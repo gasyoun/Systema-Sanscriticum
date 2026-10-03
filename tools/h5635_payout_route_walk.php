@@ -17,6 +17,29 @@ use App\Services\TeacherPayoutPoster;
 use App\Services\TeacherSalaryService;
 use Illuminate\Support\Facades\Artisan;
 
+// H5756 hard guard. This script runs migrate --force and writes Teacher/TeacherPayout/Payment rows,
+// so it may run only against the disposable sqlite scratch stand in the testing env. No .env.testing
+// is committed, and on a prod checkout (plain .env, or config cached by deploy.sh `artisan optimize`)
+// both APP_ENV and DB_CONNECTION can silently stay prod — a negative salary_payout mirror against
+// prod MySQL would pollute finance reports. Refuse before the first migrate/write unless all holds.
+$guardDie = function (string $why): void {
+    fwrite(STDERR, "H5756 guard: refusing to run — {$why}\n");
+    fwrite(STDERR, 'Use the sqlite scratch stand: .env.testing with DB_CONNECTION=sqlite and a disposable DB_DATABASE (docs/CHECKLIST_TEACHER_PAYOUT_ROUTE_WALK_H5635_02-10-2026.md).'.PHP_EOL);
+    exit(1);
+};
+if (! app()->environment('testing')) {
+    $guardDie('APP_ENV='.app()->environment().' — testing env did not take effect');
+}
+if ((string) config('database.default') !== 'sqlite') {
+    $guardDie('database.default='.config('database.default').' — not sqlite');
+}
+$dbFile = (string) config('database.connections.sqlite.database');
+if ($dbFile !== ':memory:' && ! preg_match('/\.sqlite3?$/', $dbFile)) {
+    // not the production-one clause: prod is MySQL and can never pass the sqlite assert above;
+    // here we only reject malformed/undisposable sqlite targets (:memory: and *.sqlite stand).
+    $guardDie('sqlite database='.$dbFile.' — not a disposable sqlite file (:memory: or *.sqlite)');
+}
+
 Artisan::call('migrate', ['--force' => true]);
 
 $results = [];
