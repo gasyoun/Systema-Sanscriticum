@@ -81,9 +81,17 @@ class QuestionsReviewCommand extends Command
         $fromVersion = (string) $sample->classifier_version;
         $toVersion = QuestionMessageClassifier::VERSION;
 
+        // Полнота меряется ТОЛЬКО замороженным sample_size самого сэмпла
+        // (DeepSeek D1): --sample — опция СТРАТИФИКАЦИИ нового листа, к
+        // переносу готовности ревью отношения не имеет. Метки джойнятся
+        // строго своего сэмпла (DeepSeek D2): чужая sample_id у метки не
+        // считается (unique item_id гарантирует единственную живую метку).
         $rows = SupportQuestionReviewItem::query()
             ->where('support_question_review_items.sample_id', $sample->id)
-            ->leftJoin('support_question_review_labels', 'support_question_review_labels.item_id', '=', 'support_question_review_items.id')
+            ->leftJoin('support_question_review_labels', function ($join) use ($sample): void {
+                $join->on('support_question_review_labels.item_id', '=', 'support_question_review_items.id')
+                    ->where('support_question_review_labels.sample_id', $sample->id);
+            })
             ->get([
                 'support_question_review_items.classification_id',
                 'support_question_review_items.population',
@@ -91,20 +99,20 @@ class QuestionsReviewCommand extends Command
             ]);
 
         $labeled = $rows->filter(fn ($r): bool => (string) $r->gold_label !== '');
-        $required = max(1, (int) ($this->option('sample') ?: 100));
-        if ((int) $sample->sample_size > 0 && $labeled->count() < (int) $sample->sample_size) {
+        $required = (int) $sample->sample_size;
+        if ($required < 1) {
             $this->error(sprintf(
-                'Sample %d is incomplete (%d/%d labeled) — carry-over refused until the review finishes.',
+                'Sample %d has sample_size=%d — carry-over refuses a sample without a frozen size.',
                 $sample->id,
-                $labeled->count(),
-                (int) $sample->sample_size,
+                $required,
             ));
 
             return self::FAILURE;
         }
         if ($labeled->count() < $required) {
             $this->error(sprintf(
-                'Only %d labeled rows — the corrected gate requires at least %d unique fully labeled rows.',
+                'Sample %d is incomplete (%d/%d labeled) — carry-over refused until the review finishes.',
+                $sample->id,
                 $labeled->count(),
                 $required,
             ));
@@ -169,7 +177,9 @@ class QuestionsReviewCommand extends Command
                 'frozen_version' => $fromVersion,
                 'measured_version' => $toVersion,
                 'carried_labels' => count($sheetRows),
-                'sheet' => $path,
+                // DeepSeek D5: наружу — только имя файла; лист с per-row
+                // gold живёт в защищённом storage, полный путь не печатается.
+                'sheet' => basename($path),
                 'note' => 'same protected sample, same genuine human gold, predictions from the current classifier version',
             ],
         ], JSON_UNESCAPED_UNICODE));
