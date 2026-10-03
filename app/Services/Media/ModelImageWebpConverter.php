@@ -40,6 +40,19 @@ class ModelImageWebpConverter
             return WebpTranscodeResult::skipped($path, 'curator-id');
         }
 
+        // Диагноз 03-10-2026 (прод): повторное сохранение формы возвращало в
+        // колонку прежний путь, а webp-конвейер к этому моменту уже удалил
+        // оригинал — модель оставалась с битой ссылкой («картинка пропадает»),
+        // транскодер честно рапортовал 'missing' и дальше молчал. Исходника
+        // нет, но его webp-близнец жив — возвращаем колонку на webp.
+        $healed = $this->existingWebpTwin($path);
+        if ($healed !== null) {
+            $model->setAttribute($column, $healed);
+            $model->saveQuietly();
+
+            return WebpTranscodeResult::skipped($path, 'healed-to-existing-webp');
+        }
+
         $result = $this->transcoder->transcode($path);
 
         if (! $result->converted || $result->target === null) {
@@ -65,5 +78,32 @@ class ModelImageWebpConverter
         }
 
         return $result;
+    }
+
+    /**
+     * Webp-близнец отсутствующего исходника — как его называет
+     * WebpTranscoder::targetPath: `courses/x.png` -> `courses/x.webp`,
+     * при занятом имени — `courses/x-webp.webp`. null — близнеца нет
+     * (или исходник вообще на месте).
+     */
+    private function existingWebpTwin(string $path): ?string
+    {
+        $fs = Storage::disk((string) config('media.webp.disk', 'public'));
+
+        if ($fs->exists($path)) {
+            return null;
+        }
+
+        $dir = trim((string) pathinfo($path, PATHINFO_DIRNAME), '.');
+        $stem = (string) pathinfo($path, PATHINFO_FILENAME);
+        $base = ($dir === '' ? '' : $dir.'/').$stem;
+
+        foreach ([$base.'.webp', $base.'-webp.webp'] as $candidate) {
+            if ($fs->exists($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 }
