@@ -238,9 +238,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         @endif
                     </div>
 
-                    {{-- Кликабельный бейдж преподавателя — visual continuity with card teacher line --}}
+                    {{-- Кликабельный бейдж преподавателя — visual continuity with card teacher line.
+                         Есть публичная страница /prepodavately — ведём на неё (студент ждёт анкету,
+                         не фильтр каталога); нет — прежний фильтр по преподавателю. --}}
                     @if($course->teacher)
-                        <a href="{{ route('shop.index', ['teacher' => $course->teacher->id]) }}"
+                        <a href="{{ $course->teacher->publicPageUrl() ?? route('shop.index', ['teacher' => $course->teacher->id]) }}"
                            class="group/teacher mt-6 inline-flex items-center gap-3 px-4 py-3 rounded-xl bg-[#111622] border border-[#1F2636] hover:border-brand/50 hover:bg-[#1A2235] transition-all duration-300 max-w-fit">
                             <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-brand to-brand-hover flex items-center justify-center shrink-0 shadow-md shadow-brand/20 overflow-hidden">
                                 @if(! empty($course->teacher->photo_path))

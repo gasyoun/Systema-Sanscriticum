@@ -216,7 +216,11 @@ composer check-platform-reqs --no-dev
 # (инцидент 11:00Z: docs-only PR → timeout 1500s → rollback снова vite → 124 →
 # critical breaker при живом HTTP). Собираем фронт только если изменились
 # asset-пути, нет FORCE_NPM=1, и (для skip) на диске есть manifest.
-# Пути: package* / vite / postcss / tailwind / resources/{js,css,css/**}.
+# Пути: package* / vite / postcss / tailwind / resources/{js,css} / resources/views.
+# resources/views обязателен в списке (фикс 02-10-2026, «сплошной текст» на
+# /prepodavately): Tailwind v4 сканирует blade-вьюхи (@source "../views"),
+# PR только с вьюхами меняет CSS-бандл, и skip npm оставлял на проде старый
+# бандл — новые классы не стилизованы.
 need_npm_build() {
   if [ "${FORCE_NPM:-0}" = "1" ]; then
     echo "FORCE_NPM=1 — принудительная пересборка фронта"
@@ -237,6 +241,7 @@ need_npm_build() {
       postcss.config.js postcss.config.cjs postcss.config.mjs \
       tailwind.config.js tailwind.config.ts tailwind.config.cjs \
       resources/js resources/css \
+      resources/views \
     | grep -q .; then
     echo "изменились asset-пути — npm ci + build"
     return 0

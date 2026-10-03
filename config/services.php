@@ -291,6 +291,12 @@ return [
             explode(',', (string) env('TELEGRAM_SUPPORT_TECH_GROUP_PEERS', '')),
         ))),
         'username' => ltrim((string) env('TELEGRAM_SUPPORT_USERNAME', ''), '@') ?: null,
+        // H5709: username-ы ботов (без @), чьи входящие сообщения исключаются
+        // из подсчёта вопросов (например, «Вестник» в чате заботы).
+        'bot_usernames' => array_values(array_filter(array_map(
+            static fn (string $u): string => mb_strtolower(ltrim(trim($u), '@')),
+            explode(',', (string) env('TELEGRAM_SUPPORT_BOT_USERNAMES', 'samskrte_bot')),
+        ))),
     ],
 
     // H4691: shared sentinel breaker over the MTProto watchdog-kill loop

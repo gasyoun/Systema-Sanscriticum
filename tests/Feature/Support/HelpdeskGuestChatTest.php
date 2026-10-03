@@ -260,4 +260,71 @@ class HelpdeskGuestChatTest extends TestCase
             ->assertSee('Черновик ответа')
             ->assertSee('20 000');
     }
+
+    /**
+     * Кнопка «Решен» у тредов «Без привязки»: без неё открытые unlinked-треды
+     * (веб-гости и лички непривязанных TG-авторов) нельзя снять с очереди —
+     * на проде таких открытых больше, чем user-тредов (замер 01-10-2026).
+     *
+     * @test
+     */
+    public function open_guest_thread_header_shows_the_resolve_button(): void
+    {
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        $thread = $this->guestThreadWithMessage('Оплатил и готов присоединиться');
+
+        Livewire::actingAs($admin)
+            ->test(Helpdesk::class)
+            ->call('selectGuest', $thread->id)
+            ->assertSee('resolveGuestConversation', false);
+
+        // Закрытый тред кнопки больше не показывает.
+        $thread->forceFill(['status' => SupportConversation::STATUS_CLOSED])->save();
+
+        Livewire::actingAs($admin)
+            ->test(Helpdesk::class)
+            ->call('selectGuest', $thread->id)
+            ->assertDontSee('resolveGuestConversation', false);
+    }
+
+    /** @test */
+    public function resolve_guest_conversation_closes_the_thread(): void
+    {
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        $thread = $this->guestThreadWithMessage('Сколько стоят курсы осенью?');
+
+        Livewire::actingAs($admin)
+            ->test(Helpdesk::class)
+            ->call('selectGuest', $thread->id)
+            ->call('resolveGuestConversation');
+
+        $this->assertDatabaseHas('support_conversations', [
+            'id' => $thread->id,
+            'status' => SupportConversation::STATUS_CLOSED,
+        ]);
+    }
+
+    /** @test */
+    public function resolve_closes_an_unlinked_telegram_thread(): void
+    {
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+
+        $thread = SupportConversation::create([
+            'source_telegram_chat_id' => 508405923,
+            'guest_name' => 'Трефилова Елена',
+            'status' => SupportConversation::STATUS_OPEN,
+            'queue' => SupportConversation::QUEUE_GENERAL,
+            'last_message_at' => now(),
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(Helpdesk::class)
+            ->call('selectGuest', $thread->id)
+            ->call('resolveGuestConversation');
+
+        $this->assertDatabaseHas('support_conversations', [
+            'id' => $thread->id,
+            'status' => SupportConversation::STATUS_CLOSED,
+        ]);
+    }
 }
