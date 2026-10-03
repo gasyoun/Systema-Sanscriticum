@@ -108,13 +108,31 @@ class WeeklyReportComposer
         if ($isIncomplete) {
             $lines[] = sprintf('⚠️ Снапшот неполный: %s — проценты изменения подавлены.', $incompletenessReason ?? 'причина не указана');
         }
-        $lines[] = sprintf(
-            'Покрытие источников: %d/%d дней, чатов: %d; синк %s.',
-            $coverage['days_with_incoming'],
-            $coverage['days_in_window'],
-            $coverage['chats_active'],
-            ($sync['fresh'] ?? false) ? 'свежий' : sprintf('от %s', (string) ($sync['last_synced_at'] ?? 'н/д')),
-        );
+        // H5768: полноту доказывают успешные сканы инжестера по каждому
+        // источнику; «входящие N дней» — только описательная активность.
+        $scan = $coverage['scan_evidence'] ?? null;
+        if (is_array($scan) && $scan !== []) {
+            $scanParts = [];
+            foreach ($scan as $source => $evidence) {
+                $scanParts[] = sprintf('%s: скан %d/%d дн.', $source, (int) ($evidence['days_scanned'] ?? 0), (int) ($coverage['days_in_window'] ?? 0));
+            }
+            $lines[] = sprintf(
+                'Покрытие источников (успешные сканы инжестера): %s; активность %d/%d дней, чатов: %d; синк %s.',
+                implode('; ', $scanParts),
+                $coverage['days_with_incoming'],
+                $coverage['days_in_window'],
+                $coverage['chats_active'],
+                ($sync['fresh'] ?? false) ? 'свежий' : sprintf('от %s', (string) ($sync['last_synced_at'] ?? 'н/д')),
+            );
+        } else {
+            $lines[] = sprintf(
+                'Покрытие источников: %d/%d дней, чатов: %d; синк %s.',
+                $coverage['days_with_incoming'],
+                $coverage['days_in_window'],
+                $coverage['chats_active'],
+                ($sync['fresh'] ?? false) ? 'свежий' : sprintf('от %s', (string) ($sync['last_synced_at'] ?? 'н/д')),
+            );
+        }
 
         if ($dashboardUrl !== '') {
             $lines[] = '';

@@ -8,6 +8,7 @@ use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportContact;
 use App\Models\TelegramSupportMessage;
+use App\Models\TelegramSupportScanDay;
 use App\Models\User;
 use App\Services\Leads\TelegramCourseInquiryRegistrar;
 use App\Services\Support\HomeworkPauseNoteRecorder;
@@ -1168,6 +1169,44 @@ class TelegramSupportSyncService
             'sync_state' => $state,
             'last_successful_sync_at' => now(),
             'last_sync_error' => null,
+        ])->save();
+
+        $this->recordScanDay($account->name);
+    }
+
+    /**
+     * Дневное доказательство успешного скана (H5768): успешный live-заход
+     * апсертит строку аккаунт × день (Europe/Moscow). Только live-путь —
+     * payload-импорт сетью не ходит и охват источников не доказывает.
+     * День без строки — неизвестный охват, а не «полный».
+     */
+    private function recordScanDay(string $accountName): void
+    {
+        $day = now()->timezone('Europe/Moscow')->toDateString();
+
+        /** @var TelegramSupportScanDay|null $existing */
+        $existing = TelegramSupportScanDay::query()
+            ->where('account_name', $accountName)
+            ->where('day', $day)
+            ->first();
+
+        if ($existing === null) {
+            TelegramSupportScanDay::query()->create([
+                'account_name' => $accountName,
+                'day' => $day,
+                'successful_runs' => 1,
+                'peers_polled_max' => $this->lastPeerPollCount,
+                'first_success_at' => now(),
+                'last_success_at' => now(),
+            ]);
+
+            return;
+        }
+
+        $existing->forceFill([
+            'successful_runs' => $existing->successful_runs + 1,
+            'peers_polled_max' => max($existing->peers_polled_max, $this->lastPeerPollCount),
+            'last_success_at' => now(),
         ])->save();
     }
 
