@@ -159,6 +159,20 @@ trait SchedulesSupportAndPayments
             ->onOneServer()
             ->name('knowledge-index-lessons');
 
+        // H5709: недельный отчёт по студенческим вопросам Telegram —
+        // понедельник 09:00 Europe/Moscow (снапшот прошедшей недели +
+        // exactly-once пост в «Отдел заботы»). Гейт флага — независимая
+        // верификация логики предшествует включению слота (хендофф H5709);
+        // ручной прогон: php artisan support:questions-weekly --send.
+        $schedule->command('support:questions-weekly --send')
+            ->mondays()
+            ->at('09:00')
+            ->timezone('Europe/Moscow')
+            ->when(fn () => (bool) config('features.support_questions_weekly'))
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('support-questions-weekly');
+
         // H5065: досыл ответов полосы Telegram Business. Основной путь — сразу
         // после приёма апдейта (джоба дёргает дренаж, Bot API не боится
         // воркера), слот здесь — страховка на потерянный/упавший джоб. Гейт
