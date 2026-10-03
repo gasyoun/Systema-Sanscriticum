@@ -206,6 +206,9 @@ class SupportQuestionsGoldReviewTest extends TestCase
         $this->assertStringContainsString('TEXT-', $html);
         $this->assertStringNotContainsString('Модель:', $html);
         $this->assertStringNotContainsString('data-prediction', $html);
+        // Слепая разметка и на уровне сериализации: атрибута нет даже в
+        // Livewire-снапшоте, пока метка не записана (makeHidden).
+        $this->assertStringNotContainsString('predicted_primary', $html);
 
         $item = $sample->items()->orderBy('position')->first();
         Livewire::actingAs($admin)
@@ -218,6 +221,28 @@ class SupportQuestionsGoldReviewTest extends TestCase
             'item_id' => $item->id,
             'gold_label' => 'D',
         ]);
+    }
+
+    public function test_freeze_rejects_sheet_with_drifted_prediction(): void
+    {
+        $classification = $this->seedQuestion('TEXT-drift сколько стоит курс?', 8001);
+        $predicted = $classification->primary_category ?? 'unclassified';
+        $wrong = $predicted === 'D' ? 'A' : 'D';
+
+        $path = storage_path('app/support-questions/gold-freeze-drift.tsv');
+        file_put_contents($path, "id\tpopulation\tpredicted_primary\tgold_label\ttext\n"
+            .$classification->id."\tenquiry\t".$wrong."\t\ttext\n");
+
+        try {
+            app(GoldReviewService::class)->freezeFromSheet($path, '2026-09-28..2026-10-05', null);
+            $this->fail('drifted predicted label must be refused');
+        } catch (GoldReviewException $e) {
+            $this->assertStringContainsString('drifted', $e->getMessage());
+        } finally {
+            @unlink($path);
+        }
+
+        $this->assertSame(0, SupportQuestionReviewSample::query()->count());
     }
 
     public function test_only_current_item_text_is_rendered(): void
@@ -408,6 +433,9 @@ class SupportQuestionsGoldReviewTest extends TestCase
         $this->assertSame(3, $result['verdict']['n_labeled']);
         $this->assertArrayHasKey('precision', $result['verdict']);
         $this->assertArrayHasKey('gate', $result['verdict']);
+        // Лист с метками не остаётся на диске после вердикта (пересоздаётся
+        // экспортом по требованию) — минимальный след в защищённой зоне.
+        $this->assertFileDoesNotExist($path);
     }
 
     public function test_page_freeze_action_wires_service(): void

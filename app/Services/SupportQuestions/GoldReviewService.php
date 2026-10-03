@@ -258,6 +258,13 @@ class GoldReviewService
                 ]
             );
 
+            // lockForUpdate: два параллельных финальных сабмита не должны
+            // оба увидеть labeled < total и оставить сэмпл незавершённым.
+            SupportQuestionReviewSample::query()
+                ->whereKey($sample->id)
+                ->lockForUpdate()
+                ->first();
+
             $labeled = $sample->labels()->count();
             $total = $sample->items()->count();
             if ($labeled === $total && $total > 0) {
@@ -341,17 +348,23 @@ class GoldReviewService
      * Вердикт гейта — ТОЛЬКО через (исправленный H5768) импортёр: экспорт
      * листа + Artisan-вызов, наружу агрегаты импортёра. Здесь никакая
      * точность не считается — единственный источник гейта импортёр.
+     * Лист живёт ровно на время вызова: лист детерминированно пересоздаётся
+     * экспортом по требованию, остатков с метками на диске не остаётся.
      *
      * @return array{sheet: string, verdict: array<string, mixed>|null}
      */
     public function verdictViaImporter(SupportQuestionReviewSample $sample): array
     {
         $sheet = $this->exportGoldSheet($sample);
-        Artisan::call('support:questions-review', ['--import' => $sheet]);
-        $raw = trim((string) Artisan::output());
+        try {
+            Artisan::call('support:questions-review', ['--import' => $sheet]);
+            $raw = trim((string) Artisan::output());
+        } finally {
+            @unlink($sheet);
+        }
         $verdict = json_decode($raw, true);
 
-        return ['sheet' => $sheet, 'verdict' => is_array($verdict) ? $verdict : ['raw' => $raw]];
+        return ['sheet' => basename($sheet), 'verdict' => is_array($verdict) ? $verdict : ['raw' => $raw]];
     }
 
     /**

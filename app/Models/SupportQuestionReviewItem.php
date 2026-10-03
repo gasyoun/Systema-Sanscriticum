@@ -27,6 +27,13 @@ class SupportQuestionReviewItem extends Model
         'position' => 'integer',
     ];
 
+    /**
+     * Слепая разметка (H5773): предсказание никогда не попадает ни в какую
+     * сериализацию модели (Livewire-снапшот, toArray) — рендер-экран читает
+     * атрибут напрямую и показывает его только строкам с записанной меткой.
+     */
+    protected $hidden = ['predicted_primary'];
+
     public function sample(): BelongsTo
     {
         return $this->belongsTo(SupportQuestionReviewSample::class, 'sample_id');

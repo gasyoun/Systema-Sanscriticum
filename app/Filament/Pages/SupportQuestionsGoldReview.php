@@ -104,6 +104,9 @@ class SupportQuestionsGoldReview extends Page
 
     public function getCurrentItemProperty(): ?SupportQuestionReviewItem
     {
+        // Слепая разметка на уровне сериализации: predicted_primary скрыт из
+        // любой сериализации модели целиком (SupportQuestionReviewItem
+        // ::$hidden), рендер читает атрибут напрямую только когда метка есть.
         return $this->activeSample?->items()
             ->where('position', $this->at)
             ->with(['label', 'classification.message'])
