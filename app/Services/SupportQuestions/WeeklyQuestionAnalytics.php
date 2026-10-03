@@ -6,6 +6,7 @@ use App\Models\SupportQuestionClassification;
 use App\Models\SupportQuestionWeeklySnapshot;
 use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportMessage;
+use App\Models\TelegramSupportScanDay;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -31,6 +32,15 @@ class WeeklyQuestionAnalytics
 {
     /** Спека H5709: бэкфилл доступных сообщений с 07-07-2026 (неделя, содержащая дату). */
     public const BACKFILL_SINCE = '2026-07-06';
+
+    /**
+     * Версия семантики покрытия/полноты (H5768). v1 доказывала полноту
+     * «входящими каждый день + свежим синком сейчас» — тихий просканенный
+     * день считался неполным, непросканированный источник был невидим.
+     * v2 = дневные доказательства успешного скана инжестера по каждому
+     * настроенному источнику. Снапшоты разных версий не сравниваются.
+     */
+    public const COVERAGE_VERSION = 2;
 
     public function __construct(
         private readonly QuestionMessageClassifier $classifier,
@@ -104,6 +114,8 @@ class WeeklyQuestionAnalytics
         $outgoing = 0;
         /** @var array<int, int> $questionersByPopulation уникальные спрашивающие (внутренний дедуп, наружу — только счёт) */
         $questionersByPopulation = [];
+        /** @var list<int> $studentQuestionUserIds авторы student-вопросов — для согласованной когорты нормирования (H5768) */
+        $studentQuestionUserIds = [];
 
         foreach ($messages as $message) {
             if ($message->direction !== 'incoming') {
@@ -145,6 +157,9 @@ class WeeklyQuestionAnalytics
                 $senderKey = $message->telegram_support_contact_id
                     ?: -$message->telegram_support_chat_id; // ЛС без контакта: уникален сам чат
                 $questionersByPopulation[$populationCode][$senderKey] = 1;
+                if ($populationCode === SupportQuestionClassification::POPULATION_STUDENT) {
+                    $studentQuestionUserIds[] = (int) ($verdict['user_id'] ?? 0);
+                }
             } else {
                 $notQuestions++;
             }
@@ -176,7 +191,12 @@ class WeeklyQuestionAnalytics
             + $excluded['bot'] + $excluded['duplicate_import']) === $incomingTotal;
 
         $coverage = $this->coverage($messages, $from, $to);
-        $activity = $this->activity($from, $to, $populations[SupportQuestionClassification::POPULATION_STUDENT]['questions']);
+        $activity = $this->activity(
+            $from,
+            $to,
+            $populations[SupportQuestionClassification::POPULATION_STUDENT]['questions'],
+            $studentQuestionUserIds,
+        );
 
         $payload = [
             'window' => [
@@ -186,6 +206,7 @@ class WeeklyQuestionAnalytics
                 'days' => $from->diffInDays($to),
             ],
             'classifier_version' => QuestionMessageClassifier::VERSION,
+            'coverage_version' => self::COVERAGE_VERSION,
             'student_definition' => QuestionPopulationResolver::STUDENT_DEFINITION,
             'populations' => $populations,
             'totals' => [
@@ -248,8 +269,10 @@ class WeeklyQuestionAnalytics
 
     /**
      * Сравнение допустимо только при равной популяционной сфере, версии
-     * классификатора, определении студента и полноте обоих окон; иначе
-     * проценты изменения подавляются (возврат null-дельт).
+     * классификатора, семантике покрытия, охвате источников, определении
+     * студента и полноте обоих окон; иначе проценты изменения подавляются
+     * (возврат null-дельт). Снапшоты до H5768 не имеют coverage_version и
+     * source_scope — с ними сравнение подавляется автоматически.
      *
      * @return array{ready: bool, reason: string|null}
      */
@@ -261,12 +284,18 @@ class WeeklyQuestionAnalytics
         foreach (
             [
                 'classifier_version' => 'classifier version differs',
+                'coverage_version' => 'coverage semantics differ',
                 'student_definition' => 'student definition differs',
             ] as $key => $why
         ) {
             if (($current[$key] ?? null) !== ($previous[$key] ?? null)) {
                 return ['ready' => false, 'reason' => $why];
             }
+        }
+        $currentScope = $current['coverage']['source_scope']['fingerprint'] ?? null;
+        $previousScope = $previous['coverage']['source_scope']['fingerprint'] ?? null;
+        if ($currentScope === null || $previousScope === null || $currentScope !== $previousScope) {
+            return ['ready' => false, 'reason' => 'source scope differs'];
         }
         if (! empty($previous['is_incomplete']) || ! empty($current['is_incomplete'])) {
             return ['ready' => false, 'reason' => 'incomplete window'];
@@ -276,31 +305,61 @@ class WeeklyQuestionAnalytics
     }
 
     /**
-     * Занятость активных студентов: подтверждённые студенты с lesson_date
-     * внутри окна (authoritative denominator); null, когда занятий в окне
-     * нет — нормирование недоступно, а не ноль.
+     * Нормирование по активным студентам (H5768). Занесение занятия —
+     * ЭКСКЛЮЗИВНЫМ концом окна: занятие следующего понедельника в
+     * знаменатель не входит. Когорты числителя и знаменателя согласованы:
+     * знаменатель — подтверждённые студенты (ТОТ ЖЕ авторитет
+     * QuestionStudentAuthority: активная группа ИЛИ проведённый платёж) с
+     * занятием в окне; в числителе нормирования — только вопросы студентов
+     * из этой же когорты (вопросы «оплаченных, но без группы» видны отдельно
+     * в questions_all_students). Нет занятий в окне — нормирование
+     * недоступно (null), а не ноль.
      *
+     * @param  list<int>  $studentQuestionUserIds
      * @return array<string, mixed>
      */
-    private function activity(CarbonImmutable $from, CarbonImmutable $to, int $studentQuestions): array
+    private function activity(CarbonImmutable $from, CarbonImmutable $to, int $studentQuestions, array $studentQuestionUserIds): array
     {
-        $activeStudents = (int) DB::table('group_user as gu')
+        $activeUserIds = DB::table('group_user as gu')
             ->join('lessons as l', 'l.group_id', '=', 'gu.group_id')
             ->whereNull('gu.left_at')
-            ->whereBetween('l.lesson_date', [$from->toDateString(), $to->toDateString()])
-            ->selectRaw('count(distinct gu.user_id) as active_students')
-            ->value('active_students');
+            ->where('l.lesson_date', '>=', $from->toDateString())
+            ->where('l.lesson_date', '<', $to->toDateString())
+            ->select('gu.user_id')
+            ->distinct()
+            ->pluck('gu.user_id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+
+        // Тот же студенческий авторитет, что и в числителе популяций.
+        $confirmed = $this->authority->confirmedStudentMap(collect($activeUserIds));
+        $activeConfirmed = array_keys(array_filter($confirmed, static fn (bool $is): bool => $is));
+
+        $matchedQuestions = count(array_filter(
+            $studentQuestionUserIds,
+            static fn (int $id): bool => $id > 0 && in_array($id, $activeConfirmed, true),
+        ));
 
         return [
             'definition' => 'confirmed_students_with_lesson_in_window',
-            'active_students' => $activeStudents,
-            'questions_per_100_active' => $activeStudents > 0
-                ? round($studentQuestions / $activeStudents * 100, 2)
+            'window_end_exclusive' => true,
+            'active_students' => count($activeConfirmed),
+            'questions_all_students' => $studentQuestions,
+            'questions_matched_cohort' => $matchedQuestions,
+            'questions_per_100_active' => $activeConfirmed !== []
+                ? round($matchedQuestions / count($activeConfirmed) * 100, 2)
                 : null,
         ];
     }
 
     /**
+     * Покрытие источников по АВТОРИТЕТНЫМ дневным доказательствам успешного
+     * скана инжестера (H5768, coverage v2). «Входящие каждый день» — только
+     * описательная метрика: одна капля сообщений в день не доказывает
+     * полноту, а тихий полностью просканенный день — не пробел. Настроенный
+     * охват (включённые аккаунты) фиксируется отпечатком (fingerprint) и
+     * попадает в снапшот: сравнение окон с разным охватом запрещено.
+     *
      * @return array<string, mixed>
      */
     private function coverage(Collection $messages, CarbonImmutable $from, CarbonImmutable $to): array
@@ -310,6 +369,38 @@ class WeeklyQuestionAnalytics
             ->map(fn (TelegramSupportMessage $m): string => $m->sent_at->timezone('Europe/Moscow')->toDateString())
             ->unique()
             ->count();
+
+        $daysInWindow = (int) $from->diffInDays($to);
+        $windowDays = [];
+        for ($day = $from; $day->lt($to); $day = $day->addDay()) {
+            $windowDays[] = $day->toDateString();
+        }
+
+        /** @var Collection<int, TelegramSupportAccount> $accounts */
+        $accounts = TelegramSupportAccount::query()
+            ->where('is_enabled', true)
+            ->orderBy('name')
+            ->get();
+        $sourceNames = $accounts->pluck('name')->values()->all();
+
+        $scanEvidence = [];
+        foreach ($accounts as $account) {
+            $scanned = TelegramSupportScanDay::query()
+                ->where('account_name', $account->name)
+                ->whereIn('day', $windowDays)
+                ->pluck('day')
+                ->map(static fn ($d): string => (string) $d)
+                ->all();
+            $scanEvidence[$account->name] = [
+                'days_scanned' => count($scanned),
+                'days_missing' => array_values(array_diff($windowDays, $scanned)),
+                'last_successful_sync_at' => $account->last_successful_sync_at?->toIso8601String(),
+                // Хвост окна не обрезан: успешный синк был ПОСЛЕ конца окна.
+                'tail_covered' => $account->last_successful_sync_at !== null
+                    && $account->last_successful_sync_at->gte($to),
+                'has_error' => $account->last_sync_error !== null,
+            ];
+        }
 
         /** @var TelegramSupportAccount|null $account */
         $account = TelegramSupportAccount::query()->where('name', 'support')->first();
@@ -323,8 +414,14 @@ class WeeklyQuestionAnalytics
             && $account->last_sync_error === null;
 
         return [
+            'basis' => 'ingester_successful_scan_days',
+            'source_scope' => [
+                'accounts' => $sourceNames,
+                'fingerprint' => hash('sha256', json_encode($sourceNames)),
+            ],
+            // Описательные метрики активности — НЕ доказательство полноты.
             'days_with_incoming' => $daysWithIncoming,
-            'days_in_window' => (int) $from->diffInDays($to),
+            'days_in_window' => $daysInWindow,
             'chats_active' => $messages->unique('telegram_support_chat_id')->count(),
             'private_chats' => $messages->filter(
                 fn (TelegramSupportMessage $m): bool => ($m->chat?->type ?? null) === 'private'
@@ -332,6 +429,7 @@ class WeeklyQuestionAnalytics
             'groups' => $messages->filter(
                 fn (TelegramSupportMessage $m): bool => in_array($m->chat?->type ?? '', ['group', 'supergroup'], true)
             )->unique('telegram_support_chat_id')->count(),
+            'scan_evidence' => $scanEvidence,
             'sync' => [
                 'account_present' => $account !== null,
                 'last_synced_at' => $lastSynced?->toIso8601String(),
@@ -343,22 +441,30 @@ class WeeklyQuestionAnalytics
     }
 
     /**
+     * Полнота окна (H5768, v2): авторитет — успешные сканы инжестера по
+     * каждому настроенному источнику за каждый день окна + отсутствие
+     * текущей ошибки синка + успешный синк ПОСЛЕ конца окна (хвост окна не
+     * обрезан) + сверка сумм. Дней без доказательств не бывает «полных»:
+     * исторические окна до появления таблицы сканов честно неполные.
+     *
      * @return array{0: bool, 1: string|null}
      */
     private function incompleteness(array $payload): array
     {
         $coverage = $payload['coverage'];
-        if (! $coverage['sync']['account_present']) {
+        if (($coverage['source_scope']['accounts'] ?? []) === []) {
             return [true, 'support_account_missing'];
         }
-        if ($coverage['sync']['has_error']) {
-            return [true, 'sync_error'];
-        }
-        if (! $coverage['sync']['fresh']) {
-            return [true, 'sync_stale'];
-        }
-        if ($coverage['days_with_incoming'] < $coverage['days_in_window']) {
-            return [true, 'incomplete_day_coverage'];
+        foreach (($coverage['scan_evidence'] ?? []) as $source => $evidence) {
+            if (! empty($evidence['has_error'])) {
+                return [true, 'sync_error'];
+            }
+            if (empty($evidence['tail_covered'])) {
+                return [true, 'sync_tail_stale'];
+            }
+            if (! empty($evidence['days_missing'])) {
+                return [true, 'scan_evidence_missing'];
+            }
         }
         if (($payload['reconciliation']['sum_check'] ?? false) !== true) {
             return [true, 'reconciliation_mismatch'];

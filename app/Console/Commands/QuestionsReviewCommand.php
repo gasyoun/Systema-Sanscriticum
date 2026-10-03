@@ -21,6 +21,12 @@ use Illuminate\Support\Facades\DB;
  * unclassified | not_question | other) и печатает вердикт гейта ≥93 %.
  * Если подходящих сообщений меньше N — gate_inconclusive, наблюдения не
  * фабрикуются.
+ *
+ * Семантика гейта (H5768): знаменатель точности — ВСЕ предсказания A–I;
+ * любое несовпадение gold (вкл. not_question/other/unclassified) — ошибка.
+ * PASS требует ≥100 уникальных полностью размеченных строк, ноль
+ * неразмеченных и валидные предсказанные метки; ноль предсказаний —
+ * inconclusive. Recall и покрытие публикуются отдельно, в гейт не входят.
  */
 class QuestionsReviewCommand extends Command
 {
@@ -35,6 +41,8 @@ class QuestionsReviewCommand extends Command
     protected $description = 'Стратифицированное ревью точности классификации недельных вопросов (только агрегаты наружу).';
 
     private const GOLD_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'unclassified', 'not_question', 'other'];
+
+    private const TOPIC_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
 
     public function handle(): int
     {
@@ -210,9 +218,13 @@ class QuestionsReviewCommand extends Command
             }
             $rows[] = [
                 'id' => (int) $line[$idx['id']],
-                'predicted' => trim((string) $line[$idx['predicted_primary']]),
                 // Буквы A–I — вверх, слова (unclassified/…) — вниз:
                 // единый регистр для сравнения со списком допустимых меток.
+                'predicted' => (static function (string $raw): string {
+                    $raw = trim($raw);
+
+                    return mb_strlen($raw) === 1 ? mb_strtoupper($raw) : mb_strtolower($raw);
+                })((string) $line[$idx['predicted_primary']]),
                 'gold' => (static function (string $raw): string {
                     $raw = trim($raw);
 
@@ -222,6 +234,37 @@ class QuestionsReviewCommand extends Command
         }
         fclose($fh);
 
+        // Структурная валидация (H5768): лист с дубликатами id или
+        // невалидными предсказаниями не может дать PASS ни при каких
+        // метриках — импорт отказывает сразу.
+        $ids = array_map(static fn (array $r): int => $r['id'], $rows);
+        if (count($ids) !== count(array_unique($ids))) {
+            $duplicates = array_values(array_unique(array_diff_key($ids, array_unique($ids))));
+            $this->error(sprintf('Sheet has duplicate row ids (e.g. %s) — a review with duplicate IDs cannot PASS.', implode(', ', array_slice($duplicates, 0, 5))));
+
+            return self::FAILURE;
+        }
+        if (array_filter($ids, static fn (int $id): bool => $id <= 0) !== []) {
+            $this->error('Sheet has non-positive row ids — every reviewed row must carry a valid message id.');
+
+            return self::FAILURE;
+        }
+        $validPredicted = array_merge(self::TOPIC_LABELS, ['unclassified']);
+        $invalidPredicted = array_values(array_filter(
+            $rows,
+            static fn (array $r): bool => ! in_array($r['predicted'], $validPredicted, true)
+        ));
+        if ($invalidPredicted !== []) {
+            $this->error(sprintf(
+                '%d rows have predicted labels outside %s — predicted labels must be validated before any verdict.',
+                count($invalidPredicted),
+                implode('|', $validPredicted),
+            ));
+
+            return self::FAILURE;
+        }
+
+        $unlabeled = array_values(array_filter($rows, static fn (array $r): bool => $r['gold'] === ''));
         $labeled = array_values(array_filter($rows, static fn (array $r): bool => $r['gold'] !== ''));
         if ($labeled === []) {
             $this->error('No labeled rows found (gold_label column is empty).');
@@ -239,42 +282,82 @@ class QuestionsReviewCommand extends Command
             return self::FAILURE;
         }
 
+        // Знаменатель точности (H5768) = ВСЕ строки с предсказанием A–I.
+        // Любое несовпадение gold — ошибка, ВКЛЮЧАЯ not_question/other/
+        // unclassified: прежний знаменатель (строки с gold A–I) прятал до
+        // 99 ложных срабатываний из 100 за precision=1.0.
+        $predictedTopic = array_values(array_filter(
+            $labeled,
+            static fn (array $r): bool => in_array($r['predicted'], self::TOPIC_LABELS, true)
+        ));
+
+        $matches = 0;
+        $errorsByGoldLabel = [];
+        foreach ($predictedTopic as $r) {
+            if ($r['predicted'] === $r['gold']) {
+                $matches++;
+            } else {
+                $key = $r['gold'] === '' ? '(empty)' : $r['gold'];
+                $errorsByGoldLabel[$key] = ($errorsByGoldLabel[$key] ?? 0) + 1;
+            }
+        }
+
+        // Recall и покрытие публикуются ОТДЕЛЬНО и в гейт не входят.
         $goldTopic = array_values(array_filter(
             $labeled,
-            static fn (array $r): bool => in_array($r['gold'], ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'], true)
+            static fn (array $r): bool => in_array($r['gold'], self::TOPIC_LABELS, true)
         ));
-        $classifiedGoldTopic = array_values(array_filter(
+        $goldTopicMatched = array_values(array_filter(
+            $goldTopic,
+            static fn (array $r): bool => $r['predicted'] === $r['gold']
+        ));
+        $goldTopicClassified = array_values(array_filter(
             $goldTopic,
             static fn (array $r): bool => $r['predicted'] !== 'unclassified'
         ));
 
-        $matches = 0;
-        $missesByCategory = [];
-        foreach ($classifiedGoldTopic as $r) {
-            if ($r['predicted'] === $r['gold']) {
-                $matches++;
-            } else {
-                $missesByCategory[$r['gold']] = ($missesByCategory[$r['gold']] ?? 0) + 1;
-            }
-        }
-
-        $precision = count($classifiedGoldTopic) > 0
-            ? round($matches / count($classifiedGoldTopic), 4)
+        $precision = count($predictedTopic) > 0
+            ? round($matches / count($predictedTopic), 4)
+            : null;
+        $recall = count($goldTopic) > 0
+            ? round(count($goldTopicMatched) / count($goldTopic), 4)
             : null;
         $coverage = count($goldTopic) > 0
-            ? round(count($classifiedGoldTopic) / count($goldTopic), 4)
+            ? round(count($goldTopicClassified) / count($goldTopic), 4)
             : null;
 
+        // Гейт: минимум 100 УНИКАЛЬНЫХ полностью размеченных строк, ноль
+        // неразмеченных, хотя бы одно предсказание — иначе inconclusive
+        // (наблюдения не фабрикуются); при достаточной выборке и precision
+        // < 0.93 — честный fail.
+        $required = max(1, (int) ($this->option('sample') ?: 100));
+        $gateReason = null;
+        if (count($labeled) < $required) {
+            $gateReason = 'insufficient_labeled_rows';
+        } elseif ($unlabeled !== []) {
+            $gateReason = 'partially_labeled_sheet';
+        } elseif ($predictedTopic === []) {
+            $gateReason = 'zero_predictions';
+        }
+
         $verdict = [
+            'n_rows' => count($rows),
             'n_labeled' => count($labeled),
-            'n_gold_topic' => count($goldTopic),
-            'n_classified' => count($classifiedGoldTopic),
+            'n_unlabeled' => count($unlabeled),
+            'required_labeled_rows' => $required,
+            'n_predictions' => count($predictedTopic),
             'matches' => $matches,
+            'n_gold_topic' => count($goldTopic),
+            'n_classified' => count($goldTopicClassified),
             'precision' => $precision,
+            'recall' => $recall,
             'coverage' => $coverage,
-            'misses_by_gold_category' => $missesByCategory,
+            'errors_by_gold_label' => $errorsByGoldLabel,
             'gate_min_precision' => 0.93,
-            'gate' => $precision !== null && $precision >= 0.93 ? 'pass' : 'fail',
+            'gate' => $gateReason !== null
+                ? 'inconclusive'
+                : ($precision !== null && $precision >= 0.93 ? 'pass' : 'fail'),
+            'gate_reason' => $gateReason,
         ];
 
         $this->line(json_encode($verdict, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
