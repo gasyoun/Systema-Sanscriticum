@@ -110,6 +110,37 @@ class ClassifierV2SilverClassesTest extends TestCase
         $this->assertFalse($verdict['is_question']);
     }
 
+    /** `?pwd=` внутри URL — не вопросительный знак; голая зум-ссылка — не вопрос. */
+    public function test_url_query_params_are_not_question_signals(): void
+    {
+        $verdict = $this->classifier->classifyMessage(
+            'https://zoom.example/j/83231970050?pwd=4sEc9fRDI37ZhA8Aq7fl2w2H7Y2UbO.1'
+        );
+        $this->assertFalse($verdict['is_question']);
+        $this->assertNull($verdict['primary_category']);
+    }
+
+    /** Приглашение зума (текст + ссылка с ?pwd=) гасится сервисной полосой. */
+    public function test_zoom_invite_with_pwd_url_is_not_question(): void
+    {
+        $text = 'Занятие по этой ссылке, около 1 часа: подключиться к конференции zoom '
+            .'https://zoom.example/j/81986019545?pwd=xCWBV6uGHhrx1han4wtWwNwe068yJ6.1 '
+            .'код доступа: 822297';
+        $verdict = $this->classifier->classifyMessage($text);
+        $this->assertFalse($verdict['is_question']);
+        $this->assertNull($verdict['primary_category']);
+    }
+
+    /** Ссылка-артефакт не мешает настоящему вопросу рядом с ней. */
+    public function test_real_question_next_to_url_still_classifies(): void
+    {
+        $verdict = $this->classifier->classifyMessage(
+            'Не могу зайти в личный кабинет, ссылка https://example.com/login?next=/cabinet не работает?'
+        );
+        $this->assertTrue($verdict['is_question']);
+        $this->assertSame('E', $verdict['primary_category']);
+    }
+
     /** Студент с вопросом, цитирующий служебную фразу, классифицируется как раньше. */
     public function test_student_question_quoting_service_phrase_stays_question(): void
     {
