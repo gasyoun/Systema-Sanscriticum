@@ -18,6 +18,11 @@ use App\Services\Bot\CuratorAi;
  * каждого вызова возвращаются наружу для killgate-леджера (§13): реранк обязан
  * платить токенами, даже когда промахнулся. Нового HTTP-клиента здесь нет
  * intentionally — только CuratorAi.
+ *
+ * H5771: срыв транспорта (raw=null/пустой ответ) ретраится РОВНО ОДИН раз —
+ * H5703 доказал, что на завершённых вызовах модель не ошибается (100/100), весь
+ * остаточный промах — узел, рвущий 5–15 % вызовов; повторный срыв = обычный
+ * фолбэк, дефолтное поведение не меняется. Токены обеих попыток суммируются.
  */
 final class FaqLlmReranker
 {
@@ -37,10 +42,27 @@ final class FaqLlmReranker
             return ['pick' => null, 'rank' => null, 'usage' => null, 'model' => null, 'fallback' => true, 'raw' => null];
         }
 
-        $result = $this->ai->localChatWithUsage([
+        $messages = [
             ['role' => 'system', 'content' => $this->systemPrompt()],
             ['role' => 'user', 'content' => $this->userPrompt($question, $hits)],
-        ]);
+        ];
+
+        $result = $this->ai->localChatWithUsage($messages);
+
+        // H5771: единственный ретрай срывшегося вызова (raw=null/пустой ответ).
+        // Повторный срыв уходит в обычный фолбэк ниже — пол не трогаем.
+        if (! is_string($result['content']) || trim($result['content']) === '') {
+            $retry = $this->ai->localChatWithUsage($messages);
+
+            if ($retry['usage'] !== null) {
+                $result['usage'] = $result['usage'] === null ? $retry['usage'] : [
+                    'prompt_tokens' => $result['usage']['prompt_tokens'] + $retry['usage']['prompt_tokens'],
+                    'completion_tokens' => $result['usage']['completion_tokens'] + $retry['usage']['completion_tokens'],
+                ];
+            }
+            $result['model'] = $retry['model'] ?? $result['model'];
+            $result['content'] = $retry['content'];
+        }
 
         $pick = null;
         $rank = null;
