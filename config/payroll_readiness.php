@@ -22,10 +22,11 @@ return [
     // entry here such a teacher stays outside_calculator and is absent from
     // the per-line tables. Keyed by teachers.id. Fail-closed: missing,
     // invalid, or future-dated values are ignored.
-    // Гасунс Марцис (prod id 2): never paid through recorded channels, rate
-    // always 100% (MG 29-09-2026) — full depth on purpose.
+    // Гасунс Марцис (prod id 2): MG ruling 29-09-2026 (H5554) resets the
+    // legacy 2.6M claim — the payable window counts from 2026-08-01, not from
+    // full history depth.
     'teacher_since_overrides' => [
-        2 => '2020-01-01',
+        2 => '2026-08-01',
     ],
 
     // Tochka accounts that must NEVER fund teacher payouts, matched by
