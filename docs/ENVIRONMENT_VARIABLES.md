@@ -610,6 +610,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `PUSHER_SCHEME` | optional | `'https'` | config/broadcasting.php:58<br>config/broadcasting.php:60 |
 | `QUEUE_CONNECTION` | optional | `'sync'` | config/queue.php:16 |
 | `QUEUE_FAILED_DRIVER` | optional | `'database-uuids'` | config/queue.php:128 |
+| `REACTIVATION_WAVE_CONTINUATION_DAYS` | optional | `365` | config/reactivation_wave.php:29 |
+| `REACTIVATION_WAVE_DORMANT_DAYS` | optional | `120` | config/reactivation_wave.php:22 |
+| `REACTIVATION_WAVE_RECENT_CONTACT_DAYS` | optional | `30` | config/reactivation_wave.php:35 |
 | `RECEIVABLES_ILLIQUID_DAYS` | optional | `14` | config/receivables.php:48 |
 | `RECEIVABLES_MAX_CONCURRENT` | optional | `50` | config/receivables.php:57 |
 | `RECEIVABLES_MAX_INSTALLMENT_SHARE` | optional | `30` | config/receivables.php:54 |
