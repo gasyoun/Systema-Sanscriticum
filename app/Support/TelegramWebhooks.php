@@ -17,6 +17,19 @@ use RuntimeException;
  */
 final class TelegramWebhooks
 {
+    /**
+     * Какие апдейты @zapisi_ORSbot просит у Telegram — одна правда для вебхука
+     * (zapisi:set-webhook), реестра (telegram:webhooks --set) и поллера
+     * (zapisi:poll). До 15-09-2026 списков было три и они разошлись: реестр
+     * терял my_chat_member, а callback_query не было нигде — кнопки отмены
+     * (H4519) и выбора урока #ДЗ в чатах молчали.
+     *  - message / channel_post — группа и канал;
+     *  - my_chat_member — бот добавлен в чат → приветственная карточка (H4314);
+     *  - callback_query — нажатия inline-кнопок;
+     *  - poll_answer — голоса в опросах бота (поимённо, опросы не анонимные).
+     */
+    public const ZAPISI_ALLOWED_UPDATES = ['message', 'channel_post', 'my_chat_member', 'callback_query', 'poll_answer'];
+
     /** База URL входного узла; пусто в конфиге → обычный app.url. */
     public static function baseUrl(): string
     {
