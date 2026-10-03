@@ -19,8 +19,10 @@ use Illuminate\Support\Facades\Http;
  *  1. клейм (state=claimed) ДО сетевого вызова;
  *  2. успех Telegram (ok=true, есть message_id из ответа API) —
  *     acknowledged: message_id и есть подтверждение доставки;
- *  3. dedup-гард care:post подавил (идентичный текст уже уходил) —
- *     acknowledged c suppress_reason=dedup_guard, второго поста нет;
+ *  3. dedup-гард care:post подавил (claim=false) — H5768: это PRE-SEND
+ *     клейм, а не доставка — состояние unknown до reconciliation по чату/
+ *     леджеру; исключением остаётся строка леджера, уже acknowledged с
+ *     реальным message_id (ранний выход, второго поста нет);
  *  4. отказ Telegram (ok=false, но API ответил) — not_delivered, ручной
  *     повтор через --send возможен (доставка точно не случилась);
  *  5. обрыв/таймаут/крэш после попытки — unknown; слепой автоповтор
@@ -81,12 +83,27 @@ class WeeklyReportDeliverer
         });
 
         if ($row->state === SupportQuestionWeeklyDelivery::STATE_ACKNOWLEDGED) {
-            return [
-                'state' => $row->state,
-                'message_id' => $row->telegram_message_id,
-                'suppressed' => true,
-                'reason' => $row->suppress_reason ?? 'already_acknowledged',
-            ];
+            if ($row->telegram_message_id !== null) {
+                return [
+                    'state' => $row->state,
+                    'message_id' => $row->telegram_message_id,
+                    'suppressed' => true,
+                    'reason' => $row->suppress_reason ?? 'already_acknowledged',
+                ];
+            }
+
+            // Легаси-строка (до H5768): acknowledged без реального message_id
+            // могло быть dedup-подавлением, а подавление — это pre-send клейм,
+            // не подтверждение доставки. Возвращаем в unknown: требуется
+            // --reconcile по факту из чата/леджера.
+            $row->state = SupportQuestionWeeklyDelivery::STATE_UNKNOWN;
+            $row->meta = ['legacy_ack_without_receipt' => true];
+            $row->save();
+
+            throw new \RuntimeException(sprintf(
+                'Delivery for week %s was marked acknowledged WITHOUT a Telegram message_id — a suppression claim is not a receipt. State reset to unknown; resolve with --reconcile=sent|not_sent.',
+                $weekStart,
+            ));
         }
 
         return $this->attemptSend($row, $html);
@@ -94,6 +111,9 @@ class WeeklyReportDeliverer
 
     /**
      * Ручное разрешение неоднозначной доставки по факту из чата/леджера.
+     * Реально подтверждённая неделя (acknowledged с message_id) НЕ может
+     * быть сброшена в retryable not_delivered — подтверждение уже есть
+     * (H5768: reconcile не откручивает доставку назад).
      *
      * @return array{state: string, message_id: int|null}
      */
@@ -103,6 +123,16 @@ class WeeklyReportDeliverer
         $row = SupportQuestionWeeklyDelivery::query()
             ->where('week_start', $weekStart)
             ->firstOrFail();
+
+        if (! $wasSent
+            && $row->state === SupportQuestionWeeklyDelivery::STATE_ACKNOWLEDGED
+            && $row->telegram_message_id !== null) {
+            throw new \RuntimeException(sprintf(
+                'Week %s is already acknowledged with a real Telegram message_id (%d) — refusing to reset it to retryable not_delivered.',
+                $weekStart,
+                $row->telegram_message_id,
+            ));
+        }
 
         $row->state = $wasSent
             ? SupportQuestionWeeklyDelivery::STATE_ACKNOWLEDGED
@@ -166,12 +196,34 @@ class WeeklyReportDeliverer
             );
         }
 
+        if ($suppressed) {
+            // H5768: подавление dedup-гардом — это PRE-SEND клейм «тот же текст
+            // уже уходил», а НЕ подтверждение доставки: чек-реквизита нет.
+            // Исход неизвестен: возможно, отчёт уже доставлен прошлым заходом
+            // (найти message_id в чате → --reconcile=sent), возможно, прошлый
+            // заход упал после клейма до отправки (→ --reconcile=not_sent).
+            // Подавление в СЕРЕДИНЕ последовательности хуже: часть чанков этой
+            // попытки реально ушла (firstId) — тоже unknown, не acknowledged.
+            $row->state = SupportQuestionWeeklyDelivery::STATE_UNKNOWN;
+            $row->sent_at = null;
+            $row->telegram_message_id = $firstId;
+            $row->meta = [
+                'suppressed' => 'dedup_guard',
+                'partial_send' => $firstId !== null,
+                'chunks_planned' => count($chunks),
+            ];
+            $row->save();
+
+            throw new \RuntimeException(sprintf(
+                'Weekly report delivery for %s: dedup guard suppressed the send%s — outcome UNKNOWN (a pre-send claim is not a receipt). Find the message in the chat/ledger and resolve with --reconcile=sent|not_sent; blind retry is forbidden.',
+                (string) $row->week_start,
+                $firstId !== null ? sprintf(' after a partial send (first message_id=%d)', $firstId) : '',
+            ));
+        }
+
         $row->state = SupportQuestionWeeklyDelivery::STATE_ACKNOWLEDGED;
         $row->sent_at = now();
         $row->telegram_message_id = $firstId;
-        if ($suppressed) {
-            $row->suppress_reason = 'dedup_guard';
-        }
         $row->meta = ['chunks' => count($chunks)];
         $row->save();
 
@@ -181,6 +233,16 @@ class WeeklyReportDeliverer
             'suppressed' => $suppressed,
             'reason' => $row->suppress_reason,
         ];
+    }
+
+    /**
+     * Клейм дедуп-гарда ДО сетевого вызова. Вынесен в отдельный метод для
+     * контрпримера H5768: тест подменяет его false (pre-send клейм без
+     * квитанции) и проверяет, что подавление НЕ становится acknowledged.
+     */
+    protected function guardClaim(string $chatId, string $chunk): bool
+    {
+        return TelegramSendGuard::claim($chatId, $chunk);
     }
 
     /**
@@ -199,10 +261,11 @@ class WeeklyReportDeliverer
         bool &$suppressed,
     ): void {
         foreach ($chunks as $chunk) {
-            if (! TelegramSendGuard::claim($chatId, $chunk)) {
+            if (! $this->guardClaim($chatId, $chunk)) {
                 // Идентичный текст уже уходил в этот чат за окно TTL —
-                // доставки НЕТ, но дубликат невозможен; считаем подавленным
-                // подтверждением (exactly-once уже выполнен ранее).
+                // это pre-send клейм прошлого захода, НЕ подтверждение
+                // доставки: считаем подавленным и выходим; attemptSend
+                // пометит состояние unknown (H5768), а не acknowledged.
                 $suppressed = true;
 
                 break;
@@ -227,8 +290,14 @@ class WeeklyReportDeliverer
                 $row->state = $firstId !== null
                     ? SupportQuestionWeeklyDelivery::STATE_UNKNOWN
                     : SupportQuestionWeeklyDelivery::STATE_NOT_DELIVERED;
+                // Частичная доставка оставляет след: реальный message_id
+                // ушедшего чанка — зацепка для reconciliation (H5768).
+                if ($firstId !== null) {
+                    $row->telegram_message_id = $firstId;
+                }
                 $row->meta = [
                     'refused' => true,
+                    'partial_send' => $firstId !== null,
                     'status' => $response->status(),
                     'error' => mb_substr((string) $response->json('description', ''), 0, 200),
                 ];
