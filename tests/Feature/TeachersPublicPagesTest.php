@@ -158,4 +158,71 @@ class TeachersPublicPagesTest extends TestCase
             ->assertSee('/prepodavately/ivan-tolchelnikov', false)
             ->assertDontSee('skrytyy-prepodavatel', false);
     }
+
+    /**
+     * Блоки ld+json вытащены из HTML и декодированы. JSON_THROW_ON_ERROR
+     * роняет тест, если в блоке не JSON (например, HTML-экранированный
+     * {{ }}-вывод вида {&quot;@context&quot;...} — регрессия до 02-10-2026).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function ldJsonBlocks(string $html): array
+    {
+        preg_match_all('#<script type="application/ld\+json">(.*?)</script>#s', $html, $matches);
+
+        return array_map(
+            static fn (string $json): array => json_decode($json, true, 512, JSON_THROW_ON_ERROR),
+            $matches[1]
+        );
+    }
+
+    public function test_index_emits_raw_parseable_json_ld_with_unescaped_names(): void
+    {
+        Teacher::factory()->create([
+            'name' => 'Иван "Толчельников" अर्जुन',
+            'page_enabled' => true,
+            'page_slug' => 'ivan-tolchelnikov',
+            'page_role' => 'Преподаватель санскритской грамматики',
+        ]);
+
+        $response = $this->get('/prepodavately')->assertOk();
+
+        // Пейлоад больше не прогнан через e(): HTML-экранированной формы нет.
+        $response->assertDontSee('&quot;@context&quot;', false);
+
+        $itemList = collect($this->ldJsonBlocks($response->getContent()))
+            ->first(fn (array $schema) => ($schema['@type'] ?? null) === 'ItemList');
+
+        $this->assertNotNull($itemList, 'ItemList JSON-LD отсутствует или невалиден');
+        $this->assertSame('https://schema.org', $itemList['@context']);
+        $this->assertSame(
+            'Иван "Толчельников" अर्जुन',
+            $itemList['itemListElement'][0]['item']['name']
+        );
+    }
+
+    public function test_show_emits_raw_parseable_json_ld_person_that_cannot_break_script_tag(): void
+    {
+        Teacher::factory()->create([
+            // Кавычки + деванагари + попытка порвать <script> изнутри имени:
+            // HEX-флаги json_encode экранируют всё это как \uXXXX.
+            'name' => 'Махатма "Ом" अर्जुन</script>',
+            'page_enabled' => true,
+            'page_slug' => 'mahatma-om',
+            'page_role' => 'Преподаватель хинди',
+        ]);
+
+        $response = $this->get('/prepodavately/mahatma-om')->assertOk();
+
+        $response->assertDontSee('&quot;@context&quot;', false);
+
+        $schemas = $this->ldJsonBlocks($response->getContent());
+        // Если бы имя порвало тег, второй блок не распарсился бы целиком —
+        // оба (Person + BreadcrumbList) должны декодироваться.
+        $person = collect($schemas)->first(fn (array $schema) => ($schema['@type'] ?? null) === 'Person');
+
+        $this->assertNotNull($person, 'Person JSON-LD отсутствует или невалиден');
+        $this->assertSame('https://schema.org', $person['@context']);
+        $this->assertSame('Махатма "Ом" अर्जुन</script>', $person['name']);
+    }
 }

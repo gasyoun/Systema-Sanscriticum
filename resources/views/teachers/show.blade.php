@@ -50,8 +50,11 @@
             ],
         ];
     @endphp
-    <script type="application/ld+json">{{ json_encode($personSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</script>
-    <script type="application/ld+json">{{ json_encode($breadcrumbsSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</script>
+    {{-- Сырой JSON-LD: {{ }} прогоняет e() и браузер получает {&quot;@context&quot;...} —
+         не JSON. HEX-флагы экранируют < > " ' & как \uXXXX, так что даже имя
+         с </script> внутри не порвёт тег (прецедент: main.blade.php). --}}
+    <script type="application/ld+json">{!! json_encode($personSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+    <script type="application/ld+json">{!! json_encode($breadcrumbsSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
 @endpush
 
 @section('content')
