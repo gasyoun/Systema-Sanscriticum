@@ -28,6 +28,13 @@ return [
     'teacher_since_overrides' => [
         2 => '2026-08-01',
     ],
+
+    // Tochka accounts that must NEVER fund teacher payouts, matched by
+    // account tail (last 6 digits, the same tail TochkaBalanceService
+    // reports). The tax wallet (…877617) holds reserved tax money; the
+    // payout funding pool is the operating account (…863757) only.
+    // MG 29-09-2026 (H5554 gap [2]).
+    'funding_excluded_account_tails' => ['877617'],
     // Private, gitignored manifest prepared by accounting. It contains hashes
     // and dates, not credentials. See docs/TEACHER_PAYROLL_READINESS_2026.md.
     'evidence_manifest_path' => env(

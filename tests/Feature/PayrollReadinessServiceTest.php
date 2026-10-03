@@ -424,6 +424,41 @@ final class PayrollReadinessServiceTest extends TestCase
         $this->assertSame(2760.0, $payable[1]['remaining_obligation']);
     }
 
+    public function test_funding_pool_excludes_configured_tax_wallet_account(): void
+    {
+        $teacher = Teacher::factory()->create(['name' => 'Трефилова Елена']);
+        Teacher::factory()->count(21)->create();
+        $this->seedPayable($teacher, '2026-09-01');
+        $this->seedFreshEvidence();
+
+        // …123456 = operating account (1000 ₽), …877617 = tax wallet
+        // (100000 ₽). H5554 gap [2]: only the operating account funds
+        // payouts, so a 2760 ₽ payable must stay unfunded.
+        Http::fake(['*' => Http::response([
+            'Data' => ['Balance' => [
+                [
+                    'accountId' => '40702810000000123456/RUB',
+                    'type' => 'ClosingAvailable',
+                    'Amount' => ['amount' => 1000, 'currency' => 'RUB'],
+                    'dateTime' => '2026-10-01T08:00:00+03:00',
+                ],
+                [
+                    'accountId' => '408028103000000877617/RUB',
+                    'type' => 'ClosingAvailable',
+                    'Amount' => ['amount' => 100000, 'currency' => 'RUB'],
+                    'dateTime' => '2026-10-01T08:00:00+03:00',
+                ],
+            ]],
+        ])]);
+        Cache::forget('tochka.open_banking.balances');
+
+        $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
+        $row = collect($report['teachers'])->firstWhere('teacher_id', $teacher->id);
+
+        $this->assertSame('unfunded', $row['funding_state']);
+        $this->assertSame(2760.0, $row['remaining_obligation']);
+    }
+
     public function test_paid_without_access_holds_only_the_affected_teacher_line(): void
     {
         $affected = Teacher::factory()->create(['name' => 'Трефилова Елена']);
