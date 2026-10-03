@@ -81,7 +81,7 @@ class SupportQuestionsWeekly extends Page
             $student = $payload['populations'][SupportQuestionClassification::POPULATION_STUDENT]['by_category'] ?? [];
             $enquiry = $payload['populations'][SupportQuestionClassification::POPULATION_ENQUIRY]['by_category'] ?? [];
             $byCategory = [];
-            foreach (array_keys(QuestionMessageClassifier::CATEGORY_ORDER) as $category) {
+            foreach (QuestionMessageClassifier::CATEGORY_ORDER as $category) {
                 $byCategory[$category] = ($student[$category] ?? 0) + ($enquiry[$category] ?? 0);
             }
             $rows[] = [
@@ -127,7 +127,7 @@ class SupportQuestionsWeekly extends Page
         $prevEnquiry = $previous->payload['populations'][SupportQuestionClassification::POPULATION_ENQUIRY]['by_category'] ?? [];
 
         $deltas = [];
-        foreach (array_keys(QuestionMessageClassifier::CATEGORY_ORDER) as $category) {
+        foreach (QuestionMessageClassifier::CATEGORY_ORDER as $category) {
             $now = ($student[$category] ?? 0) + ($enquiry[$category] ?? 0);
             $before = ($prevStudent[$category] ?? 0) + ($prevEnquiry[$category] ?? 0);
             $deltas[$category] = [
