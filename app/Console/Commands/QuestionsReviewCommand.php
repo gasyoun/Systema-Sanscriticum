@@ -26,6 +26,8 @@ class QuestionsReviewCommand extends Command
 {
     protected $signature = 'support:questions-review
         {--week= : ISO-дата понедельника недели (дефолт — последний снапшот)}
+        {--from= : ISO-дата начала окна выборки (вместе с --to; стратификация по всему бэкфиллу)}
+        {--to= : ISO-дата конца окна выборки (эксклюзивно)}
         {--sample=100 : размер стратифицированной выборки}
         {--sheet= : путь листа ревью (дефолт storage/app/support-questions/review-<week>.tsv)}
         {--import= : путь заполненного листа с колонкой gold_label — печатает только агрегаты}';
@@ -44,11 +46,30 @@ class QuestionsReviewCommand extends Command
         return $this->writeSheet();
     }
 
-    private function weekStart(): string
+    /**
+     * Границы окна выборки. Дефолт — неделя последнего снапшота; --week задаёт
+     * конкретную неделю; --from/--to (вместе) — произвольное окно: гейт H5709
+     * требует 100 подходящих сообщений, а в одной неделе их ~60-80, поэтому
+     * ревью стратифицируется по всему бэкфилл-корпусу.
+     *
+     * @return array{0: string, 1: string} [from-date, to-date-exclusive]
+     */
+    private function windowBounds(): array
     {
+        $fromRaw = (string) ($this->option('from') ?? '');
+        $toRaw = (string) ($this->option('to') ?? '');
+        if ($fromRaw !== '' && $toRaw !== '') {
+            return [
+                CarbonImmutable::parse($fromRaw, 'Europe/Moscow')->toDateString(),
+                CarbonImmutable::parse($toRaw, 'Europe/Moscow')->toDateString(),
+            ];
+        }
+
         $week = (string) ($this->option('week') ?? '');
         if ($week !== '') {
-            return CarbonImmutable::parse($week, 'Europe/Moscow')->startOfWeek(CarbonImmutable::MONDAY)->toDateString();
+            $monday = CarbonImmutable::parse($week, 'Europe/Moscow')->startOfWeek(CarbonImmutable::MONDAY);
+
+            return [$monday->toDateString(), $monday->addDays(7)->toDateString()];
         }
 
         $latest = DB::table('support_question_weekly_snapshots')
@@ -59,12 +80,15 @@ class QuestionsReviewCommand extends Command
             throw new \RuntimeException('No snapshots yet — run support:questions-weekly first or pass --week.');
         }
 
-        return CarbonImmutable::parse((string) $latest)->toDateString();
+        $monday = CarbonImmutable::parse((string) $latest, 'Europe/Moscow');
+
+        return [$monday->toDateString(), $monday->addDays(7)->toDateString()];
     }
 
     private function writeSheet(): int
     {
-        $week = $this->weekStart();
+        [$from, $to] = $this->windowBounds();
+        $week = $from.'..'.$to;
         $sample = max(1, (int) $this->option('sample'));
         $path = (string) ($this->option('sheet') ?? '')
             ?: storage_path('app/support-questions/review-'.$week.'.tsv');
@@ -76,15 +100,15 @@ class QuestionsReviewCommand extends Command
             ->whereIn('population', ['student', 'enquiry'])
             ->whereHas('message', fn ($m) => $m
                 ->where('direction', 'incoming')
-                ->where('sent_at', '>=', $this->localStart($week))
-                ->where('sent_at', '<', $this->localStart(CarbonImmutable::parse($week)->addDays(7)->toDateString())))
+                ->where('sent_at', '>=', $this->localStart($from))
+                ->where('sent_at', '<', $this->localStart($to)))
             ->join('telegram_support_messages', 'telegram_support_messages.id', '=', 'support_question_classifications.telegram_support_message_id')
             ->get(['support_question_classifications.*', 'telegram_support_messages.text']);
 
         if ($eligible->count() < $sample) {
             $this->line(json_encode([
                 'gate' => 'inconclusive',
-                'week' => $week,
+                'window' => $week,
                 'eligible' => $eligible->count(),
                 'required' => $sample,
                 'note' => 'fewer eligible messages than the requested sample; observations are not manufactured',
@@ -150,7 +174,7 @@ class QuestionsReviewCommand extends Command
 
         $this->line(json_encode([
             'sheet' => $path,
-            'week' => $week,
+            'window' => $week,
             'sample' => count($picked),
             'eligible' => $totalEligible,
             'strata' => count($strata),
