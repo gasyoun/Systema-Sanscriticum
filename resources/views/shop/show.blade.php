@@ -139,6 +139,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                                 Идет сейчас
                             </span>
+                        @elseif($course->isEnrolling())
+                            <span class="inline-flex items-center gap-1.5 bg-amber-500 text-white text-[11px] font-black uppercase px-3 py-1.5 rounded-full tracking-wider shadow-[0_4px_12px_rgba(245,158,11,0.35)]">
+                                <i class="fas fa-bullhorn text-[10px]"></i>
+                                Идет набор
+                            </span>
                         @elseif($course->format === 'recorded')
                             <span class="inline-flex items-center gap-1.5 bg-indigo-500/90 text-white text-[11px] font-black uppercase px-3 py-1.5 rounded-full tracking-wider">
                                 <i class="fas fa-play-circle text-[10px]"></i>
@@ -225,12 +230,14 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <i class="fas fa-play text-xs"></i> {{ $ctaAb['label'] ?? 'Смотреть пробный урок' }}
                             </a>
                         @else
-                            <a href="{{ route('shop.index', $course->isLive() ? ['format' => 'live'] : ($course->format === 'recorded' ? ['format' => 'recorded'] : [])) }}"
+                            <a href="{{ route('shop.index', $course->isLive() ? ['format' => 'live'] : ($course->isEnrolling() ? ['format' => 'enrolling'] : ($course->format === 'recorded' ? ['format' => 'recorded'] : []))) }}"
                                class="inline-flex justify-center items-center px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-[#1F2636] hover:bg-[#2A344A] transition-all">
                                 @if($course->format === 'recorded')
                                     Библиотека записей
                                 @elseif($course->isLive())
                                     Другие живые курсы
+                                @elseif($course->isEnrolling())
+                                    Другие курсы в наборе
                                 @else
                                     Все курсы
                                 @endif
@@ -293,6 +300,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <span class="inline-flex items-center gap-1.5 bg-rose-500 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md tracking-wider">
                                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                                     Идет сейчас
+                                </span>
+                            </div>
+                        @elseif($course->isEnrolling())
+                            <div class="absolute top-5 right-5 z-10">
+                                <span class="inline-flex items-center gap-1.5 bg-amber-500 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md tracking-wider">
+                                    <i class="fas fa-bullhorn text-[9px]"></i>
+                                    Идет набор
                                 </span>
                             </div>
                         @elseif($course->format === 'recorded')

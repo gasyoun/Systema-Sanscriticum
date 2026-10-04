@@ -31,7 +31,7 @@ class CourseCatalog extends Component
 
     public string $teacherId = '';
 
-    /** Возможные значения: '' | 'live' | 'recorded' */
+    /** Возможные значения: '' | ключ из Course::FORMATS (live/enrolling/recorded). */
     public string $format = '';
 
     /** Уровень: '' | ключ из Course::LEVELS (beginner/continuing/advanced). */
@@ -117,7 +117,7 @@ class CourseCatalog extends Component
             })
             // Фильтр по преподавателю включает курсы, где он основной ИЛИ со-препод.
             ->when($this->teacherId !== '', fn ($q) => $q->forTeacher((int) $this->teacherId))
-            ->when(in_array($this->format, ['live', 'recorded'], true),
+            ->when(in_array($this->format, Course::FORMATS, true),
                 fn ($q) => $q->where('format', $this->format)
             )
             ->when(array_key_exists($this->level, Course::LEVELS),
@@ -253,8 +253,11 @@ class CourseCatalog extends Component
         }
 
         // Ритм живых потоков (день/время/сколько осталось) — из расписания.
-        // Считаем ОДНИМ проходом только по live-курсам: у записей календаря нет.
-        $cadenceByCourse = CourseCadence::forMany($courses->where('format', 'live')->values());
+        // Считаем ОДНИМ проходом по live + enrolling: у «Идёт набор» расписание
+        // уже есть (слот и дата первого занятия), календаря у записей нет.
+        $cadenceByCourse = CourseCadence::forMany(
+            $courses->whereIn('format', ['live', 'enrolling'])->values()
+        );
 
         return view('livewire.shop.course-catalog', [
             'courses' => $courses,

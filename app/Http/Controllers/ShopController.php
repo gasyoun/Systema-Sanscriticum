@@ -63,7 +63,7 @@ class ShopController extends Controller
             }
 
             if (isset($parsed['format'])) {
-                abort_unless(in_array($parsed['format'], ['live', 'recorded'], true), 404);
+                abort_unless(in_array($parsed['format'], Course::FORMATS, true), 404);
                 $initial['initialFormat'] = $parsed['format'];
             }
 
