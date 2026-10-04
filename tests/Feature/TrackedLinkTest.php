@@ -99,6 +99,28 @@ class TrackedLinkTest extends TestCase
     }
 
     /** @test */
+    public function up26_webinar_campaign_routes_each_creative_to_its_own_destination(): void
+    {
+        $this->get('/ga/up26-ors-c')->assertRedirect('/webinar-upanishady-2026');
+
+        $this->assertSame([
+            'utm_source' => 'telegram_samskrte',
+            'utm_medium' => 'owned_channel',
+            'utm_campaign' => 'upanishady_webinar_oct_2026',
+            'utm_content' => 'u26_c',
+            'utm_term' => 'philosophy',
+        ], session(config('tracked_links.session_key')));
+
+        $this->flushSession();
+
+        $this->get('/ga/up26-ors-p')->assertRedirect('/k/tolkovaniia-upanisad-2-potok-2026');
+
+        $attribution = session(config('tracked_links.session_key'));
+        $this->assertSame('upanishady_webinar_oct_2026', $attribution['utm_campaign']);
+        $this->assertSame('u26_p', $attribution['utm_content']);
+    }
+
+    /** @test */
     public function demo_smoke_fixture_redirects_and_carries_demo_marked_attribution(): void
     {
         $this->get('/ga/demo-ors-h')->assertRedirect('/online');
