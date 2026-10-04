@@ -7,6 +7,8 @@ namespace Tests\Feature\Membership;
 use App\Enums\MembershipTier;
 use App\Jobs\SendMessengerAlerts;
 use App\Models\ClubMembership;
+use App\Models\Course;
+use App\Models\CourseAccessWindow;
 use App\Models\MembershipRenewalReminder;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,11 +17,15 @@ use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 /**
- * H5823 — последовательность напоминаний о продлении членства.
+ * H5823 — последовательность напоминаний о продлении.
+ *
+ * Две поверхности: клубные периоды (club_memberships, с грейсом → grace1)
+ * и окна доступа к курсам (course_access_windows, без грейса → без grace1;
+ * продление двигает ends_at у той же строки — дедуп учитывает дату периода).
  *
  * Контракт команды: dry-run по умолчанию; отправка только с --send И
- * включённым флагом; дедуп одна стадия = одно сообщение; явное «не
- * продлевать», бесплатный грант и репетиция не напоминаются.
+ * включённым флагом; дедуп одна стадия за один период = одно сообщение;
+ * явное «не продлевать», бесплатный грант и репетиция не напоминаются.
  */
 final class RenewalRemindersTest extends TestCase
 {
@@ -37,6 +43,7 @@ final class RenewalRemindersTest extends TestCase
         config()->set('features.membership_renewal_reminders', true);
         config()->set('membership.club.course_slug', 'club');
         config()->set('membership.club.grace_days', 3);
+        config()->set('access_window.enabled_course_ids', [327]);
 
         $this->member = User::factory()->create([
             'telegram_id' => 424242,
@@ -60,9 +67,22 @@ final class RenewalRemindersTest extends TestCase
         ], $overrides));
     }
 
+    private function accessWindow(User $user, array $overrides = []): CourseAccessWindow
+    {
+        $course = Course::factory()->create(['id' => 327, 'slug' => 'osnovy-aiurvedy', 'title' => 'Основы аюрведы']);
+
+        return CourseAccessWindow::setUntil(
+            $user->id,
+            $overrides['course_id'] ?? $course->id,
+            $overrides['ends_at'] ?? now()->addDays(2),
+            $overrides['reason'] ?? 'MG 09-09: окно',
+        );
+    }
+
     public function test_dry_run_by_default_sends_nothing_and_writes_no_log(): void
     {
         $this->paidPeriod($this->member, ['ends_at' => now()->addDays(5), 'grace_until' => now()->addDays(8)]);
+        $this->accessWindow($this->member);
 
         $this->artisan('membership:renewal-reminders')->assertSuccessful();
 
@@ -75,6 +95,7 @@ final class RenewalRemindersTest extends TestCase
     {
         config()->set('features.membership_renewal_reminders', false);
         $this->paidPeriod($this->member, ['ends_at' => now()->addDays(2), 'grace_until' => now()->addDays(5)]);
+        $this->accessWindow($this->member);
 
         $this->artisan('membership:renewal-reminders', ['--send' => true])->assertSuccessful();
 
@@ -95,7 +116,12 @@ final class RenewalRemindersTest extends TestCase
         self::assertSame(2, MembershipRenewalReminder::query()->count());
         self::assertSame(
             ['d3', 'd7'],
-            MembershipRenewalReminder::query()->where('club_membership_id', $membership->id)->orderBy('stage')->pluck('stage')->all(),
+            MembershipRenewalReminder::query()
+                ->where('surface', 'club_period')
+                ->where('subject_id', $membership->id)
+                ->orderBy('stage')
+                ->pluck('stage')
+                ->all(),
         );
 
         // Второй проход: дедуп, ноль новых отправок.
@@ -150,17 +176,68 @@ final class RenewalRemindersTest extends TestCase
         self::assertSame(0, MembershipRenewalReminder::query()->count());
     }
 
-    public function test_grace_stage_fires_after_ends_at(): void
+    public function test_grace_stage_fires_after_ends_at_for_club_only(): void
     {
         // Вчера закончился, грейс ещё жив (active() пропускает) → только grace1.
         $this->paidPeriod($this->member, ['ends_at' => now()->subDay(), 'grace_until' => now()->addDays(2)]);
+        // Окно, истёкшее вчера: grace1 НЕ применяется (грейса нет), d0 не догоняет
+        // (daysLeft = -1 < 0) → по окну ноль стадий.
+        $this->accessWindow($this->member, ['ends_at' => now()->subDay()]);
 
         $this->artisan('membership:renewal-reminders', ['--send' => true])->assertSuccessful();
 
         self::assertSame(
+            ['club_period'],
+            MembershipRenewalReminder::query()->distinct()->pluck('surface')->all(),
+        );
+        self::assertSame(
             ['grace1'],
             MembershipRenewalReminder::query()->pluck('stage')->all(),
         );
+    }
+
+    public function test_access_window_gets_d7_d3_d0_but_never_grace1(): void
+    {
+        // daysLeft = 0 → d7, d3 и d0 догоняют сразу; grace1 запрещён поверхностью.
+        $window = $this->accessWindow($this->member, ['ends_at' => now()]);
+
+        $this->artisan('membership:renewal-reminders', ['--send' => true])->assertSuccessful();
+
+        self::assertSame(
+            ['d0', 'd3', 'd7'],
+            MembershipRenewalReminder::query()->where('subject_id', $window->id)->orderBy('stage')->pluck('stage')->all(),
+        );
+        self::assertSame('access_window', MembershipRenewalReminder::query()->value('surface'));
+    }
+
+    public function test_forever_window_is_never_reminded(): void
+    {
+        CourseAccessWindow::setUntil($this->member->id, 327, null, 'вечное исключение');
+
+        $this->artisan('membership:renewal-reminders', ['--send' => true])->assertSuccessful();
+
+        Queue::assertNothingPushed();
+        self::assertSame(0, MembershipRenewalReminder::query()->count());
+    }
+
+    public function test_renewed_window_restarts_the_sequence(): void
+    {
+        // Продление двигает ends_at у ТОЙ ЖЕ строки (setUntil upsert) —
+        // дедуп-ключ с датой периода должен отпустить стадии заново.
+        $window = $this->accessWindow($this->member, ['ends_at' => now()->addDays(2)]);
+
+        $this->artisan('membership:renewal-reminders', ['--send' => true])->assertSuccessful();
+        self::assertSame(2, MembershipRenewalReminder::query()->count()); // d7 + d3
+
+        // Студент продлил: ends_at уехал у той же строки — в пределах окна d7,
+        // так что стадии снова due (при +32 днях они были бы корректно НЕ due).
+        CourseAccessWindow::setUntil($this->member->id, 327, now()->addDay(), 'продление');
+
+        $this->artisan('membership:renewal-reminders', ['--send' => true])->assertSuccessful();
+
+        // Новая дата периода — d7+d3 ушли заново: 2 старых + 2 новых.
+        self::assertSame(4, MembershipRenewalReminder::query()->count());
+        self::assertSame(2, MembershipRenewalReminder::query()->where('stage', 'd7')->count());
     }
 
     public function test_only_user_filter_scopes_the_test_send(): void

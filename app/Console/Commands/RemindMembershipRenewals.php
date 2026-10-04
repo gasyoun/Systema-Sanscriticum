@@ -8,6 +8,7 @@ use App\Jobs\SendMessengerAlerts;
 use App\Mail\MembershipRenewalMail;
 use App\Models\ClubMembership;
 use App\Models\Course;
+use App\Models\CourseAccessWindow;
 use App\Models\MembershipRenewalReminder;
 use App\Models\User;
 use Illuminate\Console\Command;
@@ -15,26 +16,33 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 
 /**
- * H5823 — последовательность напоминаний о продлении членства (C3, протечка
- * воронки продлений). Продление РУЧНОЕ (авто-списаний нет — шапка
- * config/membership.php), поэтому оплаченный период кончается, демон
- * `membership:expire-club` снимает право — и член молчит. Здесь он
- * НАПОМИНАЕТСЯ до отсечки, пока продление ещё бесплатно и бесконфликтно.
+ * H5823 — последовательность напоминаний о продлении (C3, протечка воронки
+ * продлений). Продление РУЧНОЕ на обеих поверхностях, поэтому срок
+ * кончается, ключи закрываются — и человек молчит. Здесь он НАПОМИНАЕТСЯ
+ * до отсечки, пока продление ещё бесплатно и бесконфликтно.
  *
- * Последовательность (config membership.renewal_stages, дни до ends_at):
- *   d7 → d3 → d0 → grace1 (первый день ПОСЛЕ ends_at, доступ ещё жив в
- *   грейсе — «последний шанс продлить без разрыва»).
+ * ДВЕ поверхности (обе — «окно с датой отсечки», обе продлеваются деньгами):
  *
- * Правила отбора (все обязательны):
- *   - период активен (не отозван, грейс жив — ClubMembership::scopeActive);
- *   - период ПЛАТНЫЙ (tier_code != free; бесплатный грант не продлевают деньгами);
- *   - не репетиция (source != rehearsal);
- *   - студент НЕ сказал «не продлевать» (renewal_cancelled_at IS NULL) —
- *     явный отказ не надоеданием не отменяют;
- *   - стадия ещё не уходила (membership_renewal_reminders, дедуп).
+ *  1. club_period — club_memberships (клуб/подписки, H2644). Периоды
+ *     append-ятся (строка = один период), есть грейс → полный конвейер
+ *     d7 → d3 → d0 → grace1 (первый день ПОСЛЕ ends_at, доступ ещё жив).
  *
- * Каналы: Telegram/VK (SendMessengerAlerts) + email (Mail::raw). Ушёл хотя
- * бы один канал → строка журнала (дедуп), иначе стадия повторится завтра.
+ *  2. access_window — course_access_windows (окна доступа к курсам
+ *     Парибка, H4456/H4468; прод-данные 04-10-2026: 348 окон, 0 продлений).
+ *     Строка upsert-ится по паре (user, course), грейса нет — ключи
+ *     закрываются в ends_at → конвейер d7 → d3 → d0 (grace1 не применяется).
+ *     Вечные именные исключения (ends_at NULL) — не напоминаем: нечего
+ *     продлевать. В {tier} подставляется название курса, {pay_link} ведёт
+ *     на страницу курса (продление = купить заново).
+ *
+ * Правила отбора (общие): стадия ещё не уходила за ЭТОТ период
+ * (журнал membership_renewal_reminders, в ключе — дата конца периода:
+ * у upsert-поверхности продление двигает ends_at той же строки, и новый
+ * срок — новая последовательность); на club_period дополнительно —
+ * студент НЕ сказал «не продлевать».
+ *
+ * Каналы: Telegram/VK (SendMessengerAlerts) + email (MembershipRenewalMail).
+ * Ушёл хотя бы один канал → строка журнала, иначе стадия повторится завтра.
  *
  * Сухой прогон по умолчанию; отправка — только --send. Флаг
  * features.membership_renewal_reminders (дефолт OFF) запрещает --send даже
@@ -47,7 +55,7 @@ final class RemindMembershipRenewals extends Command
         {--only-user= : ограничить одним студентом (тест-отправка MG)}
         {--limit=0 : ограничить число отправок за прогон (0 = все)}';
 
-    protected $description = 'H5823: напоминания о продлении членства (d7 → d3 → d0 → grace1), dry-run по умолчанию';
+    protected $description = 'H5823: напоминания о продлении (окна доступа + клубные периоды), d7 → d3 → d0 [→ grace1], dry-run по умолчанию';
 
     /**
      * Человекочитаемые метки стадий — в отчёты и тесты. Сами сроки и тексты
@@ -59,7 +67,7 @@ final class RemindMembershipRenewals extends Command
         'd7' => 'за 7 дней',
         'd3' => 'за 3 дня',
         'd0' => 'в день окончания',
-        'grace1' => 'первый день грейса (после ends_at)',
+        'grace1' => 'первый день грейса (после ends_at, club_period)',
     ];
 
     public function handle(): int
@@ -70,7 +78,7 @@ final class RemindMembershipRenewals extends Command
 
         if ($send && ! (bool) config('features.membership_renewal_reminders')) {
             $this->warn('Флаг features.membership_renewal_reminders ВЫКЛЮЧЕН — только отчёт, ничего не шлём. '
-                .'Включение — отдельный ops-шаг (CLUB_MEMBERSHIP-класс: config/features.php, дефолт OFF).');
+                .'Включение — отдельный ops-шаг (config/features.php, дефолт OFF).');
             $send = false;
         }
 
@@ -81,36 +89,24 @@ final class RemindMembershipRenewals extends Command
             return self::SUCCESS;
         }
 
-        $query = ClubMembership::query()
-            ->active()
-            ->with('user')
-            ->where('tier_code', '!=', 'free')
-            ->where('source', '!=', 'rehearsal')
-            ->whereNull('renewal_cancelled_at')
-            ->orderBy('ends_at');
-
-        if ($onlyUserId !== null) {
-            $query->where('user_id', $onlyUserId);
-        }
-
         $today = Carbon::today();
         $sent = 0;
         $skippedDedup = 0;
         $skippedNoChannel = 0;
         $rows = [];
 
-        /** @var ClubMembership $membership */
-        foreach ($query->cursor() as $membership) {
-            $user = $membership->user;
-            if (! $user instanceof User) {
-                continue;
-            }
-
-            $daysLeft = (int) $today->startOfDay()->diffInDays($membership->ends_at->copy()->startOfDay(), false);
+        foreach ($this->candidates($onlyUserId) as $candidate) {
+            $daysLeft = (int) $today->copy()->diffInDays($candidate['ends_at']->copy()->startOfDay(), false);
 
             foreach ($stages as $stage => $daysBefore) {
-                // d7/d3/d0: от сегодня до N дней до конца. grace1 (отрицательный):
-                // период уже за ends_at, но грейс жив (scopeActive это гарантирует).
+                // Отрицательные стадии (после ends_at) — только поверхности
+                // с грейсом (club_period); у окон ключи закрываются в ends_at.
+                if ($daysBefore < 0 && ! $candidate['grace_stage_allowed']) {
+                    continue;
+                }
+
+                // d7/d3/d0: от сегодня до N дней до конца; отрицательные —
+                // период уже за ends_at (активность гарантирует отбор).
                 $due = $daysBefore >= 0
                     ? ($daysLeft <= $daysBefore && $daysLeft >= 0)
                     : ($daysLeft < 0);
@@ -119,21 +115,27 @@ final class RemindMembershipRenewals extends Command
                     continue;
                 }
 
-                if (MembershipRenewalReminder::sentFor((int) $membership->id, $stage)) {
+                if (MembershipRenewalReminder::sentFor(
+                    $candidate['surface'],
+                    $candidate['subject_id'],
+                    $stage,
+                    $candidate['ends_at'],
+                )) {
                     $skippedDedup++;
 
                     continue;
                 }
 
+                $user = $candidate['user'];
                 $channels = $this->channelsFor($user);
                 if ($channels === []) {
                     $skippedNoChannel++;
-                    $rows[] = [$membership->id, $user->id, $membership->tier_code->value, $stage, '—', 'нет каналов'];
+                    $rows[] = [$candidate['surface'], $candidate['subject_id'], $user->id, $stage, '—', 'нет каналов'];
 
                     continue;
                 }
 
-                $text = $this->render($stage, $user, $membership);
+                $text = $this->render($stage, $user, $candidate);
                 $delivered = [];
 
                 if ($send) {
@@ -141,16 +143,17 @@ final class RemindMembershipRenewals extends Command
                     if ($delivered === []) {
                         // Ни один канал реально не ушёл — дедуп НЕ пишем,
                         // стадия повторится на следующем проходе.
-                        $rows[] = [$membership->id, $user->id, $membership->tier_code->value, $stage, '—', 'доставка не удалась'];
+                        $rows[] = [$candidate['surface'], $candidate['subject_id'], $user->id, $stage, '—', 'доставка не удалась'];
 
                         continue;
                     }
 
                     MembershipRenewalReminder::create([
-                        'club_membership_id' => $membership->id,
+                        'surface' => $candidate['surface'],
+                        'subject_id' => $candidate['subject_id'],
                         'user_id' => $user->id,
                         'stage' => $stage,
-                        'period_ends_at' => $membership->ends_at,
+                        'period_ends_at' => $candidate['ends_at'],
                         'channels' => implode('+', $delivered),
                         'sent_at' => now(),
                     ]);
@@ -158,9 +161,9 @@ final class RemindMembershipRenewals extends Command
                 }
 
                 $rows[] = [
-                    $membership->id,
+                    $candidate['surface'],
+                    $candidate['subject_id'],
                     $user->id,
-                    $membership->tier_code->value,
                     $stage,
                     implode('+', $send ? $delivered : $channels),
                     $send ? 'отправлено' : 'dry-run',
@@ -174,9 +177,85 @@ final class RemindMembershipRenewals extends Command
 
         $mode = $send ? 'ОТПРАВЛЕНО' : 'DRY-RUN';
         $this->info("{$mode}: стадий ушло {$sent}, дедуп-пропусков {$skippedDedup}, без каналов {$skippedNoChannel}.");
-        $this->table(['период', 'студент', 'тир', 'стадия', 'каналы', 'статус'], $rows);
+        $this->table(['поверхность', 'объект', 'студент', 'стадия', 'каналы', 'статус'], $rows);
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Кандидаты двух поверхностей.
+     *
+     * @return iterable<string, array{surface: string, subject_id: int, user: User, ends_at: Carbon, tier: string, pay_link: string, grace_stage_allowed: bool}>
+     */
+    private function candidates(?int $onlyUserId): iterable
+    {
+        // --- Поверхность 1: клубные/подписочные периоды (H2644) ---
+        $clubQuery = ClubMembership::query()
+            ->active()
+            ->with('user')
+            ->where('tier_code', '!=', 'free')
+            ->where('source', '!=', 'rehearsal')
+            ->whereNull('renewal_cancelled_at')
+            ->orderBy('ends_at');
+
+        if ($onlyUserId !== null) {
+            $clubQuery->where('user_id', $onlyUserId);
+        }
+
+        /** @var ClubMembership $membership */
+        foreach ($clubQuery->cursor() as $membership) {
+            $user = $membership->user;
+            if (! $user instanceof User) {
+                continue;
+            }
+
+            yield [
+                'surface' => MembershipRenewalReminder::SURFACE_CLUB_PERIOD,
+                'subject_id' => (int) $membership->id,
+                'user' => $user,
+                'ends_at' => $membership->ends_at,
+                'tier' => $this->tierLabel($membership->tier_code->value),
+                'pay_link' => $this->clubPayLink(),
+                'grace_stage_allowed' => true,
+            ];
+        }
+
+        // --- Поверхность 2: окна доступа к курсам (H4456, в скоупе H4468) ---
+        $scope = array_map(intval(...), (array) config('access_window.enabled_course_ids', []));
+        if ($scope === []) {
+            return;
+        }
+
+        $windowQuery = CourseAccessWindow::query()
+            ->with('user')
+            ->with('course:id,slug,title')
+            ->whereNotNull('ends_at') // вечные исключения не напоминаем
+            ->whereIn('course_id', $scope)
+            ->orderBy('ends_at');
+
+        if ($onlyUserId !== null) {
+            $windowQuery->where('user_id', $onlyUserId);
+        }
+
+        /** @var CourseAccessWindow $window */
+        foreach ($windowQuery->cursor() as $window) {
+            $user = $window->user;
+            $course = $window->course;
+            if (! $user instanceof User || ! $course instanceof Course) {
+                continue;
+            }
+
+            yield [
+                'surface' => MembershipRenewalReminder::SURFACE_ACCESS_WINDOW,
+                'subject_id' => (int) $window->id,
+                'user' => $user,
+                'ends_at' => $window->ends_at,
+                'tier' => (string) $course->title,
+                'pay_link' => route('student.course', $course->slug),
+                // Грейса у окон нет: после ends_at реальные ключи закрыты.
+                'grace_stage_allowed' => false,
+            ];
+        }
     }
 
     /**
@@ -225,23 +304,30 @@ final class RemindMembershipRenewals extends Command
 
     /**
      * Рендер текста стадии. Плейсхолдеры: {name}, {ends_date}, {tier},
-     * {pay_link}. Тексты — config membership.renewal_texts, RU, но
-     * перенастраиваются без релиза (админ правит конфиг, не код).
+     * {pay_link}. Тексты — config membership.renewal_texts, RU, правятся
+     * конфигом без релиза.
+     *
+     * @param  array{tier: string, pay_link: string}  $candidate
      */
-    private function render(string $stage, User $user, ClubMembership $membership): string
+    private function render(string $stage, User $user, array $candidate): string
     {
-        $tier = $membership->tier_code;
-        $payLink = $this->payLink();
-
         $template = (string) (config("membership.renewal_texts.{$stage}")
             ?? (string) config('membership.renewal_texts.default', ''));
 
         return strtr($template, [
             '{name}' => $user->greetingName(),
-            '{ends_date}' => $membership->ends_at->locale('ru')->translatedFormat('d F Y'),
-            '{tier}' => $this->tierLabel($membership->tier_code->value),
-            '{pay_link}' => $payLink,
+            '{ends_date}' => $candidate['ends_at']->locale('ru')->translatedFormat('d F Y'),
+            '{tier}' => $candidate['tier'],
+            '{pay_link}' => $candidate['pay_link'],
         ]);
+    }
+
+    private function clubPayLink(): string
+    {
+        $slug = (string) config('membership.club.course_slug', 'club');
+        $course = Course::query()->where('slug', $slug)->first(['slug']);
+
+        return $course !== null ? route('student.course', $course->slug) : url('/login');
     }
 
     /** Человекочитаемая метка тира для текстов (RU). */
@@ -257,17 +343,9 @@ final class RemindMembershipRenewals extends Command
         };
     }
 
-    private function payLink(): string
-    {
-        $slug = (string) config('membership.club.course_slug', 'club');
-        $course = Course::query()->where('slug', $slug)->first(['slug']);
-
-        return $course !== null ? route('student.course', $course->slug) : url('/login');
-    }
-
     /**
      * Доставка по каналам. TG/VK — через очередь (SendMessengerAlerts,
-     * антидубль-обвязка H2335 внутри); email — напрямую Mail::raw.
+     * антидубль-обвязка H2335 внутри); email — напрямую MembershipRenewalMail.
      * Возвращает СПИСОК каналов, которые фактически приняты к доставке.
      *
      * @param  list<string>  $channels
