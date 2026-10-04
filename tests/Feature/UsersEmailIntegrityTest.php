@@ -26,11 +26,14 @@ class UsersEmailIntegrityTest extends TestCase
         (new User)->forceFill(['email' => 'alexander pavlov']);
     }
 
-    public function test_mutator_throws_on_phone_and_handle(): void
+    public function test_mutator_throws_on_phone(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         (new User)->forceFill(['email' => '89384362599']);
+    }
 
+    public function test_mutator_throws_on_telegram_handle(): void
+    {
         $this->expectException(\InvalidArgumentException::class);
         (new User)->forceFill(['email' => '@nadiyoga_practice']);
     }

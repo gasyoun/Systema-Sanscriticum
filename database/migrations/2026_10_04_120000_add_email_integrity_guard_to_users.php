@@ -53,6 +53,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::connection()->getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement('ALTER TABLE users DROP CONSTRAINT users_email_valid');
     }
 };
