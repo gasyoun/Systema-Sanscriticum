@@ -97,4 +97,29 @@ class TrackedLinkTest extends TestCase
             ->assertRedirect('https://t.me/samskrtamru/4169');
         $this->assertSame('answer_story_20260917_01', session(config('tracked_links.session_key').'.utm_content'));
     }
+
+    /** @test */
+    public function demo_smoke_fixture_redirects_and_carries_demo_marked_attribution(): void
+    {
+        $this->get('/ga/demo-ors-h')->assertRedirect('/online');
+
+        $this->assertSame([
+            'utm_source' => 'demo_ors',
+            'utm_medium' => 'owned_channel',
+            'utm_campaign' => 'attribution_smoke_demo',
+            'utm_content' => 'demo_h',
+            'utm_term' => 'smoke',
+        ], session(config('tracked_links.session_key')));
+    }
+
+    /** @test */
+    public function demo_story_fixture_resolves_through_story_campaigns(): void
+    {
+        $this->get('/ga/demo-mg-st-smoke-20261004-01')->assertRedirect('/online');
+
+        $this->assertSame('telegram_marcisgasuns', session(config('tracked_links.session_key').'.utm_source'));
+        $this->assertSame('attribution_smoke_demo', session(config('tracked_links.session_key').'.utm_campaign'));
+        $this->assertSame('story', session(config('tracked_links.session_key').'.utm_medium'));
+        $this->assertSame('smoke_story_20261004_01', session(config('tracked_links.session_key').'.utm_content'));
+    }
 }
