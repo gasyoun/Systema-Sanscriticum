@@ -79,7 +79,7 @@
 
         <p class="text-xl text-gray-300 mb-12 leading-relaxed">
             С адреса <span class="text-white font-semibold">{{ session('duplicate_email') }}</span> заявка на этот курс уже принята.<br>
-            Наш менеджер обязательно свяжется с вами.
+            Повторно отправлять ничего не нужно — всё приходит автоматически.
         </p>
 
         @include('promo.partials.curator-call-notice')
