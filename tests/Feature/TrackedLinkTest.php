@@ -122,4 +122,32 @@ class TrackedLinkTest extends TestCase
         $this->assertSame('story', session(config('tracked_links.session_key').'.utm_medium'));
         $this->assertSame('smoke_story_20261004_01', session(config('tracked_links.session_key').'.utm_content'));
     }
+
+    /** @test */
+    public function every_demo_fixture_key_keeps_its_own_attribution(): void
+    {
+        $sources = [
+            'ors' => ['demo_ors', 'owned_channel'],
+            'mg' => ['demo_mg', 'owned_channel'],
+            'is' => ['demo_is', 'paid_post'],
+            'it' => ['demo_it', 'partner_post'],
+            'vk' => ['demo_vk', 'broadcast'],
+            'samskrte' => ['demo_samskrte', 'crosslink'],
+            'samskrtam' => ['demo_samskrtam', 'crosslink'],
+        ];
+
+        foreach ($sources as $channel => [$source, $medium]) {
+            foreach (['s', 'v', 'c', 't', 'h'] as $creative) {
+                $this->flushSession();
+                $this->get("/ga/demo-{$channel}-{$creative}")->assertRedirect('/online');
+
+                $attribution = session(config('tracked_links.session_key'));
+                $this->assertSame($source, $attribution['utm_source'], "demo-{$channel}-{$creative} source");
+                $this->assertSame($medium, $attribution['utm_medium'], "demo-{$channel}-{$creative} medium");
+                $this->assertSame('attribution_smoke_demo', $attribution['utm_campaign'], "demo-{$channel}-{$creative} campaign");
+                $this->assertSame("demo_{$creative}", $attribution['utm_content'], "demo-{$channel}-{$creative} content");
+                $this->assertSame('smoke', $attribution['utm_term'], "demo-{$channel}-{$creative} term");
+            }
+        }
+    }
 }
