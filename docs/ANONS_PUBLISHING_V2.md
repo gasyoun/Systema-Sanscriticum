@@ -96,13 +96,15 @@ Name mapping for the future adapter author: manifest platform = `senler`; attrib
 6. Post-send smoke (one probe click per link; it lands in `anons_link_clicks` like any reader click): `curl -sI https://samskrte.ru/ga/m26-vk-s` must return `HTTP/2 302` with `location: https://samskrte.ru/online/kursy/grammatika-gasuns-2026` — clean URL, UTM stays in the session. Live-probed PASS 04-10-2026.
 7. Journal row per the [campaign-record-template](https://github.com/gasyoun/claude-config/blob/main/commands/anons.md) in the `/anons` skill: campaign/creative, `vk_senler`, the `/ga/` link, segment size, delivered count, 24h/72h clicks (via `php artisan anons:ops metrics` / `anons_link_clicks` — slug + UTM + time only). **152-ФЗ: aggregates only, no PII in the journal.**
 
-### Upgrade path (only when MG mints a token)
+### Why there is no adapter — the API cannot send (H5944, 04-10-2026)
 
-Then mint the adapter: `platform: senler`, `publication_key` idempotency, an H5079-style `VK_PUBLISH_AUTHORIZED` gate (empty list = refuse), a persistent ledger, and the test-mode contour; the first real send still needs MG's explicit go. Until then `anons:validate`/`anons:publish` accept the schema but refuse at the adapter check with a pointer to this section — that refusal is the designed behavior, not a bug.
+The H5935 upgrade path ("MG mints a token → mint the adapter") is dead on the PLATFORM, not on access: **the Senler API has no broadcast-send method at all.** Verified 04-10-2026 (github-first prior-art, H5032) against the [official methods index](https://help.senler.ru/senler/dev/api/methods) — `Deliveries` exposes only read-only `deliveries/get`, `deliveries/stat`, `deliveries/statCount` — and both user SDKs ([SenlerPy](https://github.com/tezmen/SenlerPy), [senler-sdk](https://github.com/Alexey-zaliznuak/senler-sdk)) agree: no send/create for рассылки, from any token, ever (until Senler ships one). Sending is UI-only — the checklist above is not a stopgap, it is THE send path.
+
+What a token WOULD buy (candidate `SenlerStatsService`, awaiting MG's product call): `deliveries/stat` + `deliveries/statCount` + `utms/statCount` pull per-broadcast delivered/opened/clicked stats into the placements journal and reconcile them against `anons_link_clicks`. If Senler ever ships a send method, the adapter follows the H5079 design (`publication_key` idempotency, a `VK_PUBLISH_AUTHORIZED`-style gate with empty list = refuse, persistent ledger, test-mode contour; first real send = MG's explicit go). Until then `anons:validate`/`anons:publish` accept the schema but refuse at the adapter check with a pointer to this section — that refusal is the designed behavior, not a bug.
 
 ## Known limits
 
-- `senler` destinations are a documented manual lane (§ above) — the registry refuses them with a pointer there; `vk` (wall) destinations remain fail-closed future work.
+- `senler` destinations are a documented manual lane (§ above) — the registry refuses them with a pointer there; the Senler API has no send method at all (H5944), so no adapter is possible until upstream ships one; `vk` (wall) destinations remain fail-closed future work.
 - Archive indexer requires a live session (probe-gated) and runs one bounded `getStoriesArchive` page per invocation.
 - Font: freetype TTF resolved from `services.anons.cta_font` / `ANONS_CTA_FONT` / DejaVu(Linux)/Arial(macOS) paths; without any TTF the plaque falls back to GD's ASCII-only bitmap font — acceptable for ASCII CTA, Cyrillic needs the TTF (DejaVu present on the prod box).
 
