@@ -1,6 +1,6 @@
 # Платёжная дисциплина: куратор + ученик (+ Telegram)
 
-_Created: 02-08-2026 · Last updated: 02-08-2026_
+_Created: 02-08-2026 · Last updated: 05-10-2026_
 
 **Где в админке:** Filament → Пользователи → **Должники** (`/admin/debtors`)  
 **Кабинет ученика:** https://samskrte.ru/dvaram → вкладка **«Мои долги»**  
@@ -152,3 +152,14 @@ Grok 4.5 (`grok-4.5`) · H2155.
 | [tg-payment-discipline-1to1-scripts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/tg-payment-discipline-1to1-scripts.md) | Личные скрипты |
 
 _Dr. Mārcis Gasūns_
+
+## Синхрон с debtors-manual (05-10, H6091)
+
+Кураторская дорожка синхронизирована с [debtors-manual](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/debtors-manual.md)
+(версия 05-09): самообслуживание студента — «Мои долги» и самостоятельный перенос даты
+платежа — описано там и является первым шагом воронки; куратор подключается после
+неудачи самообслуживания. Черновой детектор отсрочек `promise_suggestion_detection_enabled`
+(default OFF) в кураторский процесс НЕ входит до отдельного решения MG — флаг существует,
+процесс на него не опирается.
+
+_Гасунс_
