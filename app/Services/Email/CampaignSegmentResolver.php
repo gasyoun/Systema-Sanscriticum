@@ -6,6 +6,7 @@ namespace App\Services\Email;
 
 use App\Models\Course;
 use App\Models\Lead;
+use App\Models\Payment;
 use App\Models\User;
 use App\Services\Crm\Lifecycle\LifecycleEligibility;
 use Illuminate\Database\Eloquent\Collection;
@@ -70,8 +71,10 @@ class CampaignSegmentResolver
      */
     private function telegramUnboundPayers(): Collection
     {
+        // P2 fix (independent review): канонический «paid» = Payment::PAID_STATUSES
+        // (paid + success; комментарий у scopePaid прямо запрещает дубль литералов).
         return User::query()
-            ->whereIn('id', DB::table('payments')->where('status', 'paid')->select('user_id'))
+            ->whereIn('id', DB::table('payments')->whereIn('status', Payment::PAID_STATUSES)->select('user_id'))
             ->where(function ($q) {
                 $q->whereNull('telegram_id')->orWhereIn('telegram_id', ['', 0]);
             })
