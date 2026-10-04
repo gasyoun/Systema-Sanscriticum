@@ -8,14 +8,15 @@ use App\Mail\LeadAdHocMail;
 use App\Models\Lead;
 use App\Models\LeadNote;
 use App\Models\User;
+use App\Rules\HouseEmail;
 use App\Support\GreetingName;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
-use Filament\Resources\Resource;
 // --- ИМПОРТЫ ДЛЯ EXCEL (ВАЖНО!) ---
+use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
@@ -66,7 +67,7 @@ class LeadResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('name')->label('Имя'),
                         Forms\Components\TextInput::make('contact')->label('Телефон / TG'),
-                        Forms\Components\TextInput::make('email')->label('Email')->email(),
+                        Forms\Components\TextInput::make('email')->label('Email')->email()->rules([new HouseEmail]),
                         Forms\Components\Select::make('landing_page_id')
                             ->relationship('landingPage', 'title')
                             ->label('Лендинг'),

@@ -34,6 +34,28 @@ class LeadsEmailIntegrityTest extends TestCase
             'updated_at' => now(),
         ]);
     }
+    public function test_public_lead_form_rejects_dotless_email_with_422_not_500(): void
+    {
+        // P2 независимого ревью: RFC-правило `email` пропускает домены без
+        // точки, CHECK их режет — без HouseEmail форма отдавала 500 и теряла лид.
+        $response = $this->post('/leads/store', [
+            'contact' => '+7(953)2126423',
+            'email' => 'ahyg13@gma',
+            'name' => 'Дотлесс',
+        ]);
+
+        $this->assertSame(302, $response->status()); // back() с ошибками валидации
+        $response->assertSessionHasErrors('email');
+        $this->assertSame(0, DB::table('leads')->where('email', 'ahyg13@gma')->count());
+    }
+
+    public function test_lead_mutator_throws_on_non_address(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        (new \App\Models\Lead)->forceFill(['email' => 'ahyg13@gma']);
+    }
+
 
     public function test_db_accepts_null_and_valid_emails(): void
     {

@@ -9,6 +9,7 @@ use App\Models\Lead;
 use App\Models\MarathonEnrollment;
 use App\Models\Payment;
 use App\Models\User;
+use App\Rules\HouseEmail;
 use App\Services\AttributionService;
 use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Messaging\TelegramDeliveryChannel;
@@ -134,7 +135,7 @@ class MarathonController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|min:2|max:255',
             'contact' => 'required|string',
-            'email' => 'nullable|email',
+            'email' => ['nullable', 'string', 'max:255', new HouseEmail],
             'social' => 'nullable|string|max:255',
             'track' => 'required|in:'.MarathonEnrollment::TRACK_FREE.','.MarathonEnrollment::TRACK_PAID,
             'quiz_goal' => 'required|in:'.implode(',', array_keys(self::QUIZ_GOALS)),
@@ -256,7 +257,7 @@ class MarathonController extends Controller
 
         $validated = $request->validate([
             'contact' => 'required|string',
-            'email' => 'required|email',
+            'email' => ['required', 'string', 'max:255', new HouseEmail],
         ]);
 
         $landing = LandingPage::where('slug', config('marathon.landing_slug'))->first();
@@ -394,7 +395,7 @@ class MarathonController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|min:2|max:255',
             'contact' => 'required|string',
-            'email' => 'nullable|email',
+            'email' => ['nullable', 'string', 'max:255', new HouseEmail],
             'social' => 'nullable|string|max:255',
             'track' => 'required|in:'.MarathonEnrollment::TRACK_FREE.','.MarathonEnrollment::TRACK_PAID,
             'quiz_goal' => 'required|in:'.implode(',', array_keys(self::QUIZ_GOALS)),
@@ -482,7 +483,7 @@ class MarathonController extends Controller
 
         $validated = $request->validate([
             'contact' => 'required|string',
-            'email' => 'required|email',
+            'email' => ['required', 'string', 'max:255', new HouseEmail],
         ]);
 
         $landing = LandingPage::where('slug', config('marathon.january_landing_slug'))->first();

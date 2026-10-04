@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\MagicLinkToken;
+use App\Rules\HouseEmail;
 use App\Services\NewsletterSubscriptionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,7 +36,7 @@ class NewsletterSubscribeController extends Controller
         RateLimiter::hit($rlKey, 5);
 
         $validated = $request->validate([
-            'email' => ['required', 'email', 'max:255'],
+            'email' => ['required', 'string', 'max:255', new HouseEmail],
             // Явное согласие на рассылку — как чекбокс промо на лендинге.
             'is_promo_agreed' => ['accepted'],
         ]);
