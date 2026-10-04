@@ -45,7 +45,7 @@ _Created: 04-10-2026 · Last updated: 04-10-2026_ · [метадок](PLAYBOOK_C
 - [ ] После ЛЮБОГО флипа флага/деплоя — `php artisan queue:restart` (или horizon:terminate): воркеры, не увидевшие новый конфиг, молча пропускают письма.
 
 ### 5. Приём оплат
-- [ ] Живёт сам: чекауты, автодоступ, PayPal, счёт юрлицу, чеки ККТ (см. `config/billing.php`, H2017). Проверка перед анонсом: открыть `/checkout/{tariff_id}` — 200 и форма `payment/create`.
+- [ ] Живёт сам: чекауты и автодоступ (Tochka, `PaymentController`), PayPal для заграницы (`features.paypal_subscriptions` + ручной клейм `PaypalClaimController`), счёт юрлицу (`config/billing.php` company_invoice), чеки ККТ (H2017). Проверка перед анонсом: открыть `/checkout/{tariff_id}` — 200 и форма `payment/create`.
 
 ### 6. Финальный смок перед анонсом
 - [ ] Страница курса: описание, счётчики, ровно ожидаемое число чекаут-кнопок, баннер с датой.
