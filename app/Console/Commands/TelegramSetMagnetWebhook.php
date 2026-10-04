@@ -39,7 +39,8 @@ final class TelegramSetMagnetWebhook extends Command
         $url = TelegramWebhooks::url('/api/webhooks/telegram-magnet');
 
         $this->info("Регистрируем глобальный webhook: {$url}");
-        $telegram->setWebhook($url, $secret, ['message'], TelegramWebhooks::certificateContents());
+        // callback_query нужен ждуну в боте (wl:* кнопки, MG 04-10-2026).
+        $telegram->setWebhook($url, $secret, ['message', 'callback_query'], TelegramWebhooks::certificateContents());
         $this->info('✓ Telegram magnet webhook (глобальный) установлен.');
 
         return self::SUCCESS;
