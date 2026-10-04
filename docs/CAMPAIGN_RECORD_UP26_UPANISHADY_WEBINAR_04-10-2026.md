@@ -22,12 +22,12 @@ _Created: 04-10-2026 · Last updated: 04-10-2026_
 | Text/version ID | пост-анонс v1 |
 | Placement | Telegram-канал @samskrte (Общество ревнителей санскрита), дополнение к посту 631 |
 | Account or channel | `ors`: `telegram_samskrte` / `owned_channel` |
-| Publication time and zone | вносится после публикации поста (МСК) |
-| Post permalink | `t.me/samskrte/<номер>` после публикации |
+| Publication time and zone | 04-10-2026, 22:43 МСК |
+| Post permalink | https://t.me/samskrte/633 |
 | VK poll/post IDs | — (не VK) |
 | Media master / published file | — (текстовый пост) |
 | Orientation and dimensions | — |
-| Final copy location | пост канала; черновик фрагмента — чат ZCode 04-10-2026 |
+| Final copy location | пост канала (опубликовано как пост 633); черновик фрагмента — чат ZCode 04-10-2026 |
 | Reader-facing short link | https://samskrte.ru/ga/up26-ors-c · https://samskrte.ru/ga/up26-ors-p |
 | UTM source / medium / campaign / content / term | `telegram_samskrte` / `owned_channel` / `upanishady_webinar_oct_2026` / `u26_c`, `u26_p` / `philosophy` |
 | Cost and currency | 0, owned placement |
@@ -36,6 +36,6 @@ _Created: 04-10-2026 · Last updated: 04-10-2026_
 | 24h / 72h views / clicks / inquiries | после публикации: `php artisan anons:ops metrics` (таблица `anons_link_clicks` — slug + UTM + время) |
 | Suitable leads / payments / revenue | лиды лендинга `/webinar-upanishady-2026`; оплаты — чекауты `/checkout/5104–5107` |
 | Reported source for unattributed leads | `reported_source`, UTM не выдумывать |
-| Findings and next action | ссылку на эфир раздаёт письмо шага `webinar_invite` (`landing.webinar_url`); после публикации — дописать permalink/время и снять метрики 24/72h |
+| Findings and next action | пост 633 опубликован с обоими `/ga`-ключами; снять метрики 24h 05-10 и 72h 07-10 (`php artisan anons:ops metrics`, таблица `anons_link_clicks`); ссылку на эфир раздаёт письмо шага `webinar_invite` (`landing.webinar_url`) |
 
 _Гасунс_
