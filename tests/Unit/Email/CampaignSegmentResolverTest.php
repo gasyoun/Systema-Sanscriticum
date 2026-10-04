@@ -6,6 +6,7 @@ namespace Tests\Unit\Email;
 
 use App\Models\Course;
 use App\Models\Lead;
+use App\Models\Payment;
 use App\Models\User;
 use App\Services\Email\CampaignSegmentResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -85,5 +86,21 @@ class CampaignSegmentResolverTest extends TestCase
         $result = (new CampaignSegmentResolver)->resolve(['type' => 'course']);
 
         $this->assertCount(0, $result);
+    }
+
+    public function test_tg_unbound_payers_includes_paid_without_telegram_only(): void
+    {
+        $paidNoTg = User::factory()->create(['wants_email_announcements' => true]);
+        Payment::create(['user_id' => $paidNoTg->id, 'amount' => 4800, 'tariff' => 'block', 'status' => 'paid']);
+        $paidWithTg = User::factory()->create(['wants_email_announcements' => true, 'telegram_id' => 555]);
+        Payment::create(['user_id' => $paidWithTg->id, 'amount' => 4800, 'tariff' => 'block', 'status' => 'paid']);
+        $paidNoConsent = User::factory()->create(['wants_email_announcements' => false]);
+        Payment::create(['user_id' => $paidNoConsent->id, 'amount' => 4800, 'tariff' => 'block', 'status' => 'paid']);
+        User::factory()->create(['wants_email_announcements' => true]); // плативших нет
+
+        $result = (new CampaignSegmentResolver)->resolve(['type' => 'tg_unbound_payers']);
+
+        $this->assertCount(1, $result);
+        $this->assertSame($paidNoTg->id, $result->first()->id);
     }
 }

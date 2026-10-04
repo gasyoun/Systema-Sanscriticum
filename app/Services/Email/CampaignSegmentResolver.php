@@ -9,6 +9,7 @@ use App\Models\Lead;
 use App\Models\User;
 use App\Services\Crm\Lifecycle\LifecycleEligibility;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -36,6 +37,7 @@ class CampaignSegmentResolver
             'course' => $this->courseStudents($segment),
             'lead_stage' => $this->leadStageEmails($segment),
             'lifecycle' => $this->lifecycleUsers($segment),
+            'tg_unbound_payers' => $this->telegramUnboundPayers(),
             default => $this->empty($type),
         };
     }
@@ -56,6 +58,26 @@ class CampaignSegmentResolver
         $users = app(LifecycleEligibility::class)->eligibleUsers($rule);
 
         return new Collection($users->all());
+    }
+
+    /**
+     * Платившие ученики без привязанного Telegram — аудитория кампании
+     * «привяжите Telegram» (MG 04-10-2026). Согласие на email — общий
+     * гейт всех сегментов; пользователь с telegram_id из выборки выпадает,
+     * поэтому повторный запуск кампании сам себя не дублирует.
+     *
+     * @return Collection<int, User>
+     */
+    private function telegramUnboundPayers(): Collection
+    {
+        return User::query()
+            ->whereIn('id', DB::table('payments')->where('status', 'paid')->select('user_id'))
+            ->where(function ($q) {
+                $q->whereNull('telegram_id')->orWhereIn('telegram_id', ['', 0]);
+            })
+            ->where('wants_email_announcements', true)
+            ->whereNotNull('email')
+            ->get();
     }
 
     /** @return Collection<int, User> */
