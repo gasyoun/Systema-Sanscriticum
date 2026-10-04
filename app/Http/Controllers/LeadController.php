@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\LandingPage;
 use App\Models\Lead;
 use App\Models\User;
+use App\Rules\HouseEmail;
 use App\Services\LeadNotifier;
 use App\Services\Leads\LeadFlashBuilder;
 use App\Services\Messaging\SocialChannelParser;
@@ -31,7 +32,7 @@ class LeadController extends Controller
             // (обязательность на ней держит HTML required).
             'name' => 'nullable|string|max:255',
             'contact' => 'required|string',
-            'email' => 'nullable|email',
+            'email' => ['nullable', 'string', 'max:255', new HouseEmail],
             'social' => 'nullable|string|max:255',
             'landing_page_id' => 'nullable|integer',
             'form_name' => 'nullable|string',

@@ -8,6 +8,7 @@ use App\Events\ChatMessageSent;
 use App\Jobs\ResolveVisitorGeoJob;
 use App\Models\ChatMessage;
 use App\Models\SupportConversation;
+use App\Rules\HouseEmail;
 use App\Services\Support\MicShadowClassifier;
 use App\Services\Support\SupportConversationManager;
 use App\Services\Support\SupportLeadCaptureService;
@@ -98,7 +99,7 @@ class PublicChatController extends Controller
             'text' => ['required', 'string', 'max:2000'],
             'name' => ['nullable', 'string', 'max:120'],
             'page' => ['nullable', 'string', 'max:2048'],
-            'email' => ['nullable', 'string', 'email', 'max:255'],
+            'email' => ['nullable', 'string', 'max:255', new HouseEmail],
             'phone' => ['nullable', 'string', 'max:40'],
         ]);
 
