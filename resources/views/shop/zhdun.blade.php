@@ -121,11 +121,36 @@
                                 $titleUrl = $item->course && $item->course->is_visible
                                     ? route('shop.course.show', $item->course->slug)
                                     : ($item->course_title ? '/online/poisk/'.App\Support\ShopCatalogUrl::encodeWords($item->course_title) : null);
+                                // Обложка — та же плашка, что на карточке каталога:
+                                // дизайнерский баннер 4:3 → фолбэк image_path
+                                // (Course::catalogBadgeUrl()). Нет курса или обложки —
+                                // миниатюры просто нет, строка узнаваема названием.
+                                $itemCoverUrl = $item->course?->catalogBadgeUrl();
                             @endphp
                             <div id="wl-{{ $item->slug }}" class="flex flex-col rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-brand/50 p-5 transition-all scroll-mt-24"
                                  data-waitlist-row="{{ $item->slug }}">
                                 <div class="flex items-start justify-between gap-3">
-                                    <div>
+                                    @if($itemCoverUrl)
+                                        {{-- Миниатюра обложки для узнаваемости; декоративная —
+                                             название рядом текстом, alt пуст. --}}
+                                        @php $coverClasses = 'w-24 aspect-[4/3] object-cover rounded-lg border border-[#1F2636]'; @endphp
+                                        @if($titleUrl)
+                                            <a href="{{ $titleUrl }}" tabindex="-1" aria-hidden="true" class="flex-none">
+                                                <img src="{{ $itemCoverUrl }}" alt=""
+                                                     width="384" height="288"
+                                                     loading="lazy" decoding="async"
+                                                     data-waitlist-cover="{{ $item->slug }}"
+                                                     class="{{ $coverClasses }}">
+                                            </a>
+                                        @else
+                                            <img src="{{ $itemCoverUrl }}" alt=""
+                                                 width="384" height="288"
+                                                 loading="lazy" decoding="async"
+                                                 data-waitlist-cover="{{ $item->slug }}"
+                                                 class="{{ $coverClasses }} flex-none">
+                                        @endif
+                                    @endif
+                                    <div class="min-w-0">
                                         <h3 class="text-base font-bold text-white leading-snug">
                                             @if($titleUrl)
                                                 <a href="{{ $titleUrl }}"

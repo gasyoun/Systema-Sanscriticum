@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Course;
+use App\Models\CourseDesignAsset;
 use App\Models\CourseWaitlistItem;
 use App\Models\Schedule;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -606,5 +608,59 @@ class VitrinaWaitlistPageTest extends TestCase
             'шапка: обе колонки (ждун и уже идут) — нумерованные списки'
         );
         $this->assertStringContainsString('<li>', $html, 'нумерованный список рендерит <li>');
+    }
+
+    /**
+     * Обложка на карточке ждуна — та же плашка, что на витрине каталога:
+     * сданный дизайном баннер 4:3 главнее, фолбэк — image_path привязанного
+     * курса; у строки без привязанного курса миниатюры нет.
+     */
+    public function test_bound_course_cover_renders_with_badge_priority(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        Storage::fake('public');
+
+        $course = Course::factory()->create([
+            'is_visible' => true,
+            'image_path' => 'covers/zhdun-legacy.jpg',
+        ]);
+        Storage::disk('public')->put('covers/zhdun-legacy.jpg', 'legacy');
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-cover-legacy',
+            'course_title' => 'Сказание о Нале',
+            'teacher_name' => 'Гасунс Марцис Юрьевич',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'course_id' => $course->id,
+        ]);
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-cover-unbound',
+            'course_title' => 'Курс без карточки',
+            'teacher_name' => 'Т',
+            'min_payers' => 8,
+            'kind' => 'other',
+        ]);
+
+        // Фолбэк: обложка витрины привязанного курса.
+        $legacyUrl = Storage::disk('public')->url('covers/zhdun-legacy.jpg');
+        $this->get(route('shop.waitlist'))
+            ->assertOk()
+            ->assertSee('data-waitlist-cover="zhdun-cover-legacy"', false)
+            ->assertSee($legacyUrl, false)
+            ->assertDontSee('data-waitlist-cover="zhdun-cover-unbound"', false);
+
+        // Сданный дизайном баннер 4:3 главнее обложки витрины.
+        Storage::disk('public')->put('course-design/zhdun-badge.jpg', 'badge');
+        CourseDesignAsset::create([
+            'course_id' => $course->id,
+            'format' => '4:3',
+            'disk' => 'public',
+            'path' => 'course-design/zhdun-badge.jpg',
+        ]);
+        $badgeUrl = Storage::disk('public')->url('course-design/zhdun-badge.jpg');
+        $this->get(route('shop.waitlist'))
+            ->assertOk()
+            ->assertSee($badgeUrl, false)
+            ->assertDontSee($legacyUrl, false);
     }
 }

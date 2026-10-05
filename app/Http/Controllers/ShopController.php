@@ -293,7 +293,13 @@ class ShopController extends Controller
                 CourseWaitlistItem::STATUS_SCHEDULED,
             ])
             ->withCount('votes')
-            ->with('course:id,slug,is_visible')
+            ->with([
+                // Обложка карточки ждуна — витринная плашка курса
+                // (Course::catalogBadgeUrl()): ассет 4:3, фолбэк image_path.
+                // Другие форматы баннеров здесь не нужны.
+                'course:id,slug,is_visible,image_path',
+                'course.designAssets' => fn ($q) => $q->where('format', '4:3'),
+            ])
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
