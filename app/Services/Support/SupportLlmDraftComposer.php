@@ -10,6 +10,7 @@ use App\Models\SupportAiReplyEvent;
 use App\Models\SupportAnswerSuggestion;
 use App\Models\User;
 use App\Services\Bot\CuratorAi;
+use Illuminate\Support\Facades\Log;
 
 /**
  * FAQ-суггестер v2 (S5): черновик ответа для категорий D (оплата/цена/тарифы),
@@ -24,12 +25,18 @@ use App\Services\Bot\CuratorAi;
  *    строится — LLM выключен);
  *  - дневной cap вызовов (MarketingSetting.support_ai_daily_cap → дефолт
  *    config('features.support_ai_daily_cap')), считается по answer_llm_drafted;
- *  - приватность: приватный TEXT импортированного Telegram-ЛС попадает в промпт
- *    ТОЛЬКО при features.support_ai_include_telegram (факты LMS — всегда).
+ *  - приватность: ЛЮБОЙ текст вопроса перед промптом проходит pii-маскировщик
+ *    ({@see SupportStudentPiiMasker}, гейт Q5 ростера v2; при недоступности
+ *    identity-сета текст исключается — fail-closed), а сырой TEXT
+ *    импортированного Telegram-ЛС дополнительно ТОЛЬКО при
+ *    features.support_ai_include_telegram (факты LMS — всегда).
  */
 class SupportLlmDraftComposer
 {
-    public function __construct(private readonly CuratorAi $ai) {}
+    public function __construct(
+        private readonly CuratorAi $ai,
+        private readonly SupportStudentPiiMasker $masker,
+    ) {}
 
     public function isEnabled(): bool
     {
@@ -56,9 +63,11 @@ class SupportLlmDraftComposer
             return null;
         }
 
+        [$promptText, $piiMasked] = $this->maskedPromptText($questionText, $sourceType);
+
         $result = $this->ai->chatWithUsage([
             ['role' => 'system', 'content' => $this->systemPrompt($category)],
-            ['role' => 'user', 'content' => $this->userPrompt($category, $grounding['facts'], $questionText, $sourceType)],
+            ['role' => 'user', 'content' => $this->userPrompt($category, $grounding['facts'], $promptText)],
         ]);
 
         $draft = $result['content'];
@@ -76,6 +85,7 @@ class SupportLlmDraftComposer
                 'user_id' => $user->id,
                 'model' => $result['model'],
                 'usage' => $result['usage'],
+                'pii_masked' => $piiMasked,
                 'preview' => mb_substr($draft, 0, 240),
             ],
         ]);
@@ -204,19 +214,44 @@ class SupportLlmDraftComposer
     /**
      * @param  array<string, mixed>  $facts
      */
-    private function userPrompt(string $category, array $facts, string $questionText, string $sourceType): string
+    /**
+     * Текст вопроса ДЛЯ ПРОМПТА: всегда через pii-маскировщик (гейт Q5 ростера v2).
+     * Приватность двухслойная: (1) маскинг личностей до любого LLM-вызова,
+     * (2) сырой текст импортированного Telegram-ЛС дополнительно требует
+     * features.support_ai_include_telegram. Fail-closed: если identity-сет
+     * недоступен, текст исключается из промпта целиком — LLM формулирует
+     * из одних фактов (чистоту доказать нельзя → текста нет).
+     *
+     * @return array{0: string, 1: int} текст для промпта и число маскировок
+     */
+    private function maskedPromptText(string $questionText, string $sourceType): array
+    {
+        $includeText = $sourceType !== SupportAnswerSuggestion::SOURCE_TELEGRAM_SUPPORT_MESSAGE
+            || (bool) config('features.support_ai_include_telegram');
+
+        if (! $includeText || trim($questionText) === '') {
+            return ['', 0];
+        }
+
+        try {
+            return $this->masker->maskOrFail($questionText);
+        } catch (\Throwable $e) {
+            Log::warning('SupportLlmDraftComposer: pii-guard fail-closed, текст исключён из промпта', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['', 0];
+        }
+    }
+
+    private function userPrompt(string $category, array $facts, string $promptText): string
     {
         $factsJson = json_encode($facts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         $prompt = "Факты LMS (JSON):\n".$factsJson;
 
-        // Приватность: сырой текст импортированного Telegram-ЛС уходит во внешний
-        // LLM только при явном разрешении. Иначе LLM формулирует из одних фактов.
-        $includeText = $sourceType !== SupportAnswerSuggestion::SOURCE_TELEGRAM_SUPPORT_MESSAGE
-            || (bool) config('features.support_ai_include_telegram');
-
-        if ($includeText && trim($questionText) !== '') {
-            $prompt .= "\n\nВопрос студента:\n".$questionText;
+        if (trim($promptText) !== '') {
+            $prompt .= "\n\nВопрос студента:\n".$promptText;
         }
 
         return $prompt;
