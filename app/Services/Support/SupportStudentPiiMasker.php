@@ -28,6 +28,7 @@ class SupportStudentPiiMasker
     private const ALLOW = ['gasyoun'];
 
     private const STRUCT_EMAIL = '/[\w.+-]+@[\w-]+\.[\w.]{2,}/u';
+
     private const STRUCT_PHONE = '/(?<!\d)(?:\+7|8)\d{10}(?!\d)/u';
 
     /** @var array<string, string>|null значение => поле (кэш на инстанс) */
