@@ -13,8 +13,8 @@ _Created: 2026-10-03 · H5776 · policy/sufler.policy.yml v1_
 |---|---|---|---|
 | K1 | Policy v1 enforced в коде: гейты money/no-PII/citation перед каждой автоотправкой (sendAuto — единая горловина) | ✅ зелёный — `Sufler\SendPolicyGate`, 15 тестов | H5776 |
 | K2 | Потолки machinery: max_steps_per_ticket=8 (окно 24 ч), авто-стоп с трейсом | ✅ зелёный — `Sufler\Ceilings`, тесты | H5776 |
-| K3 | tokens_per_ticket из конфига | ⛔ пусто — `SUFLER_TOKENS_PER_TICKET` не задан, потолок disabled | **MG** (@DO: дать monthly_allowance; число влепит сам ключ) |
-| K4 | Флаги пилота OFF по умолчанию, включение per-account | ✅ зелёный — `SUPPORT_DM_AUTO_REPLY` / `SUPPORT_DM_AUTO_REPLY_LIVE_FAQ` / `SUPPORT_AUTO_REPLY_TEMPLATES` дефолт false + колонка `auto_reply_enabled` | H5776 (проверено кодом/конфигом) |
+| K3 | tokens_per_ticket из конфига | 🟢 ключ вписан 05-10: `SUFLER_TOKENS_PER_TICKET=20000` в прод `.env` (бэкап `/root/.env.bak-h5776-k3-*`, `config:cache` ok). Число выведено из данных (MG: «сам найди или предложи»), вывод — в `policy/sufler.policy.yml`; потолок физически активируется, когда авто-деплой довезёт `Ceilings` (мёрж #2967) | агент (GLM 5.3, 05-10); финальная проба `tokensPerTicket()===20000` — первым, кто увидит деплой #2967 на проде |
+| K4 | Флаги пилота OFF по умолчанию, включение per-account | ✅ зелёный в КОДЕ — дефолт false + колонка `auto_reply_enabled`. **Поправка 05-10 (живая проба прода): в прод `.env` флаги уже ON** (`SUPPORT_DM_AUTO_REPLY`, `_LIVE_FAQ`, `_TEMPLATES` — №79/H3233); деплой #2967 накрывает гейтами УЖЕ живую ногу, не включает пилот | H5776 + очередь деплоя №90 |
 | K5 | RAG-цитаты за порогом: faq:score-floor precision at threshold ≥0.95 при приемлемом покрытии | ⚠️ частично — на committed-фикстуре в worktree планку берёт только кат. C (порог 13.1, 100 %, покрытие 33 %); A/B/D/E/F — «недостижимо» (88 % максимум); планка R3 на rerank-ноге закрыта week0 (95 % top-1, 19/20) | отдельная калибровка на живом faq.md перед включением |
 | K6 | Живой аккаунт пилота выбран и `auto_reply_enabled` проставлен вручную | ⛔ не начато — до K3 включать запрещено политикой | **MG** (@DO) |
 | K7 | N≥20 пилотных обращений: precision ≥0.95, 0 нарушений guards, killgate-леджер заполнен | ⛔ не начато — следует за K3+K5+K6 | пилотное окно |
@@ -29,7 +29,8 @@ _Created: 2026-10-03 · H5776 · policy/sufler.policy.yml v1_
 
 ## Остатки (GT)
 
-- @DO (MG): заполнить `SUFLER_TOKENS_PER_TICKET` из monthly_allowance (z.ai Max
-  месячная норма / плановые тикеты) — K3. До этого флаги пилота OFF.
+- ~~@DO: заполнить `SUFLER_TOKENS_PER_TICKET`~~ — ИСПОЛНЕНО 05-10: 20000 вписан в
+  прод `.env` агентом (GLM 5.3), число выведено из данных — K3 выше. До деплоя
+  мёржа #2967 ключ инертен; флаги пилота остаются OFF (K6 — выбор аккаунта, MG).
 - @DO (MG): выбрать живой аккаунт пилота и проставить `auto_reply_enabled` — K6.
 - @DO (агент, после K3): прогнать калибровку порогов на живом faq.md — K5.
