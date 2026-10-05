@@ -147,4 +147,21 @@ class TeacherCoursePaymentsTest extends TestCase
         $response->assertSee('СвояУченица Мария');
         $response->assertSee('ЧужойУченик Пётр');
     }
+
+    /** P1 независимого ревью H6145: teacher без карточки (teacher_id = null) не видит ничего. */
+    public function test_teacher_without_teacher_card_is_denied_and_scope_empty(): void
+    {
+        $orphan = User::factory()->create(['role' => Roles::TEACHER, 'teacher_id' => null]);
+
+        $this->actingAs($orphan)
+            ->get(TeacherCoursePayments::getUrl())
+            ->assertForbidden();
+
+        // Ремень поверх подтяжек: даже если гейт обойдён, скоуп пуст, а не «всё»
+        $page = app(TeacherCoursePayments::class);
+        $reflection = new \ReflectionMethod($page, 'scopeTeacherId');
+        $reflection->setAccessible(true);
+
+        $this->assertSame(-1, $reflection->invoke($page));
+    }
 }

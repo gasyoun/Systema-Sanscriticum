@@ -51,7 +51,11 @@ class TeacherCoursePayments extends Page implements HasTable
     {
         $user = auth()->user();
 
-        return (bool) ($user?->isTeacher() || $user?->isAdminLike());
+        // Fail-closed (P1 независимого ревью H6145): роль teacher без карточки
+        // преподавателя (users.teacher_id = null, например после удаления
+        // Teacher — FK nullOnDelete, роль остаётся) НЕ получает доступ.
+        // Ветка «видно всё» — строго админ-подобные.
+        return (bool) (($user?->isTeacher() && $user->teacher_id !== null) || $user?->isAdminLike());
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -59,12 +63,16 @@ class TeacherCoursePayments extends Page implements HasTable
         return static::canAccess();
     }
 
-    /** teacher_id для скоупа: у преподавателя — свой; у админ-подобных — null (всё). */
+    /** Несуществующий id: пустой скоуп для вырожденного случая teacher без карточки. */
+    private const EMPTY_SCOPE = -1;
+
+    /** teacher_id для скоупа: у преподавателя — свой; null — только админ-подобные (всё). */
     private function scopeTeacherId(): ?int
     {
         $user = auth()->user();
         if ($user && $user->isTeacher() && ! $user->isAdminLike()) {
-            return $user->teacher_id;
+            // teacher без карточки: null НЕ должен означать «всё» — пустой скоуп
+            return $user->teacher_id ?? self::EMPTY_SCOPE;
         }
 
         return null;
