@@ -137,35 +137,42 @@
                                 $titleUrl = $item->course && $item->course->is_visible
                                     ? route('shop.course.show', $item->course->slug)
                                     : ($item->course_title ? '/online/poisk/'.App\Support\ShopCatalogUrl::encodeWords($item->course_title) : null);
-                                // Обложка — та же плашка, что на карточке каталога:
-                                // дизайнерский баннер 4:3 → фолбэк image_path
+                                // Обложка — та же плашка, что на карточке каталога,
+                                // баннером на всю ширину карточки: дизайнерский
+                                // баннер 4:3 → фолбэк image_path
                                 // (Course::catalogBadgeUrl()). Нет курса или обложки —
-                                // миниатюры просто нет, строка узнаваема названием.
+                                // баннера нет, строка узнаваема названием.
                                 $itemCoverUrl = $item->course?->catalogBadgeUrl();
                             @endphp
-                            <div id="wl-{{ $item->slug }}" class="flex flex-col rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-brand/50 p-5 transition-all scroll-mt-24"
+                            <div id="wl-{{ $item->slug }}" class="group flex flex-col rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-brand/50 transition-all scroll-mt-24 overflow-hidden"
                                  data-waitlist-row="{{ $item->slug }}">
-                                <div class="flex items-start justify-between gap-3">
-                                    @if($itemCoverUrl)
-                                        {{-- Миниатюра обложки для узнаваемости; декоративная —
-                                             название рядом текстом, alt пуст. --}}
-                                        @php $coverClasses = 'w-24 aspect-[4/3] object-cover rounded-lg border border-[#1F2636]'; @endphp
-                                        @if($titleUrl)
-                                            <a href="{{ $titleUrl }}" tabindex="-1" aria-hidden="true" class="flex-none">
-                                                <img src="{{ $itemCoverUrl }}" alt=""
-                                                     width="384" height="288"
-                                                     loading="lazy" decoding="async"
-                                                     data-waitlist-cover="{{ $item->slug }}"
-                                                     class="{{ $coverClasses }}">
-                                            </a>
-                                        @else
+                                @if($itemCoverUrl)
+                                    {{-- Обложка на всю ширину карточки — как на каталоге:
+                                         плашка 4:3, затухание в фон карточки. Декоративная —
+                                         название рядом текстом, alt пуст. --}}
+                                    @if($titleUrl)
+                                        <a href="{{ $titleUrl }}" tabindex="-1" aria-hidden="true"
+                                           class="relative block w-full aspect-[4/3] bg-gradient-to-br from-slate-800 to-[#0A0D14] border-b border-[#1F2636] overflow-hidden">
                                             <img src="{{ $itemCoverUrl }}" alt=""
-                                                 width="384" height="288"
+                                                 width="533" height="400"
                                                  loading="lazy" decoding="async"
                                                  data-waitlist-cover="{{ $item->slug }}"
-                                                 class="{{ $coverClasses }} flex-none">
-                                        @endif
+                                                 class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80">
+                                            <div class="absolute inset-0 bg-gradient-to-t from-[#111622] via-transparent to-transparent opacity-80"></div>
+                                        </a>
+                                    @else
+                                        <div class="relative w-full aspect-[4/3] bg-gradient-to-br from-slate-800 to-[#0A0D14] border-b border-[#1F2636] overflow-hidden">
+                                            <img src="{{ $itemCoverUrl }}" alt=""
+                                                 width="533" height="400"
+                                                 loading="lazy" decoding="async"
+                                                 data-waitlist-cover="{{ $item->slug }}"
+                                                 class="absolute inset-0 w-full h-full object-cover opacity-80">
+                                            <div class="absolute inset-0 bg-gradient-to-t from-[#111622] via-transparent to-transparent opacity-80"></div>
+                                        </div>
                                     @endif
+                                @endif
+                                <div class="p-5 flex flex-col flex-grow">
+                                <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
                                         <h3 class="text-base font-bold text-white leading-snug">
                                             @if($titleUrl)
@@ -262,6 +269,7 @@
                                         </div>
                                     @endif
                                     </div>
+                                </div>
                                 </div>
                             </div>
                         @endforeach
