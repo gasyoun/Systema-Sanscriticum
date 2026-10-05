@@ -46,7 +46,7 @@
                             @endif
                         </td>
                         <td class="px-3 py-2 whitespace-nowrap">{{ $payout->period_month ?? '—' }}</td>
-                        <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ Str::limit($payout->comment, 90) }}</td>
+                        <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ Str::limit($payout->comment ?? '', 90) }}</td>
                     </tr>
                 @empty
                     <tr>
