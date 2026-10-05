@@ -39,6 +39,29 @@ class ZapisiSetWebhookTest extends TestCase
         });
     }
 
+    /**
+     * 15-09-2026: голоса в опросах бота (poll_answer) и нажатия inline-кнопок
+     * (callback_query — отмена H4519, выбор урока #ДЗ) приходят, только если их
+     * попросить при регистрации. Список один — TelegramWebhooks::ZAPISI_ALLOWED_UPDATES.
+     */
+    public function test_webhook_subscribes_to_poll_answers_and_button_presses(): void
+    {
+        config(['app.url' => 'https://samskrte.ru']);
+        MarketingSetting::create([
+            'zapisi_bot_username' => 'zapisi_ORSbot',
+            'zapisi_bot_token' => 'BOT-TOKEN-123',
+            'zapisi_webhook_secret' => 'super-secret-48',
+        ]);
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true], 200)]);
+
+        $this->artisan('zapisi:set-webhook')->assertSuccessful();
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/setWebhook')
+            && in_array('poll_answer', (array) $request['allowed_updates'], true)
+            && in_array('callback_query', (array) $request['allowed_updates'], true)
+            && in_array('my_chat_member', (array) $request['allowed_updates'], true));
+    }
+
     public function test_fails_and_sends_nothing_when_credentials_missing(): void
     {
         MarketingSetting::create([

@@ -60,6 +60,20 @@ class PollTelegramZapisiUpdatesTest extends TestCase
         Bus::assertDispatchedTimes(ProcessTelegramZapisiUpdate::class, 2);
     }
 
+    /** Поллер просит те же типы апдейтов, что и вебхук (включая голоса и кнопки). */
+    public function test_polling_asks_for_poll_answers_and_button_presses(): void
+    {
+        $this->enableBot();
+        Bus::fake();
+        $this->fakeTelegram([]);
+
+        $this->artisan('zapisi:poll --once')->assertSuccessful();
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/getUpdates')
+            && in_array('poll_answer', (array) $request['allowed_updates'], true)
+            && in_array('callback_query', (array) $request['allowed_updates'], true));
+    }
+
     /** Курсор двигается, иначе следующий заход получит те же апдейты снова. */
     public function test_offset_advances_past_the_last_update(): void
     {
