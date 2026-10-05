@@ -375,6 +375,8 @@
                                 :cadence="$cadenceByCourse[$course->id] ?? null"
                                 :favoriteKeys="$favoriteKeys"
                                 :eager="$loop->index < 4"
+                                :waitlist="$waitlistByCourse[$course->id] ?? null"
+                                :votedWaitlistIds="$votedWaitlistIds"
                                 wire:key="course-{{ $course->id }}" />
                         @endforeach
                     </div>
