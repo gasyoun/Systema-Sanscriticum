@@ -72,6 +72,17 @@
                 Идут сейчас
             </a>
 
+            {{-- Идёт набор --}}
+            <a href="{{ route('shop.index.facets', ['facets' => 'format/enrolling']) }}" wire:click.prevent="$set('format', 'enrolling')"
+                    @class([
+                        'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition whitespace-nowrap cursor-pointer',
+                        'bg-amber-500 text-white border-amber-500' => $format === 'enrolling',
+                        'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-amber-500/50 hover:text-white' => $format !== 'enrolling',
+                    ])>
+                <i class="fas fa-bullhorn text-[11px]"></i>
+                Идет набор
+            </a>
+
             {{-- В записи --}}
             <a href="{{ route('shop.index.facets', ['facets' => 'format/recorded']) }}" wire:click.prevent="$set('format', 'recorded')"
                     @class([
@@ -321,17 +332,19 @@
                 // H2379: library vocabulary when browsing recorded-only; otherwise section pair.
                 $sectionLabels = [
                     'live' => 'Идут сейчас',
+                    'enrolling' => 'Идет набор',
                     'recorded' => $format === 'recorded' ? 'Библиотека записей' : 'В записи',
                     'other' => 'Другие курсы',
                 ];
                 $sectionHints = [
                     'live' => 'Живые потоки — можно присоединиться к идущему курсу.',
+                    'enrolling' => 'Группы ещё не стартовали — успейте записаться.',
                     'recorded' => 'Открытая библиотека: смотрите в своем темпе, доступ бессрочный.',
                     'other' => null,
                 ];
                 // Группируем всю выдачу; порядок секций фиксирован
                 $grouped = $courses->groupBy(fn ($c) => $c->format ?: 'other');
-                $orderedKeys = collect(['live', 'recorded', 'other'])
+                $orderedKeys = collect(['live', 'enrolling', 'recorded', 'other'])
                     ->merge($grouped->keys())
                     ->unique()
                     ->filter(fn ($k) => $grouped->has($k));

@@ -269,13 +269,13 @@ class CourseResource extends Resource
 
                                 Forms\Components\Radio::make('format')
                                     ->label('Формат курса')
-                                    ->options([
-                                        'live' => '🔴 Идёт сейчас (live-поток)',
-                                        'recorded' => '📼 В записи (доступен в любое время)',
-                                    ])
+                                    ->options(Course::FORMAT_LABELS)
                                     ->default('recorded')
                                     ->required()
                                     ->inline(false)
+                                    // «Идёт набор» — живой курс, группа ещё не стартовала:
+                                    // жёлтый бейдж на карточке, своя секция и чип-фильтр каталога.
+                                    ->helperText('«Идёт набор» — живой курс до старта группы; когда начнётся, переключите на «Идёт сейчас».')
                                     ->columnSpanFull(),
 
                                 Forms\Components\Select::make('level')
