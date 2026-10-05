@@ -90,8 +90,12 @@ final class AnonsOpsJournalTest extends TestCase
             ->assertExitCode(0);
 
         $published = Carbon::parse('2026-10-04 22:43:00');
-        // внутри 24h — 2; внутри 72h, но не 24h — 1; до публикации — не считается
-        foreach (['2026-10-04 23:00:00', '2026-10-05 20:00:00', '2026-10-06 18:00:00', '2026-10-04 20:00:00'] as $at) {
+        // внутри 24h — 2; ровно +24h — 1 (включительная граница); внутри 72h — 1;
+        // ровно +72h — 1 (включительная граница); до публикации — не считается
+        foreach ([
+            '2026-10-04 23:00:00', '2026-10-05 20:00:00', '2026-10-05 22:43:00',
+            '2026-10-06 18:00:00', '2026-10-07 22:43:00', '2026-10-04 20:00:00',
+        ] as $at) {
             AnonsLinkClick::create(['link' => 'up26-ors-c', 'clicked_at' => Carbon::parse($at)]);
         }
         AnonsLinkClick::create(['link' => 'other-key', 'clicked_at' => $published->copy()->addHours(2)]);
@@ -104,8 +108,8 @@ final class AnonsOpsJournalTest extends TestCase
         $row = AnonsPlacement::query()->where('link', 'up26-ors-c')->firstOrFail();
         $this->assertSame('https://t.me/samskrte/633', $row->permalink);
         $this->assertSame('2026-10-04 22:43:00', $row->published_at->format('Y-m-d H:i:s'));
-        $this->assertSame(2, $row->clicks_24h);
-        $this->assertSame(3, $row->clicks_72h);
+        $this->assertSame(3, $row->clicks_24h);
+        $this->assertSame(5, $row->clicks_72h);
     }
 
     public function test_journal_fill_requires_existing_row(): void
