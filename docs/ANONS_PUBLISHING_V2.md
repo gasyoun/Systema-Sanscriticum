@@ -1,6 +1,6 @@
 # Anons publishing v2 — operator manual
 
-_Created: 17-09-2026 · Last updated: 04-10-2026_
+_Created: 17-09-2026 · Last updated: 05-10-2026_
 
 H5049 delivery: declarative announcement/Story publishing with visible CTA plaques burned into pixels, idempotent reruns, per-destination retries, explicit-missingness analytics, archive catalog and a safe test contour. Companion of the canonical [`/anons` skill](https://github.com/gasyoun/claude-config/blob/main/commands/anons.md).
 
@@ -101,6 +101,21 @@ Name mapping for the future adapter author: manifest platform = `senler`; attrib
 The H5935 upgrade path ("MG mints a token → mint the adapter") is dead on the PLATFORM, not on access: **the Senler API has no broadcast-send method at all.** Verified 04-10-2026 (github-first prior-art, H5032) against the [official methods index](https://help.senler.ru/senler/dev/api/methods) — `Deliveries` exposes only read-only `deliveries/get`, `deliveries/stat`, `deliveries/statCount` — and both user SDKs ([SenlerPy](https://github.com/tezmen/SenlerPy), [senler-sdk](https://github.com/Alexey-zaliznuak/senler-sdk)) agree: no send/create for рассылки, from any token, ever (until Senler ships one). Sending is UI-only — the checklist above is not a stopgap, it is THE send path.
 
 What a token WOULD buy (candidate `SenlerStatsService`, awaiting MG's product call): `deliveries/stat` + `deliveries/statCount` + `utms/statCount` pull per-broadcast delivered/opened/clicked stats into the placements journal and reconcile them against `anons_link_clicks`. If Senler ever ships a send method, the adapter follows the H5079 design (`publication_key` idempotency, a `VK_PUBLISH_AUTHORIZED`-style gate with empty list = refuse, persistent ledger, test-mode contour; first real send = MG's explicit go). Until then `anons:validate`/`anons:publish` accept the schema but refuse at the adapter check with a pointer to this section — that refusal is the designed behavior, not a bug.
+
+## Placements journal — anons:ops journal (H6095)
+
+Машинный журнал размещений: хвост публикации (permalink, время, 24h/72h клики) пишется командой в таблицу `anons_placements` вместо ручного PR по md-документу. Ключи, UTM-кортеж и destination выводятся из [config/tracked_links.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/tracked_links.php) — ничего не набирается руками; PII-правило то же, что у `anons_link_clicks` (только агрегаты).
+
+```bash
+# после минта кампании — строки размещений из конфига (одна команда на кампанию)
+php artisan anons:ops journal-add --campaign=up26        # или --link=up26-ors-c
+# после выхода поста — хвост: permalink + время (МСК), клики за 24/72h из anons_link_clicks
+php artisan anons:ops journal-fill --link=up26-ors-c --permalink=https://t.me/samskrte/633 --published-at="2026-10-04 22:43:00"
+# сводка
+php artisan anons:ops journal-list --campaign=up26
+```
+
+Идемпотентность — по `/ga/` ключу (повторный `journal-add` обновляет строку). Story-ключи (`st-`) команда отказывается принимать — они живут в `story_campaigns`-формате. Живой пример первого заполнения: up26, пост 633 (PR [#3008](https://github.com/gasyoun/Systema-Sanscriticum/pull/3008) — до команды хвост был ручным PR; после H6095 — одна команда). Читаемый md-журнал кампании (campaign-record-template) остаётся человеком-артефактом, команда его не патчит.
 
 ## Known limits
 
