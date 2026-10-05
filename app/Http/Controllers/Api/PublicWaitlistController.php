@@ -8,6 +8,7 @@ use App\Models\CourseWaitlistItem;
 use App\Models\User;
 use App\Models\WaitlistVote;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -42,8 +43,13 @@ class PublicWaitlistController extends Controller
     /**
      * Голос из кабинета (только зарегистрированные; идемпотентный — повторный
      * клик не дублирует). Флаг waitlist_voting ON, иначе 404. Прогресс наружу.
+     *
+     * Два режима: fetch с Accept: application/json (кнопки на /online/zhdun)
+     * и обычная веб-форма POST (карточка каталога и страница курса) —
+     * тогда не JSON, а редирект: гость → /login (голос ждёт в сессии),
+     * успех → назад, карточка перерисуется в «Голос учтен».
      */
-    public function vote(Request $request): JsonResponse
+    public function vote(Request $request): JsonResponse|RedirectResponse
     {
         if (! config('features.waitlist_voting', false)) {
             abort(404);
@@ -71,6 +77,10 @@ class PublicWaitlistController extends Controller
                 $request->session()->put('url.intended', route('shop.waitlist'));
             }
 
+            if (! $request->expectsJson()) {
+                return redirect()->route('login');
+            }
+
             return response()->json(['ok' => false, 'error' => 'auth_required'], 401);
         }
 
@@ -80,6 +90,10 @@ class PublicWaitlistController extends Controller
             ->first();
 
         if ($item === null) {
+            if (! $request->expectsJson()) {
+                return back();
+            }
+
             return response()->json(['ok' => false, 'error' => 'not_found'], 404);
         }
 
@@ -88,6 +102,10 @@ class PublicWaitlistController extends Controller
         // Страница перезагрузится после ответа — там покажем «Спасибо, ваш голос учтён!».
         if ($request->hasSession()) {
             $request->session()->flash(self::VOTED_FLASH_KEY, true);
+        }
+
+        if (! $request->expectsJson()) {
+            return back();
         }
 
         return response()->json([
@@ -100,9 +118,10 @@ class PublicWaitlistController extends Controller
 
     /**
      * Отзыв своего голоса (MG 01-09-2026, «передумал»): удаляет голос юзера.
-     * Идемпотентный — отмена без голоса не ошибка.
+     * Идемпотентный — отмена без голоса не ошибка. Веб-форма (карточка курса)
+     * получает редирект назад, fetch — JSON.
      */
-    public function unvote(Request $request): JsonResponse
+    public function unvote(Request $request): JsonResponse|RedirectResponse
     {
         if (! config('features.waitlist_voting', false)) {
             abort(404);
@@ -110,6 +129,10 @@ class PublicWaitlistController extends Controller
 
         $user = $request->user('web') ?? $request->user();
         if (! $user instanceof User) {
+            if (! $request->expectsJson()) {
+                return redirect()->route('login');
+            }
+
             return response()->json(['ok' => false, 'error' => 'auth_required'], 401);
         }
 
@@ -123,12 +146,20 @@ class PublicWaitlistController extends Controller
             ->first();
 
         if ($item === null) {
+            if (! $request->expectsJson()) {
+                return back();
+            }
+
             return response()->json(['ok' => false, 'error' => 'not_found'], 404);
         }
 
         $item->votes()->where('user_id', $user->getKey())->delete();
 
         Cache::forget('public_waitlist:v1');
+
+        if (! $request->expectsJson()) {
+            return back();
+        }
 
         return response()->json([
             'ok' => true,

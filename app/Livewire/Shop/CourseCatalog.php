@@ -7,9 +7,11 @@ namespace App\Livewire\Shop;
 use App\Models\Category;
 use App\Models\Course;
 use App\Models\CourseFavorite;
+use App\Models\CourseWaitlistItem;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\Teacher;
+use App\Models\WaitlistVote;
 use App\Services\Membership\PrivateArchiveEligibility;
 use App\Support\CourseCadence;
 use App\Support\FlagshipExperiments;
@@ -259,6 +261,36 @@ class CourseCatalog extends Component
             $courses->whereIn('format', ['live', 'enrolling'])->values()
         );
 
+        // Ждун в каталоге: курс, привязанный к строке списка ожидания,
+        // без тарифов перестаёт быть тупиком «Набор закрыт» — карточка показывает
+        // прогресс голосов и кнопку «Намерен участвовать» (механика /online/zhdun).
+        // Тот же скоуп, что на витрине ждуна (is_listed, без closed/scheduled).
+        // Флаг OFF — карточки живут как раньше, лишнего запроса нет.
+        $waitlistByCourse = [];
+        $votedWaitlistIds = [];
+        if ((bool) config('features.waitlist_voting', false) && $courses->isNotEmpty()) {
+            $waitlistItems = CourseWaitlistItem::query()
+                ->where('is_listed', true)
+                ->whereIn('course_id', $courses->pluck('id'))
+                ->whereNotIn('status', [
+                    CourseWaitlistItem::STATUS_CLOSED,
+                    CourseWaitlistItem::STATUS_SCHEDULED,
+                ])
+                ->withCount('votes')
+                ->get();
+
+            $waitlistByCourse = $waitlistItems->keyBy('course_id')->all();
+
+            // «Я уже голосовал» — карточка в состоянии «Голос учтен» (как на ждуне).
+            if (Auth::check() && $waitlistItems->isNotEmpty()) {
+                $votedWaitlistIds = WaitlistVote::query()
+                    ->where('user_id', Auth::id())
+                    ->whereIn('course_waitlist_item_id', $waitlistItems->modelKeys())
+                    ->pluck('course_waitlist_item_id')
+                    ->all();
+            }
+        }
+
         return view('livewire.shop.course-catalog', [
             'courses' => $courses,
             'cadenceByCourse' => $cadenceByCourse,
@@ -267,6 +299,8 @@ class CourseCatalog extends Component
             'purchasedByCourse' => $purchasedByCourse,
             'deposit' => MarketingSetting::cached(),
             'nextStepByCourse' => $nextStepByCourse,
+            'waitlistByCourse' => $waitlistByCourse,
+            'votedWaitlistIds' => $votedWaitlistIds,
         ]);
     }
 }
