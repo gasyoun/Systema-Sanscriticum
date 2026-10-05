@@ -16,7 +16,6 @@ use App\Models\User;
 use App\Services\SupportQuestions\GoldReviewException;
 use App\Services\SupportQuestions\GoldReviewService;
 use App\Services\SupportQuestions\QuestionMessageClassifier;
-use App\Services\SupportQuestions\StaleGoldSampleException;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -357,7 +356,12 @@ class SupportQuestionsGoldReviewTest extends TestCase
         $this->assertSame(0, $sampleA->labels()->count());
     }
 
-    public function test_stale_classifier_version_blocks_labeling(): void
+    /**
+     * H5781: сэмпл, замороженный под старую версию классификатора, остаётся
+     * размечаемым — деплой новой версии не омораживает идущее ревью. Чип
+     * «устарела» остаётся только информационным на ЗАВЕРШЁННЫХ сэмплах.
+     */
+    public function test_labeling_continues_across_classifier_version_bump(): void
     {
         $classification = $this->seedQuestion('TEXT-stale сколько стоит курс?', 5001);
         $sample = SupportQuestionReviewSample::create([
@@ -378,13 +382,35 @@ class SupportQuestionsGoldReviewTest extends TestCase
 
         $admin = User::factory()->create(['role' => 'admin']);
 
-        try {
-            app(GoldReviewService::class)->setGoldLabel($sample, $sample->items()->first()->id, $admin, 'D');
-            $this->fail('stale sample must refuse new labels');
-        } catch (StaleGoldSampleException $e) {
-            $this->assertStringContainsString('freeze a new sample', $e->getMessage());
-        }
+        $label = app(GoldReviewService::class)->setGoldLabel($sample, $sample->items()->first()->id, $admin, 'D');
+        $this->assertSame('D', $label->gold_label);
 
+        // Сэмпл завершился (1/1): чип «устарела» — информационный на завершённых.
+        $html = (string) $this->actingAs($admin)->get(self::PAGE)->getContent();
+        $this->assertStringContainsString('устарела', $html);
+    }
+
+    /** H5781: завершённый сэмпл под старой версией — информационный чип. */
+    public function test_completed_sample_under_old_version_shows_informational_chip(): void
+    {
+        $classification = $this->seedQuestion('TEXT-done сколько стоит курс?', 5002);
+        $sample = SupportQuestionReviewSample::create([
+            'window_from' => '2026-09-28',
+            'window_to' => '2026-10-05',
+            'classifier_version' => 'qw-2026-09-v0',
+            'sample_size' => 1,
+            'fingerprint' => str_repeat('b', 64),
+            'status' => SupportQuestionReviewSample::STATUS_COMPLETED,
+        ]);
+        SupportQuestionReviewItem::create([
+            'sample_id' => $sample->id,
+            'classification_id' => $classification->id,
+            'population' => 'enquiry',
+            'predicted_primary' => $classification->primary_category ?? 'unclassified',
+            'position' => 1,
+        ]);
+
+        $admin = User::factory()->create(['role' => 'admin']);
         $html = (string) $this->actingAs($admin)->get(self::PAGE)->getContent();
         $this->assertStringContainsString('устарела', $html);
     }

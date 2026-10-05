@@ -112,6 +112,7 @@ class CampaignResource extends Resource
                                 'all_subscribers' => 'Все подписчики (согласившиеся на email)',
                                 'course' => 'Студенты курса',
                                 'lead_stage' => 'Лиды на стадии воронки',
+                                'tg_unbound_payers' => 'Платившие без Telegram (кампания привязки)',
                             ])
                             ->default(fn ($record) => $record?->segment['type'] ?? 'all_subscribers')
                             ->live()

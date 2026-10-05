@@ -91,7 +91,10 @@ class SupportQuestionsGoldReview extends Page
                 'window' => $s->windowLabel(),
                 'version' => $s->classifier_version,
                 'status' => $s->status,
-                'stale' => $s->classifier_version !== QuestionMessageClassifier::VERSION,
+                // H5781: информационный чип только на завершённых сэмплах;
+                // идущее ревью под старой версией остаётся размечаемым.
+                'stale' => $s->classifier_version !== QuestionMessageClassifier::VERSION
+                    && $s->status === SupportQuestionReviewSample::STATUS_COMPLETED,
                 'progress' => $this->service->progress($s),
             ])
             ->all();

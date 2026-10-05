@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\SupportQuestionClassification;
+use App\Models\SupportQuestionReviewItem;
+use App\Models\SupportQuestionReviewSample;
 use App\Services\SupportQuestions\QuestionMessageClassifier;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
@@ -36,7 +38,8 @@ class QuestionsReviewCommand extends Command
         {--to= : ISO-дата конца окна выборки (эксклюзивно)}
         {--sample=100 : размер стратифицированной выборки}
         {--sheet= : путь листа ревью (дефолт storage/app/support-questions/review-<week>.tsv)}
-        {--import= : путь заполненного листа с колонкой gold_label — печатает только агрегаты}';
+        {--import= : путь заполненного листа с колонкой gold_label — печатает только агрегаты}
+        {--carryover-gold= : id замороженного сэмпла — перенос human gold на предсказания ТЕКУЩЕЙ версии классификатора (те же сообщения, те же метки, новый predicted-столбец)}';
 
     protected $description = 'Стратифицированное ревью точности классификации недельных вопросов (только агрегаты наружу).';
 
@@ -51,7 +54,137 @@ class QuestionsReviewCommand extends Command
             return $this->importSheet($import);
         }
 
+        $carryover = (string) ($this->option('carryover-gold') ?? '');
+        if ($carryover !== '') {
+            return $this->carryoverGold((int) $carryover);
+        }
+
         return $this->writeSheet();
+    }
+
+    /**
+     * Перенос human gold (H5781): тот же замороженный сэмпл, те же genuine
+     * human-метки, но predicted-столбец — от ТЕКУЩЕЙ версии классификатора.
+     * Так одна и та же независимая разметка человека меряет починенный
+     * классификатор без повторного ревью. Наружу — агрегаты импортёра;
+     * собранный лист остаётся в защищённом storage (одобренное окружение).
+     */
+    private function carryoverGold(int $sampleId): int
+    {
+        $sample = SupportQuestionReviewSample::query()->find($sampleId);
+        if ($sample === null) {
+            $this->error("Review sample {$sampleId} not found.");
+
+            return self::FAILURE;
+        }
+
+        $fromVersion = (string) $sample->classifier_version;
+        $toVersion = QuestionMessageClassifier::VERSION;
+
+        // Полнота меряется ТОЛЬКО замороженным sample_size самого сэмпла
+        // (DeepSeek D1): --sample — опция СТРАТИФИКАЦИИ нового листа, к
+        // переносу готовности ревью отношения не имеет. Метки джойнятся
+        // строго своего сэмпла (DeepSeek D2): чужая sample_id у метки не
+        // считается (unique item_id гарантирует единственную живую метку).
+        $rows = SupportQuestionReviewItem::query()
+            ->where('support_question_review_items.sample_id', $sample->id)
+            ->leftJoin('support_question_review_labels', function ($join) use ($sample): void {
+                $join->on('support_question_review_labels.item_id', '=', 'support_question_review_items.id')
+                    ->where('support_question_review_labels.sample_id', $sample->id);
+            })
+            ->get([
+                'support_question_review_items.classification_id',
+                'support_question_review_items.population',
+                'support_question_review_labels.gold_label',
+            ]);
+
+        $labeled = $rows->filter(fn ($r): bool => (string) $r->gold_label !== '');
+        $required = (int) $sample->sample_size;
+        if ($required < 1) {
+            $this->error(sprintf(
+                'Sample %d has sample_size=%d — carry-over refuses a sample without a frozen size.',
+                $sample->id,
+                $required,
+            ));
+
+            return self::FAILURE;
+        }
+        if ($labeled->count() < $required) {
+            $this->error(sprintf(
+                'Sample %d is incomplete (%d/%d labeled) — carry-over refused until the review finishes.',
+                $sample->id,
+                $labeled->count(),
+                $required,
+            ));
+
+            return self::FAILURE;
+        }
+
+        // Исходные classification-строки сэмпла дают message id; предсказание
+        // берём от ТЕКУЩЕЙ версии по тому же сообщению (нет строки — unclassified).
+        $messageIds = SupportQuestionClassification::query()
+            ->whereIn('id', $rows->pluck('classification_id'))
+            ->pluck('telegram_support_message_id', 'id');
+        $current = SupportQuestionClassification::query()
+            ->where('classifier_version', $toVersion)
+            ->whereIn('telegram_support_message_id', $messageIds->values())
+            ->get(['telegram_support_message_id', 'primary_category'])
+            ->keyBy('telegram_support_message_id');
+
+        $sheetRows = [];
+        foreach ($rows as $row) {
+            $gold = trim((string) $row->gold_label);
+            if ($gold === '') {
+                continue;
+            }
+            $gold = mb_strlen($gold) === 1 ? mb_strtoupper($gold) : mb_strtolower($gold);
+            $messageId = $messageIds->get($row->classification_id);
+            if ($messageId === null) {
+                $this->error("Classification {$row->classification_id} vanished — carry-over refused.");
+
+                return self::FAILURE;
+            }
+            $predicted = (string) ($current->get($messageId)?->primary_category ?? 'unclassified');
+            $sheetRows[] = [
+                'id' => (int) $row->classification_id,
+                'population' => (string) $row->population,
+                'predicted' => $predicted,
+                'gold' => $gold,
+            ];
+        }
+
+        $ids = array_map(static fn (array $r): int => $r['id'], $sheetRows);
+        if (count($ids) !== count(array_unique($ids))) {
+            $this->error('Carry-over sheet would have duplicate ids — refusing.');
+
+            return self::FAILURE;
+        }
+
+        $path = storage_path('app/support-questions/carryover-sample'.$sample->id.'-'.$fromVersion.'-to-'.$toVersion.'.tsv');
+        if (! is_dir(dirname($path))) {
+            mkdir(dirname($path), 0775, true);
+        }
+        $fh = fopen($path, 'w');
+        fwrite($fh, "id\tpopulation\tpredicted_primary\tgold_label\n");
+        foreach ($sheetRows as $r) {
+            fwrite($fh, implode("\t", [$r['id'], $r['population'], $r['predicted'], $r['gold']])."\n");
+        }
+        fclose($fh);
+
+        $this->line(json_encode([
+            'carryover' => [
+                'sample_id' => $sample->id,
+                'frozen_version' => $fromVersion,
+                'measured_version' => $toVersion,
+                'carried_labels' => count($sheetRows),
+                // DeepSeek D5: наружу — только имя файла; лист с per-row
+                // gold живёт в защищённом storage, полный путь не печатается.
+                'sheet' => basename($path),
+                'note' => 'same protected sample, same genuine human gold, predictions from the current classifier version',
+            ],
+        ], JSON_UNESCAPED_UNICODE));
+
+        return $this->importSheet($path);
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Rules\HouseEmail;
 use App\Services\AttributionService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -30,7 +31,7 @@ final class StoreTrialRequest extends FormRequest
         return [
             'surname' => ['required', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
+            'email' => ['required', 'string', 'max:255', new HouseEmail],
             'city' => ['required', 'string', 'max:255'],
             'signup_source' => ['nullable', 'string', Rule::in(AttributionService::SIGNUP_SOURCES)],
         ];

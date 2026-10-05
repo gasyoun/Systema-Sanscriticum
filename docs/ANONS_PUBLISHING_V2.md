@@ -1,6 +1,6 @@
 # Anons publishing v2 — operator manual
 
-_Created: 17-09-2026 · Last updated: 17-09-2026_
+_Created: 17-09-2026 · Last updated: 05-10-2026_
 
 H5049 delivery: declarative announcement/Story publishing with visible CTA plaques burned into pixels, idempotent reruns, per-destination retries, explicit-missingness analytics, archive catalog and a safe test contour. Companion of the canonical [`/anons` skill](https://github.com/gasyoun/claude-config/blob/main/commands/anons.md).
 
@@ -80,9 +80,46 @@ Production promotion reuses the accepted manifest hash — no asset regeneration
 - Tables: `anons_publications`, `anons_destination_runs`, `anons_metrics`, `anons_archive_items`, `anons_link_clicks`.
 - Tests: `tests/Feature/Anons/` (15 tests, incl. the no-plaque regression pin).
 
+## Senler manual lane (H5935)
+
+**Decision (04-10-2026): Senler ships as a documented manual lane, not an adapter.** Access probes found no Senler API credential anywhere in the estate: the prod `.env` has only site-callback `VK_*` keys (bot token, confirm code, group id — not Senler), and the Mac has no `~/.claude/secrets/vk_poll.env` (that file is the H5079 VK *wall* tool anyway). A Senler API token can only be minted by hand in MG's Senler UI, and until MG's explicit decision every Senler API call and every send is off-limits. So the manifest keeps `senler` as a valid platform name, the tracked link already exists (channel key `vk` in `config/tracked_links.php` → `utm_source=vk_senler`, `utm_medium=broadcast`), and `AdapterRegistry` stays fail-closed — its refusal now points here instead of "future work".
+
+Name mapping for the future adapter author: manifest platform = `senler`; attribution source = `vk_senler` (the `/ga/…-vk-…` links).
+
+### Broadcast checklist (UI Senler)
+
+1. Take copy + the rendered creative from the campaign's `anons:preview` artifacts — the CTA plaque is already in the pixels; do not rebuild it in Senler.
+2. Tracked link: `https://samskrte.ru/ga/m26-vk-s` (creative variants `-v/-c/-t/-h` live in `config/tracked_links.php`). The link goes AFTER the copy — never the first line (anons publication rule).
+3. senler.ru → samskrte community → «Рассылки» → create: paste copy, link, attach the image.
+4. Test send to MG's own subscription first: link opens, redirect lands on the clean page, copy + image render on the phone.
+5. Send to the full subscriber segment (~3000) — real sending is MG's explicit decision, every time.
+6. Post-send smoke (one probe click per link; it lands in `anons_link_clicks` like any reader click): `curl -sI https://samskrte.ru/ga/m26-vk-s` must return `HTTP/2 302` with `location: https://samskrte.ru/online/kursy/grammatika-gasuns-2026` — clean URL, UTM stays in the session. Live-probed PASS 04-10-2026.
+7. Journal row per the [campaign-record-template](https://github.com/gasyoun/claude-config/blob/main/commands/anons.md) in the `/anons` skill: campaign/creative, `vk_senler`, the `/ga/` link, segment size, delivered count, 24h/72h clicks (via `php artisan anons:ops metrics` / `anons_link_clicks` — slug + UTM + time only). **152-ФЗ: aggregates only, no PII in the journal.**
+
+### Why there is no adapter — the API cannot send (H5944, 04-10-2026)
+
+The H5935 upgrade path ("MG mints a token → mint the adapter") is dead on the PLATFORM, not on access: **the Senler API has no broadcast-send method at all.** Verified 04-10-2026 (github-first prior-art, H5032) against the [official methods index](https://help.senler.ru/senler/dev/api/methods) — `Deliveries` exposes only read-only `deliveries/get`, `deliveries/stat`, `deliveries/statCount` — and both user SDKs ([SenlerPy](https://github.com/tezmen/SenlerPy), [senler-sdk](https://github.com/Alexey-zaliznuak/senler-sdk)) agree: no send/create for рассылки, from any token, ever (until Senler ships one). Sending is UI-only — the checklist above is not a stopgap, it is THE send path.
+
+What a token WOULD buy (candidate `SenlerStatsService`, awaiting MG's product call): `deliveries/stat` + `deliveries/statCount` + `utms/statCount` pull per-broadcast delivered/opened/clicked stats into the placements journal and reconcile them against `anons_link_clicks`. If Senler ever ships a send method, the adapter follows the H5079 design (`publication_key` idempotency, a `VK_PUBLISH_AUTHORIZED`-style gate with empty list = refuse, persistent ledger, test-mode contour; first real send = MG's explicit go). Until then `anons:validate`/`anons:publish` accept the schema but refuse at the adapter check with a pointer to this section — that refusal is the designed behavior, not a bug.
+
+## Placements journal — anons:ops journal (H6095)
+
+Машинный журнал размещений: хвост публикации (permalink, время, 24h/72h клики) пишется командой в таблицу `anons_placements` вместо ручного PR по md-документу. Ключи, UTM-кортеж и destination выводятся из [config/tracked_links.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/tracked_links.php) — ничего не набирается руками; PII-правило то же, что у `anons_link_clicks` (только агрегаты).
+
+```bash
+# после минта кампании — строки размещений из конфига (одна команда на кампанию)
+php artisan anons:ops journal-add --campaign=up26        # или --link=up26-ors-c
+# после выхода поста — хвост: permalink + время (МСК), клики за 24/72h из anons_link_clicks
+php artisan anons:ops journal-fill --link=up26-ors-c --permalink=https://t.me/samskrte/633 --published-at="2026-10-04 22:43:00"
+# сводка
+php artisan anons:ops journal-list --campaign=up26
+```
+
+Идемпотентность — по `/ga/` ключу (повторный `journal-add` обновляет строку). Story-ключи (`st-`) команда отказывается принимать — они живут в `story_campaigns`-формате. Живой пример первого заполнения: up26, пост 633 (PR [#3008](https://github.com/gasyoun/Systema-Sanscriticum/pull/3008) — до команды хвост был ручным PR; после H6095 — одна команда). Читаемый md-журнал кампании (campaign-record-template) остаётся человеком-артефактом, команда его не патчит.
+
 ## Known limits
 
-- VK/Senler destinations are fail-closed until their adapters are written (platform list validates, registry refuses).
+- `senler` destinations are a documented manual lane (§ above) — the registry refuses them with a pointer there; the Senler API has no send method at all (H5944), so no adapter is possible until upstream ships one; `vk` (wall) destinations remain fail-closed future work.
 - Archive indexer requires a live session (probe-gated) and runs one bounded `getStoriesArchive` page per invocation.
 - Font: freetype TTF resolved from `services.anons.cta_font` / `ANONS_CTA_FONT` / DejaVu(Linux)/Arial(macOS) paths; without any TTF the plaque falls back to GD's ASCII-only bitmap font — acceptable for ASCII CTA, Cyrillic needs the TTF (DejaVu present on the prod box).
 
