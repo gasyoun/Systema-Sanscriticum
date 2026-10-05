@@ -18,6 +18,12 @@ use App\Models\User;
  * псевдонимы, сквозная нумерация на вызов; значения идентичностей не
  * логируются и не кэшируются между инстансами.
  *
+ * H6144 (фикс 1 по вердикту H6140 на PR #3027): телефонные значения и фигуры
+ * матчатся ЦИФРОВОЙ нормализацией — '+7 (916) 123-45-67', '8-916-123-45-67'
+ * и '+79161234567' это одна и та же личность (префикс +7/8 взаимозаменяем,
+ * разделители между цифрами необязательны); канонический ключ тега —
+ * нормализованные цифры, поэтому любое написание получает один тег.
+ *
  * Fail-closed: если identity-сет недоступен (БД упала), maskOrFail() бросает —
  * вызывающий ОБЯЗАН исключить текст из промпта (черновик собирается из одних
  * фактов), а не отправлять сырой текст. Чистоту нельзя доказать → вызова нет.
@@ -29,12 +35,19 @@ class SupportStudentPiiMasker
 
     private const STRUCT_EMAIL = '/[\w.+-]+@[\w-]+\.[\w.]{2,}/u';
 
-    private const STRUCT_PHONE = '/(?<!\d)(?:\+7|8)\d{10}(?!\d)/u';
+    /** H6144: разделители между цифрами не меняют фигуру телефона. */
+    private const STRUCT_PHONE = '/(?<!\d)(?:\+7|8)(?:[ \x{00A0}\t.()+\-]*\d){10}(?!\d)/u';
+
+    /** Класс разделителей между цифрами телефонной личности (H6144). */
+    private const PHONE_SEP = '[ \x{00A0}\t.()+\-]';
+
+    /** Значение состоит только из цифр и телефонных разделителей. */
+    private const PHONE_LIKE = '/^[+\d \x{00A0}\t.()+\-]+$/u';
 
     /** @var array<string, string>|null значение => поле (кэш на инстанс) */
     private ?array $identities = null;
 
-    /** @var array<int, array{string, string}>|[поле, паттерн] longest-first */
+    /** @var array<int, array{string, string, string}>|[поле, паттерн, канонический ключ] longest-first */
     private ?array $patterns = null;
 
     /** @var array<string, int> ключ (поле|значение или фигура|значение) => номер тега */
@@ -51,11 +64,11 @@ class SupportStudentPiiMasker
         $this->ensureIdentities();
         $substitutions = 0;
 
-        foreach ($this->patterns as [$field, $pattern]) {
-            $text = preg_replace_callback($pattern, function (array $m) use ($field, &$substitutions): string {
+        foreach ($this->patterns as [$field, $pattern, $canonical]) {
+            $text = preg_replace_callback($pattern, function (array $m) use ($field, $canonical, &$substitutions): string {
                 $substitutions++;
 
-                return $this->tag($field, $m[0]);
+                return $this->tag($field, $canonical);
             }, $text);
         }
 
@@ -122,9 +135,44 @@ class SupportStudentPiiMasker
         usort($pairs, fn (array $a, array $b): int => mb_strlen($b[0]) <=> mb_strlen($a[0]));
         $this->identities = array_column($pairs, 1, 0);
         $this->patterns = array_map(
-            fn (array $p): array => [$p[1], '/(?<!\w)'.preg_quote($p[0], '/').'(?!\w)/u'],
+            fn (array $p): array => $this->compileIdentity($p[0], $p[1]),
             $pairs,
         );
+    }
+
+    /**
+     * Значение → [поле, паттерн, канонический ключ тега]. Телефонно-подобные
+     * значения (только цифры и разделители) компилируются цифро-гибко (H6144):
+     * форматированные написания — та же личность, ключ тега — нормализованные
+     * цифры с префиксом 7, поэтому '+79161234567', '+7 (916) 123-45-67' и
+     * '8-916-123-45-67' получают ОДИН тег-псевдоним на вызов.
+     *
+     * @return array{0: string, 1: string, 2: string}
+     */
+    private function compileIdentity(string $value, string $field): array
+    {
+        $digits = preg_replace('/\D+/u', '', $value) ?? '';
+
+        if ($digits !== '' && strlen($digits) >= 4 && preg_match(self::PHONE_LIKE, $value) === 1) {
+            if (strlen($digits) === 11 && in_array($digits[0], ['7', '8'], true)) {
+                $canonical = '7'.substr($digits, 1);
+                $body = '';
+                foreach (str_split(substr($canonical, 1)) as $digit) {
+                    $body .= self::PHONE_SEP.'*'.$digit;
+                }
+
+                return [$field, '/(?<!\d)(?:\+7|8)'.$body.'(?!\d)/u', $canonical];
+            }
+
+            $body = '';
+            foreach (str_split($digits) as $i => $digit) {
+                $body .= ($i > 0 ? self::PHONE_SEP.'*' : '').$digit;
+            }
+
+            return [$field, '/(?<!\d)'.$body.'(?!\d)/u', $digits];
+        }
+
+        return [$field, '/(?<!\w)'.preg_quote($value, '/').'(?!\w)/u', $value];
     }
 
     private function tag(string $kind, string $value): string
