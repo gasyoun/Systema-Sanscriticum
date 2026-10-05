@@ -259,7 +259,7 @@
                         </div>
                     @endif
 
-                    {{-- Тариф: по модулям --}}
+                    {{-- Тариф: по блокам --}}
                     @if($blockTariff)
                         @php
                             $blockFinalPrice = auth()->check() ? $blockTariff->calculateFinalPriceForUser(auth()->user()) : $blockTariff->price;
@@ -267,7 +267,7 @@
                         @endphp
 
                         <div class="flex justify-between items-center">
-                            <span class="text-slate-400 text-xs font-medium">По модулям</span>
+                            <span class="text-slate-400 text-xs font-medium">По блокам</span>
                             <div class="text-right flex items-center justify-end flex-wrap gap-x-1.5">
                                 @if($blockFinalPrice < $blockTariff->price)
                                     <span class="text-slate-500 line-through text-[10px] decoration-slate-600/50">{{ number_format($blockTariff->price, 0, '.', ' ') }}</span>
