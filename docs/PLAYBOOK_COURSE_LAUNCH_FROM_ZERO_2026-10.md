@@ -1,6 +1,6 @@
 # Плейбук: запуск курса с нуля + self-serve как есть (боты, сайт)
 
-_Created: 04-10-2026 · Last updated: 04-10-2026_ · [метадок](PLAYBOOK_COURSE_LAUNCH_FROM_ZERO_2026-10.meta.md)
+_Created: 04-10-2026 · Last updated: 05-10-2026_ · [метадок](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAYBOOK_COURSE_LAUNCH_FROM_ZERO_2026-10.meta.md)
 
 Обоснование: единого плейбука не было — запуск «Традиций толкования упанишад» 04-10-2026 собрал всё в одном проходе ([H5864](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H5864-OxAlpha_Systema-Sanscriticum_webinar-upanishady-5okt-prod-prep_04.10.26.md), [H5910](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H5910-OxAlpha_Systema-Sanscriticum_leads-email-integrity-guard_04.10.26.md)). Всё ниже проверено на проде; смежные спеки: [access-self-service-spec.md](access-self-service-spec.md) (кабинет), [debtor-self-service-spec.md](debtor-self-service-spec.md) (долги).
 
@@ -16,7 +16,7 @@ _Created: 04-10-2026 · Last updated: 04-10-2026_ · [метадок](PLAYBOOK_C
 | Уведомления (домашки, сертификаты, дожимы) | `@samskrtamru_bot` (кабинетный, привязка `/telegram/connect`) | нет |
 | Бот-куратор | в кабинетном боте | нет |
 | Голосование за будущие группы (ждун) | `/zhdun` в `@samskrte_bot` + [samskrte.ru/online/zhdun](https://samskrte.ru/online/zhdun) | нет |
-| Куратор | `@rusamskrtam` — **только экстренные случаи** (рулинг MG 04-10-2026) | да |
+| Куратор | `@rusamskrtam` — в постах остаётся строкой контакта, но **не единственный и не основной вход**: основной упор — самообслуживание (лендинг, `/ga`-ключи, боты); прямые обращения к куратору — экстренные случаи (рулинги MG 04-10 и 05-10-2026) | да |
 
 Роли ботов: `@samskrte_bot` — лидовый/магазинный (магниты, статусы, ждун); `@samskrtamru_bot` — кабинетный (уведомления, бот-куратор); `@zapisi_ORSbot` — записи. Вебхуки: входной узел 103.112.71.201 (ssh -R релей, штатный) → прод; магнитный вебхук — `/api/webhooks/telegram-magnet` (глобальный бот: allowed_updates = message + callback_query).
 
@@ -52,6 +52,7 @@ _Created: 04-10-2026 · Last updated: 04-10-2026_ · [метадок](PLAYBOOK_C
 - [ ] Тестовая заявка на лендинге: бот прислал магнит со ссылкой.
 - [ ] Тестовый заказ до шага оплаты (без списания).
 - [ ] Пост в канале: ссылки без «голых» UTM (шаблон — [ORS-FAQ Telegram_templates](https://github.com/gasyoun/ORS-FAQ/blob/main/Telegram_templates.md)).
+- [ ] Порядок входов в посте: запись/оплата (self-service, `/ga`-ключи) ведут; куратор — второстепенная строка, не единственный вход (рулинг MG 05-10-2026).
 
 ## 7. Анонс-контур набора (маркетинг) — что приносило наборы в прежних запусках
 
