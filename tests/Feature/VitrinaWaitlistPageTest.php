@@ -48,7 +48,7 @@ class VitrinaWaitlistPageTest extends TestCase
 
         // Отзыв голоса: голос удалён, идемпотентно.
         $this->actingAs($user)
-            ->post(route('shop.waitlist.unvote'), ['slug' => 'zhdun-voted'])
+            ->postJson(route('shop.waitlist.unvote'), ['slug' => 'zhdun-voted'])
             ->assertOk()
             ->assertJson(['ok' => true, 'votes' => 0]);
         $this->assertDatabaseMissing('waitlist_votes', [
@@ -56,7 +56,7 @@ class VitrinaWaitlistPageTest extends TestCase
             'user_id' => $user->id,
         ]);
         $this->actingAs($user)
-            ->post(route('shop.waitlist.unvote'), ['slug' => 'zhdun-voted'])
+            ->postJson(route('shop.waitlist.unvote'), ['slug' => 'zhdun-voted'])
             ->assertJson(['ok' => true, 'votes' => 0]);
 
         // После отзыва кнопка «Намерен участвовать» вернулась.
@@ -104,7 +104,7 @@ class VitrinaWaitlistPageTest extends TestCase
             'kind' => 'other',
         ]);
 
-        $this->post(route('shop.waitlist.unvote'), ['slug' => 'zhdun-unvote-guest'])
+        $this->postJson(route('shop.waitlist.unvote'), ['slug' => 'zhdun-unvote-guest'])
             ->assertStatus(401);
     }
 
@@ -332,7 +332,7 @@ class VitrinaWaitlistPageTest extends TestCase
 
         // Web-маршрут: сессия + CSRF, как на витрине.
         $resp = $this->actingAs($user)
-            ->post(route('shop.waitlist.vote'), ['slug' => 'zhdun-vote-web']);
+            ->postJson(route('shop.waitlist.vote'), ['slug' => 'zhdun-vote-web']);
         $resp->assertOk()->assertJson(['ok' => true, 'votes' => 1]);
         $this->assertDatabaseHas('waitlist_votes', [
             'course_waitlist_item_id' => $item->getKey(),
@@ -341,7 +341,7 @@ class VitrinaWaitlistPageTest extends TestCase
 
         // Повторный голос не дублирует.
         $this->actingAs($user)
-            ->post(route('shop.waitlist.vote'), ['slug' => 'zhdun-vote-web'])
+            ->postJson(route('shop.waitlist.vote'), ['slug' => 'zhdun-vote-web'])
             ->assertJson(['ok' => true, 'votes' => 1]);
         $this->assertDatabaseCount('waitlist_votes', 1);
     }
@@ -357,7 +357,7 @@ class VitrinaWaitlistPageTest extends TestCase
             'kind' => 'other',
         ]);
 
-        $this->post(route('shop.waitlist.vote'), ['slug' => 'zhdun-guest'])
+        $this->postJson(route('shop.waitlist.vote'), ['slug' => 'zhdun-guest'])
             ->assertStatus(401);
 
         // Страница рендерится гостю с кнопкой.
