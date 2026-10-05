@@ -257,6 +257,16 @@ return [
         // трёх лет. Ставка здесь на устойчивость к перебоям, а не на объём.
         'auto_reply_max_age_hours' => (int) env('TELEGRAM_SUPPORT_AUTO_REPLY_MAX_AGE_HOURS', 6),
         'hint_max_age_hours' => (int) env('TELEGRAM_SUPPORT_HINT_MAX_AGE_HOURS', 24),
+        // H5776, политика v1 (policy/sufler.policy.yml) — machinery потолков
+        // автономной отправки суфлёра. max_steps_per_ticket: сколько
+        // автоотправок на один чат в скользящем окне; нарушение = авто-стоп
+        // с трейсом (dm_ceiling_stop) и маршрут куратору.
+        'sufler_max_steps_per_ticket' => (int) env('SUFLER_MAX_STEPS_PER_TICKET', 8),
+        'sufler_steps_window_hours' => (int) env('SUFLER_STEPS_WINDOW_HOURS', 24),
+        // tokens_per_ticket: monthly_allowance даёт MG (политика: поле TBD) —
+        // ПОКА ЧИСЛА НЕТ, ключ пуст и потолок токенов disabled, а флаги пилота
+        // остаются OFF. Заполнять вместе с monthly_allowance от MG.
+        'sufler_tokens_per_ticket' => env('SUFLER_TOKENS_PER_TICKET'),
         // H3380 v2: тёплый ответ на чистое приветствие («Намасте!») — один раз
         // за то же cooldown-окно чата. Благодарности молча не отвечаются.
         'auto_greeting_text' => env(
