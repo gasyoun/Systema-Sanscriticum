@@ -35,9 +35,9 @@ class TeacherCoursePayments extends Page implements HasTable
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
-    protected static ?string $navigationGroup = 'Финансы';
+    protected static ?string $navigationGroup = 'Продажи';
 
-    protected static ?int $navigationSort = 48;
+    protected static ?int $navigationSort = 71;
 
     protected static ?string $navigationLabel = 'Оплаты моих курсов';
 
