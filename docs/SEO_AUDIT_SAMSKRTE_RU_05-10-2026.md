@@ -1,6 +1,6 @@
 # SEO-аудит samskrte.ru — 05-10-2026
 
-_Created: 05-10-2026 · Last updated: 05-10-2026_
+_Created: 05-10-2026 · Last updated: 06-10-2026_
 
 **Исполнитель:** OxAlpha (ZCode, `account:zai-individual-coding-plan/GLM-5.3`) · скилл `/seo` (audit) · длительность ~25 мин.
 **Метод:** живые пробы curl (с `--compressed`) + разбор HTML/JSON-LD + PageSpeed API (квота исчерпана — CWV не измерены) + Google `site:`-выдача. Все факты ниже — первичные пробы этой сессии, не строки из документов.
@@ -27,10 +27,10 @@ _Created: 05-10-2026 · Last updated: 05-10-2026_
 
 ## Findings
 
-### High-1 · www-хост отдаёт весь сайт (HTTP 200) с self-canonical
+### High-1 · www-хост отдаёт сайт (HTTP 200) с self-canonical
 
-- **Наблюдение (PERCEIVE/THINK):** `https://www.samskrte.ru/` → 200, canonical = `https://www.samskrte.ru`, контент идентичен apex. Google держит www-URL в индексе (в `site:`-выдаче виден `www.samskrte.ru/klub` — сейчас 404 на обоих хостах, т.е. это хвост, но механизм дублирования жив). Внешние ссылки и клики могут делиться между двумя хостами.
-- **Действие:** 301 `www.samskrte.ru` → `samskrte.ru` на уровне nginx (сейчас редирект есть только http→https, www-ветка отдаёт 200). После включения — в GSC «Удалить URL» для www-копий по мере их всплытия.
+- **Наблюдение (PERCEIVE/THINK):** `https://www.samskrte.ru/` → 200, canonical = `https://www.samskrte.ru`, контент идентичен apex (200 на типовых страницах; удалённые страницы, напр. `/klub`, отдают 404 ровно как на apex — дубль полный, а не частичный). Google держит www-URL в индексе (в `site:`-выдаче виден `www.samskrte.ru/klub` — сейчас 404 на обоих хостах, т.е. это хвост, но механизм дублирования жив). Внешние ссылки и клики могут делиться между двумя хостами.
+- **Действие:** 301 `www.samskrte.ru` → `samskrte.ru` на уровне nginx (сейчас редирект есть только http→https, www-ветка отдаёт 200). После включения — в GSC «Удалить URL» для www-копий по мере их всплытия. Хостовый 301 не конфликтует с путевым из Medium-3: правило `/klub` живёт на apex, www-запросы до него просто не доходят.
 - **Как понять, что не сработало (falsifiability):** через 2–4 недели `site:www.samskrte.ru` всё ещё > 0 живых 200-URL, в GSC «Дубли без выбранного канонического» не падает.
 - **Ведущий индикатор (без нового аудита):** доля www-URL в отчёте GSC «Страницы» должна уйти в ноль.
 
@@ -62,9 +62,9 @@ _Created: 05-10-2026 · Last updated: 05-10-2026_
 
 ### Low
 
-1. **Favicon только .ico** (`favicon.ico?v=2`): добавить PNG 512×512 + `apple-touch-icon` + webmanifest — Google показывает иконку в мобильной выдаче, у .ico она мыльная/отсутствует.
-2. **Лишний 301-хоп с главной:** ссылка `/online?format=recorded` редиректится на `/online/format/recorded` — ссылаться сразу на path-версию.
-3. **WebSite SearchAction:** у графа есть WebSite-узел без `potentialAction` — поиск по `/slovar` можно объявить SearchAction (sitelinks searchbox в выдаче).
+1. **Favicon только .ico** (`favicon.ico?v=2`): добавить PNG 512×512 + `apple-touch-icon` + webmanifest — Google показывает иконку в мобильной выдаче, у .ico она мыльная/отсутствует. Проверка: Rich Results Test/GSC не ругаются на иконку, иконка видна в мобильной сниппет-выдаче.
+2. **Лишний 301-хоп с главной:** ссылка `/online?format=recorded` редиректится на `/online/format/recorded` — ссылаться сразу на path-версию. Проверка: `grep -c 'format=recorded'` в HTML главной = 0 после правки шаблона.
+3. **WebSite SearchAction:** у графа есть WebSite-узел без `potentialAction` — поиск по `/slovar` можно объявить SearchAction (sitelinks searchbox в выдаче). Проверка: валидатор разметки не показывает ошибок на SearchAction; факультативно — сителинкс-бокс в брендовой выдаче.
 
 ### Info
 
