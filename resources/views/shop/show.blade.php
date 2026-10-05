@@ -773,7 +773,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <button @click="tab = 'blocks'"
                                 :class="tab === 'blocks' ? 'bg-[#1F2636] text-white shadow-md' : 'text-slate-500 hover:text-slate-300'"
                                 class="px-6 py-2.5 text-sm font-bold rounded-lg transition-all duration-200">
-                            По модулям
+                            По блокам
                         </button>
                     </div>
                 @endif
@@ -1027,8 +1027,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 @elseif($whole)
                                     <a href="{{ route('checkout.show', $whole->id) }}"
                                        class="w-full flex justify-center items-center py-3 px-4 {{ $isCurrent ? 'bg-brand hover:bg-brand-hover text-white shadow-md shadow-brand/20' : 'bg-[#1F2636] text-white hover:bg-[#38BDF8] hover:text-[#0A0D14]' }} text-sm font-bold rounded-lg transition-colors">
-                                        {{-- H3100: у прошедшего блока «Оплатить модуль» обещает живые занятия, которых уже не будет. --}}
-                                        {{ $sellsRecordings ? 'Купить запись блока' : ($isFinishedBlock ? 'Купить записи блока' : ($halves->isNotEmpty() ? 'Оплатить блок целиком' : 'Оплатить модуль')) }}
+                                        {{-- H3100: у прошедшего блока кнопка покупки не должна обещать живые занятия, которых уже не будет. --}}
+                                        {{ $sellsRecordings ? 'Купить запись блока' : ($isFinishedBlock ? 'Купить записи блока' : ($halves->isNotEmpty() ? 'Оплатить блок целиком' : 'Оплатить блок')) }}
                                     </a>
                                 @endif
                             </div>
