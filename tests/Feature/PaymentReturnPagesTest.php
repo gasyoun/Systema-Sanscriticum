@@ -79,6 +79,57 @@ class PaymentReturnPagesTest extends TestCase
         $response->assertSee('Если через 10 минут доступа все еще нет');
     }
 
+    public function test_unconfirmed_return_does_not_emit_metrika_purchase_for_either_counter(): void
+    {
+        config()->set('analytics.metrika.enabled', true);
+        config()->set('analytics.metrika.shop_counter_id', '106964341');
+
+        foreach (['pending', 'failed', 'refunded'] as $status) {
+            foreach ([[], ['yandex_id' => '12345678']] as $session) {
+                $user = User::factory()->create();
+                $course = Course::factory()->create();
+                $payment = $this->makePayment($user, $course, $status);
+
+                $this->flushSession();
+                $this->actingAs($user)->withSession($session)->get('/payment/success')
+                    ->assertOk()
+                    ->assertDontSee("'reachGoal', 'payment_success'", false);
+
+                $this->assertSame($status, $payment->fresh()->status);
+            }
+        }
+
+        auth()->logout();
+        $this->flushSession();
+        $this->get('/payment/success')->assertOk()
+            ->assertDontSee("'reachGoal', 'payment_success'", false);
+        $this->withSession(['yandex_id' => '12345678'])->get('/payment/success')->assertOk()
+            ->assertDontSee("'reachGoal', 'payment_success'", false);
+    }
+
+    public function test_confirmed_return_emits_metrika_purchase_for_selected_counter(): void
+    {
+        config()->set('analytics.metrika.enabled', true);
+        config()->set('analytics.metrika.shop_counter_id', '106964341');
+
+        foreach (Payment::PAID_STATUSES as $status) {
+            foreach ([[], ['yandex_id' => '12345678']] as $session) {
+                $user = User::factory()->create();
+                $course = Course::factory()->create();
+                $payment = $this->makePayment($user, $course, $status);
+                $counter = $session['yandex_id'] ?? '106964341';
+
+                $this->flushSession();
+                $html = $this->actingAs($user)->withSession($session)->get('/payment/success')
+                    ->assertOk()->getContent();
+
+                $this->assertStringContainsString("ym({$counter}, 'reachGoal', 'payment_success')", $html);
+                $this->assertSame(1, substr_count($html, "'reachGoal', 'payment_success'"));
+                $this->assertSame($status, $payment->fresh()->status);
+            }
+        }
+    }
+
     public function test_fail_renders_double_charge_reassurance_and_course_retry(): void
     {
         $user = User::factory()->create();
