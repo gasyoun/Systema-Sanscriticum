@@ -1,7 +1,7 @@
 ---
 metadoc: SEO_AUDIT_SAMSKRTE_RU_05-10-2026.md
 Created: 05-10-2026
-Last updated: 05-10-2026
+Last updated: 06-10-2026
 genre: audit report
 owner: OxAlpha (ZCode, account:zai-individual-coding-plan/GLM-5.3)
 ---
@@ -12,6 +12,6 @@ owner: OxAlpha (ZCode, account:zai-individual-coding-plan/GLM-5.3)
 
 Синхронизация: смена роута/шаблона каталога `/online`, генератора sitemap или серверного nginx-конфига должна перечитывать соответствующие секции отчёта (High-2, Medium-1, High-1/Medium-3); llms.txt и `/slovar`-хаб трогают секции AI-readiness и Medium-1.
 
-История ревизий: 05-10-2026 — создание (первичный аудит, весь перечень проб этой сессии).
+История ревизий: 05-10-2026 — создание (первичный аудит, весь перечень проб этой сессии); ночь 05→06-10-2026 — ревью-фиксы верификатора (PR #3040); 06-10-2026 H6161 — секция «Правки исполнены»: nginx www→apex 301 (сервер .92, немедленно), H1 каталога + sitemap-хаб + path-ссылки фильтров (кодом), Medium-3 снят (тёмный запуск `/klub` за `features.club_membership`).
 
 _Гасунс_
