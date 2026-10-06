@@ -1,10 +1,16 @@
 {{-- H4328: полное расписание курса (обзорное + занятия 1–N) тем же билдером, --}}
 {{-- что и Telegram-пост. Принимает $fullSchedulePosts — list<FullSchedulePost>. --}}
 @if(!empty($fullSchedulePosts))
-<section id="full-schedule" class="mb-16 lg:mb-20">
-    <div class="flex items-center gap-4 mb-8">
-        <h2 class="text-3xl font-bold text-white">Полное расписание курса</h2>
-    </div>
+<section id="full-schedule" class="mb-16 lg:mb-20" x-data="{ open: false }" data-collapse-section>
+    @include('shop.partials.collapse-header', ['title' => 'Полное расписание курса', 'bodyId' => 'full-schedule-body'])
+
+    <div id="full-schedule-body" x-show="open" x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 -translate-y-3"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0 -translate-y-3">
 
     <style>
         .full-schedule-block .fs-head { color: #fff; font-weight: 700; margin: 0 0 .75rem; }
@@ -44,5 +50,6 @@
 
     @include('partials.schedule-past-toggle')
     @include('partials.client-tz-convert')
+    </div>
 </section>
 @endif
