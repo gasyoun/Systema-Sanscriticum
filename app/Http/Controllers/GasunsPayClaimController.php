@@ -12,6 +12,7 @@ use App\Models\Tariff;
 use App\Models\User;
 use App\Services\AttributionService;
 use App\Services\CuratorNotifier;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -68,12 +69,23 @@ final class GasunsPayClaimController extends Controller
         $user = $this->resolveUser($request);
 
         // H5442-зеркало, fail-closed: курс без групп доступа нельзя провести
-        // с доступом — trusted откатываем, заявка ложится pending.
+        // с доступом — trusted откатываем, заявка ложится pending
+        // (с типизированной причиной для сверки — P3 ревью #3047).
+        $accessDemoted = false;
         if ($trusted && $tariff->course !== null && ! $tariff->course->groups()->exists()) {
             $trusted = false;
+            $accessDemoted = true;
         }
 
         $this->rejectDuplicateClaim($user, $tariff);
+
+        // P2 ревью #3047: сериальный пре-чек не держит гонку двух параллельных
+        // POST (устоявшийся ученик → двойной paid → двойной fireOnPaid).
+        // DB-гарда — unique-индекс payments.claim_replay_key (миграция
+        // 2026_09_24 money-P0): бизнес-правило «одна заявка на тариф» и есть
+        // ключ повтора. Повторная легитимная оплата того же блока — через
+        // администратора, как и до этого PR.
+        $replayKey = 'gasuns:'.(int) $user->id.':'.(int) $tariff->id;
 
         // Приватное хранение чека (disk 'local', НЕ public) — зеркало teacher-pay-proofs.
         $proofPath = $request->file('proof')?->store('gasuns-pay-proofs', 'local') ?: null;
@@ -91,29 +103,19 @@ final class GasunsPayClaimController extends Controller
             $claimMeta['auto_trusted'] = true;
             $claimMeta['trusted_at'] = now()->toIso8601String();
         }
+        if ($accessDemoted) {
+            $claimMeta['reconciliation_exception'] = 'no_access_groups';
+        }
 
-        $payment = DB::transaction(function () use ($user, $tariff, $request, $proofPath, $startBlock, $endBlock, $claimMeta, $trusted): Payment {
-            return Payment::create([
-                'user_id' => $user->id,
-                'course_id' => $tariff->course_id,
-                // Рублёвый номинал тарифа — учётная сумма школы; из неё
-                // начисляется и гонорар преподавателя курса (движок payout:run).
-                'amount' => (float) $tariff->price,
-                'tariff' => $tariff->accessKey(),
-                'start_block' => $startBlock,
-                'end_block' => $endBlock,
-                // Рулинг MG 06-10 «сверка сразу проходит»: устоявшийся ученик —
-                // сразу paid (доступ и учёт открывает Payment::booted()), сверка
-                // выборочная пост-фактум; гость/курс без групп — pending.
-                'status' => $trusted ? 'paid' : 'pending',
-                'provider' => Payment::PROVIDER_GASUNS_TRANSFER,
-                // Деньги школы: гонорар НЕ урезается (в отличие от teacher_personal).
-                'received_account' => Payment::RECEIVED_SCHOOL,
-                'proof_path' => $proofPath,
-                'claim_meta' => $claimMeta,
-                'payer_note' => $this->buildNote($request),
+        try {
+            $payment = $this->createClaimPayment($user, $tariff, $request, $proofPath, $startBlock, $endBlock, $claimMeta, $trusted, $replayKey);
+        } catch (UniqueConstraintViolationException) {
+            // Гонка двух одновременных submit'ов с одним ключом — unique-индекс
+            // отбил второй; отказ, не 500 (зеркало paypal H5442).
+            throw ValidationException::withMessages([
+                'tariff' => 'Уведомление по этому тарифу уже подано и ждёт сверки. Если нужно сообщить о втором переводе — напишите куратору.',
             ]);
-        });
+        }
 
         $curators->gasunsPayReceived($payment);
 
@@ -137,6 +139,36 @@ final class GasunsPayClaimController extends Controller
     {
         abort_unless((bool) config('services.gasuns_pay.enabled'), 404);
         abort_unless($tariff->is_active, 404, 'Тариф недоступен для покупки.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $claimMeta
+     */
+    private function createClaimPayment(User $user, Tariff $tariff, StoreGasunsPayRequest $request, ?string $proofPath, ?int $startBlock, ?int $endBlock, array $claimMeta, bool $trusted, string $replayKey): Payment
+    {
+        return DB::transaction(function () use ($user, $tariff, $request, $proofPath, $startBlock, $endBlock, $claimMeta, $trusted, $replayKey): Payment {
+            return Payment::create([
+                'claim_replay_key' => $replayKey,
+                'user_id' => $user->id,
+                'course_id' => $tariff->course_id,
+                // Рублёвый номинал тарифа — учётная сумма школы; из неё
+                // начисляется и гонорар преподавателя курса (движок payout:run).
+                'amount' => (float) $tariff->price,
+                'tariff' => $tariff->accessKey(),
+                'start_block' => $startBlock,
+                'end_block' => $endBlock,
+                // Рулинг MG 06-10 «сверка сразу проходит»: устоявшийся ученик —
+                // сразу paid (доступ и учёт открывает Payment::booted()), сверка
+                // выборочная пост-фактум; гость/курс без групп — pending.
+                'status' => $trusted ? 'paid' : 'pending',
+                'provider' => Payment::PROVIDER_GASUNS_TRANSFER,
+                // Деньги школы: гонорар НЕ урезается (в отличие от teacher_personal).
+                'received_account' => Payment::RECEIVED_SCHOOL,
+                'proof_path' => $proofPath,
+                'claim_meta' => $claimMeta,
+                'payer_note' => $this->buildNote($request),
+            ]);
+        });
     }
 
     /** Одна незакрытая заявка на тариф: повторная отправка до сверки — отказ. */
