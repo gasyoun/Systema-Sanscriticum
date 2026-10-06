@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\Payment;
 use App\Models\Tariff;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -174,5 +175,47 @@ class GasunsPayClaimTest extends TestCase
             Payment::query()->where('user_id', $user->id)->value('status'),
             'kill-switch газанул авто-доверие'
         );
+    }
+
+    /** P2 ревью #3047: гонка дублей закрыта unique-индексом claim_replay_key. */
+    public function test_claim_writes_replay_key_unique_at_db_level(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post('/gasuns-pay/'.$this->tariff->id, [
+                'paid_on' => '2026-10-06',
+                'sender_name' => 'Отправитель',
+            ])->assertRedirect();
+
+        $payment = Payment::query()->where('user_id', $user->id)->first();
+        $this->assertSame('gasuns:'.$user->id.':'.$this->tariff->id, $payment->claim_replay_key);
+
+        // Вторая строка с тем же ключом БД уже не примет — даже в обход контроллера
+        $this->expectException(UniqueConstraintViolationException::class);
+        Payment::withoutEvents(fn () => Payment::create([
+            'claim_replay_key' => $payment->claim_replay_key,
+            'user_id' => $user->id,
+            'course_id' => $this->tariff->course_id,
+            'amount' => 8000,
+            'status' => 'paid',
+            'provider' => Payment::PROVIDER_GASUNS_TRANSFER,
+        ]));
+    }
+
+    /** P3 ревью #3047: демотация за курс без групп оставляет типизированную причину. */
+    public function test_demoted_trusted_claim_carries_reconciliation_exception(): void
+    {
+        $user = User::factory()->create(['created_at' => now()->subDays(8)]);
+
+        $this->actingAs($user)
+            ->post('/gasuns-pay/'.$this->tariff->id, [
+                'paid_on' => '2026-10-06',
+                'sender_name' => 'Отправитель',
+            ])->assertRedirect();
+
+        $payment = Payment::query()->where('user_id', $user->id)->first();
+        $this->assertSame('pending', $payment->status);
+        $this->assertSame('no_access_groups', (string) $payment->claimMeta('reconciliation_exception'));
     }
 }
