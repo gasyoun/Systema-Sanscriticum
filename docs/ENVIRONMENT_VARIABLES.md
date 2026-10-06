@@ -243,6 +243,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `FREE_TIER_GRANT_REASON` | optional | `'free_tier_monthly'` | config/membership.php:158 |
 | `FULL_COURSE_BLOCK_CREDIT` | optional | `false` | config/features.php:21 |
 | `GAMES_SKILL_DRILLS` | optional | `false` | config/features.php:1291 |
+| `GASUNS_PAY_ENABLED` | feature-flag | `false` | config/services.php:729 |
+| `GASUNS_PAY_TRUST_EXISTING` | optional | `true` | config/services.php:733 |
 | `GIFT_CERTIFICATES` | optional | `false` | config/features.php:1628 |
 | `GOOGLE_CLIENT_ID` | required | `—` | config/services.php:633 |
 | `GOOGLE_CLIENT_SECRET` | secret | `—` | config/services.php:634 |
@@ -557,7 +559,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `PARTNER_BOT_SECRET` | secret | `''` | config/partner.php:33 |
 | `PARTNER_PROGRAM_ENABLED` | feature-flag | `false` | config/partner.php:24 |
 | `PARTNER_REWARD_AMOUNT` | optional | `1000` | config/partner.php:29 |
-| `PASSWORD_AUDIT_LOG_CHANNEL` | secret | `'stack'` | config/services.php:729 |
+| `PASSWORD_AUDIT_LOG_CHANNEL` | secret | `'stack'` | config/services.php:741 |
 | `PAYMENT_BLOCK_HALF_SPLIT` | optional | `false` | config/features.php:1898 |
 | `PAYMENT_FIX_WAVE1` | optional | `false` | config/features.php:1796 |
 | `PAYMENT_RECOVERY_CTA` | optional | `false` | config/features.php:1243 |

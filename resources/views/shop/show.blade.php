@@ -121,7 +121,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
 @section('content')
 <div class="min-h-screen bg-[#0A0D14] text-white font-sans relative overflow-hidden">
-    
+
+    {{--  — «Спасибо, ваш голос учтён!» после голосования с этой страницы. --}}
+    @include('shop.partials.waitlist-voted-toast')
+
     {{-- Декоративные блюры на фоне --}}
     <div class="absolute top-[-10%] left-[-10%] w-[800px] h-[800px] bg-indigo-900/10 rounded-full blur-[150px] pointer-events-none"></div>
     <div class="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-brand/10 rounded-full blur-[150px] pointer-events-none"></div>
@@ -1065,6 +1068,42 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 @endunless
 
+            @elseif(isset($waitlistItem) && $waitlistItem)
+                {{--  — курс в списке ожидания: вместо замка — голосование.
+                     Словарь ждуна, форма шаред-partial (как на карточке каталога). --}}
+                <div class="bg-[#111622] rounded-2xl p-8 border border-[#1F2636] text-center max-w-md mx-auto" data-testid="course-waitlist-box">
+                    <div class="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-bullhorn text-2xl text-amber-400"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-white mb-2">{{ $waitlistItem->statusLabel() }}</h4>
+                    <p class="text-sm text-slate-400 leading-relaxed mb-4">
+                        Наберётся минимум голосов — откроется оплата; нужное число оплат к сроку — группа стартует.
+                    </p>
+                    <p class="text-sm font-bold mb-1 {{ $waitlistItem->votes_count >= $waitlistItem->min_payers ? 'text-emerald-400' : 'text-white' }}"
+                       data-testid="course-waitlist-progress">
+                        @if($waitlistItem->votes_count >= $waitlistItem->min_payers)
+                            <i class="fas fa-check-circle mr-1"></i>Кворум набран
+                        @else
+                            {{ $waitlistItem->votes_count }} из {{ $waitlistItem->min_payers }} {{ \App\Support\Plural::ru((int) $waitlistItem->votes_count, 'голоса', 'голосов', 'голосов') }}
+                        @endif
+                    </p>
+                    @if($waitlistItem->earliest_start_at)
+                        <p class="text-xs text-slate-500 mb-4">Старт не раньше {{ $waitlistItem->earliest_start_at->format('d.m.Y') }}.</p>
+                    @else
+                        <p class="text-xs text-slate-500 mb-4">Дата уточняется.</p>
+                    @endif
+                    <div class="max-w-xs mx-auto">
+                        @include('shop.partials.waitlist-join-actions', [
+                            'item' => $waitlistItem,
+                            'voted' => $waitlistVoted,
+                            'myPref' => $waitlistPref,
+                        ])
+                    </div>
+                    <a href="{{ route('shop.waitlist') }}#wl-{{ $waitlistItem->slug }}"
+                       class="inline-block mt-4 text-xs text-slate-500 hover:text-slate-300 transition-colors">
+                        Список ожидания: что это и какие курсы ещё собираются
+                    </a>
+                </div>
             @else
                 <div class="bg-[#111622] rounded-2xl p-8 border border-[#1F2636] text-center max-w-md mx-auto">
                     <div class="w-16 h-16 bg-[#1F2636] rounded-full flex items-center justify-center mx-auto mb-4">

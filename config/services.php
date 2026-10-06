@@ -721,6 +721,18 @@ return [
         'enabled' => (bool) env('TEACHER_PAY_ENABLED', false),
     ],
 
+    // H6198 — уведомление «перевёл рублями лично Гасунсу» (мимо Точки).
+    // Флаг default OFF (money-контур): включается GASUNS_PAY_ENABLED=1 на
+    // проде. Авто-доверия нет — каждую заявку сверяет человек (получатель
+    // перевода подтверждает поступление лично).
+    'gasuns_pay' => [
+        'enabled' => (bool) env('GASUNS_PAY_ENABLED', false),
+        // Рулинг MG 06-10 «по умолчанию сверка сразу проходит»: устоявшийся
+        // ученик — сразу paid (зеркало paypal.trust_existing_students).
+        // Kill-switch на случай волны спама/ошибок — false → все заявки pending.
+        'trust_existing_students' => (bool) env('GASUNS_PAY_TRUST_EXISTING', true),
+    ],
+
     // H4462 — аудит-след перезаписи паролей (инцидент 09-09-2026: smoke-студент
     // id=6857 перезаписан молча). Лог пишется в именованный канал из logging.php
     // (по умолчанию 'stack'); логируется факт перезаписи, writer и ip/session —
