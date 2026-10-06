@@ -1,7 +1,7 @@
 @component('mail::message')
 # Уведомление о переводе получено
 
-Здравствуйте, {{ $payment->user?->greetingName ?: $payment->user?->name }}!
+Здравствуйте, {{ $payment->user?->greetingName('друг') ?? 'друг' }}!
 
 Вы сообщили, что перевели оплату за курс **{{ $payment->course?->title ?? 'курс' }}**
 (номинал {{ number_format((float) $payment->amount, 0, '.', ' ') }} ₽) рублями

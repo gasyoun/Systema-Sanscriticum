@@ -162,7 +162,7 @@ class CuratorNotifier
             $lines[] = 'Референция: <code>'.e((string) $ref).'</code>';
         }
 
-        $this->send($payment, $lines);
+        $this->dispatchToCurators($this->join($lines));
     }
 
     public function teacherPayReceived(Payment $payment): void

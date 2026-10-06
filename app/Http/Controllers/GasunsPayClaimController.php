@@ -13,12 +13,12 @@ use App\Models\User;
 use App\Services\AttributionService;
 use App\Services\CuratorNotifier;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 
 /**
  * H6198 — анкета-уведомление «я перевёл рубли Гасунсу лично» (мимо Точки):

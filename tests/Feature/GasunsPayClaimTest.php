@@ -30,6 +30,7 @@ class GasunsPayClaimTest extends TestCase
         $course = Course::factory()->create(['title' => 'Хинди, вторник']);
         $this->tariff = Tariff::create([
             'course_id' => $course->id,
+            'title' => 'Блок 10',
             'type' => 'block',
             'block_number' => 10,
             'price' => 8000,
