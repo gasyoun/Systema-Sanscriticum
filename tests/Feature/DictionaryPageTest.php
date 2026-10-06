@@ -111,6 +111,23 @@ class DictionaryPageTest extends TestCase
             ->assertSee('/slovar/sat');
     }
 
+    public function test_sitemap_never_includes_the_noindex_hub(): void
+    {
+        config([
+            'dictionary_seo.index_enabled' => true,
+            'dictionary_seo.gate.curated_only' => false,
+            'dictionary_seo.gate.min_translation_length' => 5,
+        ]);
+        $this->makeWord();
+
+        // Хаб — поисковый интерфейс и всегда noindex (layouts/slovar default):
+        // в карте сайта живут только индексируемые URL слов (H6160 Medium-1).
+        $this->get('/sitemap.xml')
+            ->assertOk()
+            ->assertSee('/slovar/sat')
+            ->assertDontSee('/slovar</loc>');
+    }
+
     public function test_word_page_carries_course_cta(): void
     {
         $this->makeWord();

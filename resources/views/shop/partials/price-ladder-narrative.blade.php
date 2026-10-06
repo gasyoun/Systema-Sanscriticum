@@ -20,7 +20,7 @@
                 'lowPrice' => number_format((float) $ladder['minRecordedPrice'], 2, '.', ''),
                 'priceCurrency' => 'RUB',
                 'availability' => 'https://schema.org/InStock',
-                'url' => $ladder['catalogUrl'].'?format=recorded',
+                'url' => $ladder['catalogUrl'].'/format/recorded',
             ] : null,
             $ladder['minBlockPrice'] ? [
                 '@type' => 'AggregateOffer',
@@ -96,7 +96,7 @@
                     в любой день, видео остаются с вами. По сравнению с примером урока это
                     полный курс — со структурой, материалами и порядком тем.
                 </p>
-                <a href="{{ $ladder['catalogUrl'] }}?format=recorded"
+                <a href="{{ $ladder['catalogUrl'] }}/format/recorded"
                    class="inline-flex items-center px-5 py-2.5 bg-indigo-500/15 border border-indigo-500/40 hover:bg-indigo-500 hover:text-white text-indigo-400 text-xs font-bold rounded-xl transition-all">
                     Курсы в записи
                 </a>
