@@ -54,16 +54,15 @@ _Created: 05-10-2026 · Last updated: 06-10-2026_
 - **Falsifiability:** выборка из 5 случайных пар групп — средняя similarity > 80% после правок означает, что правки не изменили суть.
 - **Индикатор:** GSC «Страницы с повторяющимися тегами title/description» — новые пары не появляются.
 
-### Medium-3 · Мёртвый /klub в индексе Google
+### Medium-3 · Мёртвый /klub в индексе Google — ПЕРЕСМОТРЕНО 06-10 (тёмный запуск, не дубль)
 
-- **Наблюдение:** `www.samskrte.ru/klub` в выдаче, страница 404 на обоих хостах, в sitemap её нет. Клуб как продукт переименован/переехал (клубное членство теперь тир в membership).
-- **Действие:** 301 `/klub` → актуальная страница клубного тарифа (или 410, если преемника нет). Это кредит ссылок, который сейчас сгорает в 404.
-- **Falsifiability:** URL исчезает из индекса за 2–3 недели после 301; если ждать 410+GSC-удаление — дольше, но тоже конечный процесс.
+- **Наблюдение:** `www.samskrte.ru/klub` в выдаче, страница 404 на обоих хостах, в sitemap её нет.
+- **Пересмотр при исполнении правок:** роут `/klub` живёт в репо ([`MembershipController::landing`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/MembershipController.php)) за фичефлагом `features.club_membership` — это тёмный запуск клубного лендинга, 404 «до включения». Редирект НЕ нужен: когда флаг включат, URL оживёт и индексная запись починится сама. Действий из этого finding нет; вычёркиваем из плана.
 
 ### Low
 
 1. **Favicon только .ico** (`favicon.ico?v=2`): добавить PNG 512×512 + `apple-touch-icon` + webmanifest — Google показывает иконку в мобильной выдаче, у .ico она мыльная/отсутствует. Проверка: Rich Results Test/GSC не ругаются на иконку, иконка видна в мобильной сниппет-выдаче.
-2. **Лишний 301-хоп с главной:** ссылка `/online?format=recorded` редиректится на `/online/format/recorded` — ссылаться сразу на path-версию. Проверка: `grep -c 'format=recorded'` в HTML главной = 0 после правки шаблона.
+2. **Лишний 301-хоп с главной:** ссылка `/online?format=recorded` редиректится на `/online/format/recorded` — ссылаться сразу на path-версию. Проверка: `grep -c 'format=recorded'` в HTML главной = 0 после правки шаблона. **✅ ИСПОЛНЕНО 06-10** (вместе с `?format=live` тем же паттерном).
 3. **WebSite SearchAction:** у графа есть WebSite-узел без `potentialAction` — поиск по `/slovar` можно объявить SearchAction (sitelinks searchbox в выдаче). Проверка: валидатор разметки не показывает ошибок на SearchAction; факультативно — сителинкс-бокс в брендовой выдаче.
 
 ### Info
@@ -85,5 +84,14 @@ _Created: 05-10-2026 · Last updated: 06-10-2026_
 5. Уникализация recorded-групп (Medium-2) — контентная работа, порциями.
 6. Favicon/manifest + SearchAction (Low-1, Low-3) — бэклог.
 7. GSC: снять CWV, подтвердить уход www-URL (п.1), подать переобход ключевых /k/ после п.5.
+
+## Правки исполнены (06-10-2026, H6161)
+
+- **High-1 ✅ серверно, немедленно:** nginx на проде (.92): 443-блок `server_name` сужен до apex, добавлен выделенный www→apex 301-блок (сертификат `/etc/letsencrypt/live/samskrte.ru/` покрывает оба имени), http-редирект www ведёт сразу на apex (один хоп). Бэкап старого конфига — `/root/nginx-backup-samskrte-*.conf` на .92; попутно `.bak-h5451` убран из `sites-enabled/` в `/root/nginx-backups/`. Живые пробы после reload: `https://www` → 301 apex, `http://www/online` → 301 `https://samskrte.ru/online`, apex 200. Индикатор: доля www-URL в GSC «Страницы» → 0 за 2–4 недели.
+- **High-2 ✅ кодом (этот PR):** H1 каталога = «Курсы санскрита и хинди онлайн», подтекст начинается с «От первых букв с нуля…» (без повтора), бренд остаётся в title.
+- **Medium-1 ✅ кодом (этот PR):** хаб `/slovar` (постоянный noindex по дизайну) больше не выдаётся в sitemap ни в одной волне; слова — как раньше, только при `index_enabled` + curated-гейте.
+- **Low-2 ✅ кодом (этот PR):** все внутренние ссылки фильтров (`?format=recorded`, `?format=live`) заменены на path-URL `/online/format/…` (легаси-301 в [`ShopController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/ShopController.php) остаётся для старых адресов).
+- **Medium-3 — снят** (см. пересмотр выше: тёмный запуск клубного лендинга).
+- Осталось: Medium-2 (контентная уникализация recorded-групп), Low-1/Low-3 (favicon/manifest, SearchAction), GSC-мониторинг.
 
 _Гасунс_
