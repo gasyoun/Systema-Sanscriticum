@@ -35,8 +35,8 @@ class ShopFirstQuestionsTest extends TestCase
         $this->get('/online')
             ->assertOk()
             ->assertSee('/online/s-chego-nachat')
-            ->assertSee('format=recorded')
-            ->assertSee('format=live')
+            ->assertSee('/format/recorded')
+            ->assertSee('/format/live')
             ->assertSee('#ceny', false)
             ->assertSee('/online/materialy');
     }

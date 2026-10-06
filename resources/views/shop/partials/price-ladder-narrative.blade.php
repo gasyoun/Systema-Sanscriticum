@@ -28,7 +28,7 @@
                 'lowPrice' => number_format((float) $ladder['minBlockPrice'], 2, '.', ''),
                 'priceCurrency' => 'RUB',
                 'availability' => 'https://schema.org/InStock',
-                'url' => $ladder['catalogUrl'].'?format=live',
+                'url' => $ladder['catalogUrl'].'/format/live',
             ] : null,
             $ladder['minLiveFullPrice'] ? [
                 '@type' => 'AggregateOffer',
@@ -36,7 +36,7 @@
                 'lowPrice' => number_format((float) $ladder['minLiveFullPrice'], 2, '.', ''),
                 'priceCurrency' => 'RUB',
                 'availability' => 'https://schema.org/InStock',
-                'url' => $ladder['catalogUrl'].'?format=live',
+                'url' => $ladder['catalogUrl'].'/format/live',
             ] : null,
         ]));
     @endphp
@@ -127,7 +127,7 @@
                         все блоки закреплены сразу, следить за оплатой каждого не нужно.
                     </p>
                 @endif
-                <a href="{{ $ladder['catalogUrl'] }}?format=live"
+                <a href="{{ $ladder['catalogUrl'] }}/format/live"
                    class="inline-flex items-center px-5 py-2.5 bg-brand hover:bg-brand/85 text-white text-xs font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(232,92,36,0.3)]">
                     Живые курсы
                 </a>

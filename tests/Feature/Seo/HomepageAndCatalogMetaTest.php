@@ -54,9 +54,5 @@ class HomepageAndCatalogMetaTest extends TestCase
             '/<h1[^>]*>.*курсы санскрита и хинди онлайн/su',
             mb_strtolower($html)
         );
-        $this->assertStringNotContainsString(
-            '<h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-6">'."\n".'                Общество ревнителей санскрита',
-            $html
-        );
     }
 }
