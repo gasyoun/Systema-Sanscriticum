@@ -138,6 +138,33 @@ class CuratorNotifier
      * сверяет по выписке преподавателя, затем «Подтвердить перевод
      * преподавателю» в Filament: номинал вычтется из гонорара сам (H4597).
      */
+    /**
+     * H6198 — заявка «перевёл рублями Гасунсу»: pending до ручной сверки,
+     * деньги школы (гонорар преподавателя не урезается).
+     */
+    public function gasunsPayReceived(Payment $payment): void
+    {
+        $lines = [
+            '💰 <b>Заявка: перевод рублями Гасунсу</b> — нужна сверка',
+            '',
+            $this->studentLine($payment->user),
+            $this->courseLine($payment->course),
+            $this->tariffLine($payment),
+            'Номинал: <b>'.$this->money((float) $payment->amount).'</b>',
+        ];
+        if ($sender = $payment->claimMeta('sender_name')) {
+            $lines[] = 'Отправитель: <code>'.e((string) $sender).'</code>';
+        }
+        if ($paidOn = $payment->claimMeta('paid_on')) {
+            $lines[] = 'Дата оплаты: <b>'.e((string) $paidOn).'</b>';
+        }
+        if ($ref = $payment->claimMeta('reference')) {
+            $lines[] = 'Референция: <code>'.e((string) $ref).'</code>';
+        }
+
+        $this->send($payment, $lines);
+    }
+
     public function teacherPayReceived(Payment $payment): void
     {
         $lines = [

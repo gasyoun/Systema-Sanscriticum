@@ -7,6 +7,7 @@ use App\Http\Controllers\DepositController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaypalClaimController;
 use App\Http\Controllers\PlacementQuizController;
+use App\Http\Controllers\GasunsPayClaimController;
 use App\Http\Controllers\TeacherPayController;
 use App\Http\Controllers\TrialController;
 use App\Models\Course;
@@ -87,6 +88,20 @@ Route::get('/teacher-pay/{tariff}', [TeacherPayController::class, 'show'])
 Route::post('/teacher-pay/{tariff}', [TeacherPayController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('teacherpay.claim.store');
+
+// «Я перевёл рублями Гасунсу» (H6198): анкета-зеркало /teacher-pay и /paypal
+// для канала «рубли на личный счёт владельца школы, мимо Точки». Платёж ложится
+// pending с provider=gasuns_transfer и received_account=school (деньги школы:
+// доля преподавателя начисляется движком, из гонорара НЕ вычитается — в этом
+// принципиальная разница с teacher_personal). Сверку проходит каждая заявка:
+// поступление подтверждает получатель перевода. Флаг GASUNS_PAY_ENABLED
+// default OFF (404). Строго до catch-all /{slug}; throttle:5,1 — защита от
+// спама pending-платежей.
+Route::get('/gasuns-pay/{tariff}', [GasunsPayClaimController::class, 'show'])
+    ->name('gasunspay.claim.show');
+Route::post('/gasuns-pay/{tariff}', [GasunsPayClaimController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('gasunspay.claim.store');
 
 // Счёт для компании / ИП (безнал). Flag COMPANY_INVOICE_ENABLED; pending until
 // admin confirms bank transfer. Print path BEFORE /invoice/{tariff} so "print"
