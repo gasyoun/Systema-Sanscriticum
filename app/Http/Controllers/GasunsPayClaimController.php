@@ -30,9 +30,14 @@ use Illuminate\View\View;
  * (кейс Хадиджи из расчёта Костиной H6141: 8 000 ₽ лично Гасунсу выпали из
  * ведомости именно из-за отсутствия канала внесения).
  *
- * Авто-доверия НЕТ: получение перевода может подтвердить только получатель —
- * каждая заявка ложится pending и сверяется вручную в «Финансах».
- * Флаг services.gasuns_pay.enabled (GASUNS_PAY_ENABLED) default OFF.
+ * Авто-доверие — рулинг MG 06-10-2026 «по умолчанию сверка сразу проходит»,
+ * зеркало PayPal-рулинга 22-08-2026: вошедший УСТОЯВШИЙСЯ ученик
+ * (isEstablishedClaimStudent: возраст ≥ 7 дней ИЛИ проведённый платёж) —
+ * сразу paid, доступ/учёт открывает штатный Payment::booted(), сверка
+ * выборочная пост-фактум по выписке получателя. Гость с новым email и
+ * курс без групп доступа — pending, ручная сверка в «Финансах».
+ * Флаг services.gasuns_pay.enabled (GASUNS_PAY_ENABLED) default OFF;
+ * kill-switch авто-доверия — gasuns_pay.trust_existing_students.
  */
 final class GasunsPayClaimController extends Controller
 {
@@ -53,7 +58,20 @@ final class GasunsPayClaimController extends Controller
     {
         $this->abortUnlessEnabled($tariff);
 
+        // Зеркало PaypalClaimController (H5083): флаг читаем ДО resolveUser —
+        // resolveUser логинит только что созданного гостя, и после него
+        // auth()->check() уже не отличит устоявшегося ученика от новой сессии.
+        $trusted = auth()->check()
+            && auth()->user()->isEstablishedClaimStudent()
+            && (bool) config('services.gasuns_pay.trust_existing_students', true);
+
         $user = $this->resolveUser($request);
+
+        // H5442-зеркало, fail-closed: курс без групп доступа нельзя провести
+        // с доступом — trusted откатываем, заявка ложится pending.
+        if ($trusted && $tariff->course !== null && ! $tariff->course->groups()->exists()) {
+            $trusted = false;
+        }
 
         $this->rejectDuplicateClaim($user, $tariff);
 
@@ -69,8 +87,12 @@ final class GasunsPayClaimController extends Controller
         if ($ref = $request->validated('reference')) {
             $claimMeta['reference'] = (string) $ref;
         }
+        if ($trusted) {
+            $claimMeta['auto_trusted'] = true;
+            $claimMeta['trusted_at'] = now()->toIso8601String();
+        }
 
-        $payment = DB::transaction(function () use ($user, $tariff, $request, $proofPath, $startBlock, $endBlock, $claimMeta): Payment {
+        $payment = DB::transaction(function () use ($user, $tariff, $request, $proofPath, $startBlock, $endBlock, $claimMeta, $trusted): Payment {
             return Payment::create([
                 'user_id' => $user->id,
                 'course_id' => $tariff->course_id,
@@ -80,9 +102,10 @@ final class GasunsPayClaimController extends Controller
                 'tariff' => $tariff->accessKey(),
                 'start_block' => $startBlock,
                 'end_block' => $endBlock,
-                // Всегда pending: зачёт и доступ — только после сверки
-                // («получил ли Гасунс перевод лично» подтверждает человек).
-                'status' => 'pending',
+                // Рулинг MG 06-10 «сверка сразу проходит»: устоявшийся ученик —
+                // сразу paid (доступ и учёт открывает Payment::booted()), сверка
+                // выборочная пост-фактум; гость/курс без групп — pending.
+                'status' => $trusted ? 'paid' : 'pending',
                 'provider' => Payment::PROVIDER_GASUNS_TRANSFER,
                 // Деньги школы: гонорар НЕ урезается (в отличие от teacher_personal).
                 'received_account' => Payment::RECEIVED_SCHOOL,
@@ -99,11 +122,15 @@ final class GasunsPayClaimController extends Controller
             Mail::to($adminEmail)->send(new GasunsPayReceivedMail($payment));
         }
 
-        Mail::to($user)->send(new GasunsPayStudentAckMail($payment));
+        Mail::to($user)->send(new GasunsPayStudentAckMail($payment, $trusted));
+
+        $success = $trusted
+            ? 'Оплата зачтена — доступ к занятиям уже открыт в личном кабинете, подтверждение уходит на ваш email.'
+            : 'Спасибо, уведомление получено — подтверждение уже уходит на ваш email. Мы сверим поступление перевода, обычно в течение одного рабочего дня, и откроем доступ; для нового аккаунта пароль придёт на email.';
 
         return redirect()
             ->route('gasunspay.claim.show', $tariff)
-            ->with('success', 'Спасибо, уведомление получено — подтверждение уже уходит на ваш email. Мы сверим поступление перевода, обычно в течение одного рабочего дня, и откроем доступ; для нового аккаунта пароль придёт на email.');
+            ->with('success', $success);
     }
 
     private function abortUnlessEnabled(Tariff $tariff): void

@@ -16,7 +16,7 @@ class GasunsPayStudentAckMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Payment $payment) {}
+    public function __construct(public Payment $payment, public bool $trusted = false) {}
 
     public function envelope(): Envelope
     {
