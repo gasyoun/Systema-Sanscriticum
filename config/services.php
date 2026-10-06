@@ -727,6 +727,10 @@ return [
     // перевода подтверждает поступление лично).
     'gasuns_pay' => [
         'enabled' => (bool) env('GASUNS_PAY_ENABLED', false),
+        // Рулинг MG 06-10 «по умолчанию сверка сразу проходит»: устоявшийся
+        // ученик — сразу paid (зеркало paypal.trust_existing_students).
+        // Kill-switch на случай волны спама/ошибок — false → все заявки pending.
+        'trust_existing_students' => (bool) env('GASUNS_PAY_TRUST_EXISTING', true),
     ],
 
     // H4462 — аудит-след перезаписи паролей (инцидент 09-09-2026: smoke-студент

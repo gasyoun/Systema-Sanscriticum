@@ -12,9 +12,11 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * H6198 — анкета «перевёл рублями Гасунсу»: pending-заявка со счётом школы
- * (не teacher_personal!), провайдер gasuns_transfer, дубль до сверки — отказ,
- * флаг default OFF = 404.
+ * H6198 — анкета «перевёл рублями Гасунсу»: провайдер gasuns_transfer, счёт
+ * школы (не teacher_personal!), дубль до сверки — отказ, флаг OFF = 404.
+ * Рулинг MG 06-10 «сверка сразу проходит»: устоявшийся ученик — сразу paid
+ * (зеркало paypal 22-08); свежий аккаунт/гость — pending; курс без групп —
+ * fail-closed pending даже для устоявшегося.
  */
 class GasunsPayClaimTest extends TestCase
 {
@@ -61,6 +63,7 @@ class GasunsPayClaimTest extends TestCase
 
     public function test_submit_creates_pending_school_payment(): void
     {
+        // Свежий аккаунт (0 дней, без платежей) — НЕ устоявшийся → pending
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)
@@ -116,6 +119,60 @@ class GasunsPayClaimTest extends TestCase
         $this->assertSame(
             0,
             Payment::query()->where('provider', Payment::PROVIDER_GASUNS_TRANSFER)->count()
+        );
+    }
+
+    public function test_established_student_is_paid_immediately(): void
+    {
+        // Возраст ≥ 7 дней → устоявшийся: рулинг MG 06-10 «сверка сразу проходит»
+        $user = User::factory()->create(['created_at' => now()->subDays(8)]);
+        $course = $this->tariff->course;
+        $course->groups()->create(['name' => 'Группа вторника']);
+
+        $this->actingAs($user)
+            ->post('/gasuns-pay/'.$this->tariff->id, [
+                'paid_on' => '2026-10-06',
+                'sender_name' => 'Мухасанова Хадижа',
+            ])->assertRedirect();
+
+        $payment = Payment::query()->where('user_id', $user->id)->first();
+        $this->assertNotNull($payment);
+        $this->assertSame('paid', $payment->status);
+        $this->assertSame(Payment::RECEIVED_SCHOOL, $payment->received_account);
+        $this->assertTrue((bool) $payment->claimMeta('auto_trusted'));
+    }
+
+    public function test_trusted_falls_back_to_pending_without_access_groups(): void
+    {
+        $user = User::factory()->create(['created_at' => now()->subDays(8)]);
+
+        $this->actingAs($user)
+            ->post('/gasuns-pay/'.$this->tariff->id, [
+                'paid_on' => '2026-10-06',
+                'sender_name' => 'Отправитель',
+            ])->assertRedirect();
+
+        $payment = Payment::query()->where('user_id', $user->id)->first();
+        $this->assertNotNull($payment);
+        $this->assertSame('pending', $payment->status, 'курс без групп доступа — fail-closed pending');
+    }
+
+    public function test_trust_kill_switch_forces_pending(): void
+    {
+        config()->set('services.gasuns_pay.trust_existing_students', false);
+        $user = User::factory()->create(['created_at' => now()->subDays(8)]);
+        $this->tariff->course->groups()->create(['name' => 'Группа вторника']);
+
+        $this->actingAs($user)
+            ->post('/gasuns-pay/'.$this->tariff->id, [
+                'paid_on' => '2026-10-06',
+                'sender_name' => 'Отправитель',
+            ])->assertRedirect();
+
+        $this->assertSame(
+            'pending',
+            Payment::query()->where('user_id', $user->id)->value('status'),
+            'kill-switch газанул авто-доверие'
         );
     }
 }
