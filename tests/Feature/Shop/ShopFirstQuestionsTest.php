@@ -58,6 +58,6 @@ class ShopFirstQuestionsTest extends TestCase
     {
         $this->get('/online')
             ->assertOk()
-            ->assertSee('от первых букв с нуля до чтения текстов в оригинале');
+            ->assertSee('От первых букв с нуля до чтения текстов в оригинале');
     }
 }
