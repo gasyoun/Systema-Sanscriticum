@@ -1,8 +1,0 @@
-[Unit]
-Description=run disk-watch every 30 min
-[Timer]
-OnBootSec=5min
-OnUnitActiveSec=30min
-Persistent=true
-[Install]
-WantedBy=timers.target

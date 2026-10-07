@@ -1,6 +1,0 @@
-[Unit]
-Description=Weekly green digest of the backup estate (H3177 criterion 2.3)
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/sbin/systema-backup/deadman_check.py --digest

@@ -1,8 +1,0 @@
-{
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "@@DOCKER_LOG_MAX_SIZE@@",
-    "max-file": "@@DOCKER_LOG_MAX_FILE@@"
-  },
-  "live-restore": true
-}
