@@ -16,8 +16,12 @@
     // склеиваются с октябрьской досдачей.
     $hwImagePdf = app(\App\Services\HomeworkImagePdfService::class);
     $hwHasImages = $hwImagePdf->studentImageFiles($submission)->isNotEmpty();
+    // Синхронная пересборка здесь запрещена (инцидент 08-10-2026, сдача
+    // 3129): раунд из 12 фото собирается ~140 секунд даже на CLI с 768M, а
+    // на php-fpm с его 128M воркер гриндил минуты и умирал — карточка
+    // отдавала 502. Ставим джобу на воркер; PDF появится после обновления.
     if ($canManageFiles && $hwHasImages && ! $hwImagePdf->exists($submission)) {
-        $hwImagePdf->rebuildQuietly($submission);
+        app(\App\Services\HomeworkService::class)->queueImagesPdfRebuild($submission);
     }
     $hwImagesPdfReady = $canManageFiles && $hwHasImages && $hwImagePdf->exists($submission);
     $hwImagesPdfUrl = $hwImagesPdfReady
@@ -47,6 +51,10 @@
                 class="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white"
                 style="min-height: 70vh; height: 70vh;"
             ></iframe>
+        </div>
+    @elseif($canManageFiles && $hwHasImages)
+        <div class="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-3 text-sm text-gray-500 dark:text-gray-400">
+            PDF с картинками последней отправки собирается в фоне — обновите страницу через минуту.
         </div>
     @endif
 

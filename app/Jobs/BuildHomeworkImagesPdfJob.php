@@ -41,7 +41,10 @@ final class BuildHomeworkImagesPdfJob implements ShouldQueue
 
     public int $tries = 1;
 
-    public int $timeout = 300;
+    // 590 (не 300, 08-10-2026): раунд из 12 фото собирается ~140 c на проде,
+    // потолок 40 страниц — примерно вдвое дольше; 300 резал бы её на корню.
+    // Держимся под supervisor-long timeout 600, чтобы воркера не убивал он.
+    public int $timeout = 590;
 
     public function __construct(public readonly int $submissionId)
     {
