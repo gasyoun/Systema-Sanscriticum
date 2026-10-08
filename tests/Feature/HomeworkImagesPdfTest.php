@@ -164,6 +164,10 @@ class HomeworkImagesPdfTest extends TestCase
         $submission = HomeworkSubmission::where('user_id', $student->id)->first();
         $this->assertNotNull($submission);
 
+        // Ленивый путь асинхронный с 08-10-2026: роут только ставит джобу,
+        // собирает её воркер — играем воркера руками перед GET.
+        $this->runQueuedImagesPdfJobs();
+
         $inline = $this->actingAs($teacherUser)
             ->get(route('homework.submission.images-pdf', $submission));
         $inline->assertOk()
@@ -191,6 +195,44 @@ class HomeworkImagesPdfTest extends TestCase
         $this->actingAs($stranger)
             ->get(route('homework.submission.images-pdf', $submission))
             ->assertForbidden();
+    }
+
+    /**
+     * Регрессия 502 (08-10-2026, сдача 3129): роут images-pdf при отсутстве
+     * PDF НЕ собирает его синхронно на пути запроса — только ставит джобу.
+     * Синхронная пересборка держала воркер php-fpm минутами и умирала.
+     *
+     * @test
+     */
+    public function missing_pdf_is_queued_not_built_on_request_path(): void
+    {
+        [$course, $lesson, $teacher] = $this->makeLessonWithHomework();
+        $student = User::factory()->create();
+        $teacherUser = User::where('teacher_id', $teacher->id)->first();
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            [
+                'action' => 'submit',
+                'body' => null,
+                'files' => [UploadedFile::fake()->image('a.jpg', 100, 80)],
+            ]
+        )->assertRedirect();
+
+        $submission = HomeworkSubmission::where('user_id', $student->id)->first();
+        $this->assertNotNull($submission);
+
+        $pdf = app(HomeworkImagePdfService::class);
+        $this->assertFalse($pdf->exists($submission));
+
+        Queue::fake();
+        $this->actingAs($teacherUser)
+            ->get(route('homework.submission.images-pdf', $submission))
+            ->assertStatus(404);
+
+        // Сборка поставлена в очередь, но на пути запроса НЕ выполнена.
+        Queue::assertPushed(BuildHomeworkImagesPdfJob::class, fn (BuildHomeworkImagesPdfJob $job) => $job->submissionId === (int) $submission->id);
+        $this->assertFalse($pdf->exists($submission));
     }
 
     /** @test */

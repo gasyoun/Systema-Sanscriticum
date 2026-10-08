@@ -586,6 +586,10 @@ class HomeworkService
     /**
      * Поставить пересборку combined-images PDF в очередь (H3095).
      *
+     * Единственная точка диспатча сборки. С 08-10-2026 публичная: её зовут
+     * и ленивые пути (карточка проверки, downloadImagesPdf) — синхронная
+     * пересборка на php-fpm умерла вместе с воркером (502, сдача 3129).
+     *
      * До 18-08-2026 сборка шла прямо здесь, на пути запроса. Она держит в
      * памяти base64 всех страниц, и на php-fpm с его 128M исчерпание памяти —
      * ФАТАЛЬНАЯ ошибка, которую `try/catch` внутри `rebuildQuietly()` не ловит:
@@ -597,7 +601,7 @@ class HomeworkService
      * не должны утащить за собой уведомление проверяющего. Это и есть то, что
      * делает обещание «уведомление не зависит от сборки» безусловным.
      */
-    private function queueImagesPdfRebuild(?HomeworkSubmission $submission): void
+    public function queueImagesPdfRebuild(?HomeworkSubmission $submission): void
     {
         if ($submission === null) {
             return;
