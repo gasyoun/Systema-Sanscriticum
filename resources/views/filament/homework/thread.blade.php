@@ -11,6 +11,9 @@
         ->get(['id', 'title']);
 
     // H2455 follow-up: PDF картинок без кнопки — сразу в карточке проверки.
+    // С 08-10-2026 сборка — последняя отправка (после последнего вердикта),
+    // а не вся история сдачи: сентябрьские проверенные файлы больше не
+    // склеиваются с октябрьской досдачей.
     $hwImagePdf = app(\App\Services\HomeworkImagePdfService::class);
     $hwHasImages = $hwImagePdf->studentImageFiles($submission)->isNotEmpty();
     if ($canManageFiles && $hwHasImages && ! $hwImagePdf->exists($submission)) {
@@ -30,7 +33,7 @@
         <div class="rounded-xl border border-primary-200 dark:border-primary-500/30 bg-primary-50/60 dark:bg-primary-500/10 p-3 space-y-2">
             <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
                 <span class="font-semibold text-primary-800 dark:text-primary-200">
-                    Все картинки — одним PDF (авто)
+                    Картинки последней отправки — одним PDF (авто)
                 </span>
                 <a href="{{ $hwImagesPdfDownloadUrl }}"
                    class="text-xs font-semibold text-primary-700 dark:text-primary-300 underline underline-offset-2 hover:no-underline"
@@ -40,7 +43,7 @@
             </div>
             <iframe
                 src="{{ $hwImagesPdfUrl }}"
-                title="Картинки домашней работы одним PDF"
+                title="Картинки последней отправки домашной работы (одним PDF)"
                 class="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white"
                 style="min-height: 70vh; height: 70vh;"
             ></iframe>
