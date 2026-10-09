@@ -96,6 +96,9 @@
                               class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-3 px-4">{{ old('comment') }}</textarea>
                 </div>
 
+                {{-- 152-ФЗ: путь оплаты — обязательность по флагу money-контура. --}}
+                <x-consent.pd :required="(bool) config('features.checkout_pd_consent_enforce')" />
+
                 <button type="submit"
                         class="w-full flex justify-center items-center py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-base font-bold rounded-xl transition-all shadow-lg shadow-emerald-200">
                     <i class="fas fa-file-invoice mr-2"></i> Сформировать счет
