@@ -26,6 +26,6 @@
         и ознакомлен(а) с <a href="{{ route('docs.show', 'privacy') }}" target="_blank" class="{{ $link }}">политикой конфиденциальности</a>@if($offer), принимаю <a href="{{ route('docs.show', 'oferta') }}" target="_blank" class="{{ $link }}">оферту</a>@endif.
     </span>
 </label>
-@error('pd_consent')
-    <p class="text-red-500 text-xs mt-1 font-medium">{{ $message }}</p>
-@enderror
+@if(isset($errors) && $errors->has('pd_consent'))
+    <p class="text-red-500 text-xs mt-1 font-medium">{{ $errors->first('pd_consent') }}</p>
+@endif
