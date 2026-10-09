@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Schedule;
@@ -12,6 +13,7 @@ use App\Services\Schedule\TextbookScale;
 use App\Support\ScheduleLabel;
 use App\Support\ShopCatalogUrl;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -55,16 +57,29 @@ class PublicSchedulePageController extends Controller
      */
     private const EXCLUDED_COURSE_IDS = [];
 
-    public function __invoke(): View
+    public function __invoke(Request $request): View
     {
         $courses = collect();
         $teachers = collect();
+
+        // H6313: query-фильтры те же, что у /api/public/schedule (direction —
+        // слаг категории, teacher — точное имя из teacher/teachers): пустой
+        // параметр = фильтра нет, незнакомое значение = пустой список, без ошибок.
+        $direction = $this->stringOrNull($request->query('direction'));
+        $teacher = $this->stringOrNull($request->query('teacher'));
 
         if (config('features.schedule_full_post', false)) {
             $courses = Course::query()
                 ->where('is_active', true)
                 ->where('is_visible', true)
                 ->whereHas('schedules', fn ($q) => $q->where('start', '>=', now()))
+                ->when($direction !== null, fn ($query) => $query->whereHas(
+                    'categories',
+                    fn ($c) => $c->where('slug', $direction),
+                ))
+                ->when($teacher !== null, fn ($query) => $query->where(fn ($sub) => $sub
+                    ->whereHas('teacher', fn ($t) => $t->where('name', $teacher))
+                    ->orWhereHas('teachers', fn ($t) => $t->where('name', $teacher))))
                 ->orderBy('title')
                 ->with(['groups:id,name', 'teacher:id,name'])
                 ->get()
@@ -88,11 +103,32 @@ class PublicSchedulePageController extends Controller
                 ->values();
         }
 
+        // Показное имя направления для строки фильтра (слаг → имя категории).
+        $directionName = null;
+        if ($direction !== null) {
+            $directionName = (string) (Category::query()->where('slug', $direction)->value('name') ?? $direction);
+        }
+
         return view('schedule.page', [
             'courses' => $courses,
             'teachers' => $teachers,
             'flagOn' => config('features.schedule_full_post', false),
+            'filterDirection' => $direction,
+            'filterDirectionName' => $directionName,
+            'filterTeacher' => $teacher,
         ]);
+    }
+
+    /** Та же нормализация query-параметра, что у Api\PublicScheduleController. */
+    private function stringOrNull(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
     }
 
     /**
@@ -267,11 +303,16 @@ class PublicSchedulePageController extends Controller
      * irregular — нерегулярный ритм без строки cadence (разовые «Открытые
      * занятия и вебинары»): такие всегда внизу списка, а не в середине.
      *
-     * @return array{course: Course, posts: list<FullSchedulePost>, next: ?Carbon, weekdayIso: int, weekdayRu: ?string, lessonsCount: int, displayTitle: string, teacherDisplay: ?string, nextLabel: ?string, progress: ?string, irregular: bool}
+     * @return array{course: Course, posts: list<FullSchedulePost>, next: ?Carbon, weekdayIso: int, weekdayRu: ?string, lessonsCount: int, displayTitle: string, teacherDisplay: ?string, nextLabel: ?string, progress: ?string, irregular: bool, kind: string}
      */
     private function row(Course $course): array
     {
         $posts = FullSchedulePost::forCourse($course, [ScheduleLabel::class, 'displayTitle']);
+
+        // H6313: irregular — та же семантика, что в compareRows (H5548);
+        // вид единицы для бейджа выводится из неё же.
+        $irregular = $posts !== []
+            && collect($posts)->every(fn (FullSchedulePost $p): bool => $p->cadence === null);
 
         $next = null;
         $lessonsCount = 0;
@@ -306,8 +347,10 @@ class PublicSchedulePageController extends Controller
                 : null,
             'nextLabel' => ScheduleLabel::nextLabel($next),
             'progress' => ScheduleLabel::progressLabel($pastTotal, $next),
-            'irregular' => $posts !== []
-                && collect($posts)->every(fn (FullSchedulePost $p): bool => $p->cadence === null),
+            'irregular' => $irregular,
+            // H6313: бейдж вида на единице расписания. Обзорное занятие и так
+            // подписано внутри поста («Обзорное занятие (не в счёт N)»).
+            'kind' => $irregular ? 'разовое' : 'обычное',
         ];
     }
 
