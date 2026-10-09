@@ -457,16 +457,16 @@
                 <form action="{{ route('student.lesson.complete', [$course->slug, $lesson->id]) }}" method="POST">
                     @csrf
                     <input type="hidden" name="next" value="{{ $nextLesson->id }}">
-                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 bg-brand hover:bg-brand-hover text-white rounded-xl font-extrabold text-xs md:text-sm leading-none transition-all shadow-[0_5px_15px_rgba(232,92,36,0.3)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide">
-                        Завершить и перейти к следующему уроку <i class="fas fa-arrow-right text-xs"></i>
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 bg-brand hover:bg-brand-hover text-white rounded-xl font-extrabold text-xs md:text-sm leading-tight transition-all shadow-[0_5px_15px_rgba(232,92,36,0.3)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide max-w-full whitespace-normal text-left">
+                        Завершить и продолжить <i class="fas fa-arrow-right text-xs"></i>
                     </button>
                 </form>
             @elseif($quizForBlock)
                 <form action="{{ route('student.lesson.complete', [$course->slug, $lesson->id]) }}" method="POST">
                     @csrf
                     <input type="hidden" name="next" value="quiz">
-                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 bg-brand hover:bg-brand-hover text-white rounded-xl font-extrabold text-xs md:text-sm leading-none transition-all shadow-[0_5px_15px_rgba(232,92,36,0.3)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide">
-                        Завершить и пройти итоговый квиз <i class="fas fa-arrow-right text-xs"></i>
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 bg-brand hover:bg-brand-hover text-white rounded-xl font-extrabold text-xs md:text-sm leading-tight transition-all shadow-[0_5px_15px_rgba(232,92,36,0.3)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide max-w-full whitespace-normal text-left">
+                        Завершить и пройти квиз <i class="fas fa-arrow-right text-xs"></i>
                     </button>
                 </form>
             @else

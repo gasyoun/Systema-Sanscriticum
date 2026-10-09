@@ -111,7 +111,7 @@ class LessonCompleteNextTest extends TestCase
             ->get(route('student.lesson', [$this->course->slug, $this->lessonOne->id]))
             ->assertOk();
 
-        $page->assertSee('Завершить и перейти к следующему уроку');
+        $page->assertSee('Завершить и продолжить');
         $page->assertDontSee('>Следующий урок');
 
         // После завершения: бейдж «Пройден» + линк вперёд на урок 2.
