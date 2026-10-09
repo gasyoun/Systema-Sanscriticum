@@ -75,7 +75,7 @@ final class VideoEmbed
 
         if ($id = self::youtubeId($url)) {
             // 152-ФЗ: превью через свой сервер (VideoThumbController) — без IP посетителя в Google.
-            return route('video.thumb', ['id' => $id]);
+            return "/video-thumb/{$id}.jpg"; // маршрут video.thumb; без route() — класс чистый (unit-тесты без приложения)
         }
 
         // Для RuTube / VK / Vimeo постер достать без API-запроса нельзя.

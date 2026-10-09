@@ -37,7 +37,8 @@ class NoForeignCdnTest extends TestCase
     {
         $url = 'https://www.youtube.com/watch?v=FmdnLXZ4UFo';
 
-        $this->assertSame(route('video.thumb', ['id' => 'FmdnLXZ4UFo']), VideoEmbed::poster($url));
+        $this->assertSame('/video-thumb/FmdnLXZ4UFo.jpg', VideoEmbed::poster($url));
+        $this->assertStringEndsWith('/video-thumb/FmdnLXZ4UFo.jpg', route('video.thumb', ['id' => 'FmdnLXZ4UFo']));
         $this->assertStringStartsWith('https://www.youtube-nocookie.com/embed/FmdnLXZ4UFo', (string) VideoEmbed::embed($url));
     }
 
