@@ -10,6 +10,7 @@ use App\Http\Controllers\LeadController;
 use App\Http\Controllers\NewsletterSubscribeController;
 use App\Http\Controllers\TelegramSupportLinkController;
 use App\Http\Controllers\TgLoginLinkController;
+use App\Http\Controllers\UnsubscribeController;
 use App\Models\TelegramBusinessStoryPublication;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -70,6 +71,16 @@ Route::get('/magic/{token}', [NewsletterSubscribeController::class, 'magic'])
     ->middleware('throttle:10,1')
     ->where('token', '[A-Za-z0-9]+')
     ->name('newsletter.magic');
+
+// --- ОТПИСКА ОТ РЕКЛАМНОЙ РАССЫЛКИ (152-ФЗ, 38-ФЗ ст. 18). Подписанная ссылка
+// из письма (App\Support\Unsubscribe::url). GET — подтверждение, POST — отписка
+// (и One-Click RFC 8058; исключён из CSRF). Строго до catch-all /{slug}.
+Route::get('/otpiska', [UnsubscribeController::class, 'show'])
+    ->middleware(['signed', 'throttle:30,1'])
+    ->name('unsubscribe');
+Route::post('/otpiska', [UnsubscribeController::class, 'store'])
+    ->middleware(['signed', 'throttle:30,1'])
+    ->name('unsubscribe.store');
 
 // --- ЗАЯВКА ИНТЕРЕСА НА КУРС (H5066) — join / recording / revive.
 // Самогейтится флагом course_interest_form (404 при OFF). Строго до catch-all

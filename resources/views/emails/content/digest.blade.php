@@ -10,5 +10,6 @@
 
         <div style="font-size: 16px; white-space: pre-line;">{{ $digestBody }}</div>
     </div>
+    @include('emails.partials.unsubscribe-footer')
 </body>
 </html>

@@ -47,9 +47,10 @@ class SeasonNotifyStartCommand extends Command
 
         $season = $this->resolveSeason();
 
-        $audience = self::audienceQuery()->get(['id', 'name', 'email', 'telegram_id']);
-        $emailTargets = $audience->filter(fn (User $u) => (bool) $u->email);
-        $telegramTargets = $audience->filter(fn (User $u) => (bool) $u->telegram_id);
+        $audience = self::audienceQuery()->get(['id', 'name', 'email', 'telegram_id', 'wants_email_announcements', 'wants_messenger_announcements']);
+        // 152-ФЗ / 38-ФЗ: анонс сезона — реклама, только при согласии на рассылку в этом канале.
+        $emailTargets = $audience->filter(fn (User $u) => (bool) $u->email && (bool) $u->wants_email_announcements);
+        $telegramTargets = $audience->filter(fn (User $u) => (bool) $u->telegram_id && (bool) $u->wants_messenger_announcements);
 
         $label = $season ? "«{$season->title}» (#{$season->id})" : (string) config('season.defaults.title');
         $mode = $dryRun ? 'DRY-RUN' : 'LIVE';
