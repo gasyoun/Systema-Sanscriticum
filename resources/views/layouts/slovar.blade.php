@@ -13,6 +13,10 @@
     <link rel="canonical" href="@yield('canonical', url()->current())">
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
+    {{-- H6211 Low-1: PNG 512 + apple-touch + публичный манифест (иконка в мобильной выдаче) --}}
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('images/icon-512.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/icon-180.png') }}">
+    <link rel="manifest" href="{{ asset('manifest-site.webmanifest') }}">
 
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Общество ревнителей санскрита">
