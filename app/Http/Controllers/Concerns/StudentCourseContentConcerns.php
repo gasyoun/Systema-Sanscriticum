@@ -6,6 +6,8 @@ use App\Jobs\TrackLessonViewJob;
 use App\Models\ActivityEvent;
 use App\Models\Course;
 use App\Models\CourseMaterial;
+use App\Models\CourseQuiz;
+use App\Models\CourseQuizAttempt;
 use App\Models\Lesson;
 use App\Models\LessonAccessGrant;
 use App\Models\LessonView;
@@ -68,6 +70,22 @@ trait StudentCourseContentConcerns
         // H2333: “where is lesson 1?” when this shell continues another course.
         $continuationBanner = app(CourseContinuationBanner::class)->for($course, $user);
 
+        // Квизы этапов (мини-курсы): активные квизы курса + лучшая попытка студента
+        // по каждому — попытки достаются одним запросом, без N+1.
+        $courseQuizzes = $course->quizzes()->where('is_active', true)->get();
+        if ($courseQuizzes->isNotEmpty()) {
+            $bestByQuizId = CourseQuizAttempt::where('user_id', $user->id)
+                ->whereIn('course_quiz_id', $courseQuizzes->pluck('id'))
+                ->get()
+                ->groupBy('course_quiz_id')
+                ->map(fn ($rows) => $rows->sort(
+                    fn ($a, $b) => [$b->passed, $b->score, $b->id] <=> [$a->passed, $a->score, $a->id]
+                )->first());
+            $courseQuizzes->each(
+                fn (CourseQuiz $quiz) => $quiz->setRelation('bestAttempt', $bestByQuizId->get($quiz->id))
+            );
+        }
+
         // H2386: per-locked-lesson access findings (flag OFF → empty map, views no-op).
         $accessSelfService = (bool) config('features.access_self_service', false);
         $accessFindingsByLessonId = [];
@@ -107,6 +125,7 @@ trait StudentCourseContentConcerns
                 'continuationBanner' => $continuationBanner,
                 'accessSelfService' => $accessSelfService,
                 'accessFindingsByLessonId' => $accessFindingsByLessonId,
+                'courseQuizzes' => $courseQuizzes,
             ]);
         }
 
@@ -118,6 +137,7 @@ trait StudentCourseContentConcerns
             'continuationBanner',
             'accessSelfService',
             'accessFindingsByLessonId',
+            'courseQuizzes',
         ));
     }
 

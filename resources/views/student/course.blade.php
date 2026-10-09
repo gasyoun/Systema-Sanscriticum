@@ -257,6 +257,9 @@
         @endforelse
     </div>
 
+    {{-- Квизы этапов (мини-курсы) --}}
+    @include('student.partials.course-quizzes', ['courseQuizzes' => $courseQuizzes ?? collect()])
+
 </div>
 
 @endsection

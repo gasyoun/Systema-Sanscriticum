@@ -100,7 +100,19 @@
             if (!$text) return '';
             $pattern = '/\b(\d{1,2}:\d{2}(?::\d{2})?)\b/';
             $replacement = '<button @click.prevent="seekTo(\'$1\')" class="inline-flex items-center gap-1.5 px-2 py-0.5 mx-1 rounded-md bg-brand/10 text-brand border border-brand/30 hover:bg-brand hover:text-white font-mono text-sm font-bold transition-all shadow-sm group"><i class="fas fa-play text-[10px] opacity-60 group-hover:opacity-100 group-hover:text-white transition-colors"></i>$1</button>';
-            return preg_replace($pattern, $replacement, $text);
+            $text = preg_replace($pattern, $replacement, $text);
+            // Голые URL в тексте урока (мини-курсы ссылаются на внешние статьи
+            // и видео) → кликабельные ссылки. Текст приходит экранированным (e()),
+            // таймкод-кнопки URL не содержат, так что подмена безопасна.
+            return preg_replace_callback('~https?://[^\s<]+~u', function ($m) {
+                $url = $m[0];
+                $trail = '';
+                while ($url !== '' && str_contains('.,;…', mb_substr($url, -1))) {
+                    $trail = mb_substr($url, -1).$trail;
+                    $url = mb_substr($url, 0, -1);
+                }
+                return '<a href="'.$url.'" target="_blank" rel="noopener" class="text-brand font-bold underline decoration-brand/30 hover:decoration-brand break-all">'.$url.'</a>'.$trail;
+            }, $text);
         }
     }
     
