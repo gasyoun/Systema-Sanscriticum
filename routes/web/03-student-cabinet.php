@@ -31,6 +31,7 @@ use App\Http\Controllers\Student\TestimonialSubmissionController;
 use App\Http\Controllers\StudentAgentController;
 use App\Http\Controllers\StudentCabinetGuideController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\StudentFaqController;
 use App\Http\Controllers\TeachingGlossaryController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\TimezoneController;
@@ -79,6 +80,11 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
 
     Route::get('/dvaram/help', [StudentCabinetGuideController::class, 'show'])
         ->name('student.help');
+
+    // H6301 — веб-паритет FAQ (тикет 5 аудита self-service): тот же
+    // resources/knowledge/faq.md, что кормит BotKnowledgeBase бота,
+    // статичной страницей — без второй копии ответов и без LLM.
+    Route::get('/dvaram/faq', [StudentFaqController::class, 'show'])->name('student.faq');
 
     // H4832 — поверхность тира Top (5 000 ₽/мес): преподавательский глоссарий.
     // Двухключевой гейт в контроллере: features.teaching_glossary (OFF → 404)
