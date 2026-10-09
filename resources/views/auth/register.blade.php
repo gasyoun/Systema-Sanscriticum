@@ -94,6 +94,9 @@
                     @include('partials.signup-source-select')
                 </div>
 
+                <x-consent.pd :offer="true" />
+                <x-consent.promo />
+
                 <div class="pt-2">
                     <button type="submit"
                         class="w-full bg-brand hover:bg-brand-hover text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 text-sm uppercase tracking-wider">

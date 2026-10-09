@@ -8,6 +8,8 @@ use App\Models\PromoCode;
 use App\Models\Tariff;
 use App\Models\User;
 use App\Services\AttributionService;
+use App\Services\Consent\ConsentRecorder;
+use App\Support\Consent\ConsentRules;
 use App\Services\CuratorNotifier;
 use App\Services\NearDuplicateEmailDetector;
 use App\Services\Payments\TochkaPaymentService;
@@ -64,9 +66,11 @@ class PaymentController extends Controller
             $rules['wants_announcements'] = 'nullable|boolean';
             $rules['birth_year'] = 'nullable|integer|min:1900|max:'.now()->format('Y');
             $rules['signup_source'] = ['nullable', 'string', Rule::in(AttributionService::SIGNUP_SOURCES)];
+            // 152-ФЗ: обязательность — за флагом money-контура (дефолт OFF).
+            $rules['pd_consent'] = ConsentRules::pd(checkout: true);
         }
 
-        $request->validate($rules);
+        $request->validate($rules, ConsentRules::messages());
 
         // Авторитетная проверка активности выполняется ДО резолва гостя: прямой
         // POST с уже выключенным тарифом не должен создавать пользователя и не
@@ -599,6 +603,7 @@ class PaymentController extends Controller
             'password' => Hash::make(Str::random(12)),
             'wants_email_announcements' => $request->boolean('wants_announcements'),
         ]);
+        app(ConsentRecorder::class)->fromForm($request, 'checkout', $user, null, null, 'wants_announcements');
 
         // Реферал: привязываем нового студента к пригласившему по коду
         // (из формы или сохранённого в сессии при переходе по ссылке).

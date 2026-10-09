@@ -410,7 +410,7 @@
                                     {{-- 1. Согласие ПД --}}
                                     <label class="flex items-start gap-3 text-left p-3 rounded-xl cursor-pointer transition-all duration-300 border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 group">
                                         <div class="flex items-center h-5 mt-0.5 shrink-0">
-                                            <input type="checkbox" x-model="agreedForm" class="w-5 h-5 rounded border-white/20 bg-transparent text-brand focus:ring-brand checked:bg-brand checked:border-transparent cursor-pointer transition-colors">
+                                            <input type="checkbox" name="pd_consent" value="1" required x-model="agreedForm" class="w-5 h-5 rounded border-white/20 bg-transparent text-brand focus:ring-brand checked:bg-brand checked:border-transparent cursor-pointer transition-colors">
                                         </div>
                                         <div class="text-xs text-gray-400 leading-relaxed select-none group-hover:text-gray-200 transition">
                                             Я даю <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие</span> на обработку моих персональных данных в соответствии с <span @click.prevent.stop="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>
@@ -420,7 +420,7 @@
                                     {{-- 2. Рассылка --}}
                                     <label class="flex items-start gap-3 text-left p-3 rounded-xl cursor-pointer transition-all duration-300 border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 group">
                                         <div class="flex items-center h-5 mt-0.5 shrink-0">
-                                            <input type="checkbox" name="is_promo_agreed" x-model="agreedPromoForm" class="w-5 h-5 rounded border-white/20 bg-transparent text-brand focus:ring-brand checked:bg-brand checked:border-transparent cursor-pointer transition-colors">
+                                            <input type="checkbox" name="is_promo_agreed" value="1" x-model="agreedPromoForm" class="w-5 h-5 rounded border-white/20 bg-transparent text-brand focus:ring-brand checked:bg-brand checked:border-transparent cursor-pointer transition-colors">
                                         </div>
                                         <div class="text-xs text-gray-400 leading-relaxed select-none group-hover:text-gray-200 transition">
                                             Я даю <span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие на получение рассылки</span>

@@ -182,6 +182,8 @@
                             </div>
                         @endforeach
                     </div>
+                    <x-consent.pd :offer="true" class="text-[11px]" />
+                    <x-consent.promo class="text-[11px]" />
                     <div class="pt-1">
                         <button type="submit"
                             class="w-full bg-brand hover:bg-brand-hover text-white font-extrabold py-2.5 px-4 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 text-xs uppercase tracking-wider">
