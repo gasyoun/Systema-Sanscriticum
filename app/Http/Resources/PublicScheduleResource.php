@@ -48,6 +48,12 @@ class PublicScheduleResource extends JsonResource
 
         $row = [
             'title' => $this->title,
+            // H6313: вид занятия — «обзорное» (is_overview), «разовое» (курс без
+            // недельного ритма) или «обычное». Значение ставит контроллер при
+            // сборке фида (семантика irregular как в сортировке /raspisanie);
+            // пробные полем kind не дублируются — они уже видны по
+            // bookable/book_token.
+            'kind' => $this->kind,
             'start' => $this->start?->toIso8601String(),
             'end' => $this->end?->toIso8601String(),
             // 1 = понедельник … 7 = воскресенье (для группировки по дням в виджете)
