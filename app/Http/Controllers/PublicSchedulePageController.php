@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Schedule;
@@ -105,7 +106,7 @@ class PublicSchedulePageController extends Controller
         // Показное имя направления для строки фильтра (слаг → имя категории).
         $directionName = null;
         if ($direction !== null) {
-            $directionName = (string) (\App\Models\Category::query()->where('slug', $direction)->value('name') ?? $direction);
+            $directionName = (string) (Category::query()->where('slug', $direction)->value('name') ?? $direction);
         }
 
         return view('schedule.page', [
