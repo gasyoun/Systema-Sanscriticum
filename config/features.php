@@ -1943,4 +1943,19 @@ return [
      | финансового руководителя.
      */
     'salary_returns_student_refunds_only' => (bool) env('SALARY_RETURNS_STUDENT_REFUNDS_ONLY', false),
+
+    /*
+     | 152-ФЗ: сервер отклоняет публичную форму без галочки согласия на
+     | обработку ПДн (pd_consent). Галочка обязательна в браузере и пишется в
+     | журнал consents при любом значении флага. Дефолт OFF: включать после
+     | повторного скана sitemap — пропущенная форма иначе молча теряет заявки.
+     | Страница оплаты сюда не входит — у неё свой флаг ниже (money-контур).
+     */
+    'pd_consent_enforce' => (bool) env('PD_CONSENT_ENFORCE', false),
+
+    /*
+     | 152-ФЗ, money-контур: то же для гостевой оплаты (/payment/create).
+     | Дефолт OFF — отказ здесь стоит денег; включать отдельно и после проверки.
+     */
+    'checkout_pd_consent_enforce' => (bool) env('CHECKOUT_PD_CONSENT_ENFORCE', false),
 ];
