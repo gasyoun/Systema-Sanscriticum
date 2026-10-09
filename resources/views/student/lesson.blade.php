@@ -247,9 +247,10 @@
     {{-- ЛЕВАЯ КОЛОНКА (Главная: Видео и Текст)     --}}
 <div class="lesson-main-col">
         
-        {{-- ВИДЕОПЛЕЕР — только у уроков, где запись есть/будет
-             (мини-курс: пустой чёрный прямоугольник «Видео недоступно» не показываем) --}}
-        @if($lesson->hasVideo())
+        {{-- ВИДЕОПЛЕЕР — у уроков без записи и без ближайшего занятия блок не показываем:
+             пустой чёрный прямоугольник «Видео недоступно» в мини-курсах не нужен.
+             Плейсхолдер внутри остаётся для записи-членаства и Zoom-панели пробного. --}}
+        @if($lesson->hasVideo() || ! empty($upcomingSession) || ! $recordingAllowed)
         <div class="w-full bg-[#19191C] rounded-[24px] overflow-hidden shadow-2xl border border-gray-200/50 relative z-40">
             <div class="relative aspect-video w-full bg-black">
                 @if($hasYoutube)

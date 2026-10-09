@@ -20,6 +20,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Table;
+use FilamentTiptapEditor\TiptapEditor;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
@@ -253,7 +254,7 @@ class LessonResource extends Resource
 
                 // Богатое тело урока (мини-курсы): заполнено — печатается вместо
                 // «topic» на странице урока. Санитизация при записи (мутатор модели).
-                FilamentTiptapEditor\TiptapEditor::make('content_html')
+                TiptapEditor::make('content_html')
                     ->label('Тело урока (HTML-этап)')
                     ->profile('simple')
                     ->columnSpanFull()
