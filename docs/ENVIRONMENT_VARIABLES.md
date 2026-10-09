@@ -108,6 +108,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CHECKOUT_LEGACY_PENDING_DAYS` | optional | `30` | config/checkout.php:31 |
 | `CHECKOUT_NEAR_DUPLICATE_EMAIL_GUARD` | optional | `false` | config/features.php:1685 |
 | `CHECKOUT_PAYPAL_WEBHOOK_AMOUNT_TOLERANCE` | optional | `1.00` | config/checkout.php:52 |
+| `CHECKOUT_PD_CONSENT_ENFORCE` | optional | `false` | config/features.php:1960 |
 | `CHECKOUT_PROMO_RESERVATIONS` | optional | `true` | config/features.php:684 |
 | `CHECKOUT_PROMO_SURVIVES_SESSION` | optional | `true` | config/features.php:751 |
 | `CHECKOUT_REFERRAL_CREDIT_LOCK` | optional | `true` | config/features.php:708 |
@@ -176,7 +177,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CRM_TRIAL_WIDGET_PUBLIC` | optional | `false` | config/features.php:1114 |
 | `CSRF_MISMATCH_DIGEST_THRESHOLD` | optional | `20` | config/csrf.php:30 |
 | `CSRF_MISMATCH_DIGEST_WINDOW_DAYS` | optional | `1` | config/csrf.php:25 |
-| `CSRF_MISMATCH_LOG_RETENTION_DAYS` | optional | `30` | config/logging.php:136 |
+| `CSRF_MISMATCH_LOG_RETENTION_DAYS` | optional | `30` | config/logging.php:145 |
 | `DATABASE_URL` | required | `—` | config/database.php:41<br>config/database.php:49<br>config/database.php:73<br>config/database.php:88 |
 | `DB_CONNECTION` | optional | `'mysql'` | config/database.php:19<br>config/queue.php:112<br>config/queue.php:129 |
 | `DB_DATABASE` | optional | `database_path('database.sqlite')` | config/database.php:42<br>config/database.php:52<br>config/database.php:76<br>config/database.php:91 |
@@ -393,10 +394,11 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `LOGS_WATCH_YESTERDAY_UNTIL_UTC` | optional | `'06:00'` | config/logs_watch.php:44 |
 | `LOG_CHANNEL` | optional | `'stack'` | config/logging.php:22 |
 | `LOG_DEPRECATIONS_CHANNEL` | optional | `'null'` | config/logging.php:36 |
-| `LOG_LEVEL` | optional | `'debug'` | config/logging.php:65<br>config/logging.php:72<br>config/logging.php:82<br>config/logging.php:88<br>config/logging.php:100<br>config/logging.php:111<br>config/logging.php:118 |
-| `LOG_PAPERTRAIL_HANDLER` | optional | `SyslogUdpHandler::class` | config/logging.php:89 |
-| `LOG_SLACK_WEBHOOK_URL` | required | `—` | config/logging.php:79 |
-| `LOG_STDERR_FORMATTER` | required | `—` | config/logging.php:102 |
+| `LOG_LEVEL` | optional | `'debug'` | config/logging.php:72<br>config/logging.php:80<br>config/logging.php:91<br>config/logging.php:97<br>config/logging.php:109<br>config/logging.php:120<br>config/logging.php:127 |
+| `LOG_MASK_PERSONAL_DATA` | optional | `true` | config/logging.php:60 |
+| `LOG_PAPERTRAIL_HANDLER` | optional | `SyslogUdpHandler::class` | config/logging.php:98 |
+| `LOG_SLACK_WEBHOOK_URL` | required | `—` | config/logging.php:88 |
+| `LOG_STDERR_FORMATTER` | required | `—` | config/logging.php:111 |
 | `LYW_ENABLED` | feature-flag | `false` | config/lyw.php:24 |
 | `LYW_PACKS_PATH` | optional | `storage_path('app/lesson-packs')` | config/lyw.php:30 |
 | `MAILGUN_DOMAIN` | required | `—` | config/services.php:20 |
@@ -554,8 +556,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `OPENROUTER_TELEGRAM_CHAT_ID` | optional | `env('CABINET_PROBE_TELEGRAM_CHAT_ID', env('ADMIN_TELEGRAM_ID', '')),` | config/openrouter.php:28 |
 | `OPENROUTER_TIMEOUT` | optional | `10` | config/openrouter.php:11 |
 | `OPENROUTER_TOPUP_ROUND_TO` | optional | `10` | config/openrouter.php:26 |
-| `PAPERTRAIL_PORT` | required | `—` | config/logging.php:92<br>config/logging.php:93 |
-| `PAPERTRAIL_URL` | required | `—` | config/logging.php:91<br>config/logging.php:93 |
+| `PAPERTRAIL_PORT` | required | `—` | config/logging.php:101<br>config/logging.php:102 |
+| `PAPERTRAIL_URL` | required | `—` | config/logging.php:100<br>config/logging.php:102 |
 | `PARTNER_BOT_SECRET` | secret | `''` | config/partner.php:33 |
 | `PARTNER_PROGRAM_ENABLED` | feature-flag | `false` | config/partner.php:24 |
 | `PARTNER_REWARD_AMOUNT` | optional | `1000` | config/partner.php:29 |
@@ -577,6 +579,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `PAYPAL_TRUST_EXISTING_STUDENTS` | optional | `true` | config/services.php:662 |
 | `PAYPAL_TRUST_MIN_ACCOUNT_AGE_HOURS` | optional | `24` | config/services.php:668 |
 | `PAYPAL_WEBHOOK_ID` | required | `—` | config/services.php:691 |
+| `PD_CONSENT_ENFORCE` | optional | `false` | config/features.php:1954 |
 | `POSTMARK_TOKEN` | secret | `—` | config/services.php:27 |
 | `PRANA_DAILY_P2P_LIMIT` | optional | `30` | config/prana.php:12 |
 | `PRANA_DAILY_P2P_PER_USER` | optional | `10` | config/prana.php:13 |
@@ -586,6 +589,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `PRANA_DECAY_INACTIVE_DAYS` | optional | `30` | config/prana.php:19 |
 | `PRANA_DECAY_PERCENT` | optional | `10` | config/prana.php:20 |
 | `PRANA_SRS_REVIEW_DAILY_CAP` | optional | `120` | config/prana.php:51 |
+| `PRIVACY_IP_RETENTION_DAYS` | optional | `180` | config/privacy.php:17 |
+| `PRIVACY_PRUNE` | optional | `false` | config/features.php:1969 |
 | `PRIVATE_ARCHIVE_DRUZHININ_AYURVEDA` | optional | `false` | config/membership.php:106 |
 | `PRIVATE_ARCHIVE_DRUZHININ_ELIGIBILITY_SLUGS` | optional | `'povtornaia-aiurveda'` | config/membership.php:108 |
 | `PRIVATE_ARCHIVE_DRUZHININ_OFFER_SLUG` | optional | `'povtornaia-aiurveda-v-zapisi'` | config/membership.php:107 |
@@ -882,7 +887,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TELEGRAM_HARVEST_EXPECTED_GROUP` | optional | `'www-data'` | config/services.php:350 |
 | `TELEGRAM_HARVEST_EXPECTED_OWNER` | optional | `'www-data'` | config/services.php:349 |
 | `TELEGRAM_HARVEST_HISTORY_LIMIT` | optional | `200` | config/services.php:333 |
-| `TELEGRAM_HARVEST_LOG_RETENTION_DAYS` | optional | `7` | config/logging.php:149 |
+| `TELEGRAM_HARVEST_LOG_RETENTION_DAYS` | optional | `7` | config/logging.php:158 |
 | `TELEGRAM_HARVEST_MEDIA_DOWNLOAD_PEERS` | optional | `''` | config/services.php:391 |
 | `TELEGRAM_HARVEST_PEERS` | optional | `''` | config/services.php:335 |
 | `TELEGRAM_HARVEST_PEERS_FILE` | required | `—` | config/services.php:337 |

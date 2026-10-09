@@ -1958,4 +1958,13 @@ return [
      | Дефолт OFF — отказ здесь стоит денег; включать отдельно и после проверки.
      */
     'checkout_pd_consent_enforce' => (bool) env('CHECKOUT_PD_CONSENT_ENFORCE', false),
+
+    /*
+     | 152-ФЗ ст. 5 ч. 7: ежедневная команда privacy:prune --scheduled обнуляет
+     | IP-адреса старше config('privacy.ip_retention_days') (дефолт 180) в
+     | журналах активности. Дефолт OFF — включать после утверждения срока
+     | хранения и вписывания его в политику. Сухой прогон работает всегда:
+     | php artisan privacy:prune [--report]
+     */
+    'privacy_prune' => (bool) env('PRIVACY_PRUNE', false),
 ];
