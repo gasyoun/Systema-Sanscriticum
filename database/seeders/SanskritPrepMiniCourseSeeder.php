@@ -107,6 +107,7 @@ class SanskritPrepMiniCourseSeeder extends Seeder
                         'lesson_date' => $lessonData['lesson_date'],
                         'block_number' => $stage['number'],
                         'youtube_url' => $lessonData['youtube_url'] ?? null,
+                        'video_url' => $lessonData['video_url'] ?? null,
                         'is_published' => true,
                         'is_free' => true,
                         'show_on_main' => false,
@@ -420,6 +421,7 @@ class SanskritPrepMiniCourseSeeder extends Seeder
                     [
                         'title' => 'Урок 2 — Каллиграфия деванагари',
                         'lesson_date' => '2026-10-19',
+                        'video_url' => 'https://vk.com/video1116419_456241944',
                         'homework' => true,
                         'homework_prompt' => 'Пришлите фото своих каллиграфических опытов: пропись, символ Ом или своя акшара. Не любите чаты — загрузите работу прямо здесь, куратор оценит и подскажет.',
                         'content_html' => implode([
@@ -470,6 +472,7 @@ class SanskritPrepMiniCourseSeeder extends Seeder
                     [
                         'title' => 'Урок 3 — Напевный санскрит',
                         'lesson_date' => '2026-10-26',
+                        'video_url' => 'https://vkvideo.ru/video-89658969_456240350',
                         'homework' => true,
                         'homework_prompt' => 'Запишите аудио или видео своей рецитации: весь алфавит, только гласные или любимую мантру — любой вариант. Прикрепите файл здесь или пришлите куратору: послушаем и мягко поправим.',
                         'content_html' => implode([
@@ -520,6 +523,7 @@ class SanskritPrepMiniCourseSeeder extends Seeder
                     [
                         'title' => 'Урок 4 — Разговорный санскрит',
                         'lesson_date' => '2026-11-02',
+                        'video_url' => 'https://vkvideo.ru/video-88831040_456240131',
                         'homework' => true,
                         'homework_prompt' => 'Запишите короткое знакомство по-санскритски: «मम नाम … अस्ति» (моё имя…) и «अहम् … देशाद् अस्मि» (я из…). А в конце — одно приветствие на выбор. Смелее: это этап про смелость, а не про perfection.',
                         'content_html' => implode([
@@ -574,6 +578,7 @@ class SanskritPrepMiniCourseSeeder extends Seeder
                     [
                         'title' => 'Урок 5 — Искусство перевода',
                         'lesson_date' => '2026-11-09',
+                        'video_url' => 'https://vkvideo.ru/video-89658969_456240352',
                         'homework' => true,
                         'homework_prompt' => 'Два задания на выбор (или оба): 1) свой связный перевод строки «skandaḥ skandadharaḥ dhūryaḥ varadaḥ»; 2) литературный перевод шлоки 90 Рамаяны из подстрочника. За шлоку — конспект по сложным словам в подарок.',
                         'content_html' => implode([

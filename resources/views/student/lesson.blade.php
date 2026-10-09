@@ -84,9 +84,13 @@
         && \App\Http\Controllers\StudentController::parseVideoId($lesson->youtube_url, 'youtube') !== null;
     $hasRutube = $recordingAllowed
         && \App\Http\Controllers\StudentController::parseVideoId($lesson->rutube_url, 'rutube') !== null;
+    // VK-видео лежит в video_url человекочитаемой ссылкой (vk.com/video…, vkvideo.ru/video…)
+    $hasVk = $recordingAllowed
+        && \App\Http\Controllers\StudentController::parseVideoId($lesson->video_url, 'vk') !== null;
     $gateUrl = fn (string $player): string => route('student.recording.gate', [$course->slug, $lesson->id, $player]);
     $gateYoutube = $hasYoutube ? $gateUrl('youtube') : null;
     $gateRutube = $hasRutube ? $gateUrl('rutube') : null;
+    $gateVk = $hasVk ? $gateUrl('vk') : null;
     $kinescopeEmbedUrl = $recordingAllowed ? ($kinescopeEmbedUrl ?? null) : null;
     $kinescopePilotActive = !empty($kinescopeEmbedUrl);
     $gateKinescope = $kinescopePilotActive ? $gateUrl('kinescope') : null;
@@ -129,7 +133,7 @@
 {{-- ========================================== --}}
 <div class="lesson-layout relative"
      x-data="{
-         player: '{{ $kinescopePilotActive ? 'kinescope' : ($hasRutube ? 'rutube' : ($hasYoutube ? 'youtube' : 'none')) }}',
+         player: '{{ $kinescopePilotActive ? 'kinescope' : ($hasRutube ? 'rutube' : ($hasYoutube ? 'youtube' : ($hasVk ? 'vk' : 'none'))) }}',
          currentTime: 0,
          videoDuration: {{ $resumeDuration ?? 'null' }},
          videoResumeEnabled: {{ $videoResumeEnabled ? 'true' : 'false' }},
@@ -268,6 +272,16 @@
                     </iframe>
                 @endif
 
+                @if($hasVk)
+                    <iframe x-show="player === 'vk'"
+                            id="vk-player"
+                            src="{{ $gateVk }}"
+                            class="w-full h-full absolute inset-0"
+                            allowfullscreen
+                            allow="autoplay; encrypted-media; fullscreen">
+                    </iframe>
+                @endif
+
                 @if($kinescopePilotActive)
                     <iframe x-show="player === 'kinescope'"
                             id="kinescope-player"
@@ -356,7 +370,12 @@
                             <img src="https://rutube.ru/favicon.ico" :class="player === 'rutube' ? '' : 'opacity-50 grayscale'" class="w-3.5 h-3.5 mr-2 transition-all"> RuTube
                         </button>
                     @endif
-                    @if($hasYoutube && ($hasRutube || $kinescopePilotActive))
+                    @if($hasVk && ($hasYoutube || $hasRutube || $kinescopePilotActive))
+                        <button type="button" @click="player = 'vk'" :class="player === 'vk' ? 'bg-[#0077FF] text-white shadow-[0_0_15px_rgba(0,119,255,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
+                            <img src="https://vk.com/images/icons/favicons/fav_logo_2x.ico" :class="player === 'vk' ? '' : 'opacity-50 grayscale'" class="w-3.5 h-3.5 mr-2 transition-all" alt=""> VK Видео
+                        </button>
+                    @endif
+                    @if($hasYoutube && ($hasRutube || $kinescopePilotActive || $hasVk))
                         <button type="button" @click="player = 'youtube'" :class="player === 'youtube' ? 'bg-[#ff0000] text-white shadow-[0_0_15px_rgba(255,0,0,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
                             <i class="fab fa-youtube mr-2 text-sm" :class="player === 'youtube' ? 'text-white' : 'text-gray-500'"></i> YouTube
                         </button>
