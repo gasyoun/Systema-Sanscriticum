@@ -47,16 +47,40 @@
         </div>
 
         {{-- Ввод --}}
-        <form wire:submit="send" class="border-t border-gray-100 p-3 flex items-end gap-2 shrink-0">
-            <textarea wire:model="newMessage" rows="1"
-                      placeholder="Напишите сообщение..."
-                      class="flex-1 resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition"
-                      x-data x-on:keydown.enter.prevent="$wire.send()"></textarea>
-            <button type="submit"
-                    class="shrink-0 bg-brand hover:bg-brand-hover text-white font-bold w-12 h-12 rounded-xl shadow transition-colors flex items-center justify-center"
-                    wire:loading.attr="disabled">
-                <i class="fas fa-paper-plane"></i>
-            </button>
+        <form wire:submit="send" class="border-t border-gray-100 p-3 shrink-0">
+            <div class="flex items-end gap-2">
+                {{-- autocomplete=off и отсутствие name/id: приватный черновик не сохраняется браузером --}}
+                <textarea wire:model="newMessage" rows="1"
+                          autocomplete="off"
+                          aria-label="Сообщение в чат поддержки"
+                          placeholder="Напишите сообщение..."
+                          class="flex-1 resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition"
+                          x-data x-on:keydown.enter.prevent="$wire.send()"></textarea>
+                <button type="submit"
+                        aria-label="Отправить сообщение"
+                        class="shrink-0 bg-brand hover:bg-brand-hover text-white font-bold w-12 h-12 rounded-xl shadow transition-colors flex items-center justify-center"
+                        wire:loading.attr="disabled">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            {{-- H6300: доступное состояние отправки/ошибки — объявляется скринридеру --}}
+            <div role="status" aria-live="polite" class="min-h-0">
+                @if ($sendError)
+                    <p class="mt-2 text-[13px] text-red-600 leading-snug">
+                        <i class="fas fa-triangle-exclamation mr-1.5" aria-hidden="true"></i>{{ $sendError }}
+                    </p>
+                @endif
+                @if ($replyPendingRetry)
+                    <p class="mt-2 text-[13px] text-orange-600 leading-snug">
+                        <i class="fas fa-triangle-exclamation mr-1.5" aria-hidden="true"></i>Сообщение доставлено, но ответ задерживается.
+                    </p>
+                    <button type="button" wire:click="retryReply"
+                            class="mt-1 text-[13px] font-bold text-brand hover:text-brand-hover underline">
+                        Повторить получение ответа
+                    </button>
+                @endif
+            </div>
         </form>
     </div>
 </div>
