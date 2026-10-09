@@ -17,7 +17,12 @@
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{{ $canonical }}">
 
+    {{-- H6211 Low-1: PNG-иконка 512 + apple-touch + публичный манифест — Google показывает
+         иконку в мобильной выдаче; .ico остаётся легаси-фолбэком. --}}
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('images/icon-512.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/icon-180.png') }}">
+    <link rel="manifest" href="{{ asset('manifest-site.webmanifest') }}">
 
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="{{ $siteName }}">
@@ -71,7 +76,10 @@
                         '@type' => 'SearchAction',
                         'target' => [
                             '@type' => 'EntryPoint',
-                            'urlTemplate' => $orgSiteUrl.'/online?search={search_term_string}',
+                            // H6211 Low-3: канонический path-URL /online/poisk/{слова}
+                            // вместо /online?search=…, который 301-редиректится —
+                            // один хоп меньше для sitelinks searchbox.
+                            'urlTemplate' => $orgSiteUrl.'/online/poisk/{search_term_string}',
                         ],
                         'query-input' => 'required name=search_term_string',
                     ],

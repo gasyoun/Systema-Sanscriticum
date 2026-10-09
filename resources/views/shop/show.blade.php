@@ -23,6 +23,31 @@ document.addEventListener('DOMContentLoaded', function () {
         window.shopReachGoal('course_page_view');
     }
 });
+
+// Секции-аккордеоны (data-collapse-section: «О курсе», «Программа курса»,
+// «Расписание», «Полное расписание») свернуты по умолчанию — так «Выберите
+// вариант участия» виден сразу под хиро. Прямая ссылка с анкором секции
+// (#about, #program, #schedule, #full-schedule) и клики по якорям внутри
+// страницы («все даты» из хиро) должны раскрывать свою секцию, иначе анкор
+// ведет на закрытую шапку.
+(function () {
+    var expandForHash = function () {
+        var hash = window.location.hash;
+        if (!hash || hash.length < 2) {
+            return;
+        }
+        var el = document.getElementById(decodeURIComponent(hash.slice(1)));
+        if (!el) {
+            return;
+        }
+        var section = el.closest('section[data-collapse-section]');
+        if (section && window.Alpine && window.Alpine.$data) {
+            window.Alpine.$data(section).open = true;
+        }
+    };
+    document.addEventListener('alpine:initialized', expandForHash);
+    window.addEventListener('hashchange', expandForHash);
+})();
 </script>
 @endpush
 
@@ -233,7 +258,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <i class="fas fa-play text-xs"></i> {{ $ctaAb['label'] ?? 'Смотреть пробный урок' }}
                             </a>
                         @else
-                            <a href="{{ route('shop.index', $course->isLive() ? ['format' => 'live'] : ($course->isEnrolling() ? ['format' => 'enrolling'] : ($course->format === 'recorded' ? ['format' => 'recorded'] : []))) }}"
+                            {{-- H6211: прямой path-URL фильтра вместо ?format= (как на главной, Low-2) --}}
+                            <a href="{{ $course->isLive() ? '/online/format/live' : ($course->isEnrolling() ? '/online/format/enrolling' : ($course->format === 'recorded' ? '/online/format/recorded' : '/online')) }}"
                                class="inline-flex justify-center items-center px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-[#1F2636] hover:bg-[#2A344A] transition-all">
                                 @if($course->format === 'recorded')
                                     Библиотека записей
@@ -335,6 +361,45 @@ document.addEventListener('DOMContentLoaded', function () {
         @include('shop.partials.outcomes')
         @include('shop.partials.flagship-free-step')
 
+        {{-- ───── Запись потока: уникальные факты когорты (H6211 Medium-2) ─────
+             Записанные группы одного курса были похожи на ~72% (аудит H6160).
+             Блок собирает видимый текст ТОЛЬКО из реальных данных этого потока —
+             период учёбы по блокам, число занятий, модули, уровень. Нет данных —
+             нет строки: факты вне реальных данных сюда не вносятся. --}}
+        @if($course->format === 'recorded')
+            @php
+                $cohortDated = $course->blocks->filter(fn ($b) => $b->starts_at);
+                $cohortStart = $cohortDated->min('starts_at');
+                $cohortEnd = $course->blocks->filter(fn ($b) => $b->ends_at)->max('ends_at');
+                $cohortLessons = (int) ($course->lessons_count ?: 0);
+                $cohortModules = $course->blocks->filter(fn ($b) => filled($b->title))->count();
+                $cohortLevel = $course->levelLabel();
+                preg_match('/гр\.\s*\d+/u', $course->title, $cohortMatch);
+                $cohortLabel = $cohortMatch[0] ?? null;
+            @endphp
+            @if($cohortStart && $cohortLessons > 0)
+                <section class="mb-12 lg:mb-16 rounded-2xl bg-[#111622] border border-[#1F2636] p-6 lg:p-8">
+                    <h2 class="text-xl lg:text-2xl font-bold text-white mb-3">
+                        Запись потока{{ $cohortLabel ? ' '.$cohortLabel : '' }}
+                    </h2>
+                    <p class="text-slate-300 leading-relaxed">
+                        Это не живая группа, а запись прошедшего потока{{ $cohortLabel ? ' '.$cohortLabel : '' }}:
+                        занятия шли с {{ $cohortStart->translatedFormat('d F Y') }}@if($cohortEnd && ! $cohortEnd->isSameDay($cohortStart)) по {{ $cohortEnd->translatedFormat('d F Y') }}@endif —
+                        {{ $cohortLessons }} {{ \App\Support\Plural::ru($cohortLessons, 'онлайн-занятие', 'онлайн-занятия', 'онлайн-занятий') }}
+                        осталось в записи, смотреть можно в своём темпе, доступ открывается сразу после оплаты.@if($cohortModules > 1)
+                        Программа — {{ $cohortModules }} {{ \App\Support\Plural::ru($cohortModules, 'модуль', 'модуля', 'модулей') }}.@endif@if($cohortLevel)
+                        Уровень — {{ $cohortLevel }}.@endif
+                    </p>
+                    <p class="text-sm text-slate-400 mt-4">
+                        Предпочитаете живые занятия?
+                        <a href="/online/format/live" class="text-indigo-400 underline hover:text-indigo-300">Живые группы с преподавателем</a>
+                        ·
+                        <a href="/online/format/recorded" class="text-indigo-400 underline hover:text-indigo-300">Другие записи курсов</a>
+                    </p>
+                </section>
+            @endif
+        @endif
+
         {{-- ───── 1. О КУРСЕ (парная раскладка: текст + панель фактов) ───── --}}
         @php
             // Даты проведения курса — диапазон по блокам (если у них проставлены сроки).
@@ -367,9 +432,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     : null,
             ])->filter()->values();
         @endphp
-        <section class="mb-16 lg:mb-20">
-            <h2 class="text-3xl font-bold text-white mb-8">О курсе</h2>
+        <section id="about" class="mb-16 lg:mb-20" x-data="{ open: false }" data-collapse-section>
+            @include('shop.partials.collapse-header', ['title' => 'О курсе', 'bodyId' => 'about-body'])
 
+            <div id="about-body" x-show="open" x-cloak
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 -translate-y-3"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0 -translate-y-3">
             <div class="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
                 {{-- Левая колонка: текстовое описание --}}
                 <div class="prose prose-invert prose-lg prose-slate max-w-none lg:flex-1">
@@ -404,6 +476,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </aside>
                 @endif
             </div>
+            </div>
         </section>
 
         @include('partials.samskrtam-related', ['samskrtamKey' => $course->slug])
@@ -435,15 +508,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 || ($lessonsByBlock[$b->number] ?? collect())->isNotEmpty());
         @endphp
         @if($hasProgram)
-        <section id="program" class="mb-16 lg:mb-20" x-data="{ open: null }">
-            <h2 class="text-3xl font-bold text-white mb-8">Программа курса</h2>
+        <section id="program" class="mb-16 lg:mb-20" x-data="{ open: false, block: null }" data-collapse-section>
+            @include('shop.partials.collapse-header', ['title' => 'Программа курса', 'bodyId' => 'program-body'])
 
+            <div id="program-body" x-show="open" x-cloak
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 -translate-y-3"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0 -translate-y-3">
             <div class="space-y-3">
                 @foreach($course->blocks as $block)
                     @php $blockLessons = $lessonsByBlock[$block->number] ?? collect(); @endphp
                     <div class="rounded-2xl bg-[#111622] border border-[#1F2636] overflow-hidden">
                         <button type="button"
-                                @click="open === {{ $block->number }} ? open = null : open = {{ $block->number }}"
+                                @click="block === {{ $block->number }} ? block = null : block = {{ $block->number }}"
                                 class="w-full flex items-center gap-4 p-5 text-left hover:bg-[#1A2235] transition-colors">
                             <span class="flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-[#1F2636] to-[#0A0D14] border border-[#1F2636] text-base font-extrabold text-white">
                                 {{ $block->number }}
@@ -467,12 +547,12 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                             @if($blockLessons->isNotEmpty())
                                 <i class="fas fa-chevron-down text-slate-500 text-sm transition-transform"
-                                   :class="open === {{ $block->number }} ? 'rotate-180' : ''"></i>
+                                   :class="block === {{ $block->number }} ? 'rotate-180' : ''"></i>
                             @endif
                         </button>
 
                         @if($blockLessons->isNotEmpty())
-                            <div x-show="open === {{ $block->number }}" x-transition style="display:none"
+                            <div x-show="block === {{ $block->number }}" x-transition style="display:none"
                                  class="border-t border-[#1F2636]">
                                 <ol class="px-5 py-4 space-y-2">
                                     @foreach($blockLessons as $i => $lesson)
@@ -487,6 +567,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 @endforeach
             </div>
+            </div>
         </section>
         @endif
 
@@ -496,14 +577,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
         {{-- ───── 1.5 РАСПИСАНИЕ ───── --}}
         @if(!empty($scheduleGroups) && $scheduleGroups->isNotEmpty())
-        <section id="schedule" class="mb-16 lg:mb-20">
-            <div class="flex items-center gap-4 mb-8">
-                <h2 class="text-3xl font-bold text-white">{{ ! empty($flagship) ? 'Ближайшие занятия' : 'Расписание' }}</h2>
-                @unless(! empty($flagship))
-                    <span class="text-sm font-bold text-slate-500">ближайшие занятия</span>
-                @endunless
-            </div>
+        <section id="schedule" class="mb-16 lg:mb-20" x-data="{ open: false }" data-collapse-section>
+            @include('shop.partials.collapse-header', [
+                'title' => ! empty($flagship) ? 'Ближайшие занятия' : 'Расписание',
+                'caption' => empty($flagship) ? 'ближайшие занятия' : null,
+                'bodyId' => 'schedule-body',
+            ])
 
+            <div id="schedule-body" x-show="open" x-cloak
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 -translate-y-3"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0 -translate-y-3">
             <div class="space-y-10">
                 @foreach($scheduleGroups as $month => $sessions)
                     <div>
@@ -589,6 +676,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <p class="mt-6 text-sm text-slate-500 max-w-3xl" data-analytics="objection-time-microcopy">
                 Не попадаете по времени? Занятие останется в записи — вернетесь к нему, когда будет тишина. Пропуск не выбивает из курса.
             </p>
+            </div>
         </section>
         @endif
 

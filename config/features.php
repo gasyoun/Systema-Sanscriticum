@@ -33,6 +33,20 @@ return [
     'trial_grant_hardening' => (bool) env('TRIAL_GRANT_HARDENING', false),
 
     /*
+     | Пробное занятие переключается само (08-10-2026). Раньше после занятия пин
+     | (trial_schedule_id) «протухал»: кнопка продавала запись прошедшего, пока
+     | человек не переуказывал занятие в Filament по алерту trial:check-freshness.
+     | trial:auto-advance (каждые 15 мин): занятие пина началось → следующее
+     | занятие того же курса и той же группы; урок-заготовку создаёт прежний
+     | Course::syncTrialPlaceholderLesson(). Следующего нет — ничего не трогает.
+     | Уже купившие сохраняют доступ к своему уроку. Платёжный путь не меняется.
+     |
+     | ВЫКЛ по умолчанию (денежный контур). Включение — TRIAL_AUTO_ADVANCE=true
+     | + config:cache; проверка — php artisan trial:auto-advance --dry-run.
+     */
+    'trial_auto_advance' => (bool) env('TRIAL_AUTO_ADVANCE', false),
+
+    /*
      | Единый ответ из Helpdesk с маршрутизацией в канал разговора. ВЫКЛЮЧЕН по
      | умолчанию: когда включён, ответ куратора на диалог, живущий в
      | импортированном TG-support (userbot), пишется в TelegramSupportMessage
