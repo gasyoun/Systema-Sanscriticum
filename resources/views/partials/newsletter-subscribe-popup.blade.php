@@ -160,7 +160,9 @@
                         this.open = false;
                         return;
                     }
-                    if (! localStorage.getItem('cookie_consent_v1')) {
+                    // Не перекрываем баннер cookie: попап — только после выбора в нём
+                    // (любого — согласие на аналитику для подписки не нужно).
+                    if (! (window.ssConsent && window.ssConsent.decided())) {
                         this.open = false;
                         return;
                     }
