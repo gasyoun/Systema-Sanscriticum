@@ -243,7 +243,9 @@
     {{-- ЛЕВАЯ КОЛОНКА (Главная: Видео и Текст)     --}}
 <div class="lesson-main-col">
         
-        {{-- ВИДЕОПЛЕЕР --}}
+        {{-- ВИДЕОПЛЕЕР — только у уроков, где запись есть/будет
+             (мини-курс: пустой чёрный прямоугольник «Видео недоступно» не показываем) --}}
+        @if($lesson->hasVideo())
         <div class="w-full bg-[#19191C] rounded-[24px] overflow-hidden shadow-2xl border border-gray-200/50 relative z-40">
             <div class="relative aspect-video w-full bg-black">
                 @if($hasYoutube)
@@ -362,6 +364,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         @if($recordingAccess->notice())
             <div class="mt-3 rounded-2xl border border-amber-300/40 bg-amber-50 px-5 py-4 text-sm text-amber-950" data-membership-recording-notice>

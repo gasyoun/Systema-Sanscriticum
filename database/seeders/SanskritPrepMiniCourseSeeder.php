@@ -371,6 +371,7 @@ class SanskritPrepMiniCourseSeeder extends Seeder
                     [
                         'title' => 'Урок 1 — Вводный',
                         'lesson_date' => '2026-10-12',
+                        'youtube_url' => 'https://youtu.be/_83y7fIYZls',
                         'homework' => true,
                         'homework_prompt' => 'Выпишите новые санскритские слова, которые вы услышали во вводной лекции. Какие из них вы уже знали раньше (йога, чакра, падма…)? Пришлите список — и коротко: что удивило в лекции?',
                         'content_html' => implode([
@@ -419,7 +420,6 @@ class SanskritPrepMiniCourseSeeder extends Seeder
                     [
                         'title' => 'Урок 2 — Каллиграфия деванагари',
                         'lesson_date' => '2026-10-19',
-                        'youtube_url' => 'https://youtube.com/watch?v=kBSpzX9SoSo',
                         'homework' => true,
                         'homework_prompt' => 'Пришлите фото своих каллиграфических опытов: пропись, символ Ом или своя акшара. Не любите чаты — загрузите работу прямо здесь, куратор оценит и подскажет.',
                         'content_html' => implode([
@@ -470,7 +470,6 @@ class SanskritPrepMiniCourseSeeder extends Seeder
                     [
                         'title' => 'Урок 3 — Напевный санскрит',
                         'lesson_date' => '2026-10-26',
-                        'youtube_url' => 'https://youtu.be/_83y7fIYZls',
                         'homework' => true,
                         'homework_prompt' => 'Запишите аудио или видео своей рецитации: весь алфавит, только гласные или любимую мантру — любой вариант. Прикрепите файл здесь или пришлите куратору: послушаем и мягко поправим.',
                         'content_html' => implode([
@@ -490,9 +489,9 @@ class SanskritPrepMiniCourseSeeder extends Seeder
                             self::vowels(),
                             self::p('Полная таблица с транскрипцией и конспект алфавита по варгам — в азбуке из поста с прописями (этап 2).'),
                             self::cards([
-                                ['🎶', 'Рецитация: полный урок', 'Напевный санскрит с Ушей Санкой (YouTube)', 'https://youtu.be/_83y7fIYZls'],
                                 ['🎤', 'Гласные санскрита', 'Классическое исполнение (VK Видео)', 'https://vkvideo.ru/video-89658969_456240350'],
                                 ['🎵', 'Варнамала в исполнении Уши Санки', 'Запись 2019 года', 'https://vkvideo.ru/video-89658969_456240351'],
+                                ['📝', 'Статья оригинала', '«Напевный санскрит» в сообществе', 'https://vk.com/@sanskritskype-napevnyi-sanskrit'],
                             ]),
                             self::practice('Три дня на мантропение. Сложно спеть весь алфавит? Запишите любимую мантру — этого достаточно: послушаем и поправим ошибки. Сдавшим этап — подарок! Прикрепите запись в домашнем задании или пришлите куратору.', '3 дня — как и на каллиграфию.'),
                             self::quizCard($slug, 3, '#6d28d9'),
