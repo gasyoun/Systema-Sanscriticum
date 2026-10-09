@@ -343,7 +343,7 @@
                     {{-- h-full: Растягиваем на всю высоту --}}
                     {{-- justify-center: Центрируем контент по вертикали --}}
                     <div class="bg-gray-900 rounded-[2rem] p-6 md:p-8 shadow-2xl shadow-gray-900/30 relative overflow-hidden h-full flex flex-col justify-center" 
-                         x-data="{ agreedForm: true, agreedPromoForm: true }">
+                         x-data="{ agreedForm: false, agreedPromoForm: false }">
                         
                         {{-- Декор формы --}}
                         <div class="absolute top-0 right-0 w-48 h-48 bg-brand rounded-full mix-blend-screen filter blur-3xl opacity-15 pointer-events-none"></div>
@@ -508,7 +508,7 @@
                 <p class="text-sm text-gray-500 mt-2">Для продолжения необходимо ваше согласие с условиями.</p>
             </div>
 
-            <div class="space-y-3 mb-8" x-data="{ agreed: true, agreedPromo: true }">
+            <div class="space-y-3 mb-8" x-data="{ agreed: false, agreedPromo: false }">
                 
                 <label class="flex items-start gap-3 text-left p-3 sm:p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                     <div class="flex items-center h-5 mt-0.5 shrink-0">

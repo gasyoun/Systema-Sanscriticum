@@ -10,6 +10,7 @@ use App\Mail\GasunsPayStudentAckMail;
 use App\Models\Payment;
 use App\Models\Tariff;
 use App\Models\User;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\AttributionService;
 use App\Services\CuratorNotifier;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -244,6 +245,7 @@ final class GasunsPayClaimController extends Controller
             'name' => $request->validated('name'),
             'password' => Hash::make(Str::random(12)),
         ]);
+        app(ConsentRecorder::class)->fromForm($request, 'claim:gasuns', $user);
 
         app(AttributionService::class)->applyToNewUser($user);
 
