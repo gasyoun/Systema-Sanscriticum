@@ -387,10 +387,12 @@
     @endphp
 
     {{-- Верхний ряд: метки и кнопки --}}
-    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-        
-        {{-- Левая часть: заголовок --}}
-        <div class="flex-1 min-w-0">
+    {{-- Метки и заголовок — сверху, действия — строкой ниже (как в мобильной версии,
+         чтобы длинные кнопки не наезжали на плашку «Урок N из M»). --}}
+    <div class="flex flex-col gap-4">
+
+        {{-- Заголовок с метками --}}
+        <div class="min-w-0">
             <div class="flex items-center gap-3 mb-2 flex-wrap">
                 <span class="bg-brand/10 text-brand px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider">
                     Урок {{ $lessonIndex }} из {{ $totalLessons }}
@@ -406,8 +408,8 @@
             </h1>
         </div>
 
-        {{-- Правая часть: действия --}}
-        <div class="flex items-center gap-2 md:gap-3 shrink-0 flex-wrap">
+        {{-- Действия — отдельной строкой под заголовком --}}
+        <div class="flex items-center gap-2 md:gap-3 flex-wrap">
 
             {{-- === КНОПКА: Чат курса (если URL задан в админке) === --}}
             <x-course-chat-button :url="$course->chat_url" />
