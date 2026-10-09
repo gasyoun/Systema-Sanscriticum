@@ -422,11 +422,53 @@
                 <span class="hidden md:inline">Куратору</span>
             </a>
 
-            {{-- === КНОПКА: Завершить / Пройден === --}}
-            @if(auth()->user()->completedLessons->contains($lesson->id))
+            {{-- === КНОПКА: Завершить / Пройден (мини-курсы: с переходом дальше) === --}}
+            @php
+                $isLessonCompleted = auth()->user()->completedLessons->contains($lesson->id);
+                // Следующий урок по списку курса — среди открытых текущему студенту
+                // (то же правило доступа, что у карточек на странице курса:
+                // бесплатный/превью — открыт всем, остальное по оплаченным ключам).
+                $currentIdx = $lessons->search(fn ($l) => $l->id === $lesson->id);
+                $nextLesson = null;
+                if ($currentIdx !== false) {
+                    $nextLesson = $lessons->slice($currentIdx + 1)
+                        ->first(fn ($l) => $l->is_free || $l->is_preview || $l->isUnlockedBy($unlockedTariffs) || in_array($l->id, $grantedLessonIds ?? [], true));
+                }
+                // Квиз этого этапа — цель финального урока («Завершить и пройти итоговый квиз»).
+                $quizForBlock = $course->quizzes
+                    ->first(fn ($q) => (int) $q->block_number === (int) $lesson->block_number && $q->is_active);
+            @endphp
+            @if($isLessonCompleted)
                 <div class="inline-flex justify-center items-center gap-2 px-4 py-2.5 md:py-3 rounded-xl bg-green-50 text-green-600 text-xs md:text-sm font-extrabold leading-none border border-green-200 cursor-default">
                     <i class="fas fa-check-circle mr-2 text-base"></i> Пройден
                 </div>
+                @if($nextLesson)
+                    <a href="{{ route('student.lesson', [$course->slug, $nextLesson->id]) }}"
+                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 rounded-xl bg-gray-50 hover:bg-brand hover:text-white text-gray-700 text-xs md:text-sm font-extrabold leading-none border border-gray-200 hover:border-brand transition-all uppercase tracking-wide">
+                        Следующий урок <i class="fas fa-arrow-right text-xs"></i>
+                    </a>
+                @elseif($quizForBlock)
+                    <a href="{{ route('student.course.quiz', [$course->slug, $quizForBlock->block_number]) }}"
+                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 rounded-xl bg-gray-50 hover:bg-brand hover:text-white text-gray-700 text-xs md:text-sm font-extrabold leading-none border border-gray-200 hover:border-brand transition-all uppercase tracking-wide">
+                        Итоговый квиз <i class="fas fa-arrow-right text-xs"></i>
+                    </a>
+                @endif
+            @elseif($nextLesson)
+                <form action="{{ route('student.lesson.complete', [$course->slug, $lesson->id]) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="next" value="{{ $nextLesson->id }}">
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 bg-brand hover:bg-brand-hover text-white rounded-xl font-extrabold text-xs md:text-sm leading-none transition-all shadow-[0_5px_15px_rgba(232,92,36,0.3)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide">
+                        Завершить и перейти к следующему уроку <i class="fas fa-arrow-right text-xs"></i>
+                    </button>
+                </form>
+            @elseif($quizForBlock)
+                <form action="{{ route('student.lesson.complete', [$course->slug, $lesson->id]) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="next" value="quiz">
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 bg-brand hover:bg-brand-hover text-white rounded-xl font-extrabold text-xs md:text-sm leading-none transition-all shadow-[0_5px_15px_rgba(232,92,36,0.3)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide">
+                        Завершить и пройти итоговый квиз <i class="fas fa-arrow-right text-xs"></i>
+                    </button>
+                </form>
             @else
                 <form action="{{ route('student.lesson.complete', [$course->slug, $lesson->id]) }}" method="POST">
                     @csrf

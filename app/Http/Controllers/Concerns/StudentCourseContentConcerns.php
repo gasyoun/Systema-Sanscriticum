@@ -190,12 +190,36 @@ trait StudentCourseContentConcerns
     }
 
     /**
-     * Отметить урок как пройденный
+     * Отметить урок как пройденный.
+     *
+     * `next` (мини-курсы): id следующего урока этого же курса или 'quiz' —
+     * тогда редирект ведёт не назад, а сразу дальше («Завершить и перейти
+     * к следующему»). Чужой/несуществующий урок в next молча игнорируется —
+     * доступ к цели всё равно проверит showLesson.
      */
     public function completeLesson($courseSlug, $lessonId, PranaService $prana)
     {
         $user = auth()->user();
         $this->ensureLessonAccessible($user, $courseSlug, $lessonId);
+
+        $redirectTarget = null;
+        $requestedNext = request()->input('next');
+        $course = Course::resolveBySlugOrFail($courseSlug);
+
+        if (is_numeric($requestedNext)) {
+            $nextLesson = Lesson::where('course_id', $course->id)->find((int) $requestedNext);
+            if ($nextLesson !== null && (int) $nextLesson->id !== (int) $lessonId) {
+                $redirectTarget = route('student.lesson', [$course->slug, $nextLesson->id]);
+            }
+        } elseif ($requestedNext === 'quiz') {
+            $quiz = $course->quizzes()
+                ->where('block_number', optional(Lesson::where('course_id', $course->id)->find($lessonId))->block_number)
+                ->where('is_active', true)
+                ->first();
+            if ($quiz !== null) {
+                $redirectTarget = route('student.course.quiz', [$course->slug, $quiz->block_number]);
+            }
+        }
 
         // Уже пройден? Проверяем по реально завершённой строке pivot,
         // а не по любой записи (которую могла создать saveNote с is_completed=false).
@@ -256,6 +280,10 @@ trait StudentCourseContentConcerns
                     $prana->award($user, 'course_complete', $course);
                 }
             }
+        }
+
+        if ($redirectTarget !== null) {
+            return redirect()->to($redirectTarget)->with('success', 'Урок пройден!');
         }
 
         return redirect()->back()->with('success', 'Урок пройден!');
