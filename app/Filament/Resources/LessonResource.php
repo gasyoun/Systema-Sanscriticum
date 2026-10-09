@@ -251,6 +251,14 @@ class LessonResource extends Resource
                     ->label('Описание / Тема')
                     ->columnSpanFull(),
 
+                // Богатое тело урока (мини-курсы): заполнено — печатается вместо
+                // «topic» на странице урока. Санитизация при записи (мутатор модели).
+                FilamentTiptapEditor\TiptapEditor::make('content_html')
+                    ->label('Тело урока (HTML-этап)')
+                    ->profile('simple')
+                    ->columnSpanFull()
+                    ->helperText('Заполнено — показывается вместо текстового описания выше. Вёрстка этапа: шапка, картинки, карточки практики.'),
+
                 Forms\Components\Select::make('recording_kind')
                     ->label('Класс записи')
                     ->options([

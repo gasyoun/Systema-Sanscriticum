@@ -16,7 +16,8 @@ use Tests\TestCase;
 
 /**
  * Сидер мини-курса «Подготовительная группа по санскриту» (перенос бота
- * Senler №1186308): курс + 5 этапов с уроками + квиз после каждого этапа.
+ * Senler №1186308): курс + 5 этапов с уроками (контент статей ВК — в
+ * content_html) + квиз после каждого этапа + нативные домашки.
  * Повторный запуск обновляет контент и не плодит дубли.
  */
 class SanskritPrepMiniCourseSeederTest extends TestCase
@@ -46,8 +47,26 @@ class SanskritPrepMiniCourseSeederTest extends TestCase
         $lessons = Lesson::where('course_id', $course->id)->get();
         $this->assertSame(7, $lessons->count());
         $this->assertTrue($lessons->every(fn (Lesson $l) => $l->is_free && $l->is_published));
-        // Каждое текстовое тело урока несёт ссылки из бота.
-        $this->assertTrue($lessons->contains(fn (Lesson $l) => str_contains((string) $l->topic, 'https://goo.su/2tZNf5')));
+
+        // Контент статей перенесён в богатые тела уроков (content_html).
+        $this->assertTrue($lessons->every(fn (Lesson $l) => filled($l->content_html)));
+        $bodies = $lessons->pluck('content_html')->implode(' ');
+        $this->assertStringContainsString('vkvideo.ru/video-88831040_456239808', $bodies); // вводная лекция
+        $this->assertStringContainsString('Ачьюта Палава', $bodies); // каллиграфия
+        $this->assertStringContainsString('Уша Рани Санка', $bodies); // рецитация
+        $this->assertStringContainsString('máma nā́ma', $bodies); // устный санскрит
+        $this->assertStringContainsString('parighaḥ saṃniveśitaḥ', $bodies); // шлока 90
+
+        // Уроки этапов с практикой открывают нативные домашки.
+        $this->assertSame(5, Lesson::where('course_id', $course->id)
+            ->where('homework_enabled', true)
+            ->whereNotNull('homework_prompt')
+            ->count());
+
+        // В HTML сохраняется авторская вёрстка (инлайновые стили не вырезаются).
+        $hero = Lesson::where('course_id', $course->id)->where('title', 'Урок 2 — Каллиграфия деванагари')->firstOrFail();
+        $this->assertStringContainsString('style="', (string) $hero->content_html);
+        $this->assertStringContainsString('/images/prep-course/l2-kalligrafiya.jpg', (string) $hero->content_html);
 
         $quizzes = CourseQuiz::where('course_id', $course->id)->orderBy('block_number')->get();
         $this->assertCount(5, $quizzes);

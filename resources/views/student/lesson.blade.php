@@ -523,7 +523,13 @@
 </div>
 
         {{-- КОНТЕНТ УРОКА (Описание) --}}
-        @if($lesson->content || $lesson->topic)
+        @if(filled($lesson->content_html))
+        {{-- Богатое тело (мини-курсы): HTML уже санитизирован при записи
+             (Lesson::setContentHtmlAttribute) — инлайновые стили этапа. --}}
+        <div class="relative z-10">
+            {!! $lesson->content_html !!}
+        </div>
+        @elseif($lesson->content || $lesson->topic)
         <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 relative z-10">
             <div class="prose prose-lg max-w-none text-gray-800 leading-relaxed font-nunito font-medium marker:bg-brand/20 marker:text-[#1A1A1A]">
                 {!! formatTimecodes(nl2br(e($lesson->content ?? $lesson->topic))) !!}
