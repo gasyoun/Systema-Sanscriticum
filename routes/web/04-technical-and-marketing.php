@@ -11,6 +11,7 @@ use App\Http\Controllers\NewsletterSubscribeController;
 use App\Http\Controllers\TelegramSupportLinkController;
 use App\Http\Controllers\TgLoginLinkController;
 use App\Http\Controllers\UnsubscribeController;
+use App\Http\Controllers\VideoThumbController;
 use App\Models\TelegramBusinessStoryPublication;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -81,6 +82,12 @@ Route::get('/otpiska', [UnsubscribeController::class, 'show'])
 Route::post('/otpiska', [UnsubscribeController::class, 'store'])
     ->middleware(['signed', 'throttle:30,1'])
     ->name('unsubscribe.store');
+
+// --- ПРЕВЬЮ YOUTUBE СО СВОЕГО СЕРВЕРА (152-ФЗ: без IP посетителя в img.youtube.com).
+Route::get('/video-thumb/{id}.jpg', [VideoThumbController::class, 'show'])
+    ->where('id', '[A-Za-z0-9_-]{11}')
+    ->middleware('throttle:120,1')
+    ->name('video.thumb');
 
 // --- ЗАЯВКА ИНТЕРЕСА НА КУРС (H5066) — join / recording / revive.
 // Самогейтится флагом course_interest_form (404 при OFF). Строго до catch-all

@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Регистрация | ОРС LMS</title>
     @include('partials.tailwind-cdn')
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    @vite('resources/css/fonts.css')
 </head>
 <body class="bg-gray-50 min-h-screen flex items-center justify-center p-4 font-sans text-[#101010]">
 

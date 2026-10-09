@@ -26,7 +26,7 @@ final class VideoEmbed
         }
 
         if ($id = self::youtubeId($url)) {
-            return "https://www.youtube.com/embed/{$id}?autoplay=1";
+            return "https://www.youtube-nocookie.com/embed/{$id}?autoplay=1";
         }
 
         if ($id = self::rutubeId($url)) {
@@ -74,7 +74,8 @@ final class VideoEmbed
         }
 
         if ($id = self::youtubeId($url)) {
-            return "https://img.youtube.com/vi/{$id}/hqdefault.jpg";
+            // 152-ФЗ: превью через свой сервер (VideoThumbController) — без IP посетителя в Google.
+            return route('video.thumb', ['id' => $id]);
         }
 
         // Для RuTube / VK / Vimeo постер достать без API-запроса нельзя.

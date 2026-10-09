@@ -134,7 +134,7 @@ class RecordingGateController extends Controller
     {
         $id = StudentController::parseVideoId($url, 'youtube');
 
-        return $id === null ? null : 'https://www.youtube.com/embed/'.$id.'?enablejsapi=1&rel=0';
+        return $id === null ? null : 'https://www.youtube-nocookie.com/embed/'.$id.'?enablejsapi=1&rel=0';
     }
 
     private function rutubeEmbed(?string $url): ?string

@@ -5,7 +5,6 @@
 @endphp
 
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Charis+SIL:ital,wght@0,400;0,700;1,400;1,700&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
     
     .font-charis { font-family: 'Charis SIL', serif; }
     .font-nunito { font-family: 'Nunito Sans', sans-serif; }

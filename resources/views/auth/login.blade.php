@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Вход в кабинет | ОРС LMS</title>
     @include('partials.tailwind-cdn')
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    @vite('resources/css/fonts.css')
 </head>
 @php
     // Бегущие отзывы фоном на весь экран — только если их хватает на три колонки;

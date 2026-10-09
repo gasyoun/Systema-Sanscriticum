@@ -28,12 +28,9 @@
     <meta name="robots" content="@yield('robots', 'index, follow')">
 
     {{-- Шрифты: Montserrat (основной) + Lora (serif в статьях) грузятся из article.css --}}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    @vite('resources/css/fonts.css')
 
     {{-- Font Awesome (иконки часов, соцсетей и т.п. — используются и в шапке, и в статьях) --}}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 {{-- ═══════════════ АНАЛИТИКА БЛОГА ═══════════════ --}}
 @if(!empty($blogAnalytics['yandex_id']))
@@ -93,7 +90,7 @@ window.sendGoal = function(goalName) {
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/css/article.css'])
 
     {{-- Alpine — нужен для модалок/интерактива в шапке и футере --}}
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @vite('resources/js/alpine-standalone.js')
 
     <style>
         body { font-family: 'Montserrat', sans-serif; }
