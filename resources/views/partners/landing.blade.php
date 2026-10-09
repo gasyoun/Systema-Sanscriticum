@@ -119,6 +119,7 @@
                     <input type="text" name="payout_details" value="{{ old('payout_details') }}" placeholder="Карта / СБП — можно уточнить позже"
                            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white outline-none focus:border-brand">
                 </div>
+                <x-consent.pd />
                 <button type="submit"
                         class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand hover:bg-brand-hover text-white font-bold transition-colors">
                     <i class="fas fa-paper-plane"></i> Отправить заявку

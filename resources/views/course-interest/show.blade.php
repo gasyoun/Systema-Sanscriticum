@@ -109,6 +109,8 @@
                       placeholder="Удобное время, вопросы по курсу">{{ old('comment') }}</textarea>
         </div>
 
+        <x-consent.pd />
+
         <button type="submit"
                 class="self-start rounded-xl bg-[color:var(--brand,#6366f1)] px-6 py-3 text-sm font-bold text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-brand/40">
             Оставить заявку
