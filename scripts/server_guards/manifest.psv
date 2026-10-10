@@ -57,3 +57,10 @@ sbin/systema-deadman91-watch.sh|/usr/local/sbin/systema-deadman91-watch.sh|755|w
 # snapshot history on .91. `-P remove,rmdir` denies delete while keeping the
 # create/rename a backup needs; retention runs .91-side as restic-push.
 sshd/60-restic-append-only.conf|/etc/ssh/sshd_config.d/60-restic-append-only.conf|644|critical
+
+# H6307 (10-10-2026) — ежемесячный restore drill под версионным контролем. До этого
+# скрипт жил только руками на боксе и понимал только literal RESTIC_PASSWORD, тогда
+# как живой lane ходит с RESTIC_PASSWORD_FILE — каждый месяц SKIPPED-NO-ACCESS
+# (отчёт 2026-10-01 03:14Z, census H6286). Крон-строка уже управляемая:
+# scripts/server_guards/cron/root.crontab:55 — «14 3 1 * * /usr/local/sbin/restore_drill.sh».
+sbin/restore_drill.sh|/usr/local/sbin/restore_drill.sh|755|critical
