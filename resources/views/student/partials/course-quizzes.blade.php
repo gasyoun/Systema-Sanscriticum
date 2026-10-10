@@ -17,23 +17,33 @@ $courseQuizzes = $courseQuizzes ?? collect();
         </div>
 
         <div class="grid gap-3 sm:grid-cols-2">
+            @php($stageCeiling = (int) $course->blocks->max('number'))
             @foreach ($courseQuizzes as $quiz)
                 @php($best = $quiz->bestAttempt)
+                @php($isFinal = $quiz->block_number > $stageCeiling && $quiz->block_number > 1)
                 <a href="{{ route('student.course.quiz', [$course->slug, $quiz->block_number]) }}"
-                   class="group flex items-start gap-4 bg-white rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-0.5 {{ $best && $best->passed ? 'border-green-200 hover:shadow-lg' : 'border-gray-100 hover:border-brand/30 hover:shadow-lg' }}">
+                   class="group flex items-start gap-4 bg-white rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-0.5 {{ $best && $best->passed ? 'border-green-200 hover:shadow-lg' : ($isFinal ? 'border-indigo-200 hover:shadow-lg' : 'border-gray-100 hover:border-brand/30 hover:shadow-lg') }}">
                     <span class="flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center border text-xl
                         {{ $best && $best->passed
                             ? 'bg-green-50 text-green-500 border-green-100'
-                            : 'bg-orange-50 text-brand border-orange-100 group-hover:bg-brand group-hover:text-white transition-colors' }}">
+                            : ($isFinal
+                                ? 'bg-indigo-50 text-indigo-500 border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-colors'
+                                : 'bg-orange-50 text-brand border-orange-100 group-hover:bg-brand group-hover:text-white transition-colors') }}">
                         @if ($best && $best->passed)
                             <i class="fas fa-check"></i>
+                        @elseif ($isFinal)
+                            🏁
                         @else
                             {{ $quiz->block_number }}
                         @endif
                     </span>
                     <span class="flex-1 min-w-0">
-                        <span class="block text-[10px] font-bold uppercase tracking-widest {{ $best && $best->passed ? 'text-green-600' : 'text-brand' }}">
-                            Этап {{ $quiz->block_number }}
+                        <span class="block text-[10px] font-bold uppercase tracking-widest {{ $best && $best->passed ? 'text-green-600' : ($isFinal ? 'text-indigo-500' : 'text-brand') }}">
+                            @if ($isFinal)
+                                Финал курса
+                            @else
+                                Этап {{ $quiz->block_number }}
+                            @endif
                         </span>
                         <span class="block font-bold text-gray-900 group-hover:text-brand leading-tight mt-0.5">
                             {{ $quiz->title }}
@@ -43,6 +53,8 @@ $courseQuizzes = $courseQuizzes ?? collect();
                                 Пройден: {{ $best->score }}/{{ $best->total }} — повторить?
                             @elseif ($best)
                                 Попытка: {{ $best->score }}/{{ $best->total }} — попробовать снова
+                            @elseif ($isFinal)
+                                Итоговая проверка по всем этапам
                             @else
                                 Квиз этапа — проверить знания
                             @endif

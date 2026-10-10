@@ -69,9 +69,14 @@ class SanskritPrepMiniCourseSeederTest extends TestCase
         $this->assertStringContainsString('/images/prep-course/l2-kalligrafiya.jpg', (string) $hero->content_html);
 
         $quizzes = CourseQuiz::where('course_id', $course->id)->orderBy('block_number')->get();
-        $this->assertCount(5, $quizzes);
-        $this->assertSame([1, 2, 3, 4, 5], $quizzes->pluck('block_number')->all());
+        $this->assertCount(6, $quizzes);
+        $this->assertSame([1, 2, 3, 4, 5, 6], $quizzes->pluck('block_number')->all());
         $this->assertTrue($quizzes->every(fn (CourseQuiz $q) => $q->is_active && $q->questions()->exists()));
+
+        // Итоговый тест (block 6, вне этапов) — 10 вопросов по всем этапам.
+        $final = $quizzes->last();
+        $this->assertSame('Итоговый тест курса', $final->title);
+        $this->assertSame(10, $final->questions()->count());
 
         // Вопросы сохраняют правильные индексы внутри границ вариантов.
         CourseQuizQuestion::where('course_quiz_id', $quizzes->first()->id)
@@ -89,7 +94,7 @@ class SanskritPrepMiniCourseSeederTest extends TestCase
 
         $this->assertSame(1, Course::where('slug', 'podgotovitelnaya-gruppa-sanskrita')->count());
         $this->assertSame(7, Lesson::where('course_id', $course->id)->count());
-        $this->assertSame(5, CourseQuiz::where('course_id', $course->id)->count());
+        $this->assertSame(6, CourseQuiz::where('course_id', $course->id)->count());
 
         // Вопросы пересоздаются, дубликатов нет.
         $quizOne = CourseQuiz::where('course_id', $course->id)->where('block_number', 1)->firstOrFail();
