@@ -314,15 +314,19 @@ final class WaitlistBotService
 
     /**
      * /zhdun-stats (H6407): раскладка «кто за какой курс» — курс,
-     * голоса/кворум и каждый голосовавший (имя, дата, слот). Видна только
-     * кураторскому чату — получатель из конвенции CuratorNotifier
-     * (services.telegram.curators_chat_id); не задан или чужой чат —
-     * вежливый отказ без данных.
+     * голоса/кворум и каждый голосовавший (имя, дата, слот). Видна
+     * кураторскому чату (services.telegram.curators_chat_id, конвенция
+     * CuratorNotifier) плюс дополнительным чатам из allow-листа
+     * services.telegram.zhdun_stats_chat_ids (H6419); не задан список или
+     * чужой чат — вежливый отказ без данных.
      */
     public function sendZhdunStats(string $chatId): void
     {
-        $curatorsChatId = (string) (config('services.telegram.curators_chat_id') ?? '');
-        if ($curatorsChatId === '' || $chatId !== $curatorsChatId) {
+        $allowedChatIds = array_values(array_filter(array_merge(
+            [(string) (config('services.telegram.curators_chat_id') ?? '')],
+            (array) config('services.telegram.zhdun_stats_chat_ids', []),
+        )));
+        if ($allowedChatIds === [] || ! in_array($chatId, $allowedChatIds, true)) {
             $this->tg('sendMessage', [
                 'chat_id' => $chatId,
                 'text' => 'Эта команда доступна только кураторам ОРС. Голосовать за будущие группы — /zhdun',

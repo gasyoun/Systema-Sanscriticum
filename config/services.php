@@ -171,6 +171,13 @@ return [
         // Чат кураторов: общий group chat, куда добавлен основной бот.
         // Пусто → curator-уведомления отключены (см. App\Services\CuratorNotifier).
         'curators_chat_id' => env('TELEGRAM_CURATORS_CHAT_ID'),
+        // Дополнительные чаты, где /zhdun-stats показывает раскладку ждуна
+        // (в дополнение к curators_chat_id), через запятую. Пусто → только
+        // curators_chat_id (см. App\Services\Telegram\WaitlistBotService).
+        'zhdun_stats_chat_ids' => array_values(array_filter(array_map(
+            fn (string $id): string => trim($id),
+            explode(',', (string) env('TELEGRAM_ZHDUN_STATS_CHAT_IDS', ''))
+        ))),
         // Чат маркетологов: group chat для уведомлений о новых лидах.
         // Пусто → уведомления о лидах отключены (см. App\Services\LeadNotifier).
         'marketers_chat_id' => env('TELEGRAM_MARKETERS_CHAT_ID'),
