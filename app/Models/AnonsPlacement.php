@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property string $campaign
  * @property string $creative
  * @property string $channel
+ * @property string|null $kind
  * @property string|null $destination
  * @property array<string, string>|null $utm
  * @property string|null $permalink
@@ -25,7 +26,7 @@ use Illuminate\Support\Carbon;
 class AnonsPlacement extends Model
 {
     protected $fillable = [
-        'link', 'campaign', 'creative', 'channel', 'destination', 'utm',
+        'link', 'campaign', 'creative', 'channel', 'kind', 'destination', 'utm',
         'permalink', 'published_at', 'clicks_24h', 'clicks_72h',
     ];
 
