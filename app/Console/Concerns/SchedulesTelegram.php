@@ -144,6 +144,17 @@ trait SchedulesTelegram
             ->onOneServer()
             ->name('zapisi-slot-notices');
 
+        // H6343: каскад анонса возобновления после каникул — T−7д и T−1д в 20:00
+        // МСК (ЛС + чат группы + email), гейт «первая живая строка после паузы
+        // ≥21 день ИЛИ флаг каникул снят на этой неделе», плюс явка-алерт <50%
+        // на первом занятии после паузы. Дедуп — vacation_resume_notices.
+        $schedule->command('groups:announce-resume')
+            ->dailyAt('20:00')
+            ->timezone('Europe/Moscow')
+            ->withoutOverlapping(15)
+            ->onOneServer()
+            ->name('groups-announce-resume');
+
         // --- РАЗОВЫЕ НАПОМИНАНИЯ СТУДЕНТАМ (ScheduledReminder) ---
         // Куратор ставит текст + дату один раз в карточке студента (кнопка
         // «Запланировать напоминание») — дальше это дело системы, не человека.
