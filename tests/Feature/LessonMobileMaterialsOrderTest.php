@@ -36,7 +36,7 @@ class LessonMobileMaterialsOrderTest extends TestCase
 
     private const NO_HOMEWORK = 'Домашнего задания для этого урока нет';
 
-    private const TRANSCRIPT_SEARCH = 'Поиск фразе...';
+    private const TRANSCRIPT_SEARCH = 'Поиск фразы...';
 
     private const MATERIALS_HEADING = 'Материалы к уроку';
 
