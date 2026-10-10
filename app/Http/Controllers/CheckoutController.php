@@ -10,10 +10,12 @@ use App\Models\StudentDiscount;
 use App\Models\Tariff;
 use App\Services\Activity\FunnelTelemetry;
 use App\Services\Activity\StorefrontAnalytics;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\CuratorNotifier;
 use App\Services\Membership\MembershipFunnelAnalytics;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
+use App\Support\Consent\ConsentRules;
 use App\Support\FlagshipExperiments;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -160,7 +162,8 @@ class CheckoutController extends Controller
             'contact' => [$request->user() ? 'nullable' : 'required', 'string', 'max:255'],
             'name' => ['nullable', 'string', 'max:100'],
             'comment' => ['nullable', 'string', 'max:1000'],
-        ], [
+            'pd_consent' => ConsentRules::pd(),
+        ], ConsentRules::messages() + [
             'contact.required' => 'Оставьте контакт — Telegram, телефон или email, иначе куратору некуда написать.',
             'contact.max' => 'Слишком длинный контакт — достаточно одного способа связи.',
             'comment.max' => 'Слишком длинный комментарий — сократите до 1000 символов.',
@@ -168,6 +171,9 @@ class CheckoutController extends Controller
 
         // Та же цена, что студент видит на этой странице (лояльность + промокод).
         $state = $this->computeState($tariff, $prana);
+
+        $contact = (string) ($validated['contact'] ?? '');
+        app(ConsentRecorder::class)->fromForm($request, 'checkout:installments', $request->user(), filter_var($contact, FILTER_VALIDATE_EMAIL) ? $contact : null);
 
         $notifier->installmentAskReceived(
             $tariff->load('course'),

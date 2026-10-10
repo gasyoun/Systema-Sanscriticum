@@ -414,12 +414,12 @@ document.addEventListener('alpine:init', () => {
                                         </label>
                                         @include('partials.signup-source-select')
                                     </div>
-                                    <div class="sm:col-span-2">
-                                        <label class="flex items-start gap-3 cursor-pointer">
-                                            <input type="checkbox" name="wants_announcements" value="1" {{ old('wants_announcements', true) ? 'checked' : '' }}
-                                                   class="mt-0.5 h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition">
-                                            <span class="text-sm text-gray-600">Получать анонсы, новости и расписание на email</span>
-                                        </label>
+                                    {{-- 152-ФЗ: город и год рождения для договора не нужны — на них
+                                         нужно согласие (галочка ПДн). Рассылка — только по явной
+                                         галочке, по умолчанию НЕ отмечена (38-ФЗ ст. 18). --}}
+                                    <div class="sm:col-span-2 space-y-2">
+                                        <x-consent.pd class="text-sm" :required="(bool) config('features.checkout_pd_consent_enforce')" />
+                                        <x-consent.promo name="wants_announcements" class="text-sm" />
                                     </div>
                                 </div>
                             </div>
@@ -583,9 +583,10 @@ document.addEventListener('alpine:init', () => {
                         </button>
 
                         <p class="text-center text-xs text-gray-400 mt-4 leading-relaxed">
-                            Нажимая на кнопку, вы соглашаетесь с
-                            <a href="/docs/oferta.pdf" target="_blank" class="underline hover:text-gray-600">офертой</a> и
-                            <a href="/docs/privacy.pdf" target="_blank" class="underline hover:text-gray-600">политикой конфиденциальности</a>.
+                            Нажимая на кнопку, вы принимаете
+                            <a href="{{ route('docs.show', 'oferta') }}" target="_blank" class="underline hover:text-gray-600">публичную оферту</a>
+                            и подтверждаете, что ознакомлены с
+                            <a href="{{ route('docs.show', 'privacy') }}" target="_blank" class="underline hover:text-gray-600">политикой конфиденциальности</a>.
                         </p>
                     </div>
 

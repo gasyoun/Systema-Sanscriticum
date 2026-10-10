@@ -9,6 +9,7 @@ use App\Jobs\ResolveVisitorGeoJob;
 use App\Models\ChatMessage;
 use App\Models\SupportConversation;
 use App\Rules\HouseEmail;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\Support\MicShadowClassifier;
 use App\Services\Support\SupportConversationManager;
 use App\Services\Support\SupportLeadCaptureService;
@@ -109,6 +110,13 @@ class PublicChatController extends Controller
         }
 
         $user = $request->user();
+
+        // 152-ФЗ: гость ставит галочку ПДн перед первым сообщением (виджет шлёт
+        // pd_consent только с ним) — пишем в журнал. Обязательность не проверяем:
+        // последующие сообщения той же беседы галочку уже не несут.
+        if ($user === null) {
+            app(ConsentRecorder::class)->fromForm($request, 'support-chat', null, $validated['email'] ?? null);
+        }
 
         $message = ChatMessage::create([
             'user_id' => $user?->id,

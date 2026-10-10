@@ -23,6 +23,7 @@ use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\Tariff;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
@@ -561,6 +562,25 @@ class CuratorNotifier
         if ($user) {
             $lines[] = $this->adminLink($user);
         }
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * 152-ФЗ ст. 21: студент запросил из кабинета удаление персональных данных.
+     * Срок ответа оператора — 30 дней; удаление выполняет куратор вручную
+     * (с учётом данных, которые обязаны храниться по налоговому учёту).
+     */
+    public function personalDataDeletionRequested(User $user, CarbonInterface $deadline): void
+    {
+        $lines = [
+            '🗑 <b>Запрос на удаление персональных данных</b> (152-ФЗ)',
+            '',
+            $this->studentLine($user),
+            'Срок по закону: до <b>'.$deadline->format('d.m.Y').'</b> (30 дней).',
+            'Задача заведена в поддержке. Платёжные документы храним по сроку налогового учёта — остальное удаляем или обезличиваем.',
+            $this->adminLink($user),
+        ];
 
         $this->dispatchToCurators($this->join($lines));
     }

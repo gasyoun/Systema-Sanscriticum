@@ -65,7 +65,7 @@
             <p class="text-sm text-gray-500 mt-2">Для продолжения необходимо ваше согласие с условиями.</p>
         </div>
 
-        <div class="space-y-3 mb-8" x-data="{ localAgreed: true, localPromo: true }">
+        <div class="space-y-3 mb-8" x-data="{ localAgreed: false, localPromo: false }">
             
             {{-- Чекбокс 1 --}}
             <label class="flex items-start gap-3 text-left p-3 sm:p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">

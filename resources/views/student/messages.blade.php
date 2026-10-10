@@ -36,6 +36,54 @@
         </div>
     </div>
 
+    {{-- 152-ФЗ: согласия в кабинете — рассылки и запрос на удаление данных --}}
+    @php($privacyUser = auth()->user())
+    <div id="privacy-settings" class="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col gap-6">
+        <div>
+            <h2 class="text-xl font-black text-[#1A1A1A] mb-1">Рассылки и персональные данные</h2>
+            <p class="text-sm text-gray-500">Анонсы курсов, новости и расписание. Письма об оплате, доступе к урокам и восстановлении пароля приходят всегда — они нужны для учёбы.</p>
+        </div>
+
+        @if(session('privacy_status'))
+            <div class="rounded-xl bg-green-50 border border-green-100 text-green-800 text-sm font-semibold px-4 py-3">{{ session('privacy_status') }}</div>
+        @endif
+
+        <form method="POST" action="{{ route('student.notifications.update') }}" class="flex flex-col gap-3">
+            @csrf
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" name="email_announcements" value="1" @checked($privacyUser->wants_email_announcements)
+                       class="mt-0.5 h-5 w-5 rounded border-gray-300 text-brand focus:ring-brand">
+                <span class="text-sm text-gray-700">Получать анонсы и новости на почту <span class="text-gray-400">({{ $privacyUser->email }})</span></span>
+            </label>
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" name="messenger_announcements" value="1" @checked($privacyUser->wants_messenger_announcements)
+                       class="mt-0.5 h-5 w-5 rounded border-gray-300 text-brand focus:ring-brand">
+                <span class="text-sm text-gray-700">Получать анонсы в Telegram и VK</span>
+            </label>
+            <p class="text-xs text-gray-400">Отмечая пункты, вы даёте <a href="{{ route('docs.show', 'soglasie-promo') }}" target="_blank" class="text-brand hover:underline">согласие на рекламную рассылку</a>; сняв отметку — отзываете его.</p>
+            <div>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold transition-colors">Сохранить</button>
+            </div>
+        </form>
+
+        <details class="border-t border-gray-100 pt-5">
+            <summary class="cursor-pointer text-sm font-bold text-gray-600 hover:text-gray-900">Запросить удаление персональных данных</summary>
+            <form method="POST" action="{{ route('student.pd-deletion.request') }}" class="mt-4 flex flex-col gap-3">
+                @csrf
+                <p class="text-sm text-gray-500">Куратор свяжется с вами и удалит или обезличит ваши данные в течение 30 дней (ст. 21 152-ФЗ).
+                    После удаления доступ к кабинету и записям занятий пропадёт. Документы об оплате мы обязаны хранить по закону о налоговом учёте.</p>
+                <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" name="confirm" value="1" required class="mt-0.5 h-5 w-5 rounded border-gray-300 text-red-600 focus:ring-red-500">
+                    <span class="text-sm text-gray-700">Понимаю, что потеряю доступ к кабинету и записям</span>
+                </label>
+                @error('confirm')<p class="text-xs text-red-500 font-medium">{{ $message }}</p>@enderror
+                <div>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl border border-red-200 text-red-700 hover:bg-red-50 text-sm font-bold transition-colors">Отправить запрос на удаление</button>
+                </div>
+            </form>
+        </details>
+    </div>
+
     {{-- СПИСОК СООБЩЕНИЙ --}}
     <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden flex flex-col">
         

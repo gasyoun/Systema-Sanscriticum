@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Support\Consent\ConsentRules;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class StoreDonationRequest extends FormRequest
@@ -45,6 +46,8 @@ final class StoreDonationRequest extends FormRequest
         if (! auth()->check()) {
             $rules['name'] = ['required', 'string', 'max:255'];
             $rules['email'] = ['required', 'email', 'max:255'];
+            // 152-ФЗ: путь оплаты (донат) — обязательность по флагу money-контура.
+            $rules['pd_consent'] = ConsentRules::pd(checkout: true);
         }
 
         // Благодарность (N3): имя публикуется только при явном согласии;
@@ -57,7 +60,7 @@ final class StoreDonationRequest extends FormRequest
 
     public function messages(): array
     {
-        return [
+        return ConsentRules::messages() + [
             'amount.required_without' => 'Укажите сумму или выберите уровень поддержки.',
         ];
     }

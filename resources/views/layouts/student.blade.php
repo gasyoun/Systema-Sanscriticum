@@ -17,13 +17,9 @@
     <title>@yield('title', 'Обучение') | ОРС LMS</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
     {{-- preconnect к сторонним origin: экономит по одному DNS+TLS-рукопожатию каждому --}}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     @include('partials.tailwind-cdn')
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap" rel="stylesheet">
+    @vite('resources/css/fonts.css')
     {{-- Кабинетная Метрика (MG 18-09-2026): тот же счетчик 106964341, но
          webvisor:false + clickmap:false — никаких записей сессий залогиненных
          (152-ФЗ). План: docs/METRIKA_GOALS_SHOP_CABINET_2026-09-18.md. --}}
@@ -438,5 +434,7 @@
             });
         }
     </script>
+    {{-- 152-ФЗ: баннер cookie — без него здесь нельзя дать/отозвать согласие на аналитику. --}}
+    @include('partials.cookie-consent')
 </body>
 </html>

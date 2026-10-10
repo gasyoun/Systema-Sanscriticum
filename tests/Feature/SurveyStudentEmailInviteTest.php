@@ -72,7 +72,7 @@ class SurveyStudentEmailInviteTest extends TestCase
 
         $this->emailStudent(['role' => 'teacher']);
         $this->emailStudent(['role' => 'admin']);
-        $this->emailStudent(['wants_messenger_announcements' => false]);
+        $this->emailStudent(['wants_email_announcements' => false]); // 152-ФЗ: email-канал — email-согласие
         $this->emailStudent(['email' => '']);
         $this->telegramStudent();
 
@@ -170,7 +170,7 @@ class SurveyStudentEmailInviteTest extends TestCase
         // Legacy-строка (класс импорта 22-04): raw-update в обход мутатора и CHECK.
         $legacy = User::factory()->create([
             'email' => 'legacy@example.com',
-            'wants_messenger_announcements' => true,
+            'wants_email_announcements' => true,
             'role' => null,
             'is_admin' => false,
         ]);
@@ -371,6 +371,7 @@ class SurveyStudentEmailInviteTest extends TestCase
     private function bareUser(array $attrs = []): User
     {
         return User::factory()->create(array_merge([
+            'wants_email_announcements' => true,
             'wants_messenger_announcements' => true,
             'role' => null,
             'is_admin' => false,

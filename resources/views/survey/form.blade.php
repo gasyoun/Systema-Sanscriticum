@@ -104,6 +104,7 @@
                                         @endforeach
                                     </div>
                                     <div><label class="block text-sm font-bold text-slate-200 mb-2">Куда начислить (email или @telegram) <span class="text-brand">*</span></label><input type="text" name="contact" value="{{ old('contact', $auth_email ?? '') }}" maxlength="200" placeholder="you@mail.ru или @username" class="w-full rounded-lg bg-[#0A0D14]/60 border border-[#1F2636] focus:border-brand outline-none px-3 py-2 text-sm text-slate-200">@error('contact')<p class="mt-1.5 text-xs text-red-400">{{ $message }}</p>@enderror</div>
+                                    <x-consent.pd theme="dark" />
                                 </div>
                             @endif
 
