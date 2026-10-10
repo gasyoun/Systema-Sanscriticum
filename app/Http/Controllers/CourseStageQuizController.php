@@ -78,8 +78,8 @@ class CourseStageQuizController extends Controller
     /**
      * Награды финала: промокод создаётся только при ЗАЧЁТЕ итогового теста
      * (повторная сдача/просмотр новой попытки код не плодят — детерминированный
-     * код PREP50-{user}). Приглашение — ближайшее будущее занятие курса,
-     * если студент ещё не записан на него.
+     * код PREP50-{user}). Плюс студента записывают в группу ближайшего будущего
+     * занятия «напевного» курса — бесплатное «прийти и попробовать».
      */
     private function rewardsFor(Course $course, CourseQuiz $quiz, $user, bool $passed): ?array
     {
@@ -90,7 +90,7 @@ class CourseStageQuizController extends Controller
         }
 
         $promo = CourseFinalRewards::promoCodeFor($user);
-        $trialEvent = CourseFinalRewards::nearestTrialEvent();
+        $trialEvent = CourseFinalRewards::enrollToNearestTrialEvent();
 
         return [
             'promo_code' => CourseFinalRewards::promoDisplayCode($user),
@@ -98,7 +98,6 @@ class CourseStageQuizController extends Controller
             'grammar_course' => CourseFinalRewards::grammarCourse(),
             'trial_event' => $trialEvent,
             'trial_course' => $trialEvent?->course,
-            'invite' => $trialEvent !== null && CourseFinalRewards::shouldInvite($user),
         ];
     }
 
