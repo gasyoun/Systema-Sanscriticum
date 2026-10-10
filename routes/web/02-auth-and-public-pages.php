@@ -191,7 +191,7 @@ Route::get('/maintenance-bypass/{secret}', function (string $secret) {
 // всё платное контроллер закрывает 404 сам. До catch-all /{slug}.
 Route::get('/c/{slug}/u/{lessonId}/video/{player}', [RecordingGateController::class, 'show'])
     ->middleware('course.canonical')
-    ->whereIn('player', ['youtube', 'rutube', 'kinescope', 'video'])
+    ->whereIn('player', ['youtube', 'rutube', 'kinescope', 'vk', 'video'])
     ->name('student.recording.gate');
 
 Route::get('/otzyvy', [ShopController::class, 'testimonialsLibrary'])

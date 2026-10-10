@@ -84,9 +84,13 @@
         && \App\Http\Controllers\StudentController::parseVideoId($lesson->youtube_url, 'youtube') !== null;
     $hasRutube = $recordingAllowed
         && \App\Http\Controllers\StudentController::parseVideoId($lesson->rutube_url, 'rutube') !== null;
+    // VK-видео лежит в video_url человекочитаемой ссылкой (vk.com/video…, vkvideo.ru/video…)
+    $hasVk = $recordingAllowed
+        && \App\Http\Controllers\StudentController::parseVideoId($lesson->video_url, 'vk') !== null;
     $gateUrl = fn (string $player): string => route('student.recording.gate', [$course->slug, $lesson->id, $player]);
     $gateYoutube = $hasYoutube ? $gateUrl('youtube') : null;
     $gateRutube = $hasRutube ? $gateUrl('rutube') : null;
+    $gateVk = $hasVk ? $gateUrl('vk') : null;
     $kinescopeEmbedUrl = $recordingAllowed ? ($kinescopeEmbedUrl ?? null) : null;
     $kinescopePilotActive = !empty($kinescopeEmbedUrl);
     $gateKinescope = $kinescopePilotActive ? $gateUrl('kinescope') : null;
@@ -100,7 +104,19 @@
             if (!$text) return '';
             $pattern = '/\b(\d{1,2}:\d{2}(?::\d{2})?)\b/';
             $replacement = '<button @click.prevent="seekTo(\'$1\')" class="inline-flex items-center gap-1.5 px-2 py-0.5 mx-1 rounded-md bg-brand/10 text-brand border border-brand/30 hover:bg-brand hover:text-white font-mono text-sm font-bold transition-all shadow-sm group"><i class="fas fa-play text-[10px] opacity-60 group-hover:opacity-100 group-hover:text-white transition-colors"></i>$1</button>';
-            return preg_replace($pattern, $replacement, $text);
+            $text = preg_replace($pattern, $replacement, $text);
+            // Голые URL в тексте урока (мини-курсы ссылаются на внешние статьи
+            // и видео) → кликабельные ссылки. Текст приходит экранированным (e()),
+            // таймкод-кнопки URL не содержат, так что подмена безопасна.
+            return preg_replace_callback('~https?://[^\s<]+~u', function ($m) {
+                $url = $m[0];
+                $trail = '';
+                while ($url !== '' && str_contains('.,;…', mb_substr($url, -1))) {
+                    $trail = mb_substr($url, -1).$trail;
+                    $url = mb_substr($url, 0, -1);
+                }
+                return '<a href="'.$url.'" target="_blank" rel="noopener" class="text-brand font-bold underline decoration-brand/30 hover:decoration-brand break-all">'.$url.'</a>'.$trail;
+            }, $text);
         }
     }
     
@@ -117,7 +133,7 @@
 {{-- ========================================== --}}
 <div class="lesson-layout relative"
      x-data="{
-         player: '{{ $kinescopePilotActive ? 'kinescope' : ($hasRutube ? 'rutube' : ($hasYoutube ? 'youtube' : 'none')) }}',
+         player: '{{ $kinescopePilotActive ? 'kinescope' : ($hasRutube ? 'rutube' : ($hasYoutube ? 'youtube' : ($hasVk ? 'vk' : 'none'))) }}',
          currentTime: 0,
          videoDuration: {{ $resumeDuration ?? 'null' }},
          videoResumeEnabled: {{ $videoResumeEnabled ? 'true' : 'false' }},
@@ -231,7 +247,10 @@
     {{-- ЛЕВАЯ КОЛОНКА (Главная: Видео и Текст)     --}}
 <div class="lesson-main-col">
         
-        {{-- ВИДЕОПЛЕЕР --}}
+        {{-- ВИДЕОПЛЕЕР — у уроков без записи и без ближайшего занятия блок не показываем:
+             пустой чёрный прямоугольник «Видео недоступно» в мини-курсах не нужен.
+             Плейсхолдер внутри остаётся для записи-членаства и Zoom-панели пробного. --}}
+        @if($lesson->hasVideo() || ! empty($upcomingSession) || ! $recordingAllowed)
         <div class="w-full bg-[#19191C] rounded-[24px] overflow-hidden shadow-2xl border border-gray-200/50 relative z-40">
             <div class="relative aspect-video w-full bg-black">
                 @if($hasYoutube)
@@ -251,6 +270,16 @@
                             class="w-full h-full absolute inset-0"
                             allowfullscreen
                             allow="autoplay; encrypted-media">
+                    </iframe>
+                @endif
+
+                @if($hasVk)
+                    <iframe x-show="player === 'vk'"
+                            id="vk-player"
+                            src="{{ $gateVk }}"
+                            class="w-full h-full absolute inset-0"
+                            allowfullscreen
+                            allow="autoplay; encrypted-media; fullscreen">
                     </iframe>
                 @endif
 
@@ -342,7 +371,12 @@
                             <img src="https://rutube.ru/favicon.ico" :class="player === 'rutube' ? '' : 'opacity-50 grayscale'" class="w-3.5 h-3.5 mr-2 transition-all"> RuTube
                         </button>
                     @endif
-                    @if($hasYoutube && ($hasRutube || $kinescopePilotActive))
+                    @if($hasVk && ($hasYoutube || $hasRutube || $kinescopePilotActive))
+                        <button type="button" @click="player = 'vk'" :class="player === 'vk' ? 'bg-[#0077FF] text-white shadow-[0_0_15px_rgba(0,119,255,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
+                            <img src="https://vk.com/images/icons/favicons/fav_logo_2x.ico" :class="player === 'vk' ? '' : 'opacity-50 grayscale'" class="w-3.5 h-3.5 mr-2 transition-all" alt=""> VK Видео
+                        </button>
+                    @endif
+                    @if($hasYoutube && ($hasRutube || $kinescopePilotActive || $hasVk))
                         <button type="button" @click="player = 'youtube'" :class="player === 'youtube' ? 'bg-[#ff0000] text-white shadow-[0_0_15px_rgba(255,0,0,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
                             <i class="fab fa-youtube mr-2 text-sm" :class="player === 'youtube' ? 'text-white' : 'text-gray-500'"></i> YouTube
                         </button>
@@ -350,6 +384,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         @if($recordingAccess->notice())
             <div class="mt-3 rounded-2xl border border-amber-300/40 bg-amber-50 px-5 py-4 text-sm text-amber-950" data-membership-recording-notice>
@@ -375,10 +410,12 @@
     @endphp
 
     {{-- Верхний ряд: метки и кнопки --}}
-    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-        
-        {{-- Левая часть: заголовок --}}
-        <div class="flex-1 min-w-0">
+    {{-- Метки и заголовок — сверху, действия — строкой ниже (как в мобильной версии,
+         чтобы длинные кнопки не наезжали на плашку «Урок N из M»). --}}
+    <div class="flex flex-col gap-4">
+
+        {{-- Заголовок с метками --}}
+        <div class="min-w-0">
             <div class="flex items-center gap-3 mb-2 flex-wrap">
                 <span class="bg-brand/10 text-brand px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider">
                     Урок {{ $lessonIndex }} из {{ $totalLessons }}
@@ -394,8 +431,8 @@
             </h1>
         </div>
 
-        {{-- Правая часть: действия --}}
-        <div class="flex items-center gap-2 md:gap-3 shrink-0 flex-wrap">
+        {{-- Действия — отдельной строкой под заголовком --}}
+        <div class="flex items-center gap-2 md:gap-3 flex-wrap">
 
             {{-- === КНОПКА: Чат курса (если URL задан в админке) === --}}
             <x-course-chat-button :url="$course->chat_url" />
@@ -410,11 +447,53 @@
                 <span class="hidden md:inline">Куратору</span>
             </a>
 
-            {{-- === КНОПКА: Завершить / Пройден === --}}
-            @if(auth()->user()->completedLessons->contains($lesson->id))
+            {{-- === КНОПКА: Завершить / Пройден (мини-курсы: с переходом дальше) === --}}
+            @php
+                $isLessonCompleted = auth()->user()->completedLessons->contains($lesson->id);
+                // Следующий урок по списку курса — среди открытых текущему студенту
+                // (то же правило доступа, что у карточек на странице курса:
+                // бесплатный/превью — открыт всем, остальное по оплаченным ключам).
+                $currentIdx = $lessons->search(fn ($l) => $l->id === $lesson->id);
+                $nextLesson = null;
+                if ($currentIdx !== false) {
+                    $nextLesson = $lessons->slice($currentIdx + 1)
+                        ->first(fn ($l) => $l->is_free || $l->is_preview || $l->isUnlockedBy($unlockedTariffs) || in_array($l->id, $grantedLessonIds ?? [], true));
+                }
+                // Квиз этого этапа — цель финального урока («Завершить и пройти итоговый квиз»).
+                $quizForBlock = $course->quizzes
+                    ->first(fn ($q) => (int) $q->block_number === (int) $lesson->block_number && $q->is_active);
+            @endphp
+            @if($isLessonCompleted)
                 <div class="inline-flex justify-center items-center gap-2 px-4 py-2.5 md:py-3 rounded-xl bg-green-50 text-green-600 text-xs md:text-sm font-extrabold leading-none border border-green-200 cursor-default">
                     <i class="fas fa-check-circle mr-2 text-base"></i> Пройден
                 </div>
+                @if($nextLesson)
+                    <a href="{{ route('student.lesson', [$course->slug, $nextLesson->id]) }}"
+                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 rounded-xl bg-gray-50 hover:bg-brand hover:text-white text-gray-700 text-xs md:text-sm font-extrabold leading-none border border-gray-200 hover:border-brand transition-all uppercase tracking-wide">
+                        Следующий урок <i class="fas fa-arrow-right text-xs"></i>
+                    </a>
+                @elseif($quizForBlock)
+                    <a href="{{ route('student.course.quiz', [$course->slug, $quizForBlock->block_number]) }}"
+                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 rounded-xl bg-gray-50 hover:bg-brand hover:text-white text-gray-700 text-xs md:text-sm font-extrabold leading-none border border-gray-200 hover:border-brand transition-all uppercase tracking-wide">
+                        Итоговый квиз <i class="fas fa-arrow-right text-xs"></i>
+                    </a>
+                @endif
+            @elseif($nextLesson)
+                <form action="{{ route('student.lesson.complete', [$course->slug, $lesson->id]) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="next" value="{{ $nextLesson->id }}">
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 bg-brand hover:bg-brand-hover text-white rounded-xl font-extrabold text-xs md:text-sm leading-tight transition-all shadow-[0_5px_15px_rgba(232,92,36,0.3)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide max-w-full whitespace-normal text-left">
+                        Завершить и продолжить <i class="fas fa-arrow-right text-xs"></i>
+                    </button>
+                </form>
+            @elseif($quizForBlock)
+                <form action="{{ route('student.lesson.complete', [$course->slug, $lesson->id]) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="next" value="quiz">
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 bg-brand hover:bg-brand-hover text-white rounded-xl font-extrabold text-xs md:text-sm leading-tight transition-all shadow-[0_5px_15px_rgba(232,92,36,0.3)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide max-w-full whitespace-normal text-left">
+                        Завершить и пройти квиз <i class="fas fa-arrow-right text-xs"></i>
+                    </button>
+                </form>
             @else
                 <form action="{{ route('student.lesson.complete', [$course->slug, $lesson->id]) }}" method="POST">
                     @csrf
@@ -511,7 +590,13 @@
 </div>
 
         {{-- КОНТЕНТ УРОКА (Описание) --}}
-        @if($lesson->content || $lesson->topic)
+        @if(filled($lesson->content_html))
+        {{-- Богатое тело (мини-курсы): HTML уже санитизирован при записи
+             (Lesson::setContentHtmlAttribute) — инлайновые стили этапа. --}}
+        <div class="relative z-10">
+            {!! $lesson->content_html !!}
+        </div>
+        @elseif($lesson->content || $lesson->topic)
         <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 relative z-10">
             <div class="prose prose-lg max-w-none text-gray-800 leading-relaxed font-nunito font-medium marker:bg-brand/20 marker:text-[#1A1A1A]">
                 {!! formatTimecodes(nl2br(e($lesson->content ?? $lesson->topic))) !!}
