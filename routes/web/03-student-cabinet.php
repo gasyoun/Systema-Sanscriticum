@@ -18,6 +18,7 @@ use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PranaShopController;
 use App\Http\Controllers\PranaTransferController;
+use App\Http\Controllers\PrivacySettingsController;
 use App\Http\Controllers\ReadingPackController;
 use App\Http\Controllers\Rq4StudyController;
 use App\Http\Controllers\SrsController;
@@ -441,6 +442,15 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::post('/profile/password/email-link', [PasswordResetController::class, 'sendResetLinkToSelf'])
         ->middleware('throttle:3,1')
         ->name('student.password.email-link');
+
+    // 152-ФЗ: согласия в кабинете — переключатели рекламной рассылки и запрос
+    // на удаление персональных данных (раздел «Уведомления и рассылки»).
+    Route::post('/profile/notifications', [PrivacySettingsController::class, 'updateNotifications'])
+        ->middleware('throttle:20,1')
+        ->name('student.notifications.update');
+    Route::post('/profile/personal-data/delete-request', [PrivacySettingsController::class, 'requestDeletion'])
+        ->middleware('throttle:3,1')
+        ->name('student.pd-deletion.request');
 
     // H4434 — timezone localization (MG 09-09-2026): ручной селектор + временное
     // пребывание + silent device-TZ захват (VPN-иммунный сигнал).

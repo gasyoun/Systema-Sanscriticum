@@ -74,10 +74,12 @@ jobs:
           cat > public/build/manifest.json << 'JSON'
           {
             "resources/css/app.css": { "file": "assets/app.css", "src": "resources/css/app.css", "isEntry": true },
-            "resources/js/app.js":  { "file": "assets/app.js",  "src": "resources/js/app.js",  "isEntry": true }
+            "resources/js/app.js":  { "file": "assets/app.js",  "src": "resources/js/app.js",  "isEntry": true },
+            "resources/css/fonts.css": { "file": "assets/fonts.css", "src": "resources/css/fonts.css", "isEntry": true },
+            "resources/js/alpine-standalone.js": { "file": "assets/alpine-standalone.js", "src": "resources/js/alpine-standalone.js", "isEntry": true }
           }
           JSON
-          touch public/build/assets/app.css public/build/assets/app.js
+          touch public/build/assets/app.css public/build/assets/app.js public/build/assets/fonts.css public/build/assets/alpine-standalone.js
 
       - name: Laravel Pint format check
         env:
