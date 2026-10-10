@@ -154,6 +154,8 @@ verification in §8 — kick that off separately, it is not part of this deliver
   submission package** — [GOOGLE_CALENDAR_VERIFICATION_PACK_H4434.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GOOGLE_CALENDAR_VERIFICATION_PACK_H4434.md)
   (ready answers, screencast plan, ~40 min console walkthrough); the actual
   Console submission is MG's manual step and has not been filed yet.
+  **Update 10-10-2026 (calendar grill): MG ruled to file it now** (GTD `@DO (MG, ~40м)`
+  in Uprava); Phase 2–3 wait on Google's review from that moment.
 - **This repo has a watcher.** [`.claude/hooks/watcher_autosave.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.claude/hooks/watcher_autosave.py)
   reverts uncommitted working-tree edits — all implementation work must land via the
   `/watcher-safe-commit` discipline (author + commit in one shot, verify survival vs
