@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Category;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Schedule;
@@ -216,5 +217,76 @@ class PublicSchedulePageTest extends TestCase
             ->assertSee('Марцис Юрьевич Гасунс')
             ->assertSee('пт 18:00')
             ->assertSee('сейчас 2-е (нед. 11)');
+    }
+
+    /**
+     * H6313: у каждой единицы расписания — бейдж вида («Разовое»/«Обычное»);
+     * фильтры ?direction= и ?teacher= сужают список (те же query-параметры,
+     * что у /api/public/schedule); пустые параметры = без фильтра,
+     * незнакомое значение = пустой список без ошибки.
+     *
+     * @test
+     */
+    public function units_carry_kind_badges_and_query_filters_narrow_the_list(): void
+    {
+        config(['features.schedule_full_post' => true]);
+
+        $teacher = Teacher::create(['name' => 'Бейдж Тестов', 'email' => 'badge@example.test']);
+        $category = Category::factory()->create(['name' => 'Грамматика', 'slug' => 'badge-grammatika']);
+
+        $regular = Course::factory()->create([
+            'title' => 'Регулярный курс бейджа', 'slug' => 'badge-regular',
+            'is_active' => true, 'is_visible' => true, 'teacher_id' => $teacher->id,
+        ]);
+        $regular->categories()->attach($category->id);
+        $open = Course::factory()->create([
+            'title' => 'Открытые вебинары бейджа', 'slug' => 'badge-open',
+            'is_active' => true, 'is_visible' => true,
+        ]);
+
+        $groupR = Group::factory()->create();
+        $regular->groups()->attach($groupR->id);
+        $groupO = Group::factory()->create();
+        $open->groups()->attach($groupO->id);
+
+        Schedule::create(['title' => 'R', 'start' => Carbon::parse('2027-03-06 11:00'), 'group_id' => $groupR->id, 'course_id' => $regular->id]);
+        foreach (['2027-03-09', '2027-03-10', '2027-03-11', '2027-03-14'] as $i => $day) {
+            Schedule::create(['title' => 'O'.$i, 'start' => Carbon::parse($day.' 16:00'), 'group_id' => $groupO->id, 'course_id' => $open->id]);
+        }
+
+        // Бейджи вида в оглавлении и заголовке единицы: минимум по два каждого.
+        $html = $this->get('/raspisanie')
+            ->assertOk()
+            ->assertSee('Регулярный курс бейджа')
+            ->assertSee('Открытые вебинары бейджа')
+            ->assertSee('class="sch-kind', false)
+            ->getContent();
+        $this->assertGreaterThanOrEqual(2, substr_count($html, '>Разовое<'));
+        $this->assertGreaterThanOrEqual(2, substr_count($html, '>Обычное<'));
+
+        // Фильтр по направлению: остаётся только курс этой категории.
+        $this->get('/raspisanie?direction=badge-grammatika')
+            ->assertOk()
+            ->assertSee('Регулярный курс бейджа')
+            ->assertDontSee('Открытые вебинары бейджа')
+            ->assertSee('Фильтр:');
+
+        // Фильтр по преподавателю — то же сужение.
+        $this->get('/raspisanie?teacher='.urlencode('Бейдж Тестов'))
+            ->assertOk()
+            ->assertSee('Регулярный курс бейджа')
+            ->assertDontSee('Открытые вебинары бейджа');
+
+        // Пустые параметры = без фильтра (обе единицы на месте, строки фильтра нет).
+        $this->get('/raspisanie?direction=&teacher=')
+            ->assertOk()
+            ->assertSee('Регулярный курс бейджа')
+            ->assertSee('Открытые вебинары бейджа')
+            ->assertDontSee('Фильтр:');
+
+        // Незнакомое значение = пустой список, страница не роняется.
+        $this->get('/raspisanie?direction=net-takogo')
+            ->assertOk()
+            ->assertSee('Сейчас нет курсов с предстоящими занятиями');
     }
 }
