@@ -269,6 +269,32 @@ class WaitlistBotServiceTest extends TestCase
             && str_contains((string) $request['text'], 'любое время'));
     }
 
+    public function test_zhdun_stats_allowlisted_extra_chat_sees_breakdown_and_foreign_still_refused(): void
+    {
+        config([
+            'services.telegram.curators_chat_id' => '-100777',
+            'services.telegram.zhdun_stats_chat_ids' => ['-100888'],
+        ]);
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+        $anna = User::factory()->create(['name' => 'Анна', 'telegram_id' => 11]);
+        $this->item->castVoteBy($anna, 'evening');
+
+        $consumed = (new WaitlistBotService)->handleUpdate([
+            'message' => ['chat' => ['id' => -100888], 'text' => '/zhdun-stats'],
+        ]);
+
+        $this->assertTrue($consumed);
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/sendMessage')
+            && str_contains((string) $request['text'], 'Руководство по Бюлеру')
+            && str_contains((string) $request['text'], 'Анна'));
+
+        (new WaitlistBotService)->handleUpdate([
+            'message' => ['chat' => ['id' => 4242], 'text' => '/zhdun-stats'],
+        ]);
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/sendMessage')
+            && str_contains((string) $request['text'], 'только кураторам'));
+    }
+
     public function test_zhdun_stats_other_chat_gets_polite_refusal_without_data(): void
     {
         config(['services.telegram.curators_chat_id' => '-100777']);
