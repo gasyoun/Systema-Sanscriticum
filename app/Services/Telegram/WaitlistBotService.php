@@ -327,6 +327,7 @@ final class WaitlistBotService
             (array) config('services.telegram.zhdun_stats_chat_ids', []),
         )));
         if ($allowedChatIds === [] || ! in_array($chatId, $allowedChatIds, true)) {
+            Log::info('zhdun-stats: чат не в allow-листе — отказ без данных', ['chat_id' => $chatId]);
             $this->tg('sendMessage', [
                 'chat_id' => $chatId,
                 'text' => 'Эта команда доступна только кураторам ОРС. Голосовать за будущие группы — /zhdun',
