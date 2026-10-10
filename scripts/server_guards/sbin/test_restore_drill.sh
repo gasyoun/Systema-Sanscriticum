@@ -150,7 +150,8 @@ run_drill() {
     export RESTIC_DRILL_INCLUDE="${RESTIC_TEST_INCLUDE:-/var/backups/*.gz}"
     export RESTIC_TEST_BRIEF_DIR="$TMP/brief"
     export RESTIC_TEST_ARGS_LOG="$TMP/args.log"
-    unset RESTIC_PASSWORD RESTIC_PASSWORD_FILE RESTIC_REPOSITORY STUB_MODE STUB_FIXTURE
+    unset RESTIC_PASSWORD RESTIC_PASSWORD_FILE RESTIC_REPOSITORY STUB_MODE STUB_FIXTURE RESTIC_RUN_SCRIPT
+    if [ -n "${RESTIC_TEST_RUN_SCRIPT:-}" ]; then export RESTIC_RUN_SCRIPT="$RESTIC_TEST_RUN_SCRIPT"; fi
     if [ -z "${RESTIC_TEST_REAL_RESTIC:-}" ]; then
       export STUB_MODE="${RESTIC_TEST_STUB_MODE:-ok}"
       export STUB_FIXTURE="${RESTIC_TEST_FIXTURE:-$TMP/var-backups-dump.sql.gz}"
@@ -239,6 +240,42 @@ ENV
 run_drill
 check "7a legacy literal: drill proceeds" "$(lacks 'SKIPPED-NO-ACCESS' "$ART/report.md")"
 check "7b legacy literal: restic invoked with resolved repo" "$(has "-r $TMP/fake-repo" "$ART/restic-args.log" 2)"
+
+# ── 10. loose-perms WARN: group/world-readable password file still drills ─────
+new_case "password-file-loose-perms"
+printf '%s\n' "$PW_FILE_SECRET" > "$TMP/pw-loose"
+chmod 644 "$TMP/pw-loose"
+write_env <<ENV
+export RESTIC_REPOSITORY=$TMP/fake-repo
+export RESTIC_PASSWORD_FILE=$TMP/pw-loose
+ENV
+run_drill
+check "10a loose perms: loud WARN with mode" "$(has 'доступен группе/прочим' "$ART/report.md")"
+check "10b loose perms: drill still proceeds (read-only drill)" "$(lacks 'SKIPPED-NO-ACCESS' "$ART/report.md")"
+
+# ── 11. run-script-only fallbacks (no creds env file) — H6307 review majors ───
+# 11a FILE contract via the run script (must be EXPORTED to the restic child).
+new_case "run-script-file-fallback"
+: > "$TMP/drill.env"
+cat > "$TMP/fake-run-file.sh" <<RS
+#!/bin/bash
+export RESTIC_REPOSITORY=$TMP/fake-repo-runfile
+export RESTIC_PASSWORD_FILE=$TMP/pw-file
+RS
+RESTIC_TEST_RUN_SCRIPT="$TMP/fake-run-file.sh" run_drill
+check "11a run-script FILE fallback: drill proceeds" "$(has 'пароль взят из RESTIC_PASSWORD_FILE' "$ART/report.md")"
+check "11b run-script FILE fallback: restic got the repo" "$(has "-r $TMP/fake-repo-runfile" "$ART/restic-args.log")"
+# 11c legacy literal via the run script (eval + export).
+new_case "run-script-literal-fallback"
+: > "$TMP/drill.env"
+cat > "$TMP/fake-run-literal.sh" <<RS
+#!/bin/bash
+export RESTIC_REPOSITORY=$TMP/fake-repo-runlit
+export RESTIC_PASSWORD=$PW_LEGACY_SECRET
+RS
+RESTIC_TEST_RUN_SCRIPT="$TMP/fake-run-literal.sh" run_drill
+check "11c run-script literal fallback: drill proceeds" "$(lacks 'SKIPPED-NO-ACCESS' "$ART/report.md")"
+check "11d run-script literal fallback: restic got the repo" "$(has "-r $TMP/fake-repo-runlit" "$ART/restic-args.log")"
 
 # ── 9. real restic: encrypted scratch fixture restores to matching sha256 ─────
 if command -v restic >/dev/null 2>&1; then

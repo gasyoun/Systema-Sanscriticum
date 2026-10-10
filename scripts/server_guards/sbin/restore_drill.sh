@@ -43,7 +43,10 @@ else
   hb_mark() { :; }
 fi
 OUT="$BRIEF_DIR/drill_latest.md"
-SCRATCH="$(mktemp -d "$TMP_BASE/restic_drill.XXXXXX")"
+SCRATCH="$(mktemp -d "$TMP_BASE/restic_drill.XXXXXX" 2>/dev/null)" || {
+  echo "FAIL — restore drill: mktemp не смог создать scratch в ${TMP_BASE}" >&2
+  exit 1
+}
 cleanup() { rm -rf "$SCRATCH"; }
 trap cleanup EXIT INT TERM
 
@@ -63,7 +66,9 @@ resolve_password_file() {
   if [ ! -s "$RESTIC_PASSWORD_FILE" ]; then PF_ERR="empty"; return 1; fi
   local perms grp oth
   perms="$(ls -ld "$RESTIC_PASSWORD_FILE" 2>/dev/null | cut -c1-10)"
-  grp="${perms:5:1}"; oth="${perms:8:1}"
+  # perms layout (1-indexed): 1 type, 2-4 owner, 5-7 group, 8-10 other;
+  # group read is char 5 => bash index 4, other read is char 8 => bash index 7.
+  grp="${perms:4:1}"; oth="${perms:7:1}"
   if [ "$grp" = "r" ] || [ "$oth" = "r" ]; then
     PW_WARN="WARN — RESTIC_PASSWORD_FILE доступен группе/прочим (mode ${perms}); ужать до 0600"
   fi
@@ -78,16 +83,18 @@ if [ -z "$REPO" ] && [ -f "$RUN" ]; then
   REPO="$(grep -oE 'RESTIC_REPOSITORY=[^ ]+' "$RUN" | head -1 | cut -d= -f2- | tr -d '"')"
 fi
 # FILE contract from the run-script as a fallback (path value — parsed, never eval'd).
+# export: restic reads the password from env/file, so the child MUST inherit it.
 if [ -z "${RESTIC_PASSWORD_FILE:-}" ] && [ -f "$RUN" ]; then
-  RESTIC_PASSWORD_FILE="$(grep -oE 'RESTIC_PASSWORD_FILE=[^ ]+' "$RUN" | head -1 | cut -d= -f2- | tr -d '"')"
+  export RESTIC_PASSWORD_FILE="$(grep -oE 'RESTIC_PASSWORD_FILE=[^ ]+' "$RUN" | head -1 | cut -d= -f2- | tr -d '"')"
 fi
 resolve_password_file || true
 
 # Legacy literal fallback: only if NO usable password file, pull export RESTIC_PASSWORD=
-# from the run script the same way the pre-H6307 drill did (value stays in env, never echoed).
+# from the run script the same way the pre-H6307 drill did (value stays in env, never
+# echoed; exported so the restic child inherits it).
 if [ -z "$PW_PATH" ] && [ -z "${RESTIC_PASSWORD:-}" ] && [ -f "$RUN" ]; then
   # shellcheck disable=SC2046  # intended word-split of a single matched export line
-  eval "$(grep -oE 'export RESTIC_PASSWORD=[^ ]+' "$RUN" | head -1 | sed 's/export //')" 2>/dev/null || true
+  eval "export $(grep -oE 'export RESTIC_PASSWORD=[^ ]+' "$RUN" | head -1 | sed 's/export //')" 2>/dev/null || true
 fi
 
 {
@@ -132,7 +139,11 @@ fi
       page_or_queue "P1" "Restore drill: restic не ответил — бэкапы могут быть ненастоящими"
     fi
   fi
-} > "$OUT"
+} > "$OUT" || {
+  # Never a silent no-op: report write failure (unwritable BRIEF_DIR) must be loud.
+  echo "FAIL — restore drill: не смог записать отчёт в ${OUT}" >&2
+  page_or_queue "P1" "Restore drill: report write failed (${OUT}) — результат прогона не виден"
+}
 
 chown hermes:hermes "$OUT" 2>/dev/null || true
 hb_mark "restore_drill" 0

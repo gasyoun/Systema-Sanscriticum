@@ -28,8 +28,8 @@ restic lane carries `export RESTIC_PASSWORD_FILE=` in `/root/.restic-systema.env
 ## Install manifest (expected state on the box)
 
 - Managed file: `scripts/server_guards/sbin/restore_drill.sh` → `/usr/local/sbin/restore_drill.sh`, mode `755`, importance `critical`.
-- Expected sha256 of the installed file (repo bytes, branch h6307-drain):
-  `c89a99c25cfde4fd090d1f20b99686c2d6efbf549036d1ac9900077c880e9492`
+- Expected sha256 of the installed file (repo bytes, branch h6307-drain, after review fixes):
+  `fa27bce835f9f981b66851044d4a0115abe4faf85c3e7b3e208afad22a289ae6`
 - Scheduler command (already managed, unchanged):
   `14 3 1 * * /usr/local/sbin/restore_drill.sh` — source
   [scripts/server_guards/cron/root.crontab line 55](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/cron/root.crontab),
@@ -46,10 +46,30 @@ RESTORE_DRILL_UNDER_TEST=/tmp/old_restore_drill_live.sh \
   bash scripts/server_guards/sbin/test_restore_drill.sh
 # → exit 1; "summary: pass=9 fail=15 skipped=0"
 
-# AFTER — the fixed script:
+# AFTER — the fixed script (after independent-review fixes, 30 checks):
 bash scripts/server_guards/sbin/test_restore_drill.sh
-# → exit 0; "summary: pass=24 fail=0 skipped=0" (macOS host, real restic via Homebrew)
+# → exit 0; "summary: pass=30 fail=0 skipped=0" (macOS host, real restic via Homebrew)
 ```
+
+## Independent security review (class: security, H4358)
+
+Different-session reviewer (fresh context, read-only, adversarial): **VERDICT: PASS** —
+"prod-critical fix (env-file RESTIC_PASSWORD_FILE contract) is sound with no secret-leak or
+destructive-path findings". Full verdict recorded in the handoff file's `## Verifier` section
+(Uprava). Two major findings found by the reviewer, both fixed in this branch with regression
+tests added (cases 10–11; suite grew 24 → 30 checks, 30/30 green):
+
+1. Loose-perms WARN indexed the wrong `ls -ld` characters (5/8 → 4/7) — the group/other-readable
+   WARN was dead code; now covered by case 10 (mode 644 → WARN present, drill proceeds).
+2. Run-script fallback credentials were assigned without `export` — restic child never inherited
+   them; now `export`ed (FILE path) and `eval "export …"` (legacy literal), covered by cases
+   11a–11d (run-script-only creds for both contracts).
+
+Minor fixes also applied: mktemp failure is loud (`|| { … exit 1; }`), report-write failure
+pages P1 instead of a silent no-op. Accepted notes (declared in Risks): legacy eval stays in
+the run-script trust domain and never fires on the preferred FILE path; commented-out lines in
+the run script could shadow creds (root-owned file, parity with the old drill); concurrent runs
+last-writer-wins on `drill_latest.md` (scratch isolation itself is safe).
 
 - Real-restic case (case 9) ran locally with restic present: repo init → backup of a gz
   fixture → the drill restored it into its scratch and reported the matching sha256; report
