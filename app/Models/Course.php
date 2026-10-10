@@ -154,6 +154,12 @@ class Course extends Model
         return $this->format === 'live';
     }
 
+    /** Живой курс, группа ещё не стартовала (набор открыт). */
+    public function isEnrolling(): bool
+    {
+        return $this->format === 'enrolling';
+    }
+
     /**
      * Embed-URL видео-анонса курса (YouTube/RuTube/VK video) для hero-блока
      * продающей страницы, или null если ссылка не задана/не распознана.
@@ -164,14 +170,30 @@ class Course extends Model
     }
 
     /**
+     * Формат курса (courses.format). Единый источник значений для админки
+     * (CourseResource), фильтра каталога (CourseCatalog) и whitelist'а
+     * фасет-URL (ShopController). enrolling — набор открыт, живая группа
+     * ещё не стартовала; в запись/архив подписки такие курсы не попадают.
+     */
+    public const FORMATS = ['live', 'enrolling', 'recorded'];
+
+    /** Значения FORMATS с эмодзи-лейблами для radio в админке. */
+    public const FORMAT_LABELS = [
+        'live' => '🔴 Идёт сейчас (live-поток)',
+        'enrolling' => '🟡 Идёт набор (группа ещё не стартовала)',
+        'recorded' => '📼 В записи (доступен в любое время)',
+    ];
+
+    /**
      * Человекочитаемый лейбл формата для панели «Коротко о курсе».
-     * Значения совпадают с CourseResource (Radio 'format'): live | recorded.
+     * Значения совпадают с CourseResource (Radio 'format'): live | enrolling | recorded.
      */
     public function formatLabel(): ?string
     {
         // H2379: same vocabulary as catalogue card badges + hybrid cabinet.
         return match ($this->format) {
             'live' => 'Идет сейчас',
+            'enrolling' => 'Идет набор',
             'recorded' => 'В записи',
             default => null,
         };
@@ -895,6 +917,12 @@ class Course extends Model
     public function blocks(): HasMany
     {
         return $this->hasMany(CourseBlock::class)->orderBy('number');
+    }
+
+    /** Квизы этапов (мини-курсы): один на block_number. */
+    public function quizzes(): HasMany
+    {
+        return $this->hasMany(CourseQuiz::class)->orderBy('block_number');
     }
 
     public function certificateMilestones(): HasMany

@@ -1,15 +1,14 @@
 # CLAUDE.md
 
-_Created: 07-05-2026 · Last updated: 20-09-2026 (H5176 SLA slim: duplicates removed; invariants + pins kept)_
+_Created: 07-05-2026 · Last updated: 04-10-2026 (H5885 SLA trim; H5176 slim before)_
 
-**Systema-Sanscriticum** is the Laravel LMS for [samskrte.ru](https://samskrte.ru)
-(cabinet, shop, homework, finance, Telegram/VK bots). Org spine applies; this
-file is repo-local always-on only — open the section matching the task, don't
-read end-to-end.
+**Systema-Sanscriticum** is the Laravel LMS for [samskrte.ru](https://samskrte.ru).
+Org spine applies; repo-local always-on only — open the matching section,
+don't read end-to-end.
 
 ## Stack
 
-Laravel 12/PHP 8.3 · Vite 8+Tailwind 4 · Filament v3 (`/admin`, `/editor`) ·
+Laravel 12/PHP 8.3 · Vite 8+Tailwind 4 · Filament v3 ·
 Horizon/Redis · MySQL prod, SQLite tests · Sail.
 
 ## Watcher (always-on)
@@ -63,8 +62,7 @@ payout. [ARCHITECTURE…SETTLEMENT.md](https://github.com/gasyoun/Systema-Sanscr
 
 Only [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh)
 — never a hand `git pull` on prod. Ritual+gate: [deploy.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md)
-(incl. the no-GitHub fallback when `api.github.com` is down — prod cron within
-30 min, or `ssh root@193.232.229.92 'sudo /bin/bash /var/www/html/deploy.sh'`);
+(incl. the no-GitHub fallback when `api.github.com` is down);
 guards+playbook: [server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md) ·
 [SERVER_SOFT_ALERT_PLAYBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md).
 Soft TG «Кабинет: soft-сбой» + `auto_deploy.disabled`/tracked dirty ≠ cabinet
@@ -73,7 +71,7 @@ down. **Never** edit tracked `app/`/`config/` on the VPS. Safe auto:
 env): [SOFT_ALERT_WEBHOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/SOFT_ALERT_WEBHOOK.md).
 Uptime: [EN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md)/[RU](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md).
 
-## Teacher surfaces (H3219)
+## Teacher surfaces
 
 Admin-like staff see every teacher surface (`RoleGate::seesTeacherSurfaces()`).
 Impersonation `MODE_TEACHER` — super_admin only, flag `STAFF_IMPERSONATION`.
@@ -138,7 +136,7 @@ Schema derives from migrations; Money above carries the invariants.
 - Tochka `/api/webhooks/tochka` · Telegram `/api/telegram/webhook` · VK `/api/vk-webhook` · DomPDF.
 - Чеки: Digital Kassa (`DIGITALKASSA_RECEIPTS`, OFF) — провайдер фиксируется на платеже (`payments.fiscal_provider`) при создании ссылки; чек после paid-вебхука, `fiscal:retry-digitalkassa`. Флаг OFF = чек Точки.
 - Lead-magnet bots: `/api/webhooks/telegram-magnet`, `/vk-magnet`, `/max-magnet/{secret}` (secret **in the path** — rotate in `MarketingSetting` after a leak). Secrets use Eloquent `encrypted`.
-- New Telegram send points claim via [TelegramSendGuard](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/TelegramSendGuard.php) before the API call — unclaimed retry after a lost response duplicates the send. Dedupe: `update_id` via `claimUpdate()`.
+- New Telegram send points claim via [TelegramSendGuard](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/TelegramSendGuard.php) before the API call (an unclaimed retry duplicates the send). Dedupe: `update_id` via `claimUpdate()`.
 - n8n ZOOM 1.4: DOWNLOAD only via the fresh signed URL (≤24h); cleanup deletes only `…/executions/{{ \.id }}*`, never a global rm. API-PUT: back up JSON first.
 
 ## Environment / worktrees
@@ -156,13 +154,21 @@ Destructive-risk facts: [Uprava DANGER_FACTS.md](https://github.com/gasyoun/Upra
 
 ## Agent skills
 
-- **Issue tracker:** GitHub Issues via `gh`; PRs NOT triage. `docs/agents/issue-tracker.md`.
-- **Triage labels:** `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. `docs/agents/triage-labels.md`.
-- **Domain docs:** root `CONTEXT.md`+`docs/adr/`, lazy. `docs/agents/domain.md`.
+- Issue tracker: GitHub Issues via `gh`; PRs NOT triage. `docs/agents/issue-tracker.md`.
+- Triage labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. `docs/agents/triage-labels.md`.
+- Domain docs: root `CONTEXT.md`+`docs/adr/`, lazy. `docs/agents/domain.md`.
 
 ## Memory store
 
-Committed memory store at [`.claude/projects/Systema-Sanscriticum/memory/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/.claude/projects/Systema-Sanscriticum/memory)
-— dangerous/durable facts go there, indexed in its `MEMORY.md` (H4547, `/danger-memory`).
+Committed memory store at [`.claude/projects/Systema-Sanscriticum/memory/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/.claude/projects/Systema-Sanscriticum/memory);
+dangerous/durable facts go there, indexed in its `MEMORY.md` (`/danger-memory`).
+
+## Repo guards
+
+The shared main tree is guarded: `.githooks/pre-commit` blocks main-tree commits
+(escape `ALLOW_MAIN_TREE_COMMIT=1`, solo only) and `.githooks/post-checkout`
+auto-reverts a foreign branch-switch back to `main` (shared-tree branch-switch guard,
+03-10-2026, PR #2964; escape `ALLOW_MAIN_TREE_CHECKOUT=1`). Work in a session-unique
+worktree; `core.hooksPath=.githooks`.
 
 _Dr. Mārcis Gasūns_

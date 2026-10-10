@@ -6,7 +6,9 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Services\AttributionService;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\Membership\FreeTierLessonGranter;
+use App\Support\Consent\ConsentRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -54,7 +56,9 @@ final class GuestRegisterController extends Controller
             'city' => ['nullable', 'string', 'max:120'],
             'birth_year' => ['nullable', 'integer'],
             'signup_source' => ['nullable', 'string', Rule::in(AttributionService::SIGNUP_SOURCES)],
-        ], [
+            'pd_consent' => ConsentRules::pd(),
+            'is_promo_agreed' => ['nullable'],
+        ], ConsentRules::messages() + [
             'phone.regex' => 'Телефон: только цифры, пробелы, «+», скобки и дефис.',
             'phone.max' => 'Телефон слишком длинный.',
             'first_name.max' => 'Имя слишком длинное.',
@@ -81,6 +85,14 @@ final class GuestRegisterController extends Controller
             'phone' => filled($validated['phone'] ?? null) ? trim($validated['phone']) : null,
             'city' => filled($validated['city'] ?? null) ? trim($validated['city']) : null,
         ]);
+
+        // 152-ФЗ / 38-ФЗ: рассылка — только по явной галочке.
+        $wantsPromo = $request->boolean('is_promo_agreed');
+        $user->forceFill([
+            'wants_email_announcements' => $wantsPromo,
+            'wants_messenger_announcements' => $wantsPromo,
+        ])->save();
+        app(ConsentRecorder::class)->fromForm($request, 'register', $user, null, null, 'is_promo_agreed');
 
         $attribution = app(AttributionService::class);
         $attribution->applyToNewUser($user);

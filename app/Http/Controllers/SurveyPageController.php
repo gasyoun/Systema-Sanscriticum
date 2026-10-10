@@ -8,6 +8,7 @@ use App\Models\SurveyEvent;
 use App\Models\SurveyInvitation;
 use App\Models\SurveyResponse;
 use App\Models\User;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use App\Services\Survey\SurveyFunnelRecorder;
@@ -123,6 +124,8 @@ class SurveyPageController extends Controller
             'reward_choice' => $definition['reward_enabled'] ? $rewardChoice : null,
             'ip_hash' => hash('sha256', (string) $request->ip().'|'.(string) config('app.key')),
         ]);
+        // 152-ФЗ: галочка ПДн стоит у поля контакта для начисления награды.
+        app(ConsentRecorder::class)->fromForm($request, 'survey:'.$slug, $request->user(), filter_var((string) $contact, FILTER_VALIDATE_EMAIL) ? $contact : null);
 
         $this->tryAutoReward($response);
 

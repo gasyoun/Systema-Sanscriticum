@@ -25,3 +25,5 @@
     </a>
 @endforeach
 <a href="{{ route('refund.show') }}" class="{{ $linkClass }}">Условия возврата</a>
+{{-- 152-ФЗ: согласие на аналитику можно отозвать в любой момент — переоткрывает баннер cookie. --}}
+<a href="#" onclick="if (window.ssConsent) { window.ssConsent.reopen(); } return false;" class="{{ $linkClass }}" data-cookie-settings>Настройки cookie</a>

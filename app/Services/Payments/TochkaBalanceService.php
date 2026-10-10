@@ -37,6 +37,39 @@ final class TochkaBalanceService
         return $this->fetch();
     }
 
+    /**
+     * Payout funding pool: ClosingAvailable money minus accounts whose tails
+     * are excluded by payroll_readiness.funding_excluded_account_tails (the
+     * tax wallet …877617 must never fund teacher payouts — H5554 gap [2]).
+     * Null when the snapshot is unavailable. Read-only; does not mutate the
+     * cached snapshot or its closing_total.
+     */
+    public function fundingPool(): ?float
+    {
+        $snap = $this->snapshot();
+        if (! ($snap['ok'] ?? false)) {
+            return null;
+        }
+
+        $excluded = array_map(
+            static fn ($tail): string => (string) $tail,
+            (array) config('payroll_readiness.funding_excluded_account_tails', []),
+        );
+        if ($excluded === []) {
+            return (float) ($snap['closing_total'] ?? 0);
+        }
+
+        $pool = 0.0;
+        foreach ((array) ($snap['accounts'] ?? []) as $account) {
+            if (in_array((string) ($account['tail'] ?? ''), $excluded, true)) {
+                continue;
+            }
+            $pool += (float) ($account['closing'] ?? 0);
+        }
+
+        return round($pool, 2);
+    }
+
     /** @return array<string, mixed> */
     private function fetch(): array
     {

@@ -33,6 +33,20 @@ return [
     'trial_grant_hardening' => (bool) env('TRIAL_GRANT_HARDENING', false),
 
     /*
+     | Пробное занятие переключается само (08-10-2026). Раньше после занятия пин
+     | (trial_schedule_id) «протухал»: кнопка продавала запись прошедшего, пока
+     | человек не переуказывал занятие в Filament по алерту trial:check-freshness.
+     | trial:auto-advance (каждые 15 мин): занятие пина началось → следующее
+     | занятие того же курса и той же группы; урок-заготовку создаёт прежний
+     | Course::syncTrialPlaceholderLesson(). Следующего нет — ничего не трогает.
+     | Уже купившие сохраняют доступ к своему уроку. Платёжный путь не меняется.
+     |
+     | ВЫКЛ по умолчанию (денежный контур). Включение — TRIAL_AUTO_ADVANCE=true
+     | + config:cache; проверка — php artisan trial:auto-advance --dry-run.
+     */
+    'trial_auto_advance' => (bool) env('TRIAL_AUTO_ADVANCE', false),
+
+    /*
      | Единый ответ из Helpdesk с маршрутизацией в канал разговора. ВЫКЛЮЧЕН по
      | умолчанию: когда включён, ответ куратора на диалог, живущий в
      | импортированном TG-support (userbot), пишется в TelegramSupportMessage
@@ -438,6 +452,16 @@ return [
      | (урок crontab .92: «своя строка = своя судьба»), не schedule:run.
      */
     'support_hint_daily_digest' => (bool) env('SUPPORT_HINT_DAILY_DIGEST', false),
+
+    /*
+     | H5709: недельный отчёт по студенческим вопросам Telegram (понедельник
+     | 09:00 Europe/Moscow, support:questions-weekly --send). ВЫКЛ по
+     | умолчанию: слот живого поста в чат «Отдел заботы» включается только
+     | ПОСЛЕ независимой верификации логики (гейт хендоффа). Ручной прогон —
+     | php artisan support:questions-weekly [--dry-run|--send] — работает и
+     | при OFF.
+     */
+    'support_questions_weekly' => (bool) env('SUPPORT_QUESTIONS_WEEKLY', false),
 
     /*
      | H3462 (рулинг MG 24-08-2026): входящий email как канал поддержки.
@@ -1105,6 +1129,16 @@ return [
      | пока OFF. Не включать в этом PR — только ключ, default false.
      */
     'waitlist_voting' => (bool) env('WAITLIST_VOTING', false),
+
+    /*
+     | Ждун: автооткрытие оплаты при кворуме (votes >= min_payers) для
+     | строки, привязанной к курсу: статус payment_open + включение тарифов
+     | курса + сигнал куратору (OpenWaitlistPayment). Срабатывает сразу на
+     | кворумном голосе и страховочно в waitlist:process. Для непривязанных
+     | строк прогноз-гейт (waitlist:process) сохраняется. OFF — только
+     | прежний путь: ручное открытие/ежедневный прогнозный прогон.
+     */
+    'waitlist_auto_payment' => (bool) env('WAITLIST_AUTO_PAYMENT', true),
 
     /*
      | H5134 — «Избранное» (сердечки, MG 17-09-2026): личный список курсов +
@@ -1909,4 +1943,28 @@ return [
      | финансового руководителя.
      */
     'salary_returns_student_refunds_only' => (bool) env('SALARY_RETURNS_STUDENT_REFUNDS_ONLY', false),
+
+    /*
+     | 152-ФЗ: сервер отклоняет публичную форму без галочки согласия на
+     | обработку ПДн (pd_consent). Галочка обязательна в браузере и пишется в
+     | журнал consents при любом значении флага. Дефолт OFF: включать после
+     | повторного скана sitemap — пропущенная форма иначе молча теряет заявки.
+     | Страница оплаты сюда не входит — у неё свой флаг ниже (money-контур).
+     */
+    'pd_consent_enforce' => (bool) env('PD_CONSENT_ENFORCE', false),
+
+    /*
+     | 152-ФЗ, money-контур: то же для гостевой оплаты (/payment/create).
+     | Дефолт OFF — отказ здесь стоит денег; включать отдельно и после проверки.
+     */
+    'checkout_pd_consent_enforce' => (bool) env('CHECKOUT_PD_CONSENT_ENFORCE', false),
+
+    /*
+     | 152-ФЗ ст. 5 ч. 7: ежедневная команда privacy:prune --scheduled обнуляет
+     | IP-адреса старше config('privacy.ip_retention_days') (дефолт 180) в
+     | журналах активности. Дефолт OFF — включать после утверждения срока
+     | хранения и вписывания его в политику. Сухой прогон работает всегда:
+     | php artisan privacy:prune [--report]
+     */
+    'privacy_prune' => (bool) env('PRIVACY_PRUNE', false),
 ];

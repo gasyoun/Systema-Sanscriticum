@@ -1,6 +1,6 @@
 # ROADMAP — Memrise-clone vocabulary trainer in Systema (Sanskrit + Hindi)
 
-_Created: 11-07-2026 · Last updated: 01-10-2026_
+_Created: 11-07-2026 · Last updated: 02-10-2026_
 
 > **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** тренажёр отгружен и переименован в «колоду»: колоды привязаны к урокам (H1991, 02-08-2026), приватная колода `my-hindi` из плейлистных дриллов (H2445, 14-08-2026), тап-токен «в колоду» из читалки (H2111, 05-08-2026). Текущий план — [PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md).
 >
@@ -14,10 +14,17 @@ _Created: 11-07-2026 · Last updated: 01-10-2026_
 
 ## What is left (01-10-2026) — gated
 
-- [ ] P0 — export Memrise course 6679375 «Продлёнка по санскриту» (+ any Hindi course the
-  owner holds, same pass) — human-only (needs the owner's `MEMRISE_SESSION`; an agent
-  cannot log into Memrise; time-critical while the community archive still hosts the
-  course; GTD @DO 01-10-2026)
+- [x] P0 — export Memrise course 6679375 «Продлёнка по санскриту» — **CSV deliverable
+  shipped 31-07-2026** (PR [#980](https://github.com/gasyoun/Systema-Sanscriticum/pull/980),
+  commit `2a6151ab`: 10 level CSVs + `manifest.json` + README, 166 rows, exported via
+  `scripts/memrise_export.py` + human `MEMRISE_SESSION`; validator exit 0 — re-verified
+  02-10-2026 by the A02 drain after finding this checkbox stale)
+- [ ] P0r — owner export residual from P0 (same human pass, owner's `MEMRISE_SESSION` +
+  CourseDump2022; an agent cannot log into Memrise): re-export 6679375 **with media**
+  (audio/images — the landed export is text-only and re-fetching after sunset may be
+  impossible) + export any Hindi course the owner holds (feeds P5; no Hindi course data
+  exists in-repo yet). Time-critical while the community archive still hosts the courses;
+  GTD @DO 01-10-2026 (narrowed 02-10-2026, A02 drain)
 - [ ] P2b — Devanagari / transliteration input widget (live IAST→Devanagari or on-screen
   keyboard) — gate: none (agent-doable, next-wave candidate)
 - [ ] P3 — mems/UGC (`SrsMem` model + student deck CRUD + post-moderation per ruled K3) —
@@ -105,11 +112,16 @@ Phases are ordered by *dependency and risk*, not calendar. P0 is time-critical (
 sunset). P1–P4 are the core clone; P5 is the Hindi dimension; P6 is the deferred audio.
 
 ### P0 — Export the Memrise course (DO FIRST, time-critical) — [H569] · [H1146]
-**Status 31-07-2026:** tooling **shipped** (`scripts/memrise_export.py` + validator);
-sibling courses **exported** (`memrise_6502608`, `6508023`, `6517849`, `6522419`);
-target `memrise_6679375/` is still **empty of CSV** — needs a human `MEMRISE_SESSION`
-(agent cannot log into Memrise). P0 for 6679375 remains the only time-critical human
-step; engineering proceeds on P1/P2 with the other exports + fixtures.
+**Status 02-10-2026 (A02 drain; corrects a stale 31-07 note that said the target was
+empty of CSV):** the 6679375 CSV export **landed 31-07-2026** (PR
+[#980](https://github.com/gasyoun/Systema-Sanscriticum/pull/980), commit `2a6151ab`) —
+`database/seeders/data/memrise_6679375/` carries 10 level CSVs + `manifest.json` + README
+(166 rows, human `MEMRISE_SESSION`, validator exit 0, re-verified 02-10-2026). Sibling
+courses exported earlier: `memrise_6502608`, `6508023`, `6517849`, `6522419` (all `sa`).
+The landed export is **text-only** — `memrise_export.py` scrapes column text and captures
+no audio/images — so the remaining owner-gated residual (P0r above) is a media-inclusive
+re-export via CourseDump2022 plus any Hindi course the owner holds; engineering proceeds
+on the open phases below with the existing exports + fixtures.
 
 Memrise is **sunsetting community courses** with no published shutdown date; the archive can
 go dark. Export before anything else.

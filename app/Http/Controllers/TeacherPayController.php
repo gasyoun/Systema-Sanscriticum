@@ -12,6 +12,7 @@ use App\Models\Tariff;
 use App\Models\Teacher;
 use App\Models\User;
 use App\Services\AttributionService;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\CuratorNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -172,6 +173,7 @@ final class TeacherPayController extends Controller
             'name' => $request->validated('name'),
             'password' => Hash::make(Str::random(12)),
         ]);
+        app(ConsentRecorder::class)->fromForm($request, 'claim:teacher', $user);
 
         app(AttributionService::class)->applyToNewUser($user);
 

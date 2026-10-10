@@ -50,8 +50,12 @@
             ],
         ];
     @endphp
-    <script type="application/ld+json">{{ json_encode($personSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</script>
-    <script type="application/ld+json">{{ json_encode($breadcrumbsSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</script>
+    {{-- Сырой вывод {{ }} HTML-экранировал JSON до &quot;@context&quot; — браузер
+         получал нечитаемый мусор. HEX-флаги кодируют <, >, &, ' и " в строковых
+         значениях (\u003C и т.п.), поэтому payload остаётся валидным JSON и
+         не ломает тег </script> даже для админских имён с кавычками/тегами. --}}
+    <script type="application/ld+json">{!! json_encode($personSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+    <script type="application/ld+json">{!! json_encode($breadcrumbsSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
 @endpush
 
 @section('content')
@@ -123,14 +127,19 @@
 
         {{-- КОНТЕНТ страницы (RichEditor из админки). Плагин typography в билде
              выключен, поэтому типографику секций задаём вариантами — как принято
-             в остальных шаблонах витрины. --}}
+             в остальных шаблонах витрины. h1 в контенте стилизуем как h2: админ
+             может начать анкету с заголовка-имени, а hero уже даёт настоящее h1.
+             Разделительная линия под h3 визуально бьёт стену текста на секции;
+             первый абзац — лид покрупнее. --}}
         @if(filled($teacher->page_html))
             <div class="bg-[#111622] border border-[#1F2636] rounded-2xl p-6 md:p-10 mb-8">
                 <div class="text-slate-300 leading-relaxed
+                            [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-white [&_h1]:mt-8 [&_h1]:mb-3
                             [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-white [&_h2]:mt-8 [&_h2]:mb-3
-                            [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-brand [&_h3]:mt-8 [&_h3]:mb-3
+                            [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-brand [&_h3]:mt-8 [&_h3]:mb-3 [&_h3]:pb-2 [&_h3]:border-b [&_h3]:border-[#1F2636]
                             [&_h4]:text-lg [&_h4]:font-bold [&_h4]:text-white [&_h4]:mt-6 [&_h4]:mb-2
                             [&_p]:mb-4 [&_p:first-child]:mt-0
+                            [&>p:first-child]:text-lg [&>p:first-child]:text-slate-200
                             [&_strong]:text-white [&_em]:text-slate-200
                             [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4
                             [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4

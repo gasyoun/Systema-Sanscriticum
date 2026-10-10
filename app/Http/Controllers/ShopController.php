@@ -63,7 +63,7 @@ class ShopController extends Controller
             }
 
             if (isset($parsed['format'])) {
-                abort_unless(in_array($parsed['format'], ['live', 'recorded'], true), 404);
+                abort_unless(in_array($parsed['format'], Course::FORMATS, true), 404);
                 $initial['initialFormat'] = $parsed['format'];
             }
 
@@ -127,13 +127,19 @@ class ShopController extends Controller
             $teacherName = optional(Teacher::find($request->input('teacher')))->name;
         }
 
-        return ShopCatalogUrl::build(
+        $pretty = ShopCatalogUrl::build(
             categorySlugs: $categorySlugs,
             format: (string) $request->input('format', ''),
             level: (string) $request->input('level', ''),
             teacherName: $teacherName,
             search: (string) ($request->input('q') ?? $request->input('search') ?? ''),
         );
+
+        // Location — ASCII по RFC 3986: сырая кириллица из build() в Location не
+        // матчится facets-роутом (прод 02-10-2026: «/online?teacher=N» → 301 на
+        // сырой путь → 404; тот же путь в percent-encoded виде — 200). Кодируем
+        // посегментно: слэши и ASCII-сегменты (kategoriya/prepodavatel) не меняются.
+        return implode('/', array_map('rawurlencode', explode('/', $pretty)));
     }
 
     /**
@@ -287,7 +293,13 @@ class ShopController extends Controller
                 CourseWaitlistItem::STATUS_SCHEDULED,
             ])
             ->withCount('votes')
-            ->with('course:id,slug,is_visible')
+            ->with([
+                // Обложка карточки ждуна — витринная плашка курса
+                // (Course::catalogBadgeUrl()): ассет 4:3, фолбэк image_path.
+                // Другие форматы баннеров здесь не нужны.
+                'course:id,slug,is_visible,image_path',
+                'course.designAssets' => fn ($q) => $q->where('format', '4:3'),
+            ])
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
@@ -517,7 +529,35 @@ class ShopController extends Controller
             ->orderBy('id')
             ->get(['id', 'title', 'slug']);
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb', 'canonicalUrl', 'recordingOffers', 'fullSchedulePosts') + [
+        // Ждун-строка курса: если курс в списке ожидания, замок
+        // «Набор закрыт» на странице превращается в голосование. Тот же скоуп,
+        // что на /online/zhdun (is_listed, без closed/scheduled). Флаг OFF —
+        // null'ы, страница живёт по-старому.
+        $waitlistItem = null;
+        $waitlistVoted = false;
+        $waitlistPref = null;
+        if ((bool) config('features.waitlist_voting', false)) {
+            $waitlistItem = CourseWaitlistItem::query()
+                ->where('course_id', $course->id)
+                ->where('is_listed', true)
+                ->whereNotIn('status', [
+                    CourseWaitlistItem::STATUS_CLOSED,
+                    CourseWaitlistItem::STATUS_SCHEDULED,
+                ])
+                ->withCount('votes')
+                ->first();
+
+            if ($waitlistItem !== null && Auth::check()) {
+                $myVote = WaitlistVote::query()
+                    ->where('user_id', Auth::id())
+                    ->where('course_waitlist_item_id', $waitlistItem->getKey())
+                    ->first(['slot_preference']);
+                $waitlistVoted = $myVote !== null;
+                $waitlistPref = $myVote?->slot_preference;
+            }
+        }
+
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb', 'canonicalUrl', 'recordingOffers', 'fullSchedulePosts', 'waitlistItem', 'waitlistVoted', 'waitlistPref') + [
             // H5134 — сердечко на /k/{slug}: отмечен ли этот курс зрителем.
             'favoriteKeys' => CourseFavorite::heartKeysForCurrentViewer(),
         ]);
