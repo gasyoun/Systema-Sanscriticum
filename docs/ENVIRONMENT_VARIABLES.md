@@ -870,9 +870,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TELEGRAM_BUSINESS_STORY_SUBTITLES_ENABLED` | feature-flag | `true` | config/services.php:529 |
 | `TELEGRAM_BUSINESS_TIMEOUT_SECONDS` | optional | `15` | config/services.php:517 |
 | `TELEGRAM_BUSINESS_WEBHOOK_SECRET` | secret | `''` | config/services.php:501 |
-| `TELEGRAM_CABINET_EMAIL_LINK` | optional | `false` | config/features.php:821 |
-| `TELEGRAM_CABINET_LOGIN` | optional | `false` | config/features.php:807 |
-| `TELEGRAM_CABINET_PROVISION` | optional | `false` | config/features.php:832 |
+| `TELEGRAM_CABINET_EMAIL_LINK` | optional | `false` — выкл. на проде (09-10-2026) | config/features.php:821 |
+| `TELEGRAM_CABINET_LOGIN` | optional | `false` — вкл. на проде (09-10-2026) | config/features.php:807 |
+| `TELEGRAM_CABINET_PROVISION` | optional | `false` — вкл. на проде (09-10-2026) | config/features.php:832 |
 | `TELEGRAM_CURATORS_CHAT_ID` | required | `—` | config/services.php:173 |
 | `TELEGRAM_HARVEST_ACCOUNT_NAME` | optional | `'harvester'` | config/services.php:332 |
 | `TELEGRAM_HARVEST_CORPUS_SILENCE_AFTER_HOURS` | optional | `48` | config/services.php:360 |
