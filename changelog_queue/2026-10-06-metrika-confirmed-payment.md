@@ -1,0 +1,1 @@
+- Fix Metrika purchase events on the payment return page: emit only for confirmed paid payments, never for pending/failed/refunded or unbound guest returns. Preserve selected-counter routing and payment state; add regression coverage for both counter paths.
