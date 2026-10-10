@@ -84,7 +84,7 @@ class WaitlistBotServiceTest extends TestCase
         $this->assertSame($this->item->getKey(), $vote->course_waitlist_item_id);
         $this->assertNull($vote->slot_preference);
         Http::assertSent(function ($request): bool {
-            $markup = json_decode((string) $request['reply_markup'], true) ?? [];
+            $markup = json_decode((string) ($request['reply_markup'] ?? ''), true) ?? [];
             $flat = json_encode($markup, JSON_UNESCAPED_UNICODE);
 
             return str_contains($request->url(), '/editMessageText')
