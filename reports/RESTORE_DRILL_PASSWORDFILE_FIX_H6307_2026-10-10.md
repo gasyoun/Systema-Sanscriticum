@@ -46,9 +46,9 @@ RESTORE_DRILL_UNDER_TEST=/tmp/old_restore_drill_live.sh \
   bash scripts/server_guards/sbin/test_restore_drill.sh
 # → exit 1; "summary: pass=9 fail=15 skipped=0"
 
-# AFTER — the fixed script (after independent-review fixes, 30 checks):
+# AFTER — the fixed script (after independent-review fixes, 32 checks):
 bash scripts/server_guards/sbin/test_restore_drill.sh
-# → exit 0; "summary: pass=30 fail=0 skipped=0" (macOS host, real restic via Homebrew)
+# → exit 0; "summary: pass=32 fail=0 skipped=0" (macOS host, real restic via Homebrew)
 ```
 
 ## Independent security review (class: security, H4358)
@@ -105,7 +105,7 @@ last-writer-wins on `drill_latest.md` (scratch isolation itself is safe).
 ## Inspect
 
 ```sh
-bash scripts/server_guards/sbin/test_restore_drill.sh          # 24/24
+bash scripts/server_guards/sbin/test_restore_drill.sh          # 32/32
 KEEP_TMP=1 bash scripts/server_guards/sbin/test_restore_drill.sh   # artifact tree kept
 php artisan guards:verify                                       # after install on the box
 ```
