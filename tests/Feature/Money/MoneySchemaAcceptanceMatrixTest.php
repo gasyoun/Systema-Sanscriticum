@@ -82,7 +82,7 @@ class MoneySchemaAcceptanceMatrixTest extends TestCase
         // SQLite keeps the string — date() normalizes both).
         $datePart = DB::table('teacher_payout_packages')
             ->where('package_key', 'pkg:orm:v1')
-            ->value(DB::raw("date(period_start)"));
+            ->value(DB::raw('date(period_start)'));
         $this->assertSame('2026-09-01', $datePart, 'date(period_start) must normalize the ORM-written value');
 
         if (env('MATRIX_TRANSCRIPT')) {
