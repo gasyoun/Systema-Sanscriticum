@@ -14,6 +14,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use PHPUnit\Framework\AssertionFailedError;
 use Tests\TestCase;
 use Throwable;
 
@@ -87,8 +88,8 @@ class MoneySchemaAcceptanceMatrixTest extends TestCase
 
         if (env('MATRIX_TRANSCRIPT')) {
             fwrite(STDERR, "\n[MATRIX] driver=".DB::connection()->getDriverName()
-                ." orm_period_start=".var_export(DB::table('teacher_payout_packages')->where('package_key', 'pkg:orm:v1')->value('period_start'), true)
-                ." date_part=".var_export($datePart, true)."\n");
+                .' orm_period_start='.var_export(DB::table('teacher_payout_packages')->where('package_key', 'pkg:orm:v1')->value('period_start'), true)
+                .' date_part='.var_export($datePart, true)."\n");
         }
 
         // 2) Raw write of the SAME period in datetime shape must be refused by
@@ -210,7 +211,7 @@ class MoneySchemaAcceptanceMatrixTest extends TestCase
             Schema::drop('bank_statement_imports');
             $this->fail('parent bank_statement_imports dropped before its child — FK rollback-order defect is back');
         } catch (Throwable $e) {
-            $this->assertNotInstanceOf(\PHPUnit\Framework\AssertionFailedError::class, $e);
+            $this->assertNotInstanceOf(AssertionFailedError::class, $e);
             $this->assertTrue(Schema::hasTable('bank_statement_imports'), 'the parent must survive a wrong-order drop');
         }
 
