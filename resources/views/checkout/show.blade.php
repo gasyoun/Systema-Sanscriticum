@@ -277,7 +277,7 @@ document.addEventListener('alpine:init', () => {
             </div>
         @endguest
 
-        @if($finalPrice == 0 && auth()->check())
+        @if($finalPrice == 0 && auth()->check() && $alreadyOwned)
             <div class="bg-white p-8 rounded-3xl shadow-xl shadow-gray-100/30 border border-gray-100 text-center flex flex-col items-center">
                 <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 border border-green-100">
                     <i class="fas fa-check text-4xl text-green-500"></i>

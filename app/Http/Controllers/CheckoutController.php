@@ -266,6 +266,17 @@ class CheckoutController extends Controller
             }
         }
 
+        // «У вас уже есть доступ» — только при РЕАЛЬНОМ оплаченном доступе к этому
+        // тарифу. Раньше блок показывался каждому залогиненному на нулевом тарифе:
+        // вместо формы рендерилась ссылка «Перейти в кабинет», платёж не создавался,
+        // grantAccess не запускался — бесплатная запись не выдавала доступ
+        // (мини-курс «Подготовительная группа», 10-10-2026).
+        $alreadyOwned = false;
+        if ($user && $finalPrice == 0.0) {
+            $unlocked = StudentController::getUserUnlockedTariffs($user->id, $tariff->course->slug);
+            $alreadyOwned = in_array($tariff->accessKey(), $unlocked, true);
+        }
+
         return [
             'finalPrice' => $finalPrice,
             'basePrice' => $basePrice,
@@ -275,6 +286,7 @@ class CheckoutController extends Controller
             'isLoyal' => $isLoyal,
             'loyaltyPercent' => $loyaltyPercent,
             'isPersonal' => $isPersonal,
+            'alreadyOwned' => $alreadyOwned,
             'pranaBalance' => $user ? $prana->balance($user) : 0,
             'pranaMaxSpend' => $user ? $prana->maxSpendableForPrice($user, $finalPrice) : 0,
             'pranaRate' => PranaSettings::rate(),
