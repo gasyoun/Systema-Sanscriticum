@@ -249,10 +249,11 @@ class PaymentResource extends Resource
                                 'sbp' => 'СБП',
                                 'dolyame' => 'Долями',
                                 'cash' => 'Наличные',
+                                'paypal' => 'PayPal',
                             ])
                             ->native(false)
                             ->placeholder('Не задан (Точка проставит сама)')
-                            ->helperText('Для наличных и прочих ручных проводок ставьте явно. Карта/СБП/Долями приходят с вебхука Точки — не затирайте, если уже стоят.'),
+                            ->helperText('Для наличных и прочих ручных проводок ставьте явно. Карта/СБП/Долями приходят с вебхука Точки, PayPal проставляется сам по валютной заявке — не затирайте, если уже стоят.'),
 
                         Forms\Components\TextInput::make('transaction_id')
                             ->label('ID транзакции (Банк / Расход)')
@@ -485,8 +486,9 @@ class PaymentResource extends Resource
                             ->formatStateUsing(fn ($state) => $state),
                     ),
 
-                // Способ оплаты из вебхука Точки (H226): card/sbp/dolyame. Пусто —
-                // ручной платёж, PayPal или вебхук до появления поля; такие в
+                // Способ оплаты: card/sbp/dolyame — с вебхука Точки (H226),
+                // paypal — валютный канал (ставится моделью по provider).
+                // Пусто — ручной платёж или вебхук до появления поля; такие в
                 // юнит-экономике считаются вилкой эквайринга.
                 Tables\Columns\TextColumn::make('payment_method')
                     ->label('Способ')
@@ -496,6 +498,7 @@ class PaymentResource extends Resource
                         'sbp' => 'success',
                         'dolyame' => 'warning',
                         'cash' => 'gray',
+                        'paypal' => 'primary',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
@@ -503,6 +506,7 @@ class PaymentResource extends Resource
                         'sbp' => 'СБП',
                         'dolyame' => 'Долями',
                         'cash' => 'Наличные',
+                        'paypal' => 'PayPal',
                         default => (string) $state,
                     })
                     ->placeholder('—')
@@ -592,8 +596,9 @@ class PaymentResource extends Resource
                         'canceled' => 'Отменено',
                     ]),
 
-                // Способ оплаты Точки; «Не определён» = NULL (ручные платежи,
-                // PayPal, старые вебхуки) — их эквайринг в юнит-экономике вилка.
+                // Способ оплаты: card/sbp/dolyame — Точка, paypal — валютный
+                // канал; «Не определён» = NULL (ручные платежи, старые вебхуки) —
+                // их эквайринг в юнит-экономике вилка.
                 Tables\Filters\SelectFilter::make('payment_method')
                     ->label('Способ оплаты')
                     ->options([
@@ -601,6 +606,7 @@ class PaymentResource extends Resource
                         'sbp' => 'СБП',
                         'dolyame' => 'Долями (рассрочка)',
                         'cash' => 'Наличные',
+                        'paypal' => 'PayPal',
                         'unknown' => 'Не определён',
                     ])
                     ->query(fn ($query, array $data) => $query->when(
