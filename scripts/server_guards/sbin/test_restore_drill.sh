@@ -96,6 +96,12 @@ FIXTURE_SHA="$( (command -v sha256sum >/dev/null && sha256sum "$TMP/var-backups-
 cat > "$TMP/bin/restic" <<STUB
 #!/usr/bin/env bash
 echo "restic \$*" >> "\${RESTIC_TEST_ARGS_LOG:?}"
+# Child-received credential evidence (H6307 verifier): the FILE path is safe to
+# print; the literal is recorded as set/unset only — never its value.
+{
+  echo "PWFILE=\${RESTIC_PASSWORD_FILE:-}"
+  if [ -n "\${RESTIC_PASSWORD:-}" ]; then echo "PW=set"; else echo "PW=unset"; fi
+} >> "\${RESTIC_TEST_ENV_LOG:?}"
 case "\${STUB_MODE:-ok}" in
   fail-snap) exit 1 ;;
   fail-restore)
@@ -138,6 +144,7 @@ new_case() {
 # without it the stub restic answers every call.
 run_drill() {
   : > "$TMP/args.log"
+  : > "$TMP/env.log"
   (
     if [ -n "${RESTIC_TEST_REAL_RESTIC:-}" ]; then
       export PATH="$(dirname "$(command -v restic)"):$PATH"
@@ -150,6 +157,7 @@ run_drill() {
     export RESTIC_DRILL_INCLUDE="${RESTIC_TEST_INCLUDE:-/var/backups/*.gz}"
     export RESTIC_TEST_BRIEF_DIR="$TMP/brief"
     export RESTIC_TEST_ARGS_LOG="$TMP/args.log"
+    export RESTIC_TEST_ENV_LOG="$TMP/env.log"
     unset RESTIC_PASSWORD RESTIC_PASSWORD_FILE RESTIC_REPOSITORY STUB_MODE STUB_FIXTURE RESTIC_RUN_SCRIPT
     if [ -n "${RESTIC_TEST_RUN_SCRIPT:-}" ]; then export RESTIC_RUN_SCRIPT="$RESTIC_TEST_RUN_SCRIPT"; fi
     if [ -z "${RESTIC_TEST_REAL_RESTIC:-}" ]; then
@@ -162,6 +170,7 @@ run_drill() {
   if [ -f "$TMP/brief/pages.log" ]; then cp "$TMP/brief/pages.log" "$ART/pages.log"
   else : > "$ART/pages.log"; fi
   cp "$TMP/args.log" "$ART/restic-args.log"
+  cp "$TMP/env.log" "$ART/restic-env.log"
 }
 
 write_env() { # write_env uses the two named exports given as lines
@@ -265,6 +274,7 @@ RS
 RESTIC_TEST_RUN_SCRIPT="$TMP/fake-run-file.sh" run_drill
 check "11a run-script FILE fallback: drill proceeds" "$(has 'пароль взят из RESTIC_PASSWORD_FILE' "$ART/report.md")"
 check "11b run-script FILE fallback: restic got the repo" "$(has "-r $TMP/fake-repo-runfile" "$ART/restic-args.log")"
+check "11b2 run-script FILE fallback: PWFILE reached the restic CHILD env" "$(has "PWFILE=$TMP/pw-file" "$ART/restic-env.log")"
 # 11c legacy literal via the run script (eval + export).
 new_case "run-script-literal-fallback"
 : > "$TMP/drill.env"
@@ -276,6 +286,7 @@ RS
 RESTIC_TEST_RUN_SCRIPT="$TMP/fake-run-literal.sh" run_drill
 check "11c run-script literal fallback: drill proceeds" "$(lacks 'SKIPPED-NO-ACCESS' "$ART/report.md")"
 check "11d run-script literal fallback: restic got the repo" "$(has "-r $TMP/fake-repo-runlit" "$ART/restic-args.log")"
+check "11d2 run-script literal fallback: literal password EXPORTED to the restic child" "$(has 'PW=set' "$ART/restic-env.log")"
 
 # ── 9. real restic: encrypted scratch fixture restores to matching sha256 ─────
 if command -v restic >/dev/null 2>&1; then
