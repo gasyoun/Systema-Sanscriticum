@@ -23,7 +23,7 @@
     
     // YouTube
     if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $buttonUrl, $match)) {
-        $embedUrl = "https://www.youtube.com/embed/" . $match[1] . "?autoplay=1";
+        $embedUrl = "https://www.youtube-nocookie.com/embed/" . $match[1] . "?autoplay=1";
     }
     // RuTube
     elseif (preg_match('/rutube\.ru\/video\/([a-zA-Z0-9_-]+)/i', $buttonUrl, $match)) {

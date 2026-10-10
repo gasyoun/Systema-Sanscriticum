@@ -114,7 +114,7 @@
                                 {{-- Обязательная: согласие на обработку ПДн (гейтит кнопку) --}}
                                 <label class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100">
                                     <div class="flex items-center h-5 mt-px shrink-0">
-                                        <input type="checkbox" x-model="agreedForm" class="w-4 h-4 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer">
+                                        <input type="checkbox" name="pd_consent" value="1" required x-model="agreedForm" class="w-4 h-4 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer">
                                     </div>
                                     <div class="text-xs text-gray-500 leading-relaxed select-none">
                                         Я даю <a href="/docs/soglasie-pd.pdf" target="_blank" class="text-brand hover:underline font-semibold">согласие</a> на обработку данных согласно <a href="/docs/privacy.pdf" target="_blank" class="text-brand hover:underline font-semibold">политике конфиденциальности</a>
@@ -125,7 +125,7 @@
                                      читает LeadController::store; без нее лид сохраняется с is_promo_agreed=false. --}}
                                 <label class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100">
                                     <div class="flex items-center h-5 mt-px shrink-0">
-                                        <input type="checkbox" name="is_promo_agreed" x-model="agreedPromo" class="w-4 h-4 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer">
+                                        <input type="checkbox" name="is_promo_agreed" value="1" x-model="agreedPromo" class="w-4 h-4 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer">
                                     </div>
                                     <div class="text-xs text-gray-500 leading-relaxed select-none">
                                         Я даю <a href="/docs/soglasie-promo.pdf" target="_blank" class="text-brand hover:underline font-semibold">согласие</a> на получение рассылки

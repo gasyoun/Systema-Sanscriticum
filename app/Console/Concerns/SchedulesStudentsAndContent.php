@@ -101,6 +101,15 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('trial-check-freshness');
 
+        // Пробное само переходит на следующее занятие группы, когда текущее
+        // началось (features.trial_auto_advance, по умолчанию OFF).
+        $schedule->command('trial:auto-advance')
+            ->everyFifteenMinutes()
+            ->when(fn () => (bool) config('features.trial_auto_advance'))
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('trial-auto-advance');
+
     }
 
     /** Season 1 open/notify/close cron + leaderboard refresh. */

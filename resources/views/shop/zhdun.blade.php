@@ -6,25 +6,9 @@
 <div class="min-h-screen bg-[#0A0D14] text-white py-16 lg:py-24 relative overflow-hidden font-sans"
      x-data="waitlistVote()">
 
-    {{-- Голос учтён: кнопкой (после reload) или после входа/регистрации гостя (CastPendingWaitlistVote). --}}
-    @if(session(\App\Http\Controllers\Api\PublicWaitlistController::VOTED_FLASH_KEY))
-        <div x-data="{ show: true }"
-             x-init="setTimeout(() => show = false, 5000)"
-             x-show="show"
-             x-transition.opacity.duration.300ms
-             role="status"
-             data-waitlist-voted-toast
-             class="fixed z-50 top-20 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 flex items-center gap-3 rounded-2xl bg-[#111622] border border-emerald-500/40 shadow-2xl shadow-black/40 px-4 py-3">
-            <span class="flex-none w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center">
-                <i class="fas fa-check"></i>
-            </span>
-            <p class="flex-1 text-sm font-bold text-white">Спасибо, ваш голос учтён!</p>
-            <button type="button" x-on:click="show = false" title="Закрыть"
-                    class="flex-none text-slate-400 hover:text-white transition">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    @endif
+    {{-- Голос учтён: кнопкой (после reload) или после входа/регистрации гостя (CastPendingWaitlistVote).
+         Тот же тост инклюдится в каталоге и на странице курса. --}}
+    @include('shop.partials.waitlist-voted-toast')
 
     <div class="absolute top-0 left-1/4 w-96 h-96 bg-brand/10 rounded-full blur-[120px] pointer-events-none"></div>
     <div class="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[150px] pointer-events-none"></div>
@@ -137,11 +121,43 @@
                                 $titleUrl = $item->course && $item->course->is_visible
                                     ? route('shop.course.show', $item->course->slug)
                                     : ($item->course_title ? '/online/poisk/'.App\Support\ShopCatalogUrl::encodeWords($item->course_title) : null);
+                                // Обложка — та же плашка, что на карточке каталога,
+                                // баннером на всю ширину карточки: дизайнерский
+                                // баннер 4:3 → фолбэк image_path
+                                // (Course::catalogBadgeUrl()). Нет курса или обложки —
+                                // баннера нет, строка узнаваема названием.
+                                $itemCoverUrl = $item->course?->catalogBadgeUrl();
                             @endphp
-                            <div id="wl-{{ $item->slug }}" class="flex flex-col rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-brand/50 p-5 transition-all scroll-mt-24"
+                            <div id="wl-{{ $item->slug }}" class="group flex flex-col rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-brand/50 transition-all scroll-mt-24 overflow-hidden"
                                  data-waitlist-row="{{ $item->slug }}">
+                                @if($itemCoverUrl)
+                                    {{-- Обложка на всю ширину карточки — как на каталоге:
+                                         плашка 4:3, затухание в фон карточки. Декоративная —
+                                         название рядом текстом, alt пуст. --}}
+                                    @if($titleUrl)
+                                        <a href="{{ $titleUrl }}" tabindex="-1" aria-hidden="true"
+                                           class="relative block w-full aspect-[4/3] bg-gradient-to-br from-slate-800 to-[#0A0D14] border-b border-[#1F2636] overflow-hidden">
+                                            <img src="{{ $itemCoverUrl }}" alt=""
+                                                 width="533" height="400"
+                                                 loading="lazy" decoding="async"
+                                                 data-waitlist-cover="{{ $item->slug }}"
+                                                 class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80">
+                                            <div class="absolute inset-0 bg-gradient-to-t from-[#111622] via-transparent to-transparent opacity-80"></div>
+                                        </a>
+                                    @else
+                                        <div class="relative w-full aspect-[4/3] bg-gradient-to-br from-slate-800 to-[#0A0D14] border-b border-[#1F2636] overflow-hidden">
+                                            <img src="{{ $itemCoverUrl }}" alt=""
+                                                 width="533" height="400"
+                                                 loading="lazy" decoding="async"
+                                                 data-waitlist-cover="{{ $item->slug }}"
+                                                 class="absolute inset-0 w-full h-full object-cover opacity-80">
+                                            <div class="absolute inset-0 bg-gradient-to-t from-[#111622] via-transparent to-transparent opacity-80"></div>
+                                        </div>
+                                    @endif
+                                @endif
+                                <div class="p-5 flex flex-col flex-grow">
                                 <div class="flex items-start justify-between gap-3">
-                                    <div>
+                                    <div class="min-w-0">
                                         <h3 class="text-base font-bold text-white leading-snug">
                                             @if($titleUrl)
                                                 <a href="{{ $titleUrl }}"
@@ -237,6 +253,7 @@
                                         </div>
                                     @endif
                                     </div>
+                                </div>
                                 </div>
                             </div>
                         @endforeach

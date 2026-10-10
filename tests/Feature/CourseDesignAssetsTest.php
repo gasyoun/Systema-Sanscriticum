@@ -364,7 +364,7 @@ class CourseDesignAssetsTest extends TestCase
     /** @test */
     public function preview_action_is_visible_and_modal_shows_uploaded_images(): void
     {
-        $admin = User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]);
+        $admin = User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true, 'name' => "Everette O'Reilly"]);
         $course = Course::factory()->create();
         $asset = $this->service()->store($course, '16:9', $this->image(), 'https://disk.example/psd', null, $admin);
 
@@ -380,7 +380,10 @@ class CourseDesignAssetsTest extends TestCase
 
         $this->assertStringContainsString((string) $asset->imageUrl(), $html);
         $this->assertStringContainsString('https://disk.example/psd', $html);
-        $this->assertStringContainsString($admin->name, $html);
+        // Blade экранирует имя ({{ }}): у фабричного имени бывает апостроф
+        // («O'Reilly») — сравниваем с экранированной формой, иначе тест
+        // флакает только на некоторых прогонах.
+        $this->assertStringContainsString(e($admin->name), $html);
         $this->assertStringContainsString('не загружено', $html);
     }
 

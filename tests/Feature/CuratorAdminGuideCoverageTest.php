@@ -103,8 +103,10 @@ class CuratorAdminGuideCoverageTest extends TestCase
         }
 
         preg_match_all('/^### Шаги\s*$/mu', $this->partOne($text), $matches);
-        $this->assertCount(8, $matches[0], 'В части I должно быть восемь сценариев (заголовок «### Шаги»).');
+        $this->assertCount(9, $matches[0], 'В части I должно быть девять сценариев (заголовок «### Шаги»).');
         $this->assertStringContainsString('Ученик ходил, а посещаемость пустая', $text);
+        $this->assertStringContainsString('Дать кабинет новому человеку', $text);
+        $this->assertStringContainsString('samskrtamru_bot', $text);
 
         $this->assertStringContainsString('login-link', $text);
         $this->assertStringContainsString('Разблокировать (ссылка для входа)', $text);

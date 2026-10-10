@@ -139,6 +139,12 @@ class Payment extends Model
     public const PROVIDER_TEACHER_TRANSFER = 'teacher_transfer';
 
     /**
+     * H6198 — уведомление «перевёл рублями лично Гасунсу» (мимо Точки):
+     * деньги школы (received_account=school), pending до ручной сверки.
+     */
+    public const PROVIDER_GASUNS_TRANSFER = 'gasuns_transfer';
+
+    /**
      * Providers that wait for human reconciliation and must never be reaped by
      * payments:expire-stale-checkouts (they are not abandoned bank links).
      *
@@ -149,6 +155,7 @@ class Payment extends Model
         self::PROVIDER_INVOICE,
         self::PROVIDER_BANK_SEPA,
         self::PROVIDER_TEACHER_TRANSFER,
+        self::PROVIDER_GASUNS_TRANSFER,
     ];
 
     protected $casts = [
@@ -768,6 +775,15 @@ class Payment extends Model
             } else {
                 $payment->received_account = self::RECEIVED_SCHOOL;
                 $payment->received_by_teacher_id = null;
+            }
+
+            // PayPal-канал (валютная заявка студента / авто-списание подписки) —
+            // в способе оплаты всегда «paypal»: раньше колонка была пуста для
+            // всего, что не пришло с вебхука Точки, и PayPal-платежи висели в
+            // админке как «Не определён». Перезаписать card/sbp не может — Точка
+            // не участвует в этом канале.
+            if (in_array($payment->provider, [self::PROVIDER_PAYPAL, self::PROVIDER_PAYPAL_SUBSCRIPTION], true)) {
+                $payment->payment_method = 'paypal';
             }
 
             // H5445 (P3, D10): частичный возврат — только с блоками (флаг

@@ -13,6 +13,10 @@
     <link rel="canonical" href="@yield('canonical', url()->current())">
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
+    {{-- H6211 Low-1: PNG 512 + apple-touch + публичный манифест (иконка в мобильной выдаче) --}}
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('images/icon-512.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/icon-180.png') }}">
+    <link rel="manifest" href="{{ asset('manifest-site.webmanifest') }}">
 
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Общество ревнителей санскрита">
@@ -24,8 +28,7 @@
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
 
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    @vite('resources/css/fonts.css')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @stack('head')

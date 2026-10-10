@@ -8,9 +8,30 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use InvalidArgumentException;
 
 class Lead extends Model
 {
+    /**
+     * Гвард users_email_valid-класса (MG 04-10-2026): непустой не-адрес
+     * в leads.email невозможен — intake отсекает HouseEmail, этот мутатор
+     * стережёт Eloquent-пути, сырые вставки — CHECK leads_email_valid.
+     */
+    public function setEmailAttribute(?string $value): void
+    {
+        $email = $value === null ? null : trim($value);
+
+        if ($email !== null && $email !== ''
+            && preg_match('/'.User::EMAIL_PATTERN.'/i', $email) !== 1) {
+            throw new InvalidArgumentException(sprintf(
+                'leads.email: "%s" — не валидный email (гвард мусора, MG 04-10).',
+                $email
+            ));
+        }
+
+        $this->attributes['email'] = $email;
+    }
+
     use HasFactory;
     use TracksBlame;
 

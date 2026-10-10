@@ -20,6 +20,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Table;
+use FilamentTiptapEditor\TiptapEditor;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
@@ -250,6 +251,14 @@ class LessonResource extends Resource
                 Forms\Components\Textarea::make('topic')
                     ->label('Описание / Тема')
                     ->columnSpanFull(),
+
+                // Богатое тело урока (мини-курсы): заполнено — печатается вместо
+                // «topic» на странице урока. Санитизация при записи (мутатор модели).
+                TiptapEditor::make('content_html')
+                    ->label('Тело урока (HTML-этап)')
+                    ->profile('simple')
+                    ->columnSpanFull()
+                    ->helperText('Заполнено — показывается вместо текстового описания выше. Вёрстка этапа: шапка, картинки, карточки практики.'),
 
                 Forms\Components\Select::make('recording_kind')
                     ->label('Класс записи')

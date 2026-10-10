@@ -3,6 +3,7 @@
 namespace App\Services\TelegramSupport;
 
 use App\Models\SupportAiReplyEvent;
+use App\Models\SupportConversation;
 use App\Models\SupportResponderMapping;
 use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
@@ -391,15 +392,46 @@ class TelegramSupportSyncService
             }
         }
 
-        $message = TelegramSupportMessage::updateOrCreate(
-            [
+        // Кросс-канальный дедуп: business-вебхук и Madeline-синк читают одни и
+        // те же чаты (с 27-09-2026 аккаунт полосы support подключён к ORS через
+        // Telegram Business), поэтому одно сообщение Telegram приходит дважды —
+        // вебхуком сразу и синком минутой позже, и в ленте хелпдеска был второй
+        // пузырь. Настоящее сообщение уникально по (чат, message_id) независимо
+        // от полосы: первая запись владеет строкой, вторая только до-заполняет
+        // пробелы атрибуции. Placeholder-строки ждущих доставки (отрицательные
+        // id) под глобальный ключ не подпадают — их уникальность по-прежнему
+        // (аккаунт, чат, id).
+        $existing = $messageId > 0
+            ? TelegramSupportMessage::query()
+                ->where('telegram_chat_id', $chatId)
+                ->where('telegram_message_id', $messageId)
+                ->orderBy('id')
+                ->first()
+            : null;
+
+        if ($existing) {
+            // raw_payload не трогаем: в нём книжение доставки (pending_delivery/
+            // delivered_at), затирать его payload другой полосы нельзя. Контакт
+            // тоже оставляем от первой записи — у полос он разный (у business
+            // исходящих его нет вовсе), и перезапись меняла бы разрешение
+            // автора в UnifiedMessage.
+            $existing->fill([
+                'text' => $payload['text'] ?? $existing->text,
+                'role' => $existing->role === 'unknown' ? $responder['role'] : $existing->role,
+                'responder_type' => $existing->responder_type ?? $responder['responder_type'],
+                'responder_user_id' => $existing->responder_user_id ?? $responder['responder_user_id'],
+                'responder_marker' => $existing->responder_marker ?? $responder['responder_marker'],
+                'ai_state' => $existing->ai_state ?? $responder['ai_state'],
+            ])->save();
+
+            $message = $existing;
+        } else {
+            $message = TelegramSupportMessage::create([
                 'telegram_support_account_id' => $account->id,
-                'telegram_chat_id' => $chatId,
-                'telegram_message_id' => $messageId,
-            ],
-            [
                 'telegram_support_chat_id' => $chat->id,
                 'telegram_support_contact_id' => $contact?->id,
+                'telegram_chat_id' => $chatId,
+                'telegram_message_id' => $messageId,
                 'direction' => $direction,
                 'role' => $responder['role'],
                 'responder_type' => $responder['responder_type'],
@@ -409,8 +441,8 @@ class TelegramSupportSyncService
                 'text' => $payload['text'] ?? null,
                 'raw_payload' => $payload,
                 'sent_at' => $sentAt,
-            ],
-        );
+            ]);
+        }
 
         app(TelegramCourseInquiryRegistrar::class)->register($message->loadMissing(['chat', 'contact']));
 
@@ -452,9 +484,25 @@ class TelegramSupportSyncService
                     }
                 }
             }
-        } elseif ($linkedUserId && $isPrivate) {
-            // Исходящие в ЛС по-прежнему цепляем к треду (история ответов).
-            $this->conversations->recordMessage((int) $linkedUserId, $message, $message->sent_at);
+        } elseif ($isPrivate) {
+            if ($linkedUserId) {
+                // Исходящие в ЛС по-прежнему цепляем к треду (история ответов).
+                $this->conversations->recordMessage((int) $linkedUserId, $message, $message->sent_at);
+            } else {
+                // Ответ куратора, набранный прямо в Telegram (не через хелпдеск),
+                // в чате без привязанного студента тоже обязан попасть в тред —
+                // иначе лента в админке показывает вопросы, но не ответы на них.
+                // Тред ищем существующий: входящее его уже создало; сами треды
+                // из исходящего не создаём и открытость не меняем.
+                $thread = SupportConversation::query()
+                    ->where('source_telegram_chat_id', $chatId)
+                    ->orderByDesc('id')
+                    ->first();
+
+                if ($thread) {
+                    $this->conversations->attach($thread, $message, $message->sent_at);
+                }
+            }
         }
 
         return $message;

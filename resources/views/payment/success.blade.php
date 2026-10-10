@@ -18,7 +18,8 @@
          (LeadFlashBuilder кладет yandex_id/vk_id в сессию). На прямом чекауте
          их нет — блок молчит. Паттерн — promo/thankyou.blade.php. --}}
     @if(session('yandex_id'))
-        <script type="text/javascript">
+        @include('partials.analytics-gate')
+<script type="text/javascript">ssConsent.onAnalytics(function () {
            (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
            m[i].l=1*new Date();
            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
@@ -31,11 +32,12 @@
                 accurateTrackBounce:true,
                 webvisor:true
            });
+});
         </script>
-        <noscript><div><img src="https://mc.yandex.ru/watch/{{ session('yandex_id') }}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     @endif
     @if(session('vk_id') && (string) session('vk_id') !== $shopVkPixelId)
-        <script type="text/javascript">
+        @include('partials.analytics-gate')
+<script type="text/javascript">ssConsent.onAnalytics(function () {
             var _tmr = window._tmr || (window._tmr = []);
             _tmr.push({id: "{{ session('vk_id') }}", type: "pageView", start: (new Date()).getTime()});
             (function (d, w, id) {
@@ -45,8 +47,8 @@
                 var f = function () {var s = d.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ts, s);};
                 if (w.opera == "[object Opera]") { d.addEventListener("DOMContentLoaded", f, false); } else { f(); }
             })(document, window, "tmr-code");
+});
         </script>
-        <noscript><div><img src="https://top-fwz1.mail.ru/counter?id={{ session('vk_id') }};js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru" /></div></noscript>
     @endif
 @endpush
 
@@ -168,17 +170,20 @@
          (layouts/shop now includes partials/shop-metrika). --}}
     <script>
     document.addEventListener("DOMContentLoaded", function () {
-        @if(session('yandex_id'))
-            if (typeof ym !== 'undefined') {
-                ym({{ session('yandex_id') }}, 'reachGoal', 'payment_success');
-            }
-        @elseif(config('analytics.metrika.enabled') && config('analytics.metrika.shop_counter_id'))
-            {{-- Напрямую, не через shopReachGoal: тот шлёт ещё и в пиксель ВК
-                 витрины, а ВК-цель payment_success ставится ниже отдельно —
-                 иначе она ушла бы дважды. --}}
-            if (typeof ym !== 'undefined') {
-                ym({{ config('analytics.metrika.shop_counter_id') }}, 'reachGoal', 'payment_success');
-            }
+        {{-- A return URL is not proof of payment; only the webhook-confirmed state is. --}}
+        @if($confirmed && $payment)
+            @if(session('yandex_id'))
+                if (typeof ym !== 'undefined') {
+                    ym({{ session('yandex_id') }}, 'reachGoal', 'payment_success');
+                }
+            @elseif(config('analytics.metrika.enabled') && config('analytics.metrika.shop_counter_id'))
+                {{-- Напрямую, не через shopReachGoal: тот шлёт ещё и в пиксель ВК
+                     витрины, а ВК-цель payment_success ставится ниже отдельно —
+                     иначе она ушла бы дважды. --}}
+                if (typeof ym !== 'undefined') {
+                    ym({{ config('analytics.metrika.shop_counter_id') }}, 'reachGoal', 'payment_success');
+                }
+            @endif
         @endif
         {{-- Метрика access_renewal_complete (MG 18-09-2026): self-service
              платеж подтвержден = продление завершено (повторная оплата = LTV).
