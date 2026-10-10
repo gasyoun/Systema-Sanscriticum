@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CabinetMasteryController;
 use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\CallbackRequestController;
+use App\Http\Controllers\CourseStageQuizController;
 use App\Http\Controllers\DebtPaymentController;
 use App\Http\Controllers\GatedAssetController;
 use App\Http\Controllers\GrammarLabController;
@@ -295,6 +296,13 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::get('/c/{slug}', [StudentController::class, 'showCourse'])
         ->middleware('course.canonical')
         ->name('student.course');
+    // Квиз этапа курса (мини-курсы): /c/{slug}/kviz/{block}.
+    Route::get('/c/{slug}/kviz/{block}', [CourseStageQuizController::class, 'show'])
+        ->middleware('course.canonical')
+        ->name('student.course.quiz');
+    Route::post('/c/{slug}/kviz/{block}', [CourseStageQuizController::class, 'submit'])
+        ->middleware('course.canonical')
+        ->name('student.course.quiz.submit');
     Route::post('/c/{slug}/access/materialize', [AccessSelfServiceController::class, 'materialize'])
         ->middleware('course.canonical')
         ->name('student.access.materialize');
