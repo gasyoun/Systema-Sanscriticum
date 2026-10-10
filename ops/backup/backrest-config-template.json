@@ -1,5 +1,5 @@
 {
-  "_comment": "DEPRECATED historical template: do not apply; use backrest-config-safe-template.json. Scheduled checks over append-only SFTP leave an exclusive lock and block hourly backups.",
+  "_comment": "H6320 template of the live /root/.config/backrest/config.json on vps92 (backrest v1.14.1). Placeholders in <...>. Secrets are NOT committed: UI credentials live in /root/.backrest-ui-credentials (0600), the restic password is passed via RESTIC_PASSWORD_FILE env, never inline. NOTE: auth.users[].passwordBcrypt must be base64 of the ASCII $2b$ bcrypt hash (backrest base64-decodes it before bcrypt-compare).",
   "version": 6,
   "modno": 1,
   "instance": "vps-samskrte92",
