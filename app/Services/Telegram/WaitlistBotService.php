@@ -20,8 +20,10 @@ use Illuminate\Support\Facades\Log;
  *
  * Обрабатывает /zhdun, /zhdun-stats (H6407 — только кураторский чат,
  * конвенция CuratorNotifier) и callback_query с префиксом "wl:"; вызывается
- * из ProcessTelegramMagnetUpdate только для глобального бота. Все ответы
- * Telegram глотаются с логом — ошибка отправки не должна ронять джобу
+ * из ProcessTelegramMagnetUpdate только для глобального бота. Порядок шагов
+ * голосования — голос сразу (wl:vote), пожелание времени мягким шагом после
+ * (H6408, MG 10-10-2026: 29/37 голосов без слота). Все ответы Telegram
+ * глотаются с логом — ошибка отправки не должна ронять джобу
  * (Telegram сделает свой ретрай вебхука).
  */
 final class WaitlistBotService
@@ -103,7 +105,7 @@ final class WaitlistBotService
         foreach ($slice as $item) {
             $rows[] = [[
                 'text' => $this->itemLabel($item),
-                'callback_data' => self::CALLBACK_PREFIX.'pick:'.$item->getKey(),
+                'callback_data' => self::CALLBACK_PREFIX.'vote:'.$item->getKey(),
             ]];
         }
 
@@ -156,7 +158,9 @@ final class WaitlistBotService
 
             match ($parts[0]) {
                 'page' => $this->sendList($chatId, (int) ($parts[1] ?? 0), is_numeric($messageId) ? (int) $messageId : null),
-                'pick' => $this->askSlot($chatId, is_numeric($messageId) ? (int) $messageId : null, (int) ($parts[1] ?? 0)),
+                'vote', 'pick' => $this->castVote($chatId, is_numeric($messageId) ? (int) $messageId : null, (int) ($parts[1] ?? 0)),
+                'slot' => $this->applySlot($chatId, is_numeric($messageId) ? (int) $messageId : null, (int) ($parts[1] ?? 0), (string) ($parts[2] ?? '')),
+                'skip' => $this->skipSlot($chatId, is_numeric($messageId) ? (int) $messageId : null, (int) ($parts[1] ?? 0)),
                 'do' => $this->castVote($chatId, is_numeric($messageId) ? (int) $messageId : null, (int) ($parts[1] ?? 0), (string) ($parts[2] ?? '')),
                 'mine' => $this->sendMine($chatId, is_numeric($messageId) ? (int) $messageId : null),
                 default => null,
@@ -173,30 +177,12 @@ final class WaitlistBotService
         }
     }
 
-    private function askSlot(string $chatId, ?int $messageId, int $itemId): void
-    {
-        $item = $this->listedItems()->firstWhere('id', $itemId);
-        if ($item === null) {
-            $this->replace($chatId, $messageId, 'Этот курс уже не в списке ожидания.', [[['text' => '◀️ К списку', 'callback_data' => self::CALLBACK_PREFIX.'page:0']]]);
-
-            return;
-        }
-
-        $rows = [];
-        foreach (WaitlistVote::SLOT_PREFERENCES as $key => $label) {
-            $rows[] = [['text' => $label, 'callback_data' => self::CALLBACK_PREFIX.'do:'.$itemId.':'.$key]];
-        }
-        $rows[] = [['text' => 'В любое время', 'callback_data' => self::CALLBACK_PREFIX.'do:'.$itemId.':any']];
-        $rows[] = [['text' => '◀️ К списку курсов', 'callback_data' => self::CALLBACK_PREFIX.'page:0']];
-
-        $this->replace($chatId, $messageId,
-            '<b>'.e($item->course_title).'</b>'
-            .($item->teacher_name ? "\nПреподаватель: ".e($item->teacher_name) : '')
-            ."\n\nКогда вам удобнее заниматься?",
-            $rows);
-    }
-
-    private function castVote(string $chatId, ?int $messageId, int $itemId, string $slot): void
+    /**
+     * Голос одним нажатием (H6408): слот не спрашиваем заранее — после
+     * успешного голоса показываем мягкий шаг выбора времени. Старые
+     * клавиатуры с wl:do:<id>:<slot> работают как раньше.
+     */
+    private function castVote(string $chatId, ?int $messageId, int $itemId, ?string $slot = null): void
     {
         $user = User::query()->where('telegram_id', (int) $chatId)->first();
 
@@ -217,9 +203,68 @@ final class WaitlistBotService
             return;
         }
 
-        $slotKey = $slot === 'any' ? null : (in_array($slot, array_keys(WaitlistVote::SLOT_PREFERENCES), true) ? $slot : null);
+        $slotKey = $slot === null ? null : (in_array($slot, array_keys(WaitlistVote::SLOT_PREFERENCES), true) ? $slot : null);
         $item->castVoteBy($user, $slotKey);
 
+        if ($slotKey !== null) {
+            $this->finishVote($chatId, $messageId, $item, $slotKey);
+
+            return;
+        }
+
+        $rows = [];
+        foreach (WaitlistVote::SLOT_PREFERENCES as $key => $label) {
+            $rows[] = [['text' => $label, 'callback_data' => self::CALLBACK_PREFIX.'slot:'.$itemId.':'.$key]];
+        }
+        $rows[] = [['text' => 'Пропустить', 'callback_data' => self::CALLBACK_PREFIX.'skip:'.$itemId]];
+
+        $this->replace($chatId, $messageId,
+            '✅ Голос учтён: <b>'.e($item->course_title).'</b>'
+            ."\nПрогресс: {$item->votesCount()} / {$item->min_payers} голосов — "
+            .'после минимума откроется оплата.'
+            ."\n\nКогда вам удобнее заниматься? Можно и пропустить.",
+            $rows);
+    }
+
+    /** Выбор на мягком шаге (wl:slot): обновляет slot_preference существующей строки. */
+    private function applySlot(string $chatId, ?int $messageId, int $itemId, string $slot): void
+    {
+        $user = User::query()->where('telegram_id', (int) $chatId)->first();
+        if (! $user instanceof User) {
+            $this->replace($chatId, $messageId,
+                'У вас пока нет привязанного кабинета — войдите на https://samskrte.ru/telegram/connect.',
+                [[['text' => '◀️ К списку курсов', 'callback_data' => self::CALLBACK_PREFIX.'page:0']]]);
+
+            return;
+        }
+
+        $item = $this->listedItems()->firstWhere('id', $itemId);
+        if ($item === null) {
+            $this->replace($chatId, $messageId, 'Этот курс уже не в списке ожидания.', [[['text' => '◀️ К списку', 'callback_data' => self::CALLBACK_PREFIX.'page:0']]]);
+
+            return;
+        }
+
+        $slotKey = in_array($slot, array_keys(WaitlistVote::SLOT_PREFERENCES), true) ? $slot : null;
+        $item->castVoteBy($user, $slotKey);
+        $this->finishVote($chatId, $messageId, $item, $slotKey);
+    }
+
+    /** «Пропустить» (wl:skip): закрываем без записи, слот остаётся как был. */
+    private function skipSlot(string $chatId, ?int $messageId, int $itemId): void
+    {
+        $item = $this->listedItems()->firstWhere('id', $itemId);
+        if ($item === null) {
+            $this->replace($chatId, $messageId, 'Этот курс уже не в списке ожидания.', [[['text' => '◀️ К списку', 'callback_data' => self::CALLBACK_PREFIX.'page:0']]]);
+
+            return;
+        }
+
+        $this->finishVote($chatId, $messageId, $item, null);
+    }
+
+    private function finishVote(string $chatId, ?int $messageId, CourseWaitlistItem $item, ?string $slotKey): void
+    {
         $slotLine = $slotKey === null ? '' : "\nВремя: ".WaitlistVote::SLOT_PREFERENCES[$slotKey];
         $this->replace($chatId, $messageId,
             '✅ Голос учтён: <b>'.e($item->course_title).'</b>'
