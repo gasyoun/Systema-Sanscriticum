@@ -44,14 +44,23 @@ try {
     await first.page.goto(`${BASE}/dvaram/propisi`);
     await first.page.waitForSelector('#devanagari-board-root .excalidraw', { timeout: 30000 });
 
-    const canvas = first.page.locator('.excalidraw .canvas, .excalidraw canvas').first();
-    // Кисть (freedraw) — клавиша 7 в Excalidraw; по умолчанию стоит selection,
-    // которым «рисовать» нельзя.
+    const canvas = first.page.locator('.excalidraw__canvas.interactive').first();
+    // Клик по канвасу даёт ему фокус, затем кисть (freedraw) — клавиша 7;
+    // по умолчанию стоит selection, которым «рисовать» нельзя.
+    await canvas.click({ position: { x: 200, y: 200 } });
     await first.page.keyboard.press('7');
-    await canvas.hover({ position: { x: 120, y: 120 } });
+    const tool = await first.page.evaluate(() => window.__excalidrawApi?.getAppState()?.activeTool?.type);
+    if (tool !== 'freedraw') {
+        fail(`кисть не включилась после «7» (activeTool=${tool})`);
+    }
+    const box = await canvas.boundingBox();
+    if (!box) fail('не нашли интерактивный канвас доски');
+    const sx = box.x + 120;
+    const sy = box.y + 120;
+    await first.page.mouse.move(sx, sy);
     await first.page.mouse.down();
     for (let i = 0; i < 12; i += 1) {
-        await first.page.mouse.move(120 + i * 8, 120 + Math.round(30 * Math.sin(i / 2)));
+        await first.page.mouse.move(sx + i * 8, sy + Math.round(30 * Math.sin(i / 2)));
     }
     await first.page.mouse.up();
 

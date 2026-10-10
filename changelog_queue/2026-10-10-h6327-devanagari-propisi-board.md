@@ -3,11 +3,16 @@
 _Created: 10-10-2026 · Last updated: 10-10-2026_
 
 В кабинете появилась постоянная доска прописи `/dvaram/propisi`: @excalidraw/excalidraw
-0.18.1 (лениво монтируемый React-чанк `resources/js/devanagari-board.js`, основной
+0.17.6 (лениво монтируемый React-чанк `resources/js/devanagari-board.js`, основной
 Alpine/Livewire кабинет его не тянет), сцена JSON лежит в MySQL `devanagari_boards`
 («студент × занятие», cap 2 МБ с 413 сверху), автосохранение через 800 мс после
 штриха и на `beforeunload`. Доска переживает перезагрузку, перезапуск браузера и
 смену устройства — замена webwhiteboard.com, терявшему все доски каждые 24 часа.
+
+0.18.x откатили до 0.17.6 осознанно: дерево зависимостей 0.18 несло 13 advisory
+(braces/chokidar/sass, katex/mermaid, lodash-es/langium — фиксов в 0.18-линии нет),
+CI-гейт `npm audit` красный; 0.17.6 + React 18 = `npm audit` чистый (0 vulnerabilities),
+overrides `nanoid` остались как страховка.
 
 Трафареты букв (15 шт: гласные + ка-варга, пунктир низкой непрозрачности для
 обводки) грузятся в пикер Library из `public/libraries/devanagari-stencils.excalidrawlib`
