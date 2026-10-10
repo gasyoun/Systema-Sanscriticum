@@ -59,6 +59,49 @@
             </div>
         @endif
 
+        {{-- Награды за зачёт финала: промокод + приглашение на напевное.
+             Показываются и сразу после сабмита, и при возврате на страницу
+             (лучший attempt зачтён). --}}
+        @if ($isFinalQuiz && $rewards)
+                <div class="mt-4 rounded-2xl overflow-hidden border border-indigo-100">
+                    <div class="bg-indigo-600 text-white p-5">
+                        <p class="text-[10px] font-bold uppercase tracking-widest opacity-85">🎓 Награда за итоговый тест</p>
+                        <p class="font-extrabold text-lg mt-1">Ваш промокод на «{{ $rewards['grammar_course']->title ?? 'Грамматику санскрита' }}»</p>
+                        <p class="text-sm opacity-90 mt-1">Скидка {{ (int) config('mini_courses.promo_percent', 50) }}% на любой тариф курса
+                            @if ($rewards['promo_expires_at'])
+                                — действует до {{ $rewards['promo_expires_at']->timezone(config('app.timezone'))->translatedFormat('d F Y') }}.
+                            @endif
+                        </p>
+                        <div class="mt-3 bg-white/10 border-2 border-dashed border-white/50 rounded-xl px-4 py-3 inline-flex items-center gap-3">
+                            <span class="font-mono font-extrabold text-xl tracking-widest">{{ $rewards['promo_code'] }}</span>
+                        </div>
+                        <p class="text-xs opacity-85 mt-3">Введите его на странице оформления заказа курса грамматики — скидка применится сразу и только у вас.</p>
+                        @if ($rewards['grammar_course'])
+                            <a href="{{ route('shop.course.show', $rewards['grammar_course']->slug) }}"
+                               class="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-xl bg-white text-indigo-700 font-extrabold text-sm hover:opacity-90">
+                                Выбрать тариф грамматики <i class="fas fa-arrow-right text-xs"></i>
+                            </a>
+                        @endif
+                    </div>
+                    @if ($rewards['invite'] && $rewards['trial_event'] && $rewards['trial_course'])
+                        <div class="bg-white p-5 border-t border-indigo-50">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-1">🎤 Приглашение</p>
+                            <p class="font-extrabold text-gray-900">Пробное занятие по напевному санскриту</p>
+                            <p class="text-sm text-gray-600 mt-1">
+                                {{ $rewards['trial_event']->title }} —
+                                {{ $rewards['trial_event']->start->timezone(config('app.timezone'))->translatedFormat('d F, H:i') }} (МСК).
+                                Продолжите напевный санскрит с Ушей Санкой на живом занятии курса
+                                «{{ $rewards['trial_course']->title }}».
+                            </p>
+                            <a href="{{ route('shop.course.show', $rewards['trial_course']->slug) }}"
+                               class="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl border border-indigo-200 text-indigo-600 font-bold text-sm hover:bg-indigo-50">
+                                Записаться на занятие <i class="fas fa-arrow-right text-xs"></i>
+                            </a>
+                        </div>
+                    @endif
+                </div>
+        @endif
+
         <form method="post" action="{{ route('student.course.quiz.submit', [$course->slug, $quiz->block_number]) }}"
               class="mt-6 space-y-6">
             @csrf

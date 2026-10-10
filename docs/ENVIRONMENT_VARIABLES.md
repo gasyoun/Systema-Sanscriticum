@@ -481,6 +481,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MEMCACHED_PORT` | optional | `11211` | config/cache.php:71 |
 | `MEMCACHED_USERNAME` | required | `—` | config/cache.php:62 |
 | `MIC_SHADOW_CLASSIFY` | optional | `false` | config/features.php:1772 |
+| `MINI_COURSE_GRAMMAR_COURSE_ID` | optional | `450` | config/mini_courses.php:11 |
+| `MINI_COURSE_TRIAL_COURSE_ID` | optional | `451` | config/mini_courses.php:14 |
 | `MONEY_BANK_STATEMENT_CREDITS` | optional | `false` | config/features.php:1887 |
 | `MONEY_DAILY_RECONCILIATION` | optional | `false` | config/features.php:1860 |
 | `MONEY_LEDGER_CORE` | optional | `false` | config/features.php:1838 |

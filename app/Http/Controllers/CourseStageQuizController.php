@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\CourseQuiz;
 use App\Models\CourseQuizAttempt;
 use App\Services\Membership\ClubEntitlement;
+use App\Support\CourseFinalRewards;
 use App\Support\CourseStageQuiz;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,10 @@ use Illuminate\View\View;
 /**
  * Квиз этапа курса: интерактивная проверка после прохождения этапа мини-курса.
  * Доступ — как у страницы курса: активный курс + группа (или клубное покрытие).
+ *
+ * Зачёт итогового теста (block_number вне этапов — «Финал») выдаёт награды:
+ * персональный промокод на курс грамматики + приглашение на ближайшее
+ * занятие «напевного» курса (CourseFinalRewards).
  */
 class CourseStageQuizController extends Controller
 {
@@ -24,13 +29,16 @@ class CourseStageQuizController extends Controller
         $user = $request->user();
         [$course, $quiz] = $this->resolveAccessibleQuiz($user, $slug, $block);
 
+        $bestAttempt = $quiz->bestAttemptFor($user);
+
         return view('student.course-stage-quiz', [
             'course' => $course,
             'quiz' => $quiz,
             'questions' => CourseStageQuiz::questionsForDisplay($quiz, (int) $user->id),
             'result' => null,
             'answers' => [],
-            'bestAttempt' => $quiz->bestAttemptFor($user),
+            'bestAttempt' => $bestAttempt,
+            'rewards' => $this->rewardsFor($course, $quiz, $user, $bestAttempt?->passed ?? false),
         ]);
     }
 
@@ -63,7 +71,35 @@ class CourseStageQuizController extends Controller
             'result' => $graded,
             'answers' => $data['answers'],
             'bestAttempt' => $quiz->bestAttemptFor($user),
+            'rewards' => $this->rewardsFor($course, $quiz, $user, $graded['passed']),
         ]);
+    }
+
+    /**
+     * Награды финала: промокод создаётся только при ЗАЧЁТЕ итогового теста
+     * (повторная сдача/просмотр новой попытки код не плодят — детерминированный
+     * код PREP50-{user}). Приглашение — ближайшее будущее занятие курса,
+     * если студент ещё не записан на него.
+     */
+    private function rewardsFor(Course $course, CourseQuiz $quiz, $user, bool $passed): ?array
+    {
+        $isFinal = $quiz->block_number > (int) $course->blocks->max('number') && $quiz->block_number > 1;
+
+        if (! $isFinal || ! $passed) {
+            return null;
+        }
+
+        $promo = CourseFinalRewards::promoCodeFor($user);
+        $trialEvent = CourseFinalRewards::nearestTrialEvent();
+
+        return [
+            'promo_code' => CourseFinalRewards::promoDisplayCode($user),
+            'promo_expires_at' => $promo->expires_at,
+            'grammar_course' => CourseFinalRewards::grammarCourse(),
+            'trial_event' => $trialEvent,
+            'trial_course' => $trialEvent?->course,
+            'invite' => $trialEvent !== null && CourseFinalRewards::shouldInvite($user),
+        ];
     }
 
     /**
