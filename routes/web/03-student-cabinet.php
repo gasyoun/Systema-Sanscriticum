@@ -9,6 +9,7 @@ use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\CallbackRequestController;
 use App\Http\Controllers\CourseStageQuizController;
 use App\Http\Controllers\DebtPaymentController;
+use App\Http\Controllers\DevanagariBoardController;
 use App\Http\Controllers\GatedAssetController;
 use App\Http\Controllers\GrammarLabController;
 use App\Http\Controllers\GrammarLabPilotController;
@@ -462,4 +463,13 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->name('student.timezone.override.clear');
     Route::post('/profile/timezone/device', [TimezoneController::class, 'deviceCapture'])
         ->name('student.timezone.device');
+
+    // H6327 — постоянная доска прописи (Excalidraw) вместо webwhiteboard.com,
+    // терявшего все доски каждые 24 часа. Сцена JSON лежит в MySQL «студент × занятие».
+    Route::get('/dvaram/propisi', [DevanagariBoardController::class, 'page'])
+        ->name('student.propisi');
+    Route::get('/dvaram/propisi/scene', [DevanagariBoardController::class, 'show'])
+        ->name('student.propisi.scene.show');
+    Route::put('/dvaram/propisi/scene', [DevanagariBoardController::class, 'save'])
+        ->name('student.propisi.scene.save');
 });
