@@ -23,6 +23,31 @@ document.addEventListener('DOMContentLoaded', function () {
         window.shopReachGoal('course_page_view');
     }
 });
+
+// Секции-аккордеоны (data-collapse-section: «О курсе», «Программа курса»,
+// «Расписание», «Полное расписание») свернуты по умолчанию — так «Выберите
+// вариант участия» виден сразу под хиро. Прямая ссылка с анкором секции
+// (#about, #program, #schedule, #full-schedule) и клики по якорям внутри
+// страницы («все даты» из хиро) должны раскрывать свою секцию, иначе анкор
+// ведет на закрытую шапку.
+(function () {
+    var expandForHash = function () {
+        var hash = window.location.hash;
+        if (!hash || hash.length < 2) {
+            return;
+        }
+        var el = document.getElementById(decodeURIComponent(hash.slice(1)));
+        if (!el) {
+            return;
+        }
+        var section = el.closest('section[data-collapse-section]');
+        if (section && window.Alpine && window.Alpine.$data) {
+            window.Alpine.$data(section).open = true;
+        }
+    };
+    document.addEventListener('alpine:initialized', expandForHash);
+    window.addEventListener('hashchange', expandForHash);
+})();
 </script>
 @endpush
 
@@ -121,7 +146,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
 @section('content')
 <div class="min-h-screen bg-[#0A0D14] text-white font-sans relative overflow-hidden">
-    
+
+    {{--  — «Спасибо, ваш голос учтён!» после голосования с этой страницы. --}}
+    @include('shop.partials.waitlist-voted-toast')
+
     {{-- Декоративные блюры на фоне --}}
     <div class="absolute top-[-10%] left-[-10%] w-[800px] h-[800px] bg-indigo-900/10 rounded-full blur-[150px] pointer-events-none"></div>
     <div class="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-brand/10 rounded-full blur-[150px] pointer-events-none"></div>
@@ -138,6 +166,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             <span class="inline-flex items-center gap-1.5 bg-rose-500 text-white text-[11px] font-black uppercase px-3 py-1.5 rounded-full tracking-wider shadow-[0_4px_12px_rgba(244,63,94,0.35)]">
                                 <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                                 Идет сейчас
+                            </span>
+                        @elseif($course->isEnrolling())
+                            <span class="inline-flex items-center gap-1.5 bg-amber-500 text-white text-[11px] font-black uppercase px-3 py-1.5 rounded-full tracking-wider shadow-[0_4px_12px_rgba(245,158,11,0.35)]">
+                                <i class="fas fa-bullhorn text-[10px]"></i>
+                                Идет набор
                             </span>
                         @elseif($course->format === 'recorded')
                             <span class="inline-flex items-center gap-1.5 bg-indigo-500/90 text-white text-[11px] font-black uppercase px-3 py-1.5 rounded-full tracking-wider">
@@ -225,12 +258,15 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <i class="fas fa-play text-xs"></i> {{ $ctaAb['label'] ?? 'Смотреть пробный урок' }}
                             </a>
                         @else
-                            <a href="{{ route('shop.index', $course->isLive() ? ['format' => 'live'] : ($course->format === 'recorded' ? ['format' => 'recorded'] : [])) }}"
+                            {{-- H6211: прямой path-URL фильтра вместо ?format= (как на главной, Low-2) --}}
+                            <a href="{{ $course->isLive() ? '/online/format/live' : ($course->isEnrolling() ? '/online/format/enrolling' : ($course->format === 'recorded' ? '/online/format/recorded' : '/online')) }}"
                                class="inline-flex justify-center items-center px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-[#1F2636] hover:bg-[#2A344A] transition-all">
                                 @if($course->format === 'recorded')
                                     Библиотека записей
                                 @elseif($course->isLive())
                                     Другие живые курсы
+                                @elseif($course->isEnrolling())
+                                    Другие курсы в наборе
                                 @else
                                     Все курсы
                                 @endif
@@ -295,6 +331,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                     Идет сейчас
                                 </span>
                             </div>
+                        @elseif($course->isEnrolling())
+                            <div class="absolute top-5 right-5 z-10">
+                                <span class="inline-flex items-center gap-1.5 bg-amber-500 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md tracking-wider">
+                                    <i class="fas fa-bullhorn text-[9px]"></i>
+                                    Идет набор
+                                </span>
+                            </div>
                         @elseif($course->format === 'recorded')
                             <div class="absolute top-5 right-5 z-10">
                                 <span class="inline-flex items-center gap-1.5 bg-indigo-500/90 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md tracking-wider">
@@ -317,6 +360,45 @@ document.addEventListener('DOMContentLoaded', function () {
         @include('shop.partials.audience')
         @include('shop.partials.outcomes')
         @include('shop.partials.flagship-free-step')
+
+        {{-- ───── Запись потока: уникальные факты когорты (H6211 Medium-2) ─────
+             Записанные группы одного курса были похожи на ~72% (аудит H6160).
+             Блок собирает видимый текст ТОЛЬКО из реальных данных этого потока —
+             период учёбы по блокам, число занятий, модули, уровень. Нет данных —
+             нет строки: факты вне реальных данных сюда не вносятся. --}}
+        @if($course->format === 'recorded')
+            @php
+                $cohortDated = $course->blocks->filter(fn ($b) => $b->starts_at);
+                $cohortStart = $cohortDated->min('starts_at');
+                $cohortEnd = $course->blocks->filter(fn ($b) => $b->ends_at)->max('ends_at');
+                $cohortLessons = (int) ($course->lessons_count ?: 0);
+                $cohortModules = $course->blocks->filter(fn ($b) => filled($b->title))->count();
+                $cohortLevel = $course->levelLabel();
+                preg_match('/гр\.\s*\d+/u', $course->title, $cohortMatch);
+                $cohortLabel = $cohortMatch[0] ?? null;
+            @endphp
+            @if($cohortStart && $cohortLessons > 0)
+                <section class="mb-12 lg:mb-16 rounded-2xl bg-[#111622] border border-[#1F2636] p-6 lg:p-8">
+                    <h2 class="text-xl lg:text-2xl font-bold text-white mb-3">
+                        Запись потока{{ $cohortLabel ? ' '.$cohortLabel : '' }}
+                    </h2>
+                    <p class="text-slate-300 leading-relaxed">
+                        Это не живая группа, а запись прошедшего потока{{ $cohortLabel ? ' '.$cohortLabel : '' }}:
+                        занятия шли с {{ $cohortStart->translatedFormat('d F Y') }}@if($cohortEnd && ! $cohortEnd->isSameDay($cohortStart)) по {{ $cohortEnd->translatedFormat('d F Y') }}@endif —
+                        {{ $cohortLessons }} {{ \App\Support\Plural::ru($cohortLessons, 'онлайн-занятие', 'онлайн-занятия', 'онлайн-занятий') }}
+                        осталось в записи, смотреть можно в своём темпе, доступ открывается сразу после оплаты.@if($cohortModules > 1)
+                        Программа — {{ $cohortModules }} {{ \App\Support\Plural::ru($cohortModules, 'модуль', 'модуля', 'модулей') }}.@endif@if($cohortLevel)
+                        Уровень — {{ $cohortLevel }}.@endif
+                    </p>
+                    <p class="text-sm text-slate-400 mt-4">
+                        Предпочитаете живые занятия?
+                        <a href="/online/format/live" class="text-indigo-400 underline hover:text-indigo-300">Живые группы с преподавателем</a>
+                        ·
+                        <a href="/online/format/recorded" class="text-indigo-400 underline hover:text-indigo-300">Другие записи курсов</a>
+                    </p>
+                </section>
+            @endif
+        @endif
 
         {{-- ───── 1. О КУРСЕ (парная раскладка: текст + панель фактов) ───── --}}
         @php
@@ -350,9 +432,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     : null,
             ])->filter()->values();
         @endphp
-        <section class="mb-16 lg:mb-20">
-            <h2 class="text-3xl font-bold text-white mb-8">О курсе</h2>
+        <section id="about" class="mb-16 lg:mb-20" x-data="{ open: false }" data-collapse-section>
+            @include('shop.partials.collapse-header', ['title' => 'О курсе', 'bodyId' => 'about-body'])
 
+            <div id="about-body" x-show="open" x-cloak
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 -translate-y-3"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0 -translate-y-3">
             <div class="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
                 {{-- Левая колонка: текстовое описание --}}
                 <div class="prose prose-invert prose-lg prose-slate max-w-none lg:flex-1">
@@ -387,6 +476,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </aside>
                 @endif
             </div>
+            </div>
         </section>
 
         @include('partials.samskrtam-related', ['samskrtamKey' => $course->slug])
@@ -418,15 +508,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 || ($lessonsByBlock[$b->number] ?? collect())->isNotEmpty());
         @endphp
         @if($hasProgram)
-        <section id="program" class="mb-16 lg:mb-20" x-data="{ open: null }">
-            <h2 class="text-3xl font-bold text-white mb-8">Программа курса</h2>
+        <section id="program" class="mb-16 lg:mb-20" x-data="{ open: false, block: null }" data-collapse-section>
+            @include('shop.partials.collapse-header', ['title' => 'Программа курса', 'bodyId' => 'program-body'])
 
+            <div id="program-body" x-show="open" x-cloak
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 -translate-y-3"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0 -translate-y-3">
             <div class="space-y-3">
                 @foreach($course->blocks as $block)
                     @php $blockLessons = $lessonsByBlock[$block->number] ?? collect(); @endphp
                     <div class="rounded-2xl bg-[#111622] border border-[#1F2636] overflow-hidden">
                         <button type="button"
-                                @click="open === {{ $block->number }} ? open = null : open = {{ $block->number }}"
+                                @click="block === {{ $block->number }} ? block = null : block = {{ $block->number }}"
                                 class="w-full flex items-center gap-4 p-5 text-left hover:bg-[#1A2235] transition-colors">
                             <span class="flex items-center justify-center shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-[#1F2636] to-[#0A0D14] border border-[#1F2636] text-base font-extrabold text-white">
                                 {{ $block->number }}
@@ -450,12 +547,12 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                             @if($blockLessons->isNotEmpty())
                                 <i class="fas fa-chevron-down text-slate-500 text-sm transition-transform"
-                                   :class="open === {{ $block->number }} ? 'rotate-180' : ''"></i>
+                                   :class="block === {{ $block->number }} ? 'rotate-180' : ''"></i>
                             @endif
                         </button>
 
                         @if($blockLessons->isNotEmpty())
-                            <div x-show="open === {{ $block->number }}" x-transition style="display:none"
+                            <div x-show="block === {{ $block->number }}" x-transition style="display:none"
                                  class="border-t border-[#1F2636]">
                                 <ol class="px-5 py-4 space-y-2">
                                     @foreach($blockLessons as $i => $lesson)
@@ -470,6 +567,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 @endforeach
             </div>
+            </div>
         </section>
         @endif
 
@@ -479,14 +577,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
         {{-- ───── 1.5 РАСПИСАНИЕ ───── --}}
         @if(!empty($scheduleGroups) && $scheduleGroups->isNotEmpty())
-        <section id="schedule" class="mb-16 lg:mb-20">
-            <div class="flex items-center gap-4 mb-8">
-                <h2 class="text-3xl font-bold text-white">{{ ! empty($flagship) ? 'Ближайшие занятия' : 'Расписание' }}</h2>
-                @unless(! empty($flagship))
-                    <span class="text-sm font-bold text-slate-500">ближайшие занятия</span>
-                @endunless
-            </div>
+        <section id="schedule" class="mb-16 lg:mb-20" x-data="{ open: false }" data-collapse-section>
+            @include('shop.partials.collapse-header', [
+                'title' => ! empty($flagship) ? 'Ближайшие занятия' : 'Расписание',
+                'caption' => empty($flagship) ? 'ближайшие занятия' : null,
+                'bodyId' => 'schedule-body',
+            ])
 
+            <div id="schedule-body" x-show="open" x-cloak
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 -translate-y-3"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0 -translate-y-3">
             <div class="space-y-10">
                 @foreach($scheduleGroups as $month => $sessions)
                     <div>
@@ -572,6 +676,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <p class="mt-6 text-sm text-slate-500 max-w-3xl" data-analytics="objection-time-microcopy">
                 Не попадаете по времени? Занятие останется в записи — вернетесь к нему, когда будет тишина. Пропуск не выбивает из курса.
             </p>
+            </div>
         </section>
         @endif
 
@@ -759,7 +864,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <button @click="tab = 'blocks'"
                                 :class="tab === 'blocks' ? 'bg-[#1F2636] text-white shadow-md' : 'text-slate-500 hover:text-slate-300'"
                                 class="px-6 py-2.5 text-sm font-bold rounded-lg transition-all duration-200">
-                            По модулям
+                            По блокам
                         </button>
                     </div>
                 @endif
@@ -1013,8 +1118,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 @elseif($whole)
                                     <a href="{{ route('checkout.show', $whole->id) }}"
                                        class="w-full flex justify-center items-center py-3 px-4 {{ $isCurrent ? 'bg-brand hover:bg-brand-hover text-white shadow-md shadow-brand/20' : 'bg-[#1F2636] text-white hover:bg-[#38BDF8] hover:text-[#0A0D14]' }} text-sm font-bold rounded-lg transition-colors">
-                                        {{-- H3100: у прошедшего блока «Оплатить модуль» обещает живые занятия, которых уже не будет. --}}
-                                        {{ $sellsRecordings ? 'Купить запись блока' : ($isFinishedBlock ? 'Купить записи блока' : ($halves->isNotEmpty() ? 'Оплатить блок целиком' : 'Оплатить модуль')) }}
+                                        {{-- H3100: у прошедшего блока кнопка покупки не должна обещать живые занятия, которых уже не будет. --}}
+                                        {{ $sellsRecordings ? 'Купить запись блока' : ($isFinishedBlock ? 'Купить записи блока' : ($halves->isNotEmpty() ? 'Оплатить блок целиком' : 'Оплатить блок')) }}
                                     </a>
                                 @endif
                             </div>
@@ -1051,6 +1156,42 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 @endunless
 
+            @elseif(isset($waitlistItem) && $waitlistItem)
+                {{--  — курс в списке ожидания: вместо замка — голосование.
+                     Словарь ждуна, форма шаред-partial (как на карточке каталога). --}}
+                <div class="bg-[#111622] rounded-2xl p-8 border border-[#1F2636] text-center max-w-md mx-auto" data-testid="course-waitlist-box">
+                    <div class="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-bullhorn text-2xl text-amber-400"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-white mb-2">{{ $waitlistItem->statusLabel() }}</h4>
+                    <p class="text-sm text-slate-400 leading-relaxed mb-4">
+                        Наберётся минимум голосов — откроется оплата; нужное число оплат к сроку — группа стартует.
+                    </p>
+                    <p class="text-sm font-bold mb-1 {{ $waitlistItem->votes_count >= $waitlistItem->min_payers ? 'text-emerald-400' : 'text-white' }}"
+                       data-testid="course-waitlist-progress">
+                        @if($waitlistItem->votes_count >= $waitlistItem->min_payers)
+                            <i class="fas fa-check-circle mr-1"></i>Кворум набран
+                        @else
+                            {{ $waitlistItem->votes_count }} из {{ $waitlistItem->min_payers }} {{ \App\Support\Plural::ru((int) $waitlistItem->votes_count, 'голоса', 'голосов', 'голосов') }}
+                        @endif
+                    </p>
+                    @if($waitlistItem->earliest_start_at)
+                        <p class="text-xs text-slate-500 mb-4">Старт не раньше {{ $waitlistItem->earliest_start_at->format('d.m.Y') }}.</p>
+                    @else
+                        <p class="text-xs text-slate-500 mb-4">Дата уточняется.</p>
+                    @endif
+                    <div class="max-w-xs mx-auto">
+                        @include('shop.partials.waitlist-join-actions', [
+                            'item' => $waitlistItem,
+                            'voted' => $waitlistVoted,
+                            'myPref' => $waitlistPref,
+                        ])
+                    </div>
+                    <a href="{{ route('shop.waitlist') }}#wl-{{ $waitlistItem->slug }}"
+                       class="inline-block mt-4 text-xs text-slate-500 hover:text-slate-300 transition-colors">
+                        Список ожидания: что это и какие курсы ещё собираются
+                    </a>
+                </div>
             @else
                 <div class="bg-[#111622] rounded-2xl p-8 border border-[#1F2636] text-center max-w-md mx-auto">
                     <div class="w-16 h-16 bg-[#1F2636] rounded-full flex items-center justify-center mx-auto mb-4">

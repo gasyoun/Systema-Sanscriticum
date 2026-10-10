@@ -46,12 +46,40 @@ trait TracksPendingDelivery
         // Доставленное не должно таскать труп прежней ошибки.
         unset($payload['delivery_failed_at'], $payload['delivery_error']);
 
-        $update = ['raw_payload' => $payload];
         if (! empty($telegramMessageId)) {
-            $update['telegram_message_id'] = (int) $telegramMessageId;
+            // Другая полоса могла уже записать это же сообщение: business-вебхук
+            // эхом ловит ответы, отправленные юзерботом из другой сессии. Тогда
+            // превращать placeholder в реальный id нельзя — получился бы второй
+            // пузырь ответа в ленте. Книжение доставки и привязку к треду
+            // переносим в существующую строку, placeholder-строку снимаем.
+            $twin = TelegramSupportMessage::query()
+                ->where('telegram_chat_id', $message->telegram_chat_id)
+                ->where('telegram_message_id', (int) $telegramMessageId)
+                ->whereKeyNot($message->getKey())
+                ->orderBy('id')
+                ->first();
+
+            if ($twin) {
+                $twinPayload = is_array($twin->raw_payload) ? $twin->raw_payload : [];
+
+                $twin->forceFill([
+                    'raw_payload' => $payload + $twinPayload,
+                    'support_conversation_id' => $twin->support_conversation_id ?? $message->support_conversation_id,
+                    'role' => $twin->role === 'unknown' ? $message->role : $twin->role,
+                    'responder_type' => $twin->responder_type ?? $message->responder_type,
+                    'responder_user_id' => $twin->responder_user_id ?? $message->responder_user_id,
+                    'responder_marker' => $twin->responder_marker ?? $message->responder_marker,
+                ])->save();
+
+                $message->delete();
+
+                return;
+            }
+
+            $message->forceFill(['telegram_message_id' => (int) $telegramMessageId])->save();
         }
 
-        $message->forceFill($update)->save();
+        $message->forceFill(['raw_payload' => $payload])->save();
     }
 
     /**

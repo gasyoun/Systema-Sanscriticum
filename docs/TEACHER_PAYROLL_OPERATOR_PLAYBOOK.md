@@ -1,4 +1,4 @@
-_Created: 27-09-2026 · Last updated: 27-09-2026_
+_Created: 27-09-2026 · Last updated: 05-10-2026_
 
 # Teacher payroll operator playbook
 
@@ -97,5 +97,13 @@ amount.
 Do not transfer a row when its disposition is not `payable`, evidence is not
 fresh, the fingerprint changed, funding is not `funded`, or any hold remains.
 Escalate only the affected line; clean lines remain eligible.
+
+_Гасунс_
+
+## Since-override (05-10, H6091)
+
+После мёржа ветки `fix/payroll-gasuns-teacher` (PR открывает MG) правило since-override
+дописать в readiness-таблицы выше; до открытия PR таблицы считаются действующими без
+оверрайда. Существующий `.meta.md` — рядом с этим файлом (добавлен H6091).
 
 _Гасунс_

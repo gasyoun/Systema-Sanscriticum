@@ -65,7 +65,7 @@
                             {{-- Чекбокс 1: Обязательный (Персональные данные) --}}
                             <label class="flex items-start gap-3 text-left p-3 sm:p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                                 <div class="flex items-center h-5 mt-0.5 shrink-0">
-                                    <input type="checkbox" x-model="agreedForm" class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
+                                    <input type="checkbox" name="pd_consent" value="1" required x-model="agreedForm" class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
                                 </div>
                                 <div class="text-xs sm:text-sm text-gray-600 leading-relaxed select-none group-hover:text-gray-900 transition">
                                     {{ $data['pd_text'] ?? 'Чтобы попасть в лист ожидания, я даю' }} <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие</span> на обработку моих персональных данных в соответствии с <span @click.prevent.stop="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>
@@ -169,7 +169,7 @@
                             {{-- Чекбокс 1: Обязательный (Персональные данные) --}}
                             <label class="flex items-start gap-3 text-left p-3 sm:p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                                 <div class="flex items-center h-5 mt-0.5 shrink-0">
-                                    <input type="checkbox" x-model="agreedForm" class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
+                                    <input type="checkbox" name="pd_consent" value="1" required x-model="agreedForm" class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
                                 </div>
                                 <div class="text-xs sm:text-sm text-gray-600 leading-relaxed select-none group-hover:text-gray-900 transition">
                                     {{ $data['pd_text'] ?? 'Чтобы попасть в лист ожидания, я даю' }} <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие</span> на обработку моих персональных данных в соответствии с <span @click.prevent.stop="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>

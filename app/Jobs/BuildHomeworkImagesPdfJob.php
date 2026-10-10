@@ -13,7 +13,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Сборка `combined-images.pdf` одной сдачи — вне пути запроса (H3095).
+ * Сборка combined-images PDF одной сдачи — вне пути запроса (H3095).
  *
  * Почему job, а не вызов в сервисе: сборка держит в памяти base64 всех
  * страниц и декод кадра внутри dompdf. На php-fpm (128M) исчерпание памяти —
@@ -21,6 +21,9 @@ use Illuminate\Queue\SerializesModels;
  * `rebuildQuietly()` не срабатывала и падал весь POST сдачи вместе с
  * уведомлением проверяющего (H3092, [FINDINGS §483]). На воркере лимит из
  * CLI-ini (768M на .92), и падение сборки не задевает никого, кроме себя.
+ *
+ * Состав страниц (с 08-10-2026) — картинки последней отправки сдачи, а не
+ * всей её истории: см. `HomeworkImagePdfService::studentImageFiles()`.
  *
  * Очередь `imports` (соединение `redis-long`, supervisor-long, timeout 600):
  * это самая длинная из существующих очередей, новой инфраструктуры не нужно.
@@ -38,7 +41,10 @@ final class BuildHomeworkImagesPdfJob implements ShouldQueue
 
     public int $tries = 1;
 
-    public int $timeout = 300;
+    // 590 (не 300, 08-10-2026): раунд из 12 фото собирается ~140 c на проде,
+    // потолок 40 страниц — примерно вдвое дольше; 300 резал бы её на корню.
+    // Держимся под supervisor-long timeout 600, чтобы воркера не убивал он.
+    public int $timeout = 590;
 
     public function __construct(public readonly int $submissionId)
     {

@@ -38,7 +38,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class RecordingGateController extends Controller
 {
-    private const PLAYERS = ['youtube', 'rutube', 'kinescope', 'video'];
+    private const PLAYERS = ['youtube', 'rutube', 'kinescope', 'vk', 'video'];
 
     public function show(Request $request, string $slug, int $lessonId, string $player): Response
     {
@@ -103,7 +103,7 @@ class RecordingGateController extends Controller
 
     /**
      * Целевой embed-URL по подсказке плеера с фолбэком на приоритет урока
-     * (kinescope > rutube > youtube > video — как в student/lesson.blade.php).
+     * (kinescope > rutube > youtube > vk > video — как в student/lesson.blade.php).
      */
     private function embedTarget(Lesson $lesson, ?int $courseId, string $player): ?string
     {
@@ -112,6 +112,7 @@ class RecordingGateController extends Controller
                 'kinescope' => KinescopePilot::embedForLesson($lesson, $courseId),
                 'youtube' => $this->youtubeEmbed($lesson->youtube_url),
                 'rutube' => $this->rutubeEmbed($lesson->rutube_url),
+                'vk' => $this->vkEmbed($lesson->video_url),
                 'video' => $this->genericEmbed($lesson->video_url),
                 default => null,
             };
@@ -127,14 +128,14 @@ class RecordingGateController extends Controller
     /** @return list<string> запрошенный плеер первым, затем приоритет урока */
     private function playerOrder(string $player): array
     {
-        return array_values(array_unique([$player, 'kinescope', 'rutube', 'youtube', 'video']));
+        return array_values(array_unique([$player, 'kinescope', 'rutube', 'youtube', 'vk', 'video']));
     }
 
     private function youtubeEmbed(?string $url): ?string
     {
         $id = StudentController::parseVideoId($url, 'youtube');
 
-        return $id === null ? null : 'https://www.youtube.com/embed/'.$id.'?enablejsapi=1&rel=0';
+        return $id === null ? null : 'https://www.youtube-nocookie.com/embed/'.$id.'?enablejsapi=1&rel=0';
     }
 
     private function rutubeEmbed(?string $url): ?string
@@ -142,6 +143,19 @@ class RecordingGateController extends Controller
         $id = StudentController::parseVideoId($url, 'rutube');
 
         return $id === null ? null : 'https://rutube.ru/play/embed/'.$id;
+    }
+
+    /** VK: video_url хранит человекочитаемую ссылку, воротам отдаём video_ext-embed. */
+    private function vkEmbed(?string $url): ?string
+    {
+        $id = StudentController::parseVideoId($url, 'vk');
+        if ($id === null) {
+            return null;
+        }
+
+        [$oid, $videoId] = explode('_', $id);
+
+        return 'https://vk.com/video_ext.php?oid='.$oid.'&id='.$videoId.'&hd=2&js=1';
     }
 
     /** Generic fallback (video_url) — только готовые http(s)-embed, наружу наружу. */

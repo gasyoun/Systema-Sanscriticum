@@ -1606,6 +1606,16 @@ class LandingPageResource extends Resource
                 Tables\Columns\TextColumn::make('slug')->label('URL'),
                 Tables\Columns\IconColumn::make('is_active')->boolean()->label('Активен'),
                 Tables\Columns\IconColumn::make('is_listed')->boolean()->label('В каталоге'),
+                Tables\Columns\IconColumn::make('webinar_invite_ready')
+                    ->boolean()
+                    ->state(fn (LandingPage $record): bool => $record->canSendWebinarInvite())
+                    ->label('Инвайт готов')
+                    ->tooltip('Заполнена «Ссылка на вебинар» — шаг бота webinar_invite уйдёт лиду'),
+                Tables\Columns\IconColumn::make('webinar_recording_ready')
+                    ->boolean()
+                    ->state(fn (LandingPage $record): bool => $record->canSendWebinarRecording())
+                    ->label('Запись готова')
+                    ->tooltip('Заполнена «Ссылка на запись» — лидам уйдёт письмо со ссылкой на запись'),
             ])
             ->filters([])
             ->actions([

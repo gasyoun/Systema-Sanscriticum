@@ -195,6 +195,9 @@
                               class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">{{ old('comment') }}</textarea>
                 </div>
 
+                {{-- 152-ФЗ: путь оплаты — обязательность по флагу money-контура. --}}
+                <x-consent.pd :required="(bool) config('features.checkout_pd_consent_enforce')" />
+
                 <button type="submit"
                         class="w-full flex justify-center items-center py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-base font-bold rounded-xl transition-all shadow-lg shadow-indigo-200">
                     <i class="fas fa-paper-plane mr-2"></i> Отправить уведомление об оплате

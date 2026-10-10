@@ -13,15 +13,11 @@
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     @endif
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet">
-    
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></noscript>
+    {{-- 152-ФЗ: шрифты и Font Awesome со своего сервера (resources/css/fonts.css). --}}
+    @vite('resources/css/fonts.css')
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @vite('resources/js/alpine-standalone.js')
 
     <style>
         body { font-family: 'Montserrat', sans-serif; }
@@ -39,7 +35,8 @@
     </style>
 
     @if($page->yandex_metrika_id)
-    <script type="text/javascript" >
+    @include('partials.analytics-gate')
+<script type="text/javascript">ssConsent.onAnalytics(function () {
        (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
        m[i].l=1*new Date();
        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
@@ -52,12 +49,13 @@
            accurateTrackBounce:true,
            webvisor:true
        });
+});
     </script>
-    <noscript><div><img src="https://mc.yandex.ru/watch/{{ $page->yandex_metrika_id }}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     @endif
 
     @if($page->vk_pixel_id)
-    <script type="text/javascript">
+    @include('partials.analytics-gate')
+<script type="text/javascript">ssConsent.onAnalytics(function () {
       var _tmr = window._tmr || (window._tmr = []);
       _tmr.push({id: "{{ $page->vk_pixel_id }}", type: "pageView", start: (new Date()).getTime()});
       (function (d, w, id) {
@@ -67,8 +65,8 @@
         var f = function () {var s = d.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ts, s);};
         if (w.opera == "[object Opera]") { d.addEventListener("DOMContentLoaded", f, false); } else { f(); }
       })(document, window, "tmr-code");
+});
     </script>
-    <noscript><div><img src="https://top-fwz1.mail.ru/counter?id={{ $page->vk_pixel_id }};js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru" /></div></noscript>
     @endif
 </head>
 <body class="bg-white text-gray-900 antialiased selection:bg-brand selection:text-white overflow-x-hidden"
@@ -345,7 +343,7 @@
                     {{-- h-full: Растягиваем на всю высоту --}}
                     {{-- justify-center: Центрируем контент по вертикали --}}
                     <div class="bg-gray-900 rounded-[2rem] p-6 md:p-8 shadow-2xl shadow-gray-900/30 relative overflow-hidden h-full flex flex-col justify-center" 
-                         x-data="{ agreedForm: true, agreedPromoForm: true }">
+                         x-data="{ agreedForm: false, agreedPromoForm: false }">
                         
                         {{-- Декор формы --}}
                         <div class="absolute top-0 right-0 w-48 h-48 bg-brand rounded-full mix-blend-screen filter blur-3xl opacity-15 pointer-events-none"></div>
@@ -410,7 +408,7 @@
                                     {{-- 1. Согласие ПД --}}
                                     <label class="flex items-start gap-3 text-left p-3 rounded-xl cursor-pointer transition-all duration-300 border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 group">
                                         <div class="flex items-center h-5 mt-0.5 shrink-0">
-                                            <input type="checkbox" x-model="agreedForm" class="w-5 h-5 rounded border-white/20 bg-transparent text-brand focus:ring-brand checked:bg-brand checked:border-transparent cursor-pointer transition-colors">
+                                            <input type="checkbox" name="pd_consent" value="1" required x-model="agreedForm" class="w-5 h-5 rounded border-white/20 bg-transparent text-brand focus:ring-brand checked:bg-brand checked:border-transparent cursor-pointer transition-colors">
                                         </div>
                                         <div class="text-xs text-gray-400 leading-relaxed select-none group-hover:text-gray-200 transition">
                                             Я даю <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие</span> на обработку моих персональных данных в соответствии с <span @click.prevent.stop="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>
@@ -420,7 +418,7 @@
                                     {{-- 2. Рассылка --}}
                                     <label class="flex items-start gap-3 text-left p-3 rounded-xl cursor-pointer transition-all duration-300 border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 group">
                                         <div class="flex items-center h-5 mt-0.5 shrink-0">
-                                            <input type="checkbox" name="is_promo_agreed" x-model="agreedPromoForm" class="w-5 h-5 rounded border-white/20 bg-transparent text-brand focus:ring-brand checked:bg-brand checked:border-transparent cursor-pointer transition-colors">
+                                            <input type="checkbox" name="is_promo_agreed" value="1" x-model="agreedPromoForm" class="w-5 h-5 rounded border-white/20 bg-transparent text-brand focus:ring-brand checked:bg-brand checked:border-transparent cursor-pointer transition-colors">
                                         </div>
                                         <div class="text-xs text-gray-400 leading-relaxed select-none group-hover:text-gray-200 transition">
                                             Я даю <span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие на получение рассылки</span>
@@ -510,7 +508,7 @@
                 <p class="text-sm text-gray-500 mt-2">Для продолжения необходимо ваше согласие с условиями.</p>
             </div>
 
-            <div class="space-y-3 mb-8" x-data="{ agreed: true, agreedPromo: true }">
+            <div class="space-y-3 mb-8" x-data="{ agreed: false, agreedPromo: false }">
                 
                 <label class="flex items-start gap-3 text-left p-3 sm:p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                     <div class="flex items-center h-5 mt-0.5 shrink-0">
@@ -572,5 +570,7 @@
             }
         });
     </script>
+    {{-- 152-ФЗ: баннер cookie — без него здесь нельзя дать/отозвать согласие на аналитику. --}}
+    @include('partials.cookie-consent')
 </body>
 </html>

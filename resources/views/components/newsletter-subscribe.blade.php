@@ -52,6 +52,9 @@
             @error('is_promo_agreed')
                 <p style="margin: 0 0 8px; font-size: 13px; color: #c0392b;">Нужно согласие на рассылку.</p>
             @enderror
+            @error('pd_consent')
+                <p style="margin: 0 0 8px; font-size: 13px; color: #c0392b;">{{ $message }}</p>
+            @enderror
 
             <form method="POST" action="{{ route('newsletter.subscribe') }}">
                 @csrf
@@ -76,6 +79,12 @@
                         Подписаться
                     </button>
                 </div>
+                {{-- 152-ФЗ: согласие на обработку ПДн (email) — отдельно от согласия на рассылку. --}}
+                <label style="{{ $consentStyle }}">
+                    <input type="checkbox" name="pd_consent" value="1" required style="margin-top: 2px;">
+                    <span>Даю <a href="/dokumenty/soglasie-pd" style="{{ $consentLinkStyle }}">согласие на обработку персональных данных</a>
+                        и ознакомлен(а) с <a href="/dokumenty/privacy" style="{{ $consentLinkStyle }}">политикой конфиденциальности</a>.</span>
+                </label>
                 <label style="{{ $consentStyle }}">
                     <input type="checkbox" name="is_promo_agreed" value="1" required style="margin-top: 2px;">
                     <span>Я согласен(на) получать письма и принимаю
