@@ -1,4 +1,4 @@
-_Created: 07-05-2026 · Last updated: 05-09-2026_
+_Created: 07-05-2026 · Last updated: 10-10-2026_
 
 # routes
 
@@ -6,36 +6,39 @@ _Created: 07-05-2026 · Last updated: 05-09-2026_
 
 ## `web.php` — основные маршруты
 
-Маршруты перечислены в порядке объявления (важно для catch-all в конце).
+`web.php` — тонкий файл: подключает тематические группы из `routes/web/`
+(`01-checkout-and-storefront`, `02-auth-and-public-pages`, `03-student-cabinet`,
+`04-technical-and-marketing`, `05-payments-and-money`, `06-editor-and-misc-public`)
+и держит catch-all `/{slug}` → `PromoController@show` в самом конце. Новые маршруты
+объявляются в тематических файлах **до** catch-all.
 
 ### Публичные
 
 | Маршрут | Контроллер | Описание |
 |---|---|---|
-| `GET /` | Redirect | → `/shop` |
-| `GET /shop` | `ShopController@index` | Каталог курсов |
-| `GET /shop/{slug}` | `ShopController@show` | Страница курса |
+| `GET /` | замыкание в `01-checkout-and-storefront.php` | Витрина: активные лендинги/курсы (is_active + is_listed) |
+| `GET /online` | `ShopController@index` | Каталог курсов (legacy `/shop` → 301) |
+| `GET /k/{slug}` | `ShopController@show` | Страница курса (legacy `/online/kursy/{slug}` → 301) |
 | `GET /checkout/{tariff}` | `CheckoutController@show` | Оформление заказа |
-| `POST /payment` | `PaymentController@create` | Создание платежа |
-| `POST /payment/webhook` | `WebhookController@handle` | Вебхук Точки |
+| `POST /payment/create` | `PaymentController@createPayment` | Создание платежа |
+| `POST /api/webhooks/tochka` | `WebhookController@handleTochkaWebhook` | Вебхук Точки (см. таблицу api.php ниже) |
 | `GET /s` | `ArticleController@index` | Блог |
 | `GET /s/{slug}` | `ArticleController@show` | Статья |
 | `POST /login` | `AuthController@login` | Вход |
 | `POST /logout` | `AuthController@logout` | Выход |
-| `POST /lead` | `LeadController@store` | Заявка с лендинга |
 
 ### Личный кабинет (middleware: `auth`, `track.activity`)
 
 | Маршрут | Описание |
 |---|---|
-| `GET /cabinet` | Дашборд студента |
+| `GET /cabinet` | 301 → `/dvaram` (дашборд студента) |
+| `GET /dvaram` | Дашборд студента |
 | `GET /c/{slug}` | Уроки курса (legacy `/course/{slug}` → 301) |
 | `GET /c/{slug}/u/{id}` | Плеер урока (legacy `/course/.../lesson/...` → 301) |
 | `POST /c/{slug}/u/{id}/complete` | Отметить урок пройденным |
 | `POST /c/{slug}/u/{id}/note` | Сохранить заметку |
 | `GET /c/{slug}/materials/download` | Скачать архив материалов |
-| `GET /k/{slug}` | Витрина курса (legacy `/online/kursy/{slug}` → 301) |
-| `GET /certificate/{id}` | Скачать сертификат |
+| `GET /certificate/{id}/download` | Скачать сертификат (PDF; `/download/jpg` — JPG) |
 | `GET /calendar` | Расписание |
 | `GET /cabinet/payments` | История платежей |
 | `GET /cabinet/dictionary` | Словарь |
@@ -45,7 +48,7 @@ _Created: 07-05-2026 · Last updated: 05-09-2026_
 
 | Маршрут | Описание |
 |---|---|
-| `GET /leads/export` | Экспорт заявок CSV |
+| `GET /admin/leads/export` | Экспорт заявок CSV |
 
 ### Catch-all (ПОСЛЕДНИЙ маршрут)
 
@@ -61,11 +64,12 @@ Route::get('/{slug}', [PromoController::class, 'show'])
 
 | Маршрут | Аутентификация | Описание |
 |---|---|---|
-| `POST /api/sync-lessons` | Secret key заголовок | Синхронизация уроков |
+| `POST /api/sync-lessons` | Secret key заголовок (`X-Secret-Key`) + throttle 30/мин | Синхронизация уроков (n8n) |
 | `POST /api/telegram/webhook` | Telegram signature | Вебхук Telegram-бота |
 | `POST /api/vk-webhook` | VK signature | Вебхук VK-бота |
 | `POST /api/webhooks/tochka` | JWT (RSA) | Вебхук Точки Банка |
-| `POST /api/heartbeat` | `auth:sanctum` | Хартбит урока |
+| `POST /api/webhooks/zoom` | подпись Zoom | Вебхук Zoom (запись/посещаемость) |
+| `POST /api/heartbeat` | сессия кабинета (`auth`, web-guard) — маршрут объявлен в `routes/web/03-student-cabinet.php` | Хартбит урока |
 | `GET /api/user` | `auth:sanctum` | Текущий пользователь |
 
 ---
