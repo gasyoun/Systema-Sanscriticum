@@ -169,4 +169,61 @@ class WaitlistBotServiceTest extends TestCase
         Http::assertSent(fn ($request) => str_contains($request->url(), '/sendMessage')
             && str_contains((string) $request['text'], '/zhdun'));
     }
+
+    public function test_zhdun_stats_admin_chat_sees_full_voter_breakdown(): void
+    {
+        config(['services.telegram.curators_chat_id' => '-100777']);
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+        $anna = User::factory()->create(['name' => 'Анна', 'telegram_id' => 11]);
+        $petr = User::factory()->create(['name' => 'Пётр', 'telegram_id' => 12]);
+        $this->item->castVoteBy($anna, 'evening');
+        $this->item->castVoteBy($petr, null);
+
+        $consumed = (new WaitlistBotService)->handleUpdate([
+            'message' => ['chat' => ['id' => -100777], 'text' => '/zhdun-stats'],
+        ]);
+
+        $this->assertTrue($consumed);
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/sendMessage')
+            && str_contains((string) $request['text'], 'Руководство по Бюлеру')
+            && str_contains((string) $request['text'], '2 / 8')
+            && str_contains((string) $request['text'], 'Анна')
+            && str_contains((string) $request['text'], 'Вечером')
+            && str_contains((string) $request['text'], 'Пётр')
+            && str_contains((string) $request['text'], 'любое время'));
+    }
+
+    public function test_zhdun_stats_other_chat_gets_polite_refusal_without_data(): void
+    {
+        config(['services.telegram.curators_chat_id' => '-100777']);
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+        $anna = User::factory()->create(['name' => 'Анна', 'telegram_id' => 11]);
+        $this->item->castVoteBy($anna, 'morning');
+
+        $consumed = (new WaitlistBotService)->handleUpdate([
+            'message' => ['chat' => ['id' => 4242], 'text' => '/zhdun-stats'],
+        ]);
+
+        $this->assertTrue($consumed);
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/sendMessage')
+            && str_contains((string) $request['text'], 'только кураторам')
+            && ! str_contains((string) $request['text'], 'Анна')
+            && ! str_contains((string) $request['text'], 'Руководство по Бюлеру')
+            && ! str_contains((string) $request['text'], '1 / 8'));
+    }
+
+    public function test_zhdun_stats_with_unconfigured_curators_chat_refuses_without_data(): void
+    {
+        config(['services.telegram.curators_chat_id' => null]);
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+        $consumed = (new WaitlistBotService)->handleUpdate([
+            'message' => ['chat' => ['id' => 4242], 'text' => '/zhdun-stats'],
+        ]);
+
+        $this->assertTrue($consumed);
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/sendMessage')
+            && str_contains((string) $request['text'], 'только кураторам')
+            && ! str_contains((string) $request['text'], 'Руководство по Бюлеру'));
+    }
 }
