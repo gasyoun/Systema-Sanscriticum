@@ -8,12 +8,18 @@
 
 @section('title', 'Оплата')
 
+@php
+    // Пиксель ВК витрины (layouts/shop → partials/shop-vk-pixel) уже считает просмотр.
+    $shopVkPixelId = \App\Support\ShopVkPixel::id();
+@endphp
+
 @push('head')
     {{-- Счетчики доступны, только если сессия пришла из промо-воронки
          (LeadFlashBuilder кладет yandex_id/vk_id в сессию). На прямом чекауте
          их нет — блок молчит. Паттерн — promo/thankyou.blade.php. --}}
     @if(session('yandex_id'))
-        <script type="text/javascript">
+        @include('partials.analytics-gate')
+<script type="text/javascript">ssConsent.onAnalytics(function () {
            (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
            m[i].l=1*new Date();
            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
@@ -26,11 +32,12 @@
                 accurateTrackBounce:true,
                 webvisor:true
            });
+});
         </script>
-        <noscript><div><img src="https://mc.yandex.ru/watch/{{ session('yandex_id') }}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     @endif
-    @if(session('vk_id'))
-        <script type="text/javascript">
+    @if(session('vk_id') && (string) session('vk_id') !== $shopVkPixelId)
+        @include('partials.analytics-gate')
+<script type="text/javascript">ssConsent.onAnalytics(function () {
             var _tmr = window._tmr || (window._tmr = []);
             _tmr.push({id: "{{ session('vk_id') }}", type: "pageView", start: (new Date()).getTime()});
             (function (d, w, id) {
@@ -40,8 +47,8 @@
                 var f = function () {var s = d.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ts, s);};
                 if (w.opera == "[object Opera]") { d.addEventListener("DOMContentLoaded", f, false); } else { f(); }
             })(document, window, "tmr-code");
+});
         </script>
-        <noscript><div><img src="https://top-fwz1.mail.ru/counter?id={{ session('vk_id') }};js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru" /></div></noscript>
     @endif
 @endpush
 
@@ -168,9 +175,10 @@
                 ym({{ session('yandex_id') }}, 'reachGoal', 'payment_success');
             }
         @elseif(config('analytics.metrika.enabled') && config('analytics.metrika.shop_counter_id'))
-            if (typeof window.shopReachGoal === 'function') {
-                window.shopReachGoal('payment_success');
-            } else if (typeof ym !== 'undefined') {
+            {{-- Напрямую, не через shopReachGoal: тот шлёт ещё и в пиксель ВК
+                 витрины, а ВК-цель payment_success ставится ниже отдельно —
+                 иначе она ушла бы дважды. --}}
+            if (typeof ym !== 'undefined') {
                 ym({{ config('analytics.metrika.shop_counter_id') }}, 'reachGoal', 'payment_success');
             }
         @endif
@@ -183,9 +191,28 @@
                 window.shopReachGoal('access_renewal_complete');
             }
         @endif
-        @if(session('vk_id'))
-            var _tmr = window._tmr || (window._tmr = []);
-            _tmr.push({ type: 'reachGoal', id: "{{ session('vk_id') }}", goal: 'payment_success' });
+        {{-- ВК: пиксель промо-воронки из сессии и/или пиксель витрины; если это
+             один и тот же ID — цель уходит один раз. VK Ads оптимизирует рекламу
+             на эту цель, поэтому шлём её только для ПОДТВЕРЖДЁННОЙ оплаты и один
+             раз на платёж (повторное открытие страницы 30-09-2026 дало две
+             конверсии на одну тестовую оплату). value — сумма платежа, для
+             выручки/ROMI в кабинете VK Ads. --}}
+        @if($confirmed && $payment && (session('vk_id') || $shopVkPixelId))
+            (function () {
+                var onceKey = 'vk_payment_success_{{ $payment->id }}';
+                try {
+                    if (localStorage.getItem(onceKey)) return;
+                    localStorage.setItem(onceKey, '1');
+                } catch (e) { /* без localStorage — шлём, как раньше */ }
+                var _tmr = window._tmr || (window._tmr = []);
+                var value = @json((float) $payment->amount);
+                @if(session('vk_id'))
+                    _tmr.push({ type: 'reachGoal', id: "{{ session('vk_id') }}", goal: 'payment_success', value: value });
+                @endif
+                @if($shopVkPixelId && (string) session('vk_id') !== $shopVkPixelId)
+                    _tmr.push({ type: 'reachGoal', id: "{{ $shopVkPixelId }}", goal: 'payment_success', value: value });
+                @endif
+            })();
         @endif
     });
     </script>

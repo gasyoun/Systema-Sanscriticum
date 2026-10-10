@@ -21,7 +21,10 @@
     $metrikaId = config('analytics.metrika.shop_counter_id');
 @endphp
 @if($metrikaEnabled && $metrikaId)
+{{-- 152-ФЗ: счётчик — только после «Принять аналитику» (partials/analytics-gate). --}}
+@include('partials.analytics-gate')
 <script type="text/javascript">
+   ssConsent.onAnalytics(function () {
    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
    m[i].l=1*new Date();
    for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
@@ -33,6 +36,7 @@
         trackLinks:true,
         accurateTrackBounce:true,
         webvisor:false
+   });
    });
 
    window.SHOP_METRIKA_ID = {{ $metrikaId }};
@@ -48,13 +52,15 @@
             function (el) { window.shopReachGoal(el.getAttribute('data-metrika-goal')); }
         );
    }
-   if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', __cabinetMetrikaFireMarkers);
-   } else {
-        __cabinetMetrikaFireMarkers();
-   }
+   // Маркеры — только после согласия: без него ym нет, цели всё равно не дошли бы.
+   ssConsent.onAnalytics(function () {
+       if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', __cabinetMetrikaFireMarkers);
+       } else {
+            __cabinetMetrikaFireMarkers();
+       }
+   });
 </script>
-<noscript><div><img src="https://mc.yandex.ru/watch/{{ $metrikaId }}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 @endif
 {{-- Flash-маркер (например, lesson_mark_mastered после completeLesson):
      контроллер делает session()->flash('metrika_goal', <цель>) — цель

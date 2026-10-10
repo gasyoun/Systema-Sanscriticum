@@ -7,11 +7,13 @@ namespace Tests\Feature;
 use App\Jobs\BuildHomeworkImagesPdfJob;
 use App\Mail\HomeworkSubmittedMail;
 use App\Models\Course;
+use App\Models\HomeworkFile;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\Teacher;
 use App\Models\User;
 use App\Services\HomeworkImagePdfService;
+use App\Services\HomeworkService;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -162,6 +164,10 @@ class HomeworkImagesPdfTest extends TestCase
         $submission = HomeworkSubmission::where('user_id', $student->id)->first();
         $this->assertNotNull($submission);
 
+        // Ленивый путь асинхронный с 08-10-2026: роут только ставит джобу,
+        // собирает её воркер — играем воркера руками перед GET.
+        $this->runQueuedImagesPdfJobs();
+
         $inline = $this->actingAs($teacherUser)
             ->get(route('homework.submission.images-pdf', $submission));
         $inline->assertOk()
@@ -189,6 +195,44 @@ class HomeworkImagesPdfTest extends TestCase
         $this->actingAs($stranger)
             ->get(route('homework.submission.images-pdf', $submission))
             ->assertForbidden();
+    }
+
+    /**
+     * Регрессия 502 (08-10-2026, сдача 3129): роут images-pdf при отсутстве
+     * PDF НЕ собирает его синхронно на пути запроса — только ставит джобу.
+     * Синхронная пересборка держала воркер php-fpm минутами и умирала.
+     *
+     * @test
+     */
+    public function missing_pdf_is_queued_not_built_on_request_path(): void
+    {
+        [$course, $lesson, $teacher] = $this->makeLessonWithHomework();
+        $student = User::factory()->create();
+        $teacherUser = User::where('teacher_id', $teacher->id)->first();
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            [
+                'action' => 'submit',
+                'body' => null,
+                'files' => [UploadedFile::fake()->image('a.jpg', 100, 80)],
+            ]
+        )->assertRedirect();
+
+        $submission = HomeworkSubmission::where('user_id', $student->id)->first();
+        $this->assertNotNull($submission);
+
+        $pdf = app(HomeworkImagePdfService::class);
+        $this->assertFalse($pdf->exists($submission));
+
+        Queue::fake();
+        $this->actingAs($teacherUser)
+            ->get(route('homework.submission.images-pdf', $submission))
+            ->assertStatus(404);
+
+        // Сборка поставлена в очередь, но на пути запроса НЕ выполнена.
+        Queue::assertPushed(BuildHomeworkImagesPdfJob::class, fn (BuildHomeworkImagesPdfJob $job) => $job->submissionId === (int) $submission->id);
+        $this->assertFalse($pdf->exists($submission));
     }
 
     /** @test */
@@ -287,5 +331,161 @@ class HomeworkImagesPdfTest extends TestCase
 
         // Потолок режет только сборку — сами файлы работы остаются на месте.
         $this->assertCount(4, $pdf->studentImageFiles($submission));
+    }
+
+    /**
+     * Регрессия 08-10-2026 (репорт куратора): в PDF склеивались файлы ВСЕХ
+     * писем сдачи — сентябрьские, уже проверенные и отправленные на
+     * доработку, вместе с октябрьской досдачей. После вердикта проверяющего
+     * в сборку входят только файлы новой отправки.
+     *
+     * @test
+     */
+    public function resubmission_after_review_builds_pdf_of_new_round_only(): void
+    {
+        [$course, $lesson, $teacher] = $this->makeLessonWithHomework();
+        $student = User::factory()->create();
+        $teacherUser = User::where('teacher_id', $teacher->id)->first();
+
+        // Первый раунд: два фото.
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            [
+                'action' => 'submit',
+                'body' => null,
+                'files' => [
+                    UploadedFile::fake()->image('sentjabr1.jpg', 120, 90),
+                    UploadedFile::fake()->image('sentjabr2.jpg', 120, 90),
+                ],
+            ]
+        )->assertRedirect();
+
+        $submission = HomeworkSubmission::where('user_id', $student->id)->first();
+        $this->assertNotNull($submission);
+        $this->runQueuedImagesPdfJobs();
+
+        $pdf = app(HomeworkImagePdfService::class);
+        $this->assertTrue($pdf->exists($submission));
+        $this->assertCount(2, $pdf->studentImageFiles($submission));
+
+        // Вердикт: вернуть на доработку.
+        app(HomeworkService::class)->recordReview(
+            $submission,
+            $teacherUser,
+            HomeworkSubmission::STATUS_NEEDS_REVISION,
+            'Переделайте вторую страницу',
+            [],
+        );
+
+        // Второй раунд: одно новое фото.
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            [
+                'action' => 'submit',
+                'body' => 'Исправила',
+                'files' => [UploadedFile::fake()->image('oktjabr1.jpg', 120, 90)],
+            ]
+        )->assertRedirect();
+
+        $roundFiles = $pdf->studentImageFiles($submission->fresh());
+        $this->assertCount(1, $roundFiles);
+        $this->assertSame('oktjabr1.jpg', $roundFiles->first()->original_name);
+
+        $this->runQueuedImagesPdfJobs();
+        $this->assertTrue($pdf->exists($submission));
+
+        // История в треде не теряется: старые файлы остаются доступны по одному.
+        $this->assertSame(3, HomeworkFile::whereHas('comment', fn ($q) => $q->where('submission_id', $submission->id))->count());
+    }
+
+    /**
+     * Двухчастевая досдача (size-gate формы предлагает «отправьте работу в
+     * две части») и дополнение уже сданной работы — письма одного раунда
+     * складываются, вердикта между ними не было.
+     *
+     * @test
+     */
+    public function letters_without_review_between_them_stay_in_one_pdf(): void
+    {
+        [$course, $lesson] = $this->makeLessonWithHomework();
+        $student = User::factory()->create();
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            [
+                'action' => 'submit',
+                'body' => 'Часть 1',
+                'files' => [UploadedFile::fake()->image('part1.jpg', 120, 90)],
+            ]
+        )->assertRedirect();
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            [
+                'action' => 'submit',
+                'body' => 'Часть 2',
+                'files' => [UploadedFile::fake()->image('part2.jpg', 120, 90)],
+            ]
+        )->assertRedirect();
+
+        $submission = HomeworkSubmission::where('user_id', $student->id)->first();
+        $this->assertNotNull($submission);
+
+        $this->runQueuedImagesPdfJobs();
+
+        $pdf = app(HomeworkImagePdfService::class);
+        $this->assertTrue($pdf->exists($submission));
+        $this->assertCount(2, $pdf->studentImageFiles($submission));
+    }
+
+    /**
+     * Текстовая досдача после вердикта: в новой отправке нет картинок — PDF
+     * не собирается вовсе (предыдущий, уже проверенный раунд, не показывается).
+     *
+     * @test
+     */
+    public function text_only_resubmission_after_review_removes_pdf(): void
+    {
+        [$course, $lesson, $teacher] = $this->makeLessonWithHomework();
+        $student = User::factory()->create();
+        $teacherUser = User::where('teacher_id', $teacher->id)->first();
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            [
+                'action' => 'submit',
+                'body' => null,
+                'files' => [UploadedFile::fake()->image('r1.jpg', 120, 90)],
+            ]
+        )->assertRedirect();
+
+        $submission = HomeworkSubmission::where('user_id', $student->id)->first();
+        $this->assertNotNull($submission);
+        $this->runQueuedImagesPdfJobs();
+
+        $pdf = app(HomeworkImagePdfService::class);
+        $this->assertTrue($pdf->exists($submission));
+
+        app(HomeworkService::class)->recordReview(
+            $submission,
+            $teacherUser,
+            HomeworkSubmission::STATUS_NEEDS_REVISION,
+            'Уточните вывод',
+            [],
+        );
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            [
+                'action' => 'submit',
+                'body' => 'Вывод такой-то',
+                'files' => [],
+            ]
+        )->assertRedirect();
+
+        $this->runQueuedImagesPdfJobs();
+
+        $this->assertCount(0, $pdf->studentImageFiles($submission->fresh()));
+        $this->assertFalse($pdf->exists($submission));
     }
 }

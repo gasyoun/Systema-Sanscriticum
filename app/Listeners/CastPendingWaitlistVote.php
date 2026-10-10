@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Listeners;
 
+use App\Actions\Waitlist\OpenWaitlistPayment;
 use App\Http\Controllers\Api\PublicWaitlistController;
 use App\Models\CourseWaitlistItem;
 use App\Models\User;
@@ -43,6 +44,13 @@ class CastPendingWaitlistVote
         }
 
         $item->castVoteBy($event->user, $pending['slot_preference'] ?? null);
+
+        // Кворумный голос сразу открывает оплату привязанного курса
+        // (OpenWaitlistPayment сам гейтит флагом, порогом и состоянием).
+        if ($item->status === CourseWaitlistItem::STATUS_COLLECTING) {
+            app(OpenWaitlistPayment::class)->handle($item);
+        }
+
         $request->session()->flash(PublicWaitlistController::VOTED_FLASH_KEY, true);
     }
 }

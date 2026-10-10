@@ -38,7 +38,7 @@
             </div>
             <h3 class="text-lg font-bold text-white mb-2">Учитесь в своем темпе</h3>
             <p class="text-sm text-slate-400 leading-relaxed flex-1 mb-5">Курсы в записи — без расписания и дедлайнов. Видео остаются с вами навсегда, начать можно в любой день.</p>
-            <a href="{{ $catalogUrl }}?format=recorded"
+            <a href="{{ $catalogUrl }}/format/recorded"
                class="inline-flex justify-center items-center w-full py-3 px-4 bg-indigo-500/15 border border-indigo-500/40 hover:bg-indigo-500 hover:text-white text-indigo-400 text-xs font-bold rounded-xl transition-all">
                 Курсы в записи
             </a>
@@ -57,7 +57,7 @@
             </div>
             <h3 class="text-lg font-bold text-white mb-2 relative">Занимайтесь с преподавателем</h3>
             <p class="text-sm text-slate-400 leading-relaxed flex-1 mb-5 relative">Живые занятия в группе, разбор вопросов, учебный чат. Оплата по блокам — не нужно платить за весь курс сразу.</p>
-            <a href="{{ $catalogUrl }}?format=live"
+            <a href="{{ $catalogUrl }}/format/live"
                class="inline-flex justify-center items-center w-full py-3 px-4 bg-brand hover:bg-brand/85 text-white text-xs font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(232,92,36,0.3)] relative">
                 Идут сейчас
             </a>

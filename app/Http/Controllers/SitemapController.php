@@ -10,6 +10,7 @@ use App\Models\Course;
 use App\Models\DictionaryWord;
 use App\Models\LandingPage;
 use App\Models\SrsDeck;
+use App\Models\Teacher;
 use App\Services\Membership\PrivateArchiveEligibility;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
@@ -51,6 +52,28 @@ class SitemapController extends Controller
                             'lastmod' => optional($category->updated_at)->format(DATE_ATOM),
                             'changefreq' => 'weekly',
                             'priority' => '0.6',
+                        ];
+                    }
+                });
+
+            // Публичные страницы преподавателей: список + включённые анкеты.
+            $urls[] = [
+                'loc' => route('teachers.index'),
+                'changefreq' => 'weekly',
+                'priority' => '0.6',
+            ];
+
+            Teacher::query()
+                ->withPublicPage()
+                ->select(['page_slug', 'updated_at'])
+                ->orderBy('page_sort')
+                ->chunk(500, function ($teachers) use (&$urls) {
+                    foreach ($teachers as $teacher) {
+                        $urls[] = [
+                            'loc' => route('teachers.show', ['slug' => $teacher->page_slug]),
+                            'lastmod' => optional($teacher->updated_at)->format(DATE_ATOM),
+                            'changefreq' => 'monthly',
+                            'priority' => '0.5',
                         ];
                     }
                 });
@@ -181,13 +204,9 @@ class SitemapController extends Controller
             // index_enabled (Wave 1+). Wave 0 (default): держим их вне карты сайта
             // («built but unsubmitted», решение D2). Одна каноническая запись на slug.
             if (config('dictionary_seo.index_enabled', false)) {
-                $urls[] = [
-                    'loc' => route('slovar.index'),
-                    'lastmod' => optional(DictionaryWord::max('updated_at'))?->format(DATE_ATOM),
-                    'changefreq' => 'monthly',
-                    'priority' => '0.5',
-                ];
-
+                // Хаб /slovar — постоянно noindex (поисковый интерфейс, layouts/slovar
+                // default), в карту сайта не отдаём ни в одной волне (H6160 Medium-1):
+                // sitemap несёт только индексируемые URL слов.
                 DictionaryWord::query()
                     ->whereNotNull('slug')
                     ->whereHas('dictionary', fn ($q) => $q->where('is_active', true))

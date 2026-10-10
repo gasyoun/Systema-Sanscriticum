@@ -1,0 +1,70 @@
+# Sufler autonomy policy — v1, ENFORCED (H5776)
+# Каждый пункт ниже — проверяемый gate в коде, см. маппинг в комментариях.
+# Нарушение любого ceiling = авто-стоп с трейсом (dm_ceiling_stop),
+# нарушение любого gate = блокировка отправки с трейсом (dm_policy_blocked) —
+# не вмешательство человека в machinery, молчаливых остановок нет.
+
+version: 1
+pilot: sufler-autonomy-2026-09-29
+supersedes: v0 skeleton (H5560)
+
+tool_allowlist:
+  - catalog.read
+  - schedule.read
+  - cabinet.read
+  - faq.read
+  # write/send tools are NEVER allowlisted in the pilot
+
+ceilings:
+  # enforced: App\Services\Support\Sufler\Ceilings (auto-stop + trace)
+  # config: services.telegram_support.sufler_max_steps_per_ticket (env SUFLER_MAX_STEPS_PER_TICKET)
+  max_steps_per_ticket: 8
+  # enforced: тот же Ceilings::tokensPerTicket(); считается по meta.usage
+  # llm_draft-событий чата в окне. ПОКА MG НЕ ДАСТ monthly_allowance — null,
+  # потолок disabled, флаги пилота OFF.
+  # Потолок АРМИРОВАН 05-10 (MG: «сам найди записанное или предложи разумное
+  # на основе данных»). Вывод из данных, не из головы:
+  #  - единственная биллящая нога = llm_draft (OpenRouter deepseek-v4-flash,
+  #    max_tokens 2000, контекст-кэп 12 000 символов ≈ 4,5k токенов вход +
+  #    ~350 выход ≈ 5k токенов/вызов); rerank и embeddings — локальная
+  #    Ollama, 0 внешних токенов (week0, REPORT_SUFLER_WEEK0_RERANK_LLM_02-10).
+  #  - шагов ≤ 8/тикет (max_steps_per_ticket), из них LLM-ног реалистично 1-2,
+  #    административный максимум 4 → 20 000 токенов/тикет = 3-4× запас.
+  #  - план пилота 100 тикетов/мес (K7 требует N≥20; week0 сэмпл 29) →
+  #    100 × 20 000 = 2 000 000.
+  #  - конверт: ≈ $0,2-0,6/мес на OpenRouter (порядок цен deepseek-v4-flash),
+  #    эквивалент ≤0,1% месячной нормы z.ai Max (140k кредитов/нед) —
+  #    «≤ месячной нормы подписки» (scope-док Q2) исполнен с запасом.
+  # config: services.telegram_support.sufler_tokens_per_ticket (env SUFLER_TOKENS_PER_TICKET)
+  tokens_per_ticket: 20000   # = monthly_allowance / planned_tickets (100/мес), вывод выше
+  monthly_allowance: 2000000  # токенов/мес; z.ai Max norm = верхняя веха, фактическая цена ≈ $0,2-0,6
+  steps_window_hours: 24   # config: services.telegram_support.sufler_steps_window_hours
+
+verify_gates_before_external_action:
+  # enforced перед КАЖДОЙ автоотправкой в sendAuto() (единственная горловина
+  # исходящих бота) через App\Services\Support\Sufler\SendPolicyGate:
+  - money_amount_matches_system   # сумма в тексте только у kind=facts (системный
+                                  # расчёт); шаблон/FAQ/LLM с суммой = блокировка + трейс
+  - no_personal_data_in_corpus    # e-mail / телефон РФ / номер карты в исходящем
+                                  # черновике = блокировка + трейс
+  - citation_present_for_every_fact # kind in facts/faq_rag/llm_draft обязан нести
+                                    # цитату в мете (fact_type / chunk_id / faq_chunk_ids)
+
+human_stays:
+  # маршрутизация кураторам/финансовому ведущему, боту молчание:
+  - money_disputes                  # dm_balance_dispute + финансовый follow-up (A1)
+  - certificates_refunds_conflicts  # возвраты = moneyIntent-забор факта + R3-запрет LLM
+  - no_facts_hint_mode              # нет фактов/ниже порога = подсказка куратору (hintComplex)
+
+metrics:
+  head: share_resolved_without_human
+  guards:
+    citation_precision_n20_min: 0.95
+    personal_data_in_corpus: 0
+    auto_replies_in_money_disputes: 0
+
+# Состояние пилота 03-10-2026 (H5776): machinery enforced и покрыта тестами,
+# RAG-нога за порогом faq:score-floor (support_dm_auto_reply_live_faq, OFF по
+# умолчанию + пер-аккаунтный auto_reply_enabled); живое включение ОЖИДАЕТ
+# monthly_allowance от MG и выполняется по killgate-леджеру
+# docs/KILLGATE_SUFLER_PILOT_2026-10-03.md.

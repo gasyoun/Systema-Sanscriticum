@@ -1,6 +1,12 @@
 # RUNBOOK: «Telegram-вход» и самообслуживание кабинета (/кабинет)
 
-_Created: 28-08-2026 · Last updated: 02-09-2026_
+> **Статус на 05-10 (H6091): флаг ВКЛЮЧЁН на проде.** Проба `grep TELEGRAM_CABINET_LOGIN /var/www/html/.env`
+> на .92 → `TELEGRAM_CABINET_LOGIN=true`; кабинетный бот жив (привязка `/telegram/connect`,
+> покрытие см. карту ботов). Ранбук ниже писался при флагах OFF — шаги включения оставлены
+> как задокументированная история и путь отката.
+
+
+_Created: 28-08-2026 · Last updated: 05-10-2026_
 
 Источник требования: ORS-FAQ
 [CABINET_ADOPTION_ROADMAP.md](https://github.com/gasyoun/ORS-FAQ/blob/main/CABINET_ADOPTION_ROADMAP.md)

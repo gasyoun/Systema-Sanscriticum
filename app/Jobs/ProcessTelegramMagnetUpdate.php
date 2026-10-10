@@ -11,6 +11,7 @@ use App\Services\Leads\LeadMagnetDispatcher;
 use App\Services\Leads\WaitlistWelcome;
 use App\Services\Marathon\MarathonDay1Sender;
 use App\Services\Messaging\DeliveryChannelManager;
+use App\Services\Telegram\WaitlistBotService;
 use App\Support\CareChatReplyLog;
 use App\Support\TelegramChannelEcho;
 use Illuminate\Bus\Queueable;
@@ -54,6 +55,13 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
             }
         }
 
+        // Ждун в боте (MG 04-10-2026: функции ждуна — дублировать в бот, кому
+        // как удобнее). Только глобальный бот: per-bot лендинги живут в n8n.
+        // /zhdun и callback_query "wl:*" обслуживает WaitlistBotService.
+        if ($this->landingBotId === null && app(WaitlistBotService::class)->handleUpdate($this->update)) {
+            return;
+        }
+
         $message = $this->update['message'] ?? null;
         if (! $message) {
             return;
@@ -92,6 +100,8 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
 
         if (! $token) {
             // /start без токена — юзер нашёл бота сам, не через форму.
+            // Короткое приветствие с меню ждуна (MG 04-10-2026).
+            app(WaitlistBotService::class)->sendWelcome((string) $chatId);
             Log::info('Telegram /start without token', ['chat_id' => $chatId]);
 
             return;

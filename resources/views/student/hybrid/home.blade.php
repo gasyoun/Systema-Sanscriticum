@@ -115,6 +115,15 @@
                             {{ $c['cta']['label'] ?? 'Открыть' }}
                         </a>
                     @endif
+                    @if (! empty($c['per_block_url']))
+                        {{-- features.debt_pay_per_block: поблочные кнопки живут на «Оплата и доступ» --}}
+                        <a href="{{ $c['per_block_url'] }}"
+                           class="mt-2 block text-sm font-semibold text-brand underline-offset-2 hover:underline"
+                           data-track-event="cabinet.continue.click"
+                           data-track-kind="debt-per-block" data-track-surface="today-band">
+                            Оплатить по одному блоку
+                        </a>
+                    @endif
                 @endif
             </div>
         @endif

@@ -628,10 +628,12 @@ final class PayrollReadinessService
     /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
     private function applyFunding(array $rows): array
     {
-        $tochka = $this->tochka->snapshot();
+        // funding_state counts only money that may fund payouts: the Tochka
+        // operating account (…863757), not the tax wallet (…877617) —
+        // payroll_readiness.funding_excluded_account_tails (H5554 gap [2]).
         $paypal = FinanceSnapshot::latestOfType(FinanceSnapshot::TYPE_PAYPAL_BALANCE);
         $remaining = [
-            'tochka_rub' => ($tochka['ok'] ?? false) ? (float) ($tochka['closing_total'] ?? 0) : null,
+            'tochka_rub' => $this->tochka->fundingPool(),
             'paypal_mg' => $paypal?->majorAmount(),
             'xoom_mg' => null,
         ];

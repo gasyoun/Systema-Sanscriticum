@@ -8,15 +8,14 @@
 
     <title>@yield('title', 'Магазин курсов') | Общество ревнителей санскрита</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
+    {{-- H6211 Low-1: PNG 512 + apple-touch + публичный манифест (иконка в мобильной выдаче) --}}
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('images/icon-512.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/icon-180.png') }}">
+    <link rel="manifest" href="{{ asset('manifest-site.webmanifest') }}">
 
-    {{-- Tailwind + FontAwesome (в тон shop/index.blade.php) --}}
-    {{-- preconnect к сторонним origin: экономит по одному DNS+TLS-рукопожатию каждому --}}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    {{-- Tailwind + шрифты/FontAwesome со своего сервера (152-ФЗ: без Google Fonts и cdnjs) --}}
     @include('partials.tailwind-cdn')
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    @vite('resources/css/fonts.css')
 
 <style>
         [x-cloak] { display: none !important; }
@@ -33,6 +32,8 @@
 
     {{-- H2378: shop-wide Metrika (card/checkout goals were 0 without this) --}}
     @include('partials.shop-metrika')
+    {{-- Пиксель VK Ads на всю витрину; после Метрики — оборачивает shopReachGoal --}}
+    @include('partials.shop-vk-pixel')
 
     @stack('head')
 </head>
@@ -65,6 +66,11 @@
                    class="px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white hover:bg-[#1F2636] rounded-lg transition-all
                           {{ request()->routeIs('shop.*') && ! request()->routeIs('shop.materials') ? 'text-white bg-[#1F2636]' : '' }}">
                     Все курсы
+                </a>
+                <a href="{{ route('teachers.index') }}"
+                   class="px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white hover:bg-[#1F2636] rounded-lg transition-all
+                          {{ request()->routeIs('teachers.*') ? 'text-white bg-[#1F2636]' : '' }}">
+                    Преподаватели
                 </a>
                 <a href="{{ route('shop.materials') }}"
                    class="px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white hover:bg-[#1F2636] rounded-lg transition-all

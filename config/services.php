@@ -257,6 +257,16 @@ return [
         // трёх лет. Ставка здесь на устойчивость к перебоям, а не на объём.
         'auto_reply_max_age_hours' => (int) env('TELEGRAM_SUPPORT_AUTO_REPLY_MAX_AGE_HOURS', 6),
         'hint_max_age_hours' => (int) env('TELEGRAM_SUPPORT_HINT_MAX_AGE_HOURS', 24),
+        // H5776, политика v1 (policy/sufler.policy.yml) — machinery потолков
+        // автономной отправки суфлёра. max_steps_per_ticket: сколько
+        // автоотправок на один чат в скользящем окне; нарушение = авто-стоп
+        // с трейсом (dm_ceiling_stop) и маршрут куратору.
+        'sufler_max_steps_per_ticket' => (int) env('SUFLER_MAX_STEPS_PER_TICKET', 8),
+        'sufler_steps_window_hours' => (int) env('SUFLER_STEPS_WINDOW_HOURS', 24),
+        // tokens_per_ticket: monthly_allowance даёт MG (политика: поле TBD) —
+        // ПОКА ЧИСЛА НЕТ, ключ пуст и потолок токенов disabled, а флаги пилота
+        // остаются OFF. Заполнять вместе с monthly_allowance от MG.
+        'sufler_tokens_per_ticket' => env('SUFLER_TOKENS_PER_TICKET'),
         // H3380 v2: тёплый ответ на чистое приветствие («Намасте!») — один раз
         // за то же cooldown-окно чата. Благодарности молча не отвечаются.
         'auto_greeting_text' => env(
@@ -291,6 +301,12 @@ return [
             explode(',', (string) env('TELEGRAM_SUPPORT_TECH_GROUP_PEERS', '')),
         ))),
         'username' => ltrim((string) env('TELEGRAM_SUPPORT_USERNAME', ''), '@') ?: null,
+        // H5709: username-ы ботов (без @), чьи входящие сообщения исключаются
+        // из подсчёта вопросов (например, «Вестник» в чате заботы).
+        'bot_usernames' => array_values(array_filter(array_map(
+            static fn (string $u): string => mb_strtolower(ltrim(trim($u), '@')),
+            explode(',', (string) env('TELEGRAM_SUPPORT_BOT_USERNAMES', 'samskrte_bot')),
+        ))),
     ],
 
     // H4691: shared sentinel breaker over the MTProto watchdog-kill loop
@@ -703,6 +719,18 @@ return [
     // куратор по выписке преподавателя.
     'teacher_pay' => [
         'enabled' => (bool) env('TEACHER_PAY_ENABLED', false),
+    ],
+
+    // H6198 — уведомление «перевёл рублями лично Гасунсу» (мимо Точки).
+    // Флаг default OFF (money-контур): включается GASUNS_PAY_ENABLED=1 на
+    // проде. Авто-доверия нет — каждую заявку сверяет человек (получатель
+    // перевода подтверждает поступление лично).
+    'gasuns_pay' => [
+        'enabled' => (bool) env('GASUNS_PAY_ENABLED', false),
+        // Рулинг MG 06-10 «по умолчанию сверка сразу проходит»: устоявшийся
+        // ученик — сразу paid (зеркало paypal.trust_existing_students).
+        // Kill-switch на случай волны спама/ошибок — false → все заявки pending.
+        'trust_existing_students' => (bool) env('GASUNS_PAY_TRUST_EXISTING', true),
     ],
 
     // H4462 — аудит-след перезаписи паролей (инцидент 09-09-2026: smoke-студент

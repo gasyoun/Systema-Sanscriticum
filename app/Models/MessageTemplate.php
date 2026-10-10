@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\Support\SupportPayLinkResolver;
 use App\Support\MessagePlaceholders;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -123,6 +124,46 @@ class MessageTemplate extends Model
         return MessagePlaceholders::render(
             (string) $this->body,
             MessagePlaceholders::forUser($user, $course, $blockNumber),
+        );
+    }
+
+    /**
+     * Рендер для ответов поддержки (бот лички, хелпдеск): курс, блок и
+     * {pay_link} берутся из долга студента, номер блока — из его сообщения
+     * ({@see SupportPayLinkResolver}). Флаг OFF — ровно {@see render()} без
+     * курса, как раньше.
+     *
+     * Флаг ON, но курс опознать не удалось: «Оплатить курс «» … /login»
+     * студенту не уходит (инцидент 02-10-2026 — два таких автоответа в одном
+     * чате). Пустые кавычки схлопываются вместе с ведущим пробелом, а
+     * {pay_link} ведёт в кабинет ({@see SupportPayLinkResolver::cabinetPaymentsUrl()}).
+     */
+    public function renderForSupport(User $user, ?string $studentText = null): string
+    {
+        $resolver = app(SupportPayLinkResolver::class);
+        $resolverEnabled = $resolver->isEnabled();
+        $link = $resolverEnabled ? $resolver->resolve($user, $studentText) : null;
+
+        if ($link === null) {
+            if (! $resolverEnabled) {
+                return $this->render($user);
+            }
+
+            return str_replace(' «»', '', MessagePlaceholders::render(
+                (string) $this->body,
+                array_merge(
+                    MessagePlaceholders::forUser($user),
+                    ['{pay_link}' => $resolver->cabinetPaymentsUrl()],
+                ),
+            ));
+        }
+
+        return MessagePlaceholders::render(
+            (string) $this->body,
+            array_merge(
+                MessagePlaceholders::forUser($user, $link['course'], $link['block']),
+                ['{pay_link}' => $link['url']],
+            ),
         );
     }
 }

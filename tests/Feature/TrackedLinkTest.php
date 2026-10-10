@@ -97,4 +97,79 @@ class TrackedLinkTest extends TestCase
             ->assertRedirect('https://t.me/samskrtamru/4169');
         $this->assertSame('answer_story_20260917_01', session(config('tracked_links.session_key').'.utm_content'));
     }
+
+    /** @test */
+    public function up26_webinar_campaign_routes_each_creative_to_its_own_destination(): void
+    {
+        $this->get('/ga/up26-ors-c')->assertRedirect('/webinar-upanishady-2026');
+
+        $this->assertSame([
+            'utm_source' => 'telegram_samskrte',
+            'utm_medium' => 'owned_channel',
+            'utm_campaign' => 'upanishady_webinar_oct_2026',
+            'utm_content' => 'u26_c',
+            'utm_term' => 'philosophy',
+        ], session(config('tracked_links.session_key')));
+
+        $this->flushSession();
+
+        $this->get('/ga/up26-ors-p')->assertRedirect('/k/tolkovaniia-upanisad-2-potok-2026');
+
+        $attribution = session(config('tracked_links.session_key'));
+        $this->assertSame('upanishady_webinar_oct_2026', $attribution['utm_campaign']);
+        $this->assertSame('u26_p', $attribution['utm_content']);
+    }
+
+    /** @test */
+    public function demo_smoke_fixture_redirects_and_carries_demo_marked_attribution(): void
+    {
+        $this->get('/ga/demo-ors-h')->assertRedirect('/online');
+
+        $this->assertSame([
+            'utm_source' => 'demo_ors',
+            'utm_medium' => 'owned_channel',
+            'utm_campaign' => 'attribution_smoke_demo',
+            'utm_content' => 'demo_h',
+            'utm_term' => 'smoke',
+        ], session(config('tracked_links.session_key')));
+    }
+
+    /** @test */
+    public function demo_story_fixture_resolves_through_story_campaigns(): void
+    {
+        $this->get('/ga/demo-mg-st-smoke-20261004-01')->assertRedirect('/online');
+
+        $this->assertSame('telegram_marcisgasuns', session(config('tracked_links.session_key').'.utm_source'));
+        $this->assertSame('attribution_smoke_demo', session(config('tracked_links.session_key').'.utm_campaign'));
+        $this->assertSame('story', session(config('tracked_links.session_key').'.utm_medium'));
+        $this->assertSame('smoke_story_20261004_01', session(config('tracked_links.session_key').'.utm_content'));
+    }
+
+    /** @test */
+    public function every_demo_fixture_key_keeps_its_own_attribution(): void
+    {
+        $sources = [
+            'ors' => ['demo_ors', 'owned_channel'],
+            'mg' => ['demo_mg', 'owned_channel'],
+            'is' => ['demo_is', 'paid_post'],
+            'it' => ['demo_it', 'partner_post'],
+            'vk' => ['demo_vk', 'broadcast'],
+            'samskrte' => ['demo_samskrte', 'crosslink'],
+            'samskrtam' => ['demo_samskrtam', 'crosslink'],
+        ];
+
+        foreach ($sources as $channel => [$source, $medium]) {
+            foreach (['s', 'v', 'c', 't', 'h'] as $creative) {
+                $this->flushSession();
+                $this->get("/ga/demo-{$channel}-{$creative}")->assertRedirect('/online');
+
+                $attribution = session(config('tracked_links.session_key'));
+                $this->assertSame($source, $attribution['utm_source'], "demo-{$channel}-{$creative} source");
+                $this->assertSame($medium, $attribution['utm_medium'], "demo-{$channel}-{$creative} medium");
+                $this->assertSame('attribution_smoke_demo', $attribution['utm_campaign'], "demo-{$channel}-{$creative} campaign");
+                $this->assertSame("demo_{$creative}", $attribution['utm_content'], "demo-{$channel}-{$creative} content");
+                $this->assertSame('smoke', $attribution['utm_term'], "demo-{$channel}-{$creative} term");
+            }
+        }
+    }
 }

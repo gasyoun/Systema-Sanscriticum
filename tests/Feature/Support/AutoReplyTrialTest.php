@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Support;
 
+use App\Models\Course;
+use App\Models\CourseBlock;
 use App\Models\MessageTemplate;
+use App\Models\Payment;
 use App\Models\SupportAiReplyEvent;
+use App\Models\Tariff;
 use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportMessage;
@@ -81,6 +85,41 @@ class AutoReplyTrialTest extends TestCase
         ]);
     }
 
+    /**
+     * Прод, 30-09-2026: чат видят два аккаунта (обычный + полоса
+     * telegram-business с бОльшим id). Ответ брал max(account_id) и застревал
+     * в полосе с «нет business_connection_id у чата». Отвечаем тем аккаунтом,
+     * куда пришёл вопрос.
+     */
+    public function test_auto_reply_goes_out_through_the_account_that_received_the_question(): void
+    {
+        config(['features.support_auto_reply_templates' => true]);
+        $this->boundTemplate('D');
+
+        $user = User::factory()->create(['name' => 'Студент Тест']);
+        $support = $this->account(true);
+        $incoming = $this->incoming($user, 'сколько стоит курс и как оплатить', $support);
+
+        // Та же переписка, но записанная второй полосой (id больше).
+        $business = TelegramSupportAccount::create(['name' => 'telegram-business', 'auto_reply_enabled' => false]);
+        TelegramSupportMessage::create([
+            'telegram_support_account_id' => $business->id,
+            'telegram_support_chat_id' => $incoming->telegram_support_chat_id,
+            'telegram_chat_id' => 9101,
+            'telegram_message_id' => random_int(1_000_001, 2_000_000),
+            'direction' => 'incoming',
+            'text' => 'сколько стоит курс и как оплатить',
+            'sent_at' => now(),
+        ]);
+        $this->assertGreaterThan($support->id, $business->id);
+
+        $result = app(SupportDmAutoReply::class)->handle($incoming, $user->id, 'private');
+
+        $this->assertSame('sent', $result['status']);
+        $outgoing = TelegramSupportMessage::query()->where('direction', 'outgoing')->firstOrFail();
+        $this->assertSame($support->id, (int) $outgoing->telegram_support_account_id);
+    }
+
     public function test_bound_template_auto_replies_on_gated_account(): void
     {
         config(['features.support_auto_reply_templates' => true]);
@@ -102,6 +141,140 @@ class AutoReplyTrialTest extends TestCase
         $this->assertNotNull($event);
         $this->assertSame('template', $event->meta['kind']);
         $this->assertArrayHasKey('template_id', $event->meta);
+    }
+
+    /**
+     * Инцидент 01-10-2026 (чат Рады): «Перевела вам деньги для продолжение
+     * работы над Рамаяной. Это октябрьской оплаты.» — отчёт об оплате, а не
+     * вопрос; бот автоотправил на него шаблон D2 «куда оплатить». Отчёт шаблона
+     * не получает: студенту тишина, куратору подсказка как раньше.
+     */
+    public function test_payment_report_gets_no_template(): void
+    {
+        config(['features.support_auto_reply_templates' => true]);
+        $this->boundTemplate('D');
+
+        $user = User::factory()->create(['name' => 'Рада']);
+        $incoming = $this->incoming($user, 'Перевела вам деньги для продолжение работы над Рамаяной. Это октябрьской оплаты.');
+
+        $result = app(SupportDmAutoReply::class)->handle($incoming, $user->id, 'private');
+
+        $this->assertSame('hinted', $result['status']);
+        $this->assertSame(0, TelegramSupportMessage::query()->where('direction', 'outgoing')->count());
+        $this->assertSame(0, SupportAiReplyEvent::query()->where('event_type', SupportDmAutoReply::EVENT_SENT)->count());
+        $this->assertSame(1, SupportAiReplyEvent::query()->where('event_type', SupportDmAutoReply::EVENT_HINTED)->count());
+    }
+
+    /**
+     * Тот же инцидент, второй стоп: куратор ответил студенту за минуту до
+     * бота — шаблонная ветка отныне стоит за тем же cooldown-инвариантом,
+     * что ack и LLM (recentOutgoingInChat), и двойного ответа не создаёт.
+     */
+    public function test_template_does_not_double_answer_after_a_recent_outgoing(): void
+    {
+        config(['features.support_auto_reply_templates' => true]);
+        $this->boundTemplate('D');
+
+        $user = User::factory()->create(['name' => 'Студент Тест']);
+        $account = $this->account(true);
+        $chat = TelegramSupportChat::firstOrCreate(
+            ['telegram_chat_id' => 9101],
+            ['linked_user_id' => $user->id, 'last_message_at' => now()],
+        );
+        TelegramSupportMessage::create([
+            'telegram_support_account_id' => $account->id,
+            'telegram_support_chat_id' => $chat->id,
+            'telegram_chat_id' => 9101,
+            'telegram_message_id' => random_int(1, 1_000_000),
+            'direction' => 'outgoing',
+            'text' => 'Спасибо, Рада!',
+            'sent_at' => now()->subMinute(),
+        ]);
+
+        $result = app(SupportDmAutoReply::class)
+            ->handle($this->incoming($user, 'сколько стоит курс и как оплатить', $account), $user->id, 'private');
+
+        $this->assertSame('hinted', $result['status']);
+        $this->assertSame(1, TelegramSupportMessage::query()->where('direction', 'outgoing')->count());
+        $this->assertSame(0, SupportAiReplyEvent::query()->where('event_type', SupportDmAutoReply::EVENT_SENT)->count());
+    }
+
+    /**
+     * H3768, класс инцидента 01-10-2026: живой FAQ-ответ (F выше порога) —
+     * за тем же cooldown-инвариантом, что ack/LLM/шаблонная ветка. Первое
+     * сообщение уходит из FAQ, повторное в том же чате бот уже не перебивает:
+     * свежее исходящее есть — человек в диалоге.
+     */
+    public function test_live_faq_answer_does_not_repeat_after_a_recent_outgoing(): void
+    {
+        config([
+            'features.support_dm_auto_reply_live_faq' => true,
+            'features.support_auto_reply_templates' => false,
+            'support.faq_rag.path' => base_path('tests/fixtures/faq_live_f_corpus.md'),
+            'support.faq_rag.extra_paths' => [],
+            'support.faq_rag.live_categories' => ['F'],
+            'support.faq_rag.shadow_min_score' => 0.5,
+            'support.faq_rag.shadow_min_score_by_category' => [],
+        ]);
+
+        $user = User::factory()->create(['name' => 'Студент Тест']);
+        $account = $this->account(true);
+        $question = 'куда загружать домашнее задание и в каком формате';
+
+        $first = app(SupportDmAutoReply::class)
+            ->handle($this->incoming($user, $question, $account), $user->id, 'private');
+        $this->assertSame('sent', $first['status']);
+        $this->assertSame(
+            'faq_rag',
+            SupportAiReplyEvent::query()
+                ->where('event_type', SupportDmAutoReply::EVENT_SENT)
+                ->latest('id')
+                ->first()
+                ?->meta['kind'],
+        );
+
+        $second = app(SupportDmAutoReply::class)
+            ->handle($this->incoming($user, $question, $account), $user->id, 'private');
+
+        $this->assertSame('hinted', $second['status']);
+        $this->assertSame(1, TelegramSupportMessage::query()->where('direction', 'outgoing')->count());
+        $this->assertSame(1, SupportAiReplyEvent::query()->where('event_type', SupportDmAutoReply::EVENT_SENT)->count());
+    }
+
+    /** features.support_block_pay_link: «как оплатить 4» → курс и чекаут блока 4, не /login. */
+    public function test_pay_template_links_the_named_debt_block(): void
+    {
+        config(['features.support_auto_reply_templates' => true, 'features.support_block_pay_link' => true]);
+        MessageTemplate::query()->create([
+            'title' => 'Поддержка · D2 — куда оплатить',
+            'body' => "Намасте, {name}!\n\nОплатить курс «{course}»:\n{pay_link}",
+            'category' => MessageTemplate::CATEGORY_SUPPORT,
+            'suggester_category' => 'D',
+            'is_active' => true,
+        ]);
+
+        $user = User::factory()->create(['name' => 'Студент Тест']);
+        $course = Course::factory()->create(['is_active' => true, 'title' => 'Лейтан']);
+        foreach ([1, 2, 3, 4, 5] as $n) {
+            $block = CourseBlock::factory()->for($course);
+            ($n === 5 ? $block->current() : $block)->create(['number' => $n]);
+            Tariff::create(['course_id' => $course->id, 'title' => 'Блок '.$n, 'type' => 'block', 'block_number' => $n, 'price' => 8000, 'is_active' => true]);
+        }
+        foreach ([1, 2] as $n) {
+            Payment::create([
+                'user_id' => $user->id, 'course_id' => $course->id, 'amount' => 8000,
+                'tariff' => 'block_'.$n, 'status' => 'paid', 'start_block' => $n, 'end_block' => $n, 'is_conditional' => false,
+            ]);
+        }
+
+        $result = app(SupportDmAutoReply::class)
+            ->handle($this->incoming($user, 'Я не понимаю, как оплатить 4 Лейтана'), $user->id, 'private');
+
+        $this->assertSame('sent', $result['status']);
+        $outgoing = (string) TelegramSupportMessage::query()->where('direction', 'outgoing')->value('text');
+        $tariff4 = Tariff::where('course_id', $course->id)->where('block_number', 4)->firstOrFail();
+        $this->assertStringContainsString('«Лейтан»', $outgoing);
+        $this->assertStringContainsString(route('checkout.show', $tariff4), $outgoing);
     }
 
     public function test_account_gate_off_falls_through_to_hint(): void

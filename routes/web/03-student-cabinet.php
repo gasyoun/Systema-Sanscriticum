@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CabinetMasteryController;
 use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\CallbackRequestController;
+use App\Http\Controllers\CourseStageQuizController;
 use App\Http\Controllers\DebtPaymentController;
 use App\Http\Controllers\GatedAssetController;
 use App\Http\Controllers\GrammarLabController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PranaShopController;
 use App\Http\Controllers\PranaTransferController;
+use App\Http\Controllers\PrivacySettingsController;
 use App\Http\Controllers\ReadingPackController;
 use App\Http\Controllers\Rq4StudyController;
 use App\Http\Controllers\SrsController;
@@ -294,6 +296,13 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::get('/c/{slug}', [StudentController::class, 'showCourse'])
         ->middleware('course.canonical')
         ->name('student.course');
+    // Квиз этапа курса (мини-курсы): /c/{slug}/kviz/{block}.
+    Route::get('/c/{slug}/kviz/{block}', [CourseStageQuizController::class, 'show'])
+        ->middleware('course.canonical')
+        ->name('student.course.quiz');
+    Route::post('/c/{slug}/kviz/{block}', [CourseStageQuizController::class, 'submit'])
+        ->middleware('course.canonical')
+        ->name('student.course.quiz.submit');
     Route::post('/c/{slug}/access/materialize', [AccessSelfServiceController::class, 'materialize'])
         ->middleware('course.canonical')
         ->name('student.access.materialize');
@@ -433,6 +442,15 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::post('/profile/password/email-link', [PasswordResetController::class, 'sendResetLinkToSelf'])
         ->middleware('throttle:3,1')
         ->name('student.password.email-link');
+
+    // 152-ФЗ: согласия в кабинете — переключатели рекламной рассылки и запрос
+    // на удаление персональных данных (раздел «Уведомления и рассылки»).
+    Route::post('/profile/notifications', [PrivacySettingsController::class, 'updateNotifications'])
+        ->middleware('throttle:20,1')
+        ->name('student.notifications.update');
+    Route::post('/profile/personal-data/delete-request', [PrivacySettingsController::class, 'requestDeletion'])
+        ->middleware('throttle:3,1')
+        ->name('student.pd-deletion.request');
 
     // H4434 — timezone localization (MG 09-09-2026): ручной селектор + временное
     // пребывание + silent device-TZ захват (VPN-иммунный сигнал).

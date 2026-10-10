@@ -14,6 +14,8 @@ use App\Models\User;
 use App\Services\Access\TelegramAdminNotifier;
 use App\Services\Support\Faq\HybridRetriever;
 use App\Services\Support\Faq\SharedKnowledgeBase;
+use App\Services\Support\Sufler\Ceilings;
+use App\Services\Support\Sufler\SendPolicyGate;
 use App\Support\SupportSmallTalk;
 use Illuminate\Support\Facades\Log;
 
@@ -95,6 +97,16 @@ final class SupportDmAutoReply
     private const MONEY_INTENT_PATTERN = '/оплат|плат[еёжи]|денег|деньг|стоимост|сколько\s+стои|цен[аеуы]|\bтариф|рассрочк|доплат|предоплат|скидк|промокод|по\s+частям|сч[её]т|квитанц|возврат/iu';
 
     /**
+     * Отчёт об оплате — прошедшее время/совершённое действие («я оплатила»,
+     * «перевела вам деньги», «прислала чек»), не вопрос «как оплатить».
+     * Отдельно от MONEY_INTENT_PATTERN: тот шире и матчит оба, а шаблон D2
+     * «куда оплатить» нужен вопросам и вреден отчётам — инцидент 01-10-2026:
+     * на «Перевела вам деньги для продолжение работы над Рамаяной» бот
+     * автоотправил D2 со ссылкой на курс грамматики, угаданный резолвером.
+     */
+    private const MONEY_REPORT_PATTERN = '/оплатил|заплатил|перечислил|перев[её]л|закинул|скинул|произведен|сделал[аи]?\s+(?:перевод|оплату)|(?:прислал|отправил|прикрепил)[аи]?\s+(?:чек|оплату|деньги)/iu';
+
+    /**
      * H5452: намерение пробного занятия — 🔥 на подсказке куратору рядом с
      * деньгами. Стемы узкие, чтобы «запись/записи» (категория B, инцидент
      * 19-09-2026) не загорались: «записатьс» и «записываюсь» совпадают, а
@@ -104,6 +116,20 @@ final class SupportDmAutoReply
 
     /** H5452: подсказка не ушла куратору — сообщение отфильтровано как шум (reason в meta). */
     public const EVENT_HINT_SUPPRESSED = 'dm_hint_suppressed';
+
+    /**
+     * H5776, политика v1: отправка заблокирована гейтом send-policy
+     * (money_amount_matches_system / no_personal_data_in_corpus /
+     * citation_present_for_every_fact). Студенту молчание, куратору подсказка,
+     * в meta — трейс: список гейтов с деталями + excerpt черновика.
+     */
+    public const EVENT_POLICY_BLOCKED = 'dm_policy_blocked';
+
+    /**
+     * H5776, политика v1: авто-стоп по потолку machinery (max_steps_per_ticket
+     * / tokens_per_ticket). Трейс в meta: причина, счётчики, окно.
+     */
+    public const EVENT_CEILING_STOP = 'dm_ceiling_stop';
 
     /** @var list<string> */
     private const SIMPLE_CATEGORIES = [
@@ -134,6 +160,11 @@ final class SupportDmAutoReply
         // разделам, а не по 280-символьным сниппетам. `faq` (HybridRetriever)
         // остаётся: на нём подсказка куратору и цитата в ответе студенту.
         private readonly SharedKnowledgeBase $knowledge,
+        // H5776: политика v1 — enforced. Гейты перед каждой автоотправкой
+        // (sendAuto — единственная горловина исходящих бота) + потолки
+        // machinery с авто-стопом и трейсом. См. policy/sufler.policy.yml v1.
+        private readonly SendPolicyGate $policyGate,
+        private readonly Ceilings $ceilings,
     ) {}
 
     public function isEnabled(): bool
@@ -292,11 +323,16 @@ final class SupportDmAutoReply
         // Категории берутся из конфига, но D (деньги) и E (доступы)
         // вычёркиваются в КОДЕ: рулинг R3 запрещает их безусловно, и правка
         // конфига не должна уметь это снять.
+        //
+        // Cooldown-инвариант тот же, что у ack/LLM/шаблонной ветки (класс
+        // инцидента 01-10-2026): свежее исходящее в чате — человек уже
+        // ответил, бот не добавляет своего.
         if ($mayReachStudent
             && $user !== null
             && $category !== null
             && in_array($category, $this->liveFaqCategories(), true)
             && $this->accountAllowsAutoReply($incoming)
+            && ! $this->recentOutgoingInChat($incoming)
         ) {
             $hits = $this->faq->retrieve($text, 3);
             // H5065: порог читается в домене BM25 (HybridRetriever::bm25Score).
@@ -341,12 +377,19 @@ final class SupportDmAutoReply
 
         // H3380: шаблонный автоответ D/E/F по привязке S9 — только на аккаунтах
         // с auto_reply_enabled, поведение основного support-аккаунта не меняется.
+        //
+        // Инцидент 01-10-2026 (чат Рады): куратор ответил студенту сам, а бот
+        // через минуту ДОБАВИЛ шаблон D2 — шаблонная ветка оставалась
+        // единственной без cooldown-инварианта ack/LLM (recentOutgoingInChat).
+        // И сам шаблон «куда оплатить» ушёл на ОТЧЁТ об оплате, а не на вопрос.
         if ($mayReachStudent
             && $user !== null
             && $category !== null
             && in_array($category, self::TEMPLATE_CATEGORIES, true)
             && (bool) config('features.support_auto_reply_templates', false)
             && $this->accountAllowsAutoReply($incoming)
+            && ! $this->recentOutgoingInChat($incoming)
+            && ! $this->moneyReport($text)
         ) {
             $template = MessageTemplate::query()
                 ->boundToSuggesterCategory($category)
@@ -354,7 +397,7 @@ final class SupportDmAutoReply
                 ->first();
 
             if ($template !== null) {
-                $draft = $template->render($user);
+                $draft = $template->renderForSupport($user, $text);
 
                 if (trim($draft) !== '') {
                     return $this->sendAuto($incoming, $user, $category, $draft, 'template', [
@@ -509,10 +552,83 @@ final class SupportDmAutoReply
         string $kind,
         array $metaExtra = [],
     ): array {
+        // H5776, политика v1, потолок первым: machinery со значением из
+        // конфига. Нарушение = авто-стоп с трейсом (не вмешательство человека
+        // в бота): студенту молчание, куратору подсказка, событие-трейс в meta.
+        $ceiling = $this->ceilings->exceeded((int) $incoming->telegram_chat_id, $kind, $metaExtra);
+
+        if ($ceiling !== null) {
+            SupportAiReplyEvent::firstOrCreate(
+                [
+                    'telegram_support_message_id' => $incoming->id,
+                    'event_type' => self::EVENT_CEILING_STOP,
+                ],
+                [
+                    'meta' => [
+                        'via' => self::VIA,
+                        'kind' => $kind,
+                        'category' => $category,
+                        'reason' => $ceiling['reason'],
+                        'detail' => $ceiling['detail'],
+                        'window_hours' => $this->ceilings->windowHours(),
+                        'source_telegram_message_id' => (int) $incoming->telegram_message_id,
+                    ],
+                ],
+            );
+
+            return $this->hintComplex(
+                $incoming,
+                $user,
+                $category,
+                (string) $incoming->text,
+                false,
+                null,
+                '🛑 Авто-стоп по потолку ('.$ceiling['reason'].'): '.$ceiling['detail'].' Ответьте студенту сами.',
+            );
+        }
+
+        // H5776, политика v1: гейты verify_gates_before_external_action перед
+        // КАЖДОЙ автоотправкой. Нарушение любого = отправки нет, трейс
+        // событием, маршрут человеку — конвейер падает в подсказку куратору.
+        $violations = $this->policyGate->violations($draft, $kind, $metaExtra);
+
+        if ($violations !== []) {
+            SupportAiReplyEvent::firstOrCreate(
+                [
+                    'telegram_support_message_id' => $incoming->id,
+                    'event_type' => self::EVENT_POLICY_BLOCKED,
+                ],
+                [
+                    'meta' => [
+                        'via' => self::VIA,
+                        'kind' => $kind,
+                        'category' => $category,
+                        'gates' => $violations,
+                        'draft_excerpt' => mb_substr($draft, 0, 200),
+                        'source_telegram_message_id' => (int) $incoming->telegram_message_id,
+                    ],
+                ],
+            );
+
+            return $this->hintComplex(
+                $incoming,
+                $user,
+                $category,
+                (string) $incoming->text,
+                false,
+                null,
+                '🛑 Черновик заблокирован политикой v1 ('.implode(
+                    ', ',
+                    array_map(static fn (array $v): string => $v['gate'], $violations),
+                ).'). Ответьте студенту сами.',
+            );
+        }
+
         $outgoing = $this->replies->queueAiReply(
             $user,
             $draft,
             (int) $incoming->telegram_message_id,
+            (int) $incoming->telegram_support_account_id ?: null,
         );
 
         if ($outgoing === null) {
@@ -755,7 +871,7 @@ final class SupportDmAutoReply
         }
 
         if ($draft === null) {
-            $template = $this->categoryTemplate($category, $user);
+            $template = $this->categoryTemplate($category, $user, $text);
 
             if ($template !== null) {
                 $draft = $template['draft'];
@@ -805,7 +921,7 @@ final class SupportDmAutoReply
      *
      * @return array{draft: string, template_id: int, template_title: string}|null
      */
-    private function categoryTemplate(string $category, User $user): ?array
+    private function categoryTemplate(string $category, User $user, ?string $text = null): ?array
     {
         $template = MessageTemplate::query()
             ->boundToSuggesterCategory($category)
@@ -816,7 +932,7 @@ final class SupportDmAutoReply
             return null;
         }
 
-        $draft = $template->render($user);
+        $draft = $template->renderForSupport($user, $text);
 
         if (trim($draft) === '') {
             return null;
@@ -1240,6 +1356,16 @@ final class SupportDmAutoReply
     private function moneyIntent(string $text): bool
     {
         return preg_match(self::MONEY_INTENT_PATTERN, $text) === 1;
+    }
+
+    /**
+     * Отчёт об оплате («я оплатила», «перевела вам деньги») — в отличие от
+     * вопроса про оплату («как оплатить», «сколько стоит») шаблонную
+     * автоотправку гасит: см. {@see self::MONEY_REPORT_PATTERN}.
+     */
+    private function moneyReport(string $text): bool
+    {
+        return preg_match(self::MONEY_REPORT_PATTERN, $text) === 1;
     }
 
     /**

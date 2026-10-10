@@ -1,6 +1,6 @@
 # Telegram-боты и TG-аккаунты в Systema Sanscriticum
 
-_Created: 30-07-2026 · Last updated: 17-09-2026 (проверено live-пробой: usernames и режим @samskrtamru_bot)
+_Created: 30-07-2026 · Last updated: 05-10-2026 (лестница поддержки ИИ-куратор → Иван → MG, H6133; usernames сверены live-пробой 17-09-2026)
 
 Инвентарь **Bot API-ботов**, **landing-ботов** и **userbot-аккаунта** (MadelineProto),
 которые использует LMS на `samskrte.ru`.  
@@ -23,6 +23,7 @@ Lead-магнит / марафон drip  →  @samskrte_bot        (MarketingSet
 Запись на занятие           →  @zapisi_ORSbot       (MarketingSetting.zapisi_*)
 Служебные алерты LMS        →  TELEGRAM_BOT_*       (на проде: @testpodpiska12_bot)
 Саппорт / harvest чатов     →  userbot @rusamskrtam (TELEGRAM_SUPPORT_*, MTProto)
+Первая линия поддержки      →  ИИ-куратор @samskrtamru_bot; эскалация: Иван (ops) → MG — ранбук RUNBOOK_SUPPORT_ESCALATION
 Ответ ОТ ИМЕНИ аккаунта     →  TELEGRAM_BUSINESS_*  (Business-бот, Bot API, §2.5)
 «Написать в Telegram» (UX)  →  t.me/rusamskrtam     (человек/аккаунт, не LMS-бот)
 Grok в «Отделе заботы»      →  @grokusaurus_bot     (ПК Марциса, не VPS)
@@ -147,7 +148,7 @@ Privacy mode бота — снять в [@BotFather](https://t.me/BotFather) (с
 |--|--|
 | **Env** | `TELEGRAM_BUSINESS_BOT_TOKEN`, `TELEGRAM_BUSINESS_WEBHOOK_SECRET`, `TELEGRAM_BUSINESS_BOT_ENABLED` |
 | **Config** | `services.telegram_business`, флаг `features.telegram_business_bot` |
-| **Маршрут** | `POST /api/webhooks/telegram-business` (middleware `verify.tg.business`) |
+| **Маршрут** | `POST /api/webhooks/telegram-business` (middleware `verify.tg.business`); при `TELEGRAM_BUSINESS_SHARED_STUDENT_WEBHOOK=true` `set-webhook` регистрирует общий студенческий `POST /api/telegram/webhook` |
 | **Аккаунт в support-таблицах** | `TELEGRAM_BUSINESS_ACCOUNT_NAME` (по умолчанию `telegram-business`) |
 
 **Назначение:** бот подключён к аккаунту школы в **Настройки → Business →
@@ -207,6 +208,7 @@ Privacy mode бота — снять в [@BotFather](https://t.me/BotFather) (с
 | | |
 |--|--|
 | **Аккаунт** | `@rusamskrtam` (user account, MTProto) |
+| **Экстренная лестница** | Иван (1-я очередь, ops, канал @samskrte_ops_bot) → MG (2-я) — рулинг MG 05-10-2026; раньше экстренным каналом был только MG. Ранбук: [`RUNBOOK_SUPPORT_ESCALATION.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_SUPPORT_ESCALATION.md) |
 | **Env** | `TELEGRAM_SUPPORT_ENABLED`, `TELEGRAM_SUPPORT_API_ID`, `TELEGRAM_SUPPORT_API_HASH`, `TELEGRAM_SUPPORT_SESSION`, … |
 | **Команды** | `telegram-support:sync`, `telegram-support:healthcheck`, harvest/roster (`TELEGRAM_HARVEST_*`) |
 | **Сессия** | **одна** на support+harvest — **не** гонять параллельно два синка (риск `AUTH_RESTART`) |
