@@ -83,20 +83,22 @@
                             </a>
                         @endif
                     </div>
-                    @if ($rewards['invite'] && $rewards['trial_event'] && $rewards['trial_course'])
+                    @if ($rewards['trial_event'] && $rewards['trial_course'])
                         <div class="bg-white p-5 border-t border-indigo-50">
-                            <p class="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-1">🎤 Приглашение</p>
-                            <p class="font-extrabold text-gray-900">Пробное занятие по напевному санскриту</p>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-1">🎤 Бонус: живое занятие по напевному санскриту</p>
+                            <p class="font-extrabold text-gray-900">Вы записаны на ближайшее занятие с Ушей Санкой — бесплатно</p>
                             <p class="text-sm text-gray-600 mt-1">
                                 {{ $rewards['trial_event']->title }} —
-                                {{ $rewards['trial_event']->start->timezone(config('app.timezone'))->translatedFormat('d F, H:i') }} (МСК).
-                                Продолжите напевный санскрит с Ушей Санкой на живом занятии курса
-                                «{{ $rewards['trial_course']->title }}».
+                                {{ $rewards['trial_event']->start->timezone(config('app.timezone'))->translatedFormat('d F, H:i') }} (МСК),
+                                курс «{{ $rewards['trial_course']->title }}».
+                                Приходите поприсутствовать и попробовать: петь вместе с группой можно с первого занятия.
                             </p>
-                            <a href="{{ route('shop.course.show', $rewards['trial_course']->slug) }}"
-                               class="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl border border-indigo-200 text-indigo-600 font-bold text-sm hover:bg-indigo-50">
-                                Записаться на занятие <i class="fas fa-arrow-right text-xs"></i>
+                            <a href="{{ route('class.join', $rewards['trial_event']) }}"
+                               target="_blank" rel="noopener"
+                               class="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700">
+                                <i class="fas fa-video mr-1"></i> Подключиться к занятию
                             </a>
+                            <p class="text-xs text-gray-400 mt-2">Кнопка активна в момент занятия; ссылка также появится в разделе «Расписание» кабинета.</p>
                         </div>
                     @endif
                 </div>

@@ -229,7 +229,7 @@ class PaymentController extends Controller
 
                 $eligibleBeforeCapacity = $promo
                     && $promo->isCurrentlyActive()
-                    && $promo->appliesToCourse($tariff->course->id ?? null)
+                    && $promo->appliesToCourse($tariff->course->id ?? null, $tariff->block_number)
                     && ! $promo->redeemedByUser($user->id);
 
                 if (config('features.checkout_promo_reservations') && $eligibleBeforeCapacity) {
@@ -248,7 +248,7 @@ class PaymentController extends Controller
 
                 $applicable = $promo
                     && $promo->isValid()
-                    && $promo->appliesToCourse($tariff->course->id ?? null)
+                    && $promo->appliesToCourse($tariff->course->id ?? null, $tariff->block_number)
                     && ! $promo->redeemedByUser($user->id);
 
                 // Свежий pending с тем же кодом (гонка двух вкладок / возврат на
@@ -523,7 +523,7 @@ class PaymentController extends Controller
             return 'срок действия промокода истёк';
         }
 
-        if (! $promo->appliesToCourse($tariff->course->id ?? $tariff->course_id)) {
+        if (! $promo->appliesToCourse($tariff->course->id ?? $tariff->course_id, $tariff->block_number)) {
             return 'промокод не действует для этого курса';
         }
 

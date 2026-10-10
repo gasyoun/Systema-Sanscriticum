@@ -10,6 +10,7 @@ use App\Models\CourseQuizQuestion;
 use App\Models\Group;
 use App\Models\PromoCode;
 use App\Models\Schedule;
+use App\Models\Tariff;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -149,13 +150,15 @@ class FinalQuizRewardsTest extends TestCase
     }
 
     /** @test */
-    public function result_page_invites_to_nearest_upcoming_trial_event(): void
+    public function passing_final_enrolls_into_nearest_upcoming_usha_event(): void
     {
         $trialCourse = Course::factory()->create(['is_active' => true, 'title' => 'Напевный санскрит — Гита 3 часть']);
-        Schedule::create([
+        $trialGroup = Group::create(['name' => 'G-usha-live']);
+        $trialCourse->groups()->attach($trialGroup);
+        $event = Schedule::create([
             'title' => 'Напевный санскрит — живое занятие',
             'course_id' => $trialCourse->id,
-            'group_id' => Group::create(['name' => 'G-trial-sched'])->id,
+            'group_id' => $trialGroup->id,
             'start' => now()->addDays(3),
             'end' => now()->addDays(3)->addHours(2),
         ]);
@@ -163,11 +166,14 @@ class FinalQuizRewardsTest extends TestCase
 
         $this->submitAllCorrect();
 
+        // Студент записан: состоит в группе занятия → кнопка «Подключиться» откроет Zoom.
+        $this->assertTrue($this->user->fresh()->groups->pluck('id')->contains($trialGroup->id));
+
         $this->actingAs($this->user)
             ->get(route('student.course.quiz', [$this->course->slug, $this->finalQuiz->block_number]))
             ->assertOk()
-            ->assertSee('Пробное занятие по напевному санскриту')
-            ->assertSee($trialCourse->title);
+            ->assertSee('Вы записаны на ближайшее занятие с Ушей Санкой')
+            ->assertSee(route('class.join', $event));
     }
 
     /** @test */
@@ -180,6 +186,28 @@ class FinalQuizRewardsTest extends TestCase
         $this->actingAs($this->user)
             ->get(route('student.course.quiz', [$this->course->slug, $this->finalQuiz->block_number]))
             ->assertOk()
-            ->assertDontSee('Пробное занятие по напевному санскриту');
+            ->assertDontSee('Вы записаны на ближайшее занятие');
+    }
+
+    /** @test */
+    public function promo_applies_only_to_first_block_tariff(): void
+    {
+        $this->submitAllCorrect();
+
+        $promo = PromoCode::where('course_id', $this->grammarCourse->id)->first();
+        $this->assertSame(1, $promo->block_number);
+
+        $block1 = Tariff::create([
+            'course_id' => $this->grammarCourse->id, 'title' => 'Блок 1',
+            'type' => 'block', 'block_number' => 1, 'price' => 8000, 'is_active' => true,
+        ]);
+        $block2 = Tariff::create([
+            'course_id' => $this->grammarCourse->id, 'title' => 'Блок 2',
+            'type' => 'block', 'block_number' => 2, 'price' => 8000, 'is_active' => true,
+        ]);
+
+        $this->assertTrue($promo->appliesToCourse($this->grammarCourse->id, 1));
+        $this->assertFalse($promo->appliesToCourse($this->grammarCourse->id, 2));
+        $this->assertSame(4000.0, (float) $promo->calculateDiscountedPrice((float) $block1->price));
     }
 }

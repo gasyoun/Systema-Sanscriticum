@@ -29,12 +29,35 @@ final class CourseFinalRewards
                 'type' => 'percent',
                 'value' => (float) config('mini_courses.promo_percent', 50),
                 'course_id' => self::grammarCourseId(),
+                // Скидка — только на первый блок грамматики («первый месяц»).
+                'block_number' => 1,
                 'usage_limit' => 1,
                 'used_count' => 0,
                 'expires_at' => now()->addDays((int) config('mini_courses.promo_days_valid', 30)),
                 'is_active' => true,
             ],
         );
+    }
+
+    /**
+     * «Поприсутствовать и попробовать» — записываем выпускника в ГРУППУ
+     * ближайшего будущего занятия «напевного» курса: членство в группе
+     * занятия открывает кнопку «Подключиться» (учёт посещаемости ведётся
+     * через ScheduleJoinClick), занятие бесплатное.
+     */
+    public static function enrollToNearestTrialEvent(): ?Schedule
+    {
+        $event = self::nearestTrialEvent();
+        $groupId = $event?->group_id;
+
+        if ($event === null || ! $groupId) {
+            return $event;
+        }
+
+        $user = auth()->user();
+        $user?->groups()->syncWithoutDetaching([$groupId]);
+
+        return $event;
     }
 
     public static function promoCodeName(User $user): string
@@ -69,15 +92,6 @@ final class CourseFinalRewards
     public static function trialCourseId(): int
     {
         return (int) config('mini_courses.trial_course_id', 451);
-    }
-
-    /** Приглашение показываем, только если есть куда звать. */
-    public static function shouldInvite(User $user): bool
-    {
-        return self::nearestTrialEvent() !== null
-            && ! $user->groups()
-                ->where('groups.id', self::trialCourseId())
-                ->exists();
     }
 
     /** Человекочитаемый код — только для показа владельцу. */
