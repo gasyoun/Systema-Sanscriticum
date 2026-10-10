@@ -18,7 +18,8 @@
          (LeadFlashBuilder кладет yandex_id/vk_id в сессию). На прямом чекауте
          их нет — блок молчит. Паттерн — promo/thankyou.blade.php. --}}
     @if(session('yandex_id'))
-        <script type="text/javascript">
+        @include('partials.analytics-gate')
+<script type="text/javascript">ssConsent.onAnalytics(function () {
            (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
            m[i].l=1*new Date();
            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
@@ -31,11 +32,12 @@
                 accurateTrackBounce:true,
                 webvisor:true
            });
+});
         </script>
-        <noscript><div><img src="https://mc.yandex.ru/watch/{{ session('yandex_id') }}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     @endif
     @if(session('vk_id') && (string) session('vk_id') !== $shopVkPixelId)
-        <script type="text/javascript">
+        @include('partials.analytics-gate')
+<script type="text/javascript">ssConsent.onAnalytics(function () {
             var _tmr = window._tmr || (window._tmr = []);
             _tmr.push({id: "{{ session('vk_id') }}", type: "pageView", start: (new Date()).getTime()});
             (function (d, w, id) {
@@ -45,8 +47,8 @@
                 var f = function () {var s = d.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ts, s);};
                 if (w.opera == "[object Opera]") { d.addEventListener("DOMContentLoaded", f, false); } else { f(); }
             })(document, window, "tmr-code");
+});
         </script>
-        <noscript><div><img src="https://top-fwz1.mail.ru/counter?id={{ session('vk_id') }};js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru" /></div></noscript>
     @endif
 @endpush
 

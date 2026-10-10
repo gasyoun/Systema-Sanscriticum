@@ -6,6 +6,10 @@
     <title>{{ $page?->title }}</title>
     
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
+    {{-- H6211 Low-1: PNG 512 + apple-touch + публичный манифест (иконка в мобильной выдаче) --}}
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('images/icon-512.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/icon-180.png') }}">
+    <link rel="manifest" href="{{ asset('manifest-site.webmanifest') }}">
     
     {{-- === SEO И OPEN GRAPH === --}}
     <meta property="og:type" content="website">
@@ -37,13 +41,10 @@
     {{-- === КОНЕЦ SEO === --}}
 
     {{-- FONTS & STYLES --}}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    @vite('resources/css/fonts.css')
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @vite('resources/js/alpine-standalone.js')
 
     <style>
         body { font-family: 'Montserrat', sans-serif; }
@@ -51,12 +52,21 @@
     </style>
 
     {{-- BOTFAQTOR (должен быть выше Метрики и Analytics) --}}
-    <script type="text/javascript">window._ab_id_=170518</script>
-    <script src="https://cdn.botfaqtor.ru/one.js"></script>
+    {{-- 152-ФЗ: антибот собирает отпечаток браузера и IP — тоже только после согласия. --}}
+    @include('partials.analytics-gate')
+    <script type="text/javascript">
+        window._ab_id_ = 170518;
+        ssConsent.onAnalytics(function () {
+            var s = document.createElement('script');
+            s.src = 'https://cdn.botfaqtor.ru/one.js';
+            document.head.appendChild(s);
+        });
+    </script>
 
     {{-- ANALYTICS --}}
     @if($page?->yandex_metrika_id)
-    <script type="text/javascript" >
+    @include('partials.analytics-gate')
+<script type="text/javascript">ssConsent.onAnalytics(function () {
        (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
        m[i].l=1*new Date();
        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
@@ -69,12 +79,13 @@
            accurateTrackBounce:true,
            webvisor:true
        });
+});
     </script>
-    <noscript><div><img src="https://mc.yandex.ru/watch/{{ $page->yandex_metrika_id }}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     @endif
 
     @if($page?->vk_pixel_id)
-    <script type="text/javascript">
+    @include('partials.analytics-gate')
+<script type="text/javascript">ssConsent.onAnalytics(function () {
       var _tmr = window._tmr || (window._tmr = []);
       _tmr.push({id: "{{ $page->vk_pixel_id }}", type: "pageView", start: (new Date()).getTime()});
       (function (d, w, id) {
@@ -84,8 +95,8 @@
         var f = function () {var s = d.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ts, s);};
         if (w.opera == "[object Opera]") { d.addEventListener("DOMContentLoaded", f, false); } else { f(); }
       })(document, window, "tmr-code");
+});
     </script>
-    <noscript><div><img src="https://top-fwz1.mail.ru/counter?id={{ $page->vk_pixel_id }};js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru" /></div></noscript>
     @endif
 </head>
 <body class="bg-white text-gray-900 antialiased overflow-x-hidden"

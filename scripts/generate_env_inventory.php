@@ -108,13 +108,25 @@ $lines = [
     '|---|---|---|---|',
 ];
 
+// Прод-пометки (H6315): ключ → приписка к колонке Default. Живут здесь, а не в
+// регеняемом md — прогон генератора их не стирает. Проба .env прода 09-10-2026:
+// PROVISION=true, LOGIN=true, EMAIL_LINK отсутствует (эффективно false).
+// Гвард: CabinetDocsFreshnessTest::test_env_inventory_rows_carry_prod_notes_and_survive_regen.
+$prodNotes = [
+    'TELEGRAM_CABINET_PROVISION' => 'вкл. на проде (09-10-2026)',
+    'TELEGRAM_CABINET_LOGIN' => 'вкл. на проде (09-10-2026)',
+    'TELEGRAM_CABINET_EMAIL_LINK' => 'выкл. на проде (09-10-2026)',
+];
+
 foreach ($entries as $key => $entry) {
     $locations = implode('<br>', $entry['locations']);
+    $note = isset($prodNotes[$key]) ? ' — '.$prodNotes[$key] : '';
     $lines[] = sprintf(
-        '| `%s` | %s | `%s` | %s |',
+        '| `%s` | %s | `%s`%s | %s |',
         $key,
         $entry['category'],
         escapeCell($entry['default']),
+        $note,
         $locations,
     );
 }

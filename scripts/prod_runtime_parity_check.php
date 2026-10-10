@@ -373,6 +373,9 @@ if ($viteBackup === null) {
         'resources/css/app.css' => ['file' => 'assets/app.css', 'src' => 'resources/css/app.css', 'isEntry' => true],
         'resources/js/app.js' => ['file' => 'assets/app.js', 'src' => 'resources/js/app.js', 'isEntry' => true],
         'resources/js/transliterate.js' => ['file' => 'assets/transliterate.js', 'src' => 'resources/js/transliterate.js', 'isEntry' => true],
+        // 152-ФЗ: шрифты/иконки и Alpine со своего сервера — подключаются в общих лейаутах.
+        'resources/css/fonts.css' => ['file' => 'assets/fonts.css', 'src' => 'resources/css/fonts.css', 'isEntry' => true],
+        'resources/js/alpine-standalone.js' => ['file' => 'assets/alpine-standalone.js', 'src' => 'resources/js/alpine-standalone.js', 'isEntry' => true],
     ]));
 }
 try {

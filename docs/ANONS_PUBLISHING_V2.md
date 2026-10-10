@@ -1,6 +1,6 @@
 # Anons publishing v2 — operator manual
 
-_Created: 17-09-2026 · Last updated: 05-10-2026_
+_Created: 17-09-2026 · Last updated: 10-10-2026_
 
 H5049 delivery: declarative announcement/Story publishing with visible CTA plaques burned into pixels, idempotent reruns, per-destination retries, explicit-missingness analytics, archive catalog and a safe test contour. Companion of the canonical [`/anons` skill](https://github.com/gasyoun/claude-config/blob/main/commands/anons.md).
 
@@ -57,6 +57,7 @@ Validation is fail-closed: relative asset paths, UTM inside `cta_url`, a caption
 | `php artisan anons:ops history --key=…` | All persisted observations |
 | `php artisan anons:ops archive-index --account=rusamskrtam` | Index the live story archive into the catalog (hash/phash/text/tags) |
 | `php artisan anons:ops archive-search --query="осенний"` | Find evergreen assets without rescanning Telegram |
+| `php artisan anons:plan-occasions [--kind=…] [--json]` | Шаг 0 минта кампании: отбор поводов анонса по виду занятия — `обзорное \| разовое \| обычное`, без флага все виды (H6329) |
 
 HTTP API (auth:sanctum personal token): `POST /api/anons` (draft/validate), `POST /api/anons/preview`, `POST /api/anons/publish`, `GET /api/anons/{key}`, `POST /api/anons/{key}/metrics`, `POST /api/anons/{key}/rollback`.
 
@@ -106,14 +107,26 @@ What a token WOULD buy (candidate `SenlerStatsService`, awaiting MG's product ca
 
 Машинный журнал размещений: хвост публикации (permalink, время, 24h/72h клики) пишется командой в таблицу `anons_placements` вместо ручного PR по md-документу. Ключи, UTM-кортеж и destination выводятся из [config/tracked_links.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/tracked_links.php) — ничего не набирается руками; PII-правило то же, что у `anons_link_clicks` (только агрегаты).
 
+Вид кампании (`обзорное | разовое | обычное`, словарь канона [SCHEDULE_KINDS_CANON_ANONS_SITE_09-10-2026](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SCHEDULE_KINDS_CANON_ANONS_SITE_09-10-2026.md)) входит в цикл минта с шага 0 — отбор поводов (H6329, PR [#3132](https://github.com/gasyoun/Systema-Sanscriticum/pull/3132)):
+
 ```bash
-# после минта кампании — строки размещений из конфига (одна команда на кампанию)
-php artisan anons:ops journal-add --campaign=up26        # или --link=up26-ors-c
+# шаг 0 минта кампании — отбор поводов по виду (без --kind — все виды; --json — машинный вывод)
+php artisan anons:plan-occasions --kind=разовое
+# после минта кампании — строки размещений из конфига + вид в журнал (одна команда на кампанию)
+php artisan anons:ops journal-add --campaign=up26 --kind=разовое        # или --link=up26-ors-c
 # после выхода поста — хвост: permalink + время (МСК), клики за 24/72h из anons_link_clicks
 php artisan anons:ops journal-fill --link=up26-ors-c --permalink=https://t.me/samskrte/633 --published-at="2026-10-04 22:43:00"
-# сводка
+# сводка (вид каждой строки виден как [вид]; фильтр — по --campaign)
 php artisan anons:ops journal-list --campaign=up26
 ```
+
+Правила `--kind` (H6329):
+
+- Словарь fail-closed: `обзорное | разовое | обычное`; неизвестный вид — отказ с подсказкой словаря, а не молчаливое «пусто/всё».
+- Повторный `journal-add` без `--kind` вид не стирает (merge по `/ga/` ключу); смена вида — только явным `--kind=`. Строки, заведённые до H6329, живут без вида.
+- `--kind` — опция `journal-add`; фильтра `journal-list` по виду нет (только `--campaign`), вид строки виден в выводе как `[вид]`.
+- Пробные занятия полем `kind` не дублируются — в фиде они уже видны по `bookable`/`book_token` (канон); напоминания по обычным занятиям остаются в чатах групп (`classes:remind-upcoming`), анонс-кампания их не заменяет.
+- Живой пример отбора (прод 10-10-2026): `anons:plan-occasions --kind=разовое` → 3 повода «Открытые занятия и вебинары» (#1594–#1596); журнал на ту же дату — 37 строк, из них up26 [разовое] ×2 (бэкфилл).
 
 Идемпотентность — по `/ga/` ключу (повторный `journal-add` обновляет строку). Story-ключи (`st-`) команда отказывается принимать — они живут в `story_campaigns`-формате. Живой пример первого заполнения: up26, пост 633 (PR [#3008](https://github.com/gasyoun/Systema-Sanscriticum/pull/3008) — до команды хвост был ручным PR; после H6095 — одна команда). Читаемый md-журнал кампании (campaign-record-template) остаётся человеком-артефактом, команда его не патчит.
 
@@ -123,4 +136,4 @@ php artisan anons:ops journal-list --campaign=up26
 - Archive indexer requires a live session (probe-gated) and runs one bounded `getStoriesArchive` page per invocation.
 - Font: freetype TTF resolved from `services.anons.cta_font` / `ANONS_CTA_FONT` / DejaVu(Linux)/Arial(macOS) paths; without any TTF the plaque falls back to GD's ASCII-only bitmap font — acceptable for ASCII CTA, Cyrillic needs the TTF (DejaVu present on the prod box).
 
-_Гасунс_
+_Dr. Mārcis Gasūns_

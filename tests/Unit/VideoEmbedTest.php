@@ -17,8 +17,8 @@ class VideoEmbedTest extends TestCase
             'https://youtu.be/abc12345678',
             'https://www.youtube.com/shorts/abc12345678',
         ] as $url) {
-            $this->assertSame('https://www.youtube.com/embed/abc12345678?autoplay=1', VideoEmbed::embed($url), $url);
-            $this->assertSame('https://img.youtube.com/vi/abc12345678/hqdefault.jpg', VideoEmbed::poster($url), $url);
+            $this->assertSame('https://www.youtube-nocookie.com/embed/abc12345678?autoplay=1', VideoEmbed::embed($url), $url);
+            $this->assertSame('/video-thumb/abc12345678.jpg', VideoEmbed::poster($url), $url);
         }
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Waitlist\OpenWaitlistPayment;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PublicWaitlistResource;
 use App\Models\CourseWaitlistItem;
@@ -98,6 +99,12 @@ class PublicWaitlistController extends Controller
         }
 
         $item->castVoteBy($user, $data['slot_preference'] ?? null);
+
+        // Кворумный голос сразу открывает оплату привязанного курса:
+        // OpenWaitlistPayment сам гейтит флагом, порогом и состоянием.
+        if ($item->status === CourseWaitlistItem::STATUS_COLLECTING) {
+            app(OpenWaitlistPayment::class)->handle($item);
+        }
 
         // Страница перезагрузится после ответа — там покажем «Спасибо, ваш голос учтён!».
         if ($request->hasSession()) {

@@ -118,6 +118,32 @@ final class AnonsOpsJournalTest extends TestCase
             ->assertExitCode(1);
     }
 
+    public function test_journal_add_records_campaign_kind(): void
+    {
+        // H6329: вид кампании пишется в журнал и переживает повторный
+        // journal-add без --kind (не стирается идемпотентностью).
+        $this->artisan('anons:ops', ['op' => 'journal-add', '--link' => 'up26-ors-c', '--kind' => 'разовое'])
+            ->assertExitCode(0);
+        $this->artisan('anons:ops', ['op' => 'journal-add', '--link' => 'up26-ors-c'])
+            ->assertExitCode(0);
+
+        $row = AnonsPlacement::query()->where('link', 'up26-ors-c')->firstOrFail();
+        $this->assertSame('разовое', $row->kind);
+
+        // journal-list показывает вид.
+        $this->artisan('anons:ops', ['op' => 'journal-list'])
+            ->expectsOutputToContain('[разовое]')
+            ->assertExitCode(0);
+    }
+
+    public function test_journal_add_refuses_unknown_kind(): void
+    {
+        // Fail-closed: неизвестный вид — отказ ДО записи, а не молчаливое «пусто/всё».
+        $this->artisan('anons:ops', ['op' => 'journal-add', '--link' => 'up26-ors-p', '--kind' => 'вебинар'])
+            ->assertExitCode(1);
+        $this->assertSame(0, AnonsPlacement::query()->count());
+    }
+
     /** Canary на наших данных: живые ключи up26 лежат в продовом конфиге. */
     public function test_up26_keys_present_in_tracked_links_config(): void
     {

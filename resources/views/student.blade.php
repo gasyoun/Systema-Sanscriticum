@@ -7,7 +7,7 @@
     <title>Личный кабинет | Школа Санскрита</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+    @vite('resources/css/fonts.css')
     <style>
         :root { 
             --bg: #fdfcf8; --text-main: #3e3832; --primary: #d9a404; 
@@ -124,7 +124,7 @@
         let embedSrc = '';
         if (url.includes('youtu.be') || url.includes('youtube.com')) {
             const id = url.split('/').pop().split('?')[0];
-            embedSrc = `https://www.youtube.com/embed/${id}?autoplay=1`;
+            embedSrc = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1`;
         } else if (url.includes('rutube.ru')) {
             const id = url.split('/').filter(Boolean).pop();
             embedSrc = `https://rutube.ru/play/embed/${id}`;

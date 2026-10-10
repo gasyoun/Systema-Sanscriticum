@@ -30,6 +30,14 @@ trait SchedulesPresenceAndMarathon
             ->onOneServer()
             ->name('prune-stale-visitor-presences');
 
+        // 152-ФЗ ст. 5 ч. 7: обнулить IP старше config('privacy.ip_retention_days')
+        // в журналах активности. No-op, пока features.privacy_prune выключен.
+        $schedule->command('privacy:prune --scheduled')
+            ->dailyAt('04:50')
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('privacy-prune');
+
         // --- ОБНОВЛЕНИЕ АВАТАРОК TG/VK ---
         // Раз в неделю освежаем аватарки тех, кого не синхронизировали 7+ дней
         // (или ни разу). Троттлинг внутри команды (--sleep) против rate-limit.

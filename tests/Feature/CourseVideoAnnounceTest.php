@@ -24,7 +24,7 @@ class CourseVideoAnnounceTest extends TestCase
         ]);
 
         $this->assertSame(
-            'https://www.youtube.com/embed/abc12345678?autoplay=1',
+            'https://www.youtube-nocookie.com/embed/abc12345678?autoplay=1',
             $course->videoAnnounceEmbedUrl(),
         );
     }
@@ -68,7 +68,7 @@ class CourseVideoAnnounceTest extends TestCase
         $response = $this->get(route('shop.course.show', $course->slug));
 
         $response->assertOk();
-        $response->assertDontSee('youtube.com/embed', false);
+        $response->assertDontSee('youtube-nocookie.com/embed', false);
         $response->assertDontSee('rutube.ru/play/embed', false);
         $response->assertDontSee('vk.com/video_ext.php', false);
     }

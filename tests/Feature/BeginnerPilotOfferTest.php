@@ -26,7 +26,9 @@ class BeginnerPilotOfferTest extends TestCase
         $lesson = Lesson::factory()->free()->create(['course_id' => Course::factory()->create()->id, 'rutube_url' => 'https://rutube.ru/play/embed/example/']);
         config(['beginner_pilot.preview_lesson_id' => $lesson->id, 'marathon.paid_track_price' => 750]);
         $this->get(route('beginner-pilot.show'))->assertOk()->assertSee($lesson->rutube_url, false)
-            ->assertSee('750 ₽')->assertSee('Полная запись')->assertSee('пока не подтверждена');
+            ->assertSee('750 ₽')->assertSee('Полная запись')->assertSee('Начать бесплатно')
+            ->assertSee(route('marathon.show').'#marathon-form', false)
+            ->assertSee('Оплата 750 ₽ сейчас закрыта')->assertDontSee('Выбрать участие с проверкой');
         $lesson->update(['is_free' => false]);
         $this->get(route('beginner-pilot.show'))->assertDontSee($lesson->rutube_url, false);
     }

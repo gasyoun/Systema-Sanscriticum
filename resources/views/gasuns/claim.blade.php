@@ -9,7 +9,7 @@
         <div class="mb-6">
             <h1 class="text-3xl md:text-4xl font-extrabold text-gray-950 tracking-tight">Перевели оплату Гасунсу</h1>
             <p class="mt-2 text-base text-gray-500">
-                Вы перевели оплату за курс рублями на личный счёт Гасунса (не на счёт школы) —
+                Вы перевели оплату за курс рублями на личный счёт Гасунса (мимо счёта Общества) —
                 сообщите нам здесь, и мы зачтём платеж. Без уведомления оплата останется
                 незачтённой: мы сверяем поступление, обычно в течение одного рабочего дня, и
                 открываем доступ к занятиям.
@@ -96,6 +96,9 @@
                     <textarea name="comment" rows="3" maxlength="1000" placeholder="за какой курс/блок перевод, что-то еще важное"
                               class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">{{ old('comment') }}</textarea>
                 </div>
+
+                {{-- 152-ФЗ: путь оплаты — обязательность по флагу money-контура. --}}
+                <x-consent.pd :required="(bool) config('features.checkout_pd_consent_enforce')" />
 
                 <button type="submit"
                         class="w-full inline-flex justify-center items-center px-6 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition">

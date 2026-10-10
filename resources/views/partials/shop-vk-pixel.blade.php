@@ -13,7 +13,11 @@
     $shopVkPixelId = \App\Support\ShopVkPixel::id();
 @endphp
 @if($shopVkPixelId)
+{{-- 152-ФЗ: пиксель — только после «Принять аналитику» (partials/analytics-gate).
+     Цели до согласия копятся в window._tmr и никуда не уходят (скрипта нет). --}}
+@include('partials.analytics-gate')
 <script type="text/javascript">
+   ssConsent.onAnalytics(function () {
    var _tmr = window._tmr || (window._tmr = []);
    _tmr.push({id: "{{ $shopVkPixelId }}", type: "pageView", start: (new Date()).getTime()});
    (function (d, w, id) {
@@ -23,6 +27,7 @@
        var f = function () {var s = d.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ts, s);};
        if (w.opera == "[object Opera]") { d.addEventListener("DOMContentLoaded", f, false); } else { f(); }
    })(document, window, "tmr-code");
+   });
 
    window.SHOP_VK_PIXEL_ID = "{{ $shopVkPixelId }}";
    (function () {
@@ -36,5 +41,4 @@
        };
    })();
 </script>
-<noscript><div><img src="https://top-fwz1.mail.ru/counter?id={{ $shopVkPixelId }};js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru" /></div></noscript>
 @endif

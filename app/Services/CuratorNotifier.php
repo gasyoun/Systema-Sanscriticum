@@ -9,18 +9,21 @@ use App\Filament\Pages\MarathonMantraReviews;
 use App\Filament\Resources\CourseInterestRequestResource;
 use App\Filament\Resources\CourseMaterialSubmissionResource;
 use App\Filament\Resources\CourseResource;
+use App\Filament\Resources\CourseWaitlistItemResource;
 use App\Filament\Resources\GroupResource;
 use App\Filament\Resources\UserResource;
 use App\Jobs\SendTelegramChatMessageJob;
 use App\Models\Course;
 use App\Models\CourseInterestRequest;
 use App\Models\CourseMaterialSubmission;
+use App\Models\CourseWaitlistItem;
 use App\Models\Group;
 use App\Models\MarathonEnrollment;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\Tariff;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
@@ -564,6 +567,25 @@ class CuratorNotifier
     }
 
     /**
+     * 152-ФЗ ст. 21: студент запросил из кабинета удаление персональных данных.
+     * Срок ответа оператора — 30 дней; удаление выполняет куратор вручную
+     * (с учётом данных, которые обязаны храниться по налоговому учёту).
+     */
+    public function personalDataDeletionRequested(User $user, CarbonInterface $deadline): void
+    {
+        $lines = [
+            '🗑 <b>Запрос на удаление персональных данных</b> (152-ФЗ)',
+            '',
+            $this->studentLine($user),
+            'Срок по закону: до <b>'.$deadline->format('d.m.Y').'</b> (30 дней).',
+            'Задача заведена в поддержке. Платёжные документы храним по сроку налогового учёта — остальное удаляем или обезличиваем.',
+            $this->adminLink($user),
+        ];
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
      * Новый аккаунт на чекауте похож email-ом на уже существующий (опечатка в
      * домене — .con/.com, gmial/gmail и т.п.), но НЕ совпадает точь-в-точь
      * (иначе сработал бы обычный dedup и чекаут отказал бы сразу).
@@ -838,6 +860,63 @@ class CuratorNotifier
         $lines[] = $this->interestAdminLink();
 
         $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Ждун: кворум голосов набран, оплата по привязанному курсу открыта
+     * автоматически (OpenWaitlistPayment: статус payment_open + включение
+     * тарифов). Сигнал куратору на выборочную проверку — состав и цены
+     * тарифов включила машина.
+     */
+    public function waitlistPaymentOpened(CourseWaitlistItem $item, int $activatedTariffs): void
+    {
+        $lines = [
+            '🟢 <b>Ждун: кворум набран — оплата открыта</b>',
+            '',
+            'Строка: <b>'.e(filled($item->course_title) ? (string) $item->course_title : $item->slug).'</b>',
+        ];
+
+        if ($item->course !== null) {
+            $lines[] = 'Курс: <b>'.e((string) $item->course->title).'</b> (#'.$item->course_id.')';
+        }
+        $lines[] = 'Голоса: <b>'.$item->votesCount().' из '.$item->min_payers.'</b>';
+        $lines[] = 'Включено тарифов: <b>'.$activatedTariffs.'</b>';
+        $lines[] = '';
+        $lines[] = '👉 <a href="'.$this->waitlistAdminLink().'">Список ожидания в админке</a>';
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Ждун: кворум набран, но оплату открыть нельзя — у курса нет тарифов
+     * или курс скрыт с витрины. Дедуп «раз в сутки» делает OpenWaitlistPayment.
+     */
+    public function waitlistQuorumBlocked(CourseWaitlistItem $item, string $reason): void
+    {
+        $why = $reason === 'tariffs'
+            ? 'Причина: у курса нет тарифов — создайте и включите их в админке.'
+            : 'Причина: курс скрыт с витрины — включите «Показывать на сайте».';
+
+        $lines = [
+            '🟡 <b>Ждун: кворум набран — оплату открыть нельзя</b>',
+            '',
+            'Строка: <b>'.e(filled($item->course_title) ? (string) $item->course_title : $item->slug).'</b>',
+            'Голоса: <b>'.$item->votesCount().' из '.$item->min_payers.'</b>',
+            $why,
+            '',
+            '👉 <a href="'.$this->waitlistAdminLink().'">Список ожидания в админке</a>',
+        ];
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    private function waitlistAdminLink(): string
+    {
+        try {
+            return CourseWaitlistItemResource::getUrl('index');
+        } catch (\Throwable) {
+            return url('/admin');
+        }
     }
 
     /**

@@ -1,0 +1,43 @@
+/*
+ * 152-ФЗ: шрифты и иконки со своего сервера вместо fonts.googleapis.com /
+ * fonts.gstatic.com / cdnjs.cloudflare.com — эти CDN получали IP каждого
+ * посетителя (трансграничная передача без согласия). Пакеты @fontsource
+ * объявляют те же имена семейств, что и Google Fonts ('Montserrat',
+ * 'Nunito Sans', …), поэтому существующие font-family в вёрстке не меняются.
+ * Браузер скачивает только нужные начертания и подмножества (unicode-range).
+ */
+
+@import '@fontsource/montserrat/400.css';
+@import '@fontsource/montserrat/500.css';
+@import '@fontsource/montserrat/600.css';
+@import '@fontsource/montserrat/700.css';
+@import '@fontsource/montserrat/800.css';
+@import '@fontsource/montserrat/900.css';
+
+@import '@fontsource/nunito-sans/200.css';
+@import '@fontsource/nunito-sans/300.css';
+@import '@fontsource/nunito-sans/400.css';
+@import '@fontsource/nunito-sans/400-italic.css';
+@import '@fontsource/nunito-sans/500.css';
+@import '@fontsource/nunito-sans/600.css';
+@import '@fontsource/nunito-sans/700.css';
+@import '@fontsource/nunito-sans/700-italic.css';
+@import '@fontsource/nunito-sans/800.css';
+@import '@fontsource/nunito-sans/900.css';
+
+@import '@fontsource/manrope/400.css';
+@import '@fontsource/manrope/500.css';
+@import '@fontsource/manrope/700.css';
+@import '@fontsource/manrope/800.css';
+
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+
+@import '@fontsource/charis-sil/400.css';
+@import '@fontsource/charis-sil/400-italic.css';
+@import '@fontsource/charis-sil/700.css';
+@import '@fontsource/charis-sil/700-italic.css';
+
+@import '@fontsource/tiro-devanagari-sanskrit/400.css';
+
+@import '@fortawesome/fontawesome-free/css/all.min.css';
