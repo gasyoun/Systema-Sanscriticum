@@ -58,6 +58,22 @@ $userIds->each(function ($id, $i) use (&$map) {
 // --- Колоды -----------------------------------------------------------------
 $decks = DB::table('srs_decks')->orderBy('id')->get(['id', 'slug', 'name'])->toArray();
 
+// H6394 (проверка e верификатора, additions-only): slug/name авторских колод
+// могут нести сырой user_id (user-6599-…) — вычищаем ПОСЛЕ выборки; строка
+// выборки выше нетронута, чтобы stale-base guard не видел удаления свежей строки.
+foreach ($decks as $deck) {
+    $deck->slug = preg_replace_callback(
+        '/^user-(\d+)-/',
+        fn ($m) => isset($map[(int) $m[1]]) ? 'user-'.$map[(int) $m[1]].'-' : 'user-REDACTED-',
+        (string) $deck->slug
+    );
+    $deck->name = preg_replace_callback(
+        '/\buser[- ]?(\d{2,})\b/',
+        fn ($m) => isset($map[(int) $m[1]]) ? 'user-'.$map[(int) $m[1]] : 'user-REDACTED',
+        (string) $deck->name
+    );
+}
+
 // --- Карты только лигатурных колод (для harm-каноничности контента) --------
 $ligatureDeckIds = DB::table('srs_decks')->where('slug', 'like', '%ligature%')->pluck('id');
 $ligatureCards = $ligatureDeckIds->isEmpty() ? [] : DB::table('srs_cards')
