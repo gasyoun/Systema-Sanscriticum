@@ -9,6 +9,7 @@ use App\Models\Group;
 use App\Models\Schedule;
 use App\Services\Anons\AnonsOccasionSelector;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use InvalidArgumentException;
 use Tests\TestCase;
@@ -52,8 +53,8 @@ final class AnonsOccasionSelectorTest extends TestCase
             'title' => $course->title.' — занятие',
             'group_id' => $group->id,
             'course_id' => $course->id,
-            'start' => \Illuminate\Support\Carbon::parse($start),
-            'end' => \Illuminate\Support\Carbon::parse($start)->addHours(2),
+            'start' => Carbon::parse($start),
+            'end' => Carbon::parse($start)->addHours(2),
             'is_overview' => $overview,
         ]);
     }
