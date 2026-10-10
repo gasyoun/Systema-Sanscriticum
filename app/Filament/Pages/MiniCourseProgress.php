@@ -17,7 +17,6 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -350,15 +349,6 @@ class MiniCourseProgress extends Page implements HasTable
             fclose($out);
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
-        ]);
-    }
-
-    public function render(): View
-    {
-        MiniCourseProgressData::flushCache();
-
-        return view(static::$view, [
-            'course' => MiniCourseProgressData::course(),
         ]);
     }
 }
