@@ -777,6 +777,15 @@ class Payment extends Model
                 $payment->received_by_teacher_id = null;
             }
 
+            // PayPal-канал (валютная заявка студента / авто-списание подписки) —
+            // в способе оплаты всегда «paypal»: раньше колонка была пуста для
+            // всего, что не пришло с вебхука Точки, и PayPal-платежи висели в
+            // админке как «Не определён». Перезаписать card/sbp не может — Точка
+            // не участвует в этом канале.
+            if (in_array($payment->provider, [self::PROVIDER_PAYPAL, self::PROVIDER_PAYPAL_SUBSCRIPTION], true)) {
+                $payment->payment_method = 'paypal';
+            }
+
             // H5445 (P3, D10): частичный возврат — только с блоками (флаг
             // money_refund_access_rules, дефолт OFF).
             app(RefundAccessPolicy::class)->guardLegacyRefund($payment);

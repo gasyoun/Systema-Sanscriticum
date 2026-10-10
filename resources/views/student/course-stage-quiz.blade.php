@@ -13,7 +13,10 @@
     </a>
 
     <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
-        <p class="text-[10px] font-bold uppercase tracking-widest text-brand mb-2">Этап {{ $quiz->block_number }}</p>
+        @php($isFinalQuiz = $quiz->block_number > (int) $course->blocks->max('number') && $quiz->block_number > 1)
+        <p class="text-[10px] font-bold uppercase tracking-widest {{ $isFinalQuiz ? 'text-indigo-500' : 'text-brand' }} mb-2">
+            {{ $isFinalQuiz ? '🏁 Финал курса' : 'Этап '.$quiz->block_number }}
+        </p>
         <h1 class="text-2xl font-extrabold text-gray-900 leading-tight">{{ $quiz->title }}</h1>
         @if ($quiz->description)
             <p class="text-gray-600 mt-2 leading-relaxed">{{ $quiz->description }}</p>
@@ -42,7 +45,9 @@
                 </p>
                 <p class="mt-1 font-medium">
                     @if ($result['passed'])
-                        @if ($quiz->block_number >= 5)
+                        @if ($isFinalQuiz)
+                            Курс пройден — поздравляем! 🎓 Разбор ответов — ниже.
+                        @elseif ($quiz->block_number >= 5)
                             Этап пройден! Разбор ответов — ниже.
                         @else
                             Этап пройден — переходите к следующему уроку. Разбор ответов — ниже.
