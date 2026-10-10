@@ -1,7 +1,7 @@
 {
     "meta": {
         "schema_version": 1,
-        "exported_at": "2026-10-10T22:29:10+03:00",
+        "exported_at": "2026-10-10T22:44:31+03:00",
         "source": "Systema-Sanscriticum prod MySQL (.92), read-only SELECT",
         "pseudonymized": true,
         "note": "user_id -> uNN по возрастанию id; таблица соответствия не выгружается."
@@ -89,7 +89,7 @@
         },
         {
             "id": 17,
-            "slug": "user-6599-1-lfxv",
+            "slug": "user-u12-1-lfxv",
             "name": "1"
         },
         {
