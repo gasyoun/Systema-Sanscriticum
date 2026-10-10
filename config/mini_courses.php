@@ -7,6 +7,9 @@
  * через env или прямо в конфиге. Значения по умолчанию = прод (10-10-2026).
  */
 return [
+    // Слаг мини-курса «Подготовительная группа» (страница прогресса в админке).
+    'slug' => env('MINI_COURSE_SLUG', 'podgotovitelnaya-gruppa-sanskrita'),
+
     // Курс, на который выдаётся промокод сдавшим итоговый тест.
     'grammar_course_id' => (int) env('MINI_COURSE_GRAMMAR_COURSE_ID', 450),
 
