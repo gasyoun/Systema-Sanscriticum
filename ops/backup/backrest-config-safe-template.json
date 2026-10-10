@@ -1,5 +1,5 @@
 {
-  "_comment": "DEPRECATED: this historical template retains the old SFTP check schedule for provenance. Do not apply it. Use backrest-config-safe-template.json; scheduled checks over append-only SFTP leave an exclusive lock and block hourly backups.",
+  "_comment": "Current vps92 template. No Backrest check schedule: an exclusive check lock cannot be removed through append-only SFTP and blocks hourly backups. Run integrity checks only locally on vps91 with lock-removal rights. Replace placeholders before use; never commit credentials.",
   "version": 6,
   "modno": 1,
   "instance": "vps-samskrte92",
@@ -23,13 +23,7 @@
             "command": "/usr/local/sbin/backrest-hook-notify.sh {{ .ShellEscape .Task }} {{ .ShellEscape .Error }}"
           }
         }
-      ],
-      "checkPolicy": {
-        "schedule": {
-          "cron": "7 7 * * 0",
-          "clock": "CLOCK_UTC"
-        }
-      }
+      ]
     }
   ],
   "plans": [],
