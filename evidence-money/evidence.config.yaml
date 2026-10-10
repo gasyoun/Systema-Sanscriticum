@@ -1,0 +1,7 @@
+# H6326 — Evidence project config (minimal).
+# RUB figures come from the SQL ROUND()s; keep Evidence formatting defaults.
+plugins:
+  components:
+    "@evidence-dev/core-components": {}
+  datasources:
+    mysql: {}

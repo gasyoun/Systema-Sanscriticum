@@ -1,4 +1,4 @@
-_Created: 07-05-2026 · Last updated: 05-09-2026_
+_Created: 07-05-2026 · Last updated: 10-10-2026_
 
 # app/Providers
 
@@ -13,13 +13,19 @@ _Created: 07-05-2026 · Last updated: 05-09-2026_
 
 **`boot()`**:
 - Принудительно переключает URL на HTTPS в production (`URL::forceScheme('https')`).
-- Регистрирует наблюдателей: `ScheduleObserver`, `ArticleViewObserver`, `PaymentObserver`, `LandingPageObserver`.
+- Регистрирует наблюдателей (17 привязок в `boot()`): `ScheduleObserver`,
+  `ArticleViewObserver`, `CourseCoverWebpObserver`, `PaymentObserver` +
+  `PaymentAuditObserver`/`PaymentTelemetryObserver`/`PaymentDealBridgeObserver`,
+  аудиты `IpExpenseAuditObserver`/`LeadAuditObserver`/`MessageTemplateAuditObserver`,
+  `LandingPageObserver`, `SitemapCacheInvalidator` (LandingPage/Course/Article),
+  `LessonObserver`, `LectureClipObserver`, `ContentCandidateObserver`.
 
 ## Filament-провайдеры
 
 ### `Filament/AdminPanelProvider`
 Конфигурирует панель `/admin`:
-- Регистрирует все 18 ресурсов, виджеты, страницы.
+- Регистрирует ресурсы автообнаружением (`->discoverResources()` из
+  `app/Filament/Resources`, сейчас 62), виджеты, страницы.
 - Устанавливает guard `web`, middleware-группу `admin`.
 - Подключает плагины: Curator (медиабиблиотека), Excel (экспорт).
 
@@ -35,8 +41,9 @@ _Created: 07-05-2026 · Last updated: 05-09-2026_
 | `AuthServiceProvider` | Привязка Policy-классов к моделям (если есть). |
 | `BlogAnalyticsServiceProvider` | Инициализация счетчиков аналитики для блога. |
 | `BroadcastServiceProvider` | Настройка broadcasting (не используется активно). |
-| `EventServiceProvider` | Маппинг событий на слушателей: `Login → UserLoginListener`, `Logout → UserLogoutListener`. |
+| `EventServiceProvider` | Маппинг событий на слушателей: `Login → UserLoginListener`, `Logout → UserLogoutListener`, `SocialiteWasCalled → VK/Yandex-драйверы socialiteproviders`. |
 | `HorizonServiceProvider` | Настройка доступа к дашборду Horizon (`/horizon`). |
-| `RouteServiceProvider` | Привязка `HOME` константы (`/cabinet`), rate limiting для API. |
+| `RouteServiceProvider` | `HOME` константа (`/home`), rate limiting (`api`, `livewire-update`). |
+| `MessagingServiceProvider` | Синглтоны каналов доставки мессенджеров (Telegram/VK/MAX) + менеджер каналов. |
 
 _Dr. Mārcis Gasūns_

@@ -1,4 +1,4 @@
-_Created: 01-07-2026 · Last updated: 05-09-2026_
+_Created: 01-07-2026 · Last updated: 10-10-2026_
 
 # AGENTS.md — Systema Sanscriticum
 
@@ -44,7 +44,7 @@ salary calculation (`seesOwnSalary()`), not the school payroll. Policy:
   secret rotation before changing behavior.
 - **Telegram support analytics:** MadelineProto session/login, flood limits,
   contact auto-linking, responder mappings, sync state resets.
-- **Runtime baseline:** Laravel 12 on PHP 8.3. Eloquent supports both the
+- **Runtime baseline:** Laravel 13 on PHP 8.3. Eloquent supports both the
   `protected $casts` property and the protected `casts(): array` method; follow
   the convention already used by the model being edited.
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Calendar;
 
 use App\Models\CourseBlock;
+use App\Models\Group;
 use App\Models\Schedule;
 use App\Models\User;
 use Illuminate\Support\Carbon;
@@ -18,9 +19,18 @@ use Illuminate\Support\Collection;
  * группы, тот же фильтр «карточка живёт до конца занятия»), плюс диапазоны
  * Course/CourseBlock как all-day события — фид не должен расходиться с тем,
  * что студент видит в кабинете.
+ *
+ * H6347 (будильник T−10 Марциса): фид дополнительно включает группы, где
+ * пользователь ПРЕПОДАЁТ (courses.teacher_id / course_teacher pivot), а не
+ * только студенческие членства user->groups; каждый VEVENT несёт VALARM
+ * -PT10M (подписанные webcal-календари Google/Samsung его игнорируют —
+ * дефолт-алерт ставится в приложении, см. docs/ops/TEACHER_ALARM_T10_SAMSUNG_RUNBOOK.md).
  */
 class IcsFeedBuilder
 {
+    /** Алерт «за 10 минут» — выбранный T−10 решения MG от 10-10-2026. */
+    public const VALARM_TRIGGER = '-PT10M';
+
     public function build(User $user): string
     {
         $lines = [
@@ -48,7 +58,12 @@ class IcsFeedBuilder
     /** @return Collection<int, Schedule> */
     private function scheduleEvents(User $user)
     {
-        $groupIds = $user->groups->pluck('id');
+        // H6347 — студент идёт по user->groups, преподаватель — по группам
+        // своих курсов (courses.teacher_id или course_teacher pivot).
+        $groupIds = $user->groups->pluck('id')
+            ->merge($this->taughtGroupIds($user))
+            ->unique()
+            ->values();
 
         return Schedule::with(['course', 'group'])
             ->where(function ($query) use ($groupIds) {
@@ -81,6 +96,18 @@ class IcsFeedBuilder
             ->get();
     }
 
+    /** Группы, где пользователь преподаёт (основной или со-препод) — H6347. */
+    private function taughtGroupIds(User $user): Collection
+    {
+        if ($user->teacher_id === null) {
+            return collect();
+        }
+
+        return Group::query()
+            ->whereHas('courses', fn ($query) => $query->forTeacher($user->teacher_id))
+            ->pluck('id');
+    }
+
     private function scheduleToVevent(Schedule $schedule): array
     {
         $end = $schedule->end ?? $schedule->start->copy()->addHours(Schedule::DEFAULT_DURATION_HOURS);
@@ -108,6 +135,13 @@ class IcsFeedBuilder
             $lines[] = 'LOCATION:'.$this->escape($schedule->zoom_join_url ?: $schedule->link);
         }
 
+        // H6347 — будильник T−10 в каждом VEVENT. ВАЖНО: подписанные (webcal)
+        // календари Google/Samsung VALARM игнорируют — дефолт-алерт ставится
+        // в приложении (docs/ops/TEACHER_ALARM_T10_SAMSUNG_RUNBOOK.md).
+        array_push($lines, ...$this->valarmLines(
+            'Через 10 минут: '.($schedule->title ?: ($schedule->course->title ?? 'Занятие'))
+        ));
+
         $lines[] = 'END:VEVENT';
 
         return $lines;
@@ -128,7 +162,20 @@ class IcsFeedBuilder
             'DTEND;VALUE=DATE:'.$end->format('Ymd'),
             'SUMMARY:'.$this->escape(($block->course->title ?? 'Курс').' — '.($block->title ?: 'блок '.$block->number)),
             'TRANSP:TRANSPARENT',
+            ...$this->valarmLines(($block->course->title ?? 'Курс').' — '.($block->title ?: 'блок '.$block->number)),
             'END:VEVENT',
+        ];
+    }
+
+    /** Компонент VALARM «за T−10» (RFC 5545 §3.6.6) — вложен в каждый VEVENT. */
+    private function valarmLines(string $label): array
+    {
+        return [
+            'BEGIN:VALARM',
+            'ACTION:DISPLAY',
+            'DESCRIPTION:'.$this->escape($label),
+            'TRIGGER:'.self::VALARM_TRIGGER,
+            'END:VALARM',
         ];
     }
 

@@ -1,6 +1,6 @@
 # Systema Sanscriticum — платформа онлайн-обучения санскриту
 
-_Created: 13-02-2026 · Last updated: 14-09-2026_
+_Created: 13-02-2026 · Last updated: 10-10-2026_
 
 Laravel-приложение для школы санскрита: учебный кабинет со словарем, домашними
 заданиями и интервальными повторениями (SRS), магазин курсов с гибкими тарифами,
@@ -123,7 +123,7 @@ draft → submitted → (needs_revision → submitted)* → accepted
   цены курса;
 - **Начисления** (растят оба счетчика): завершен урок (+10), курс пройден (+500),
   просмотр открытого урока (+20), ежедневный вход (+5), покупка курса (+50),
-  приглашенный друг оплатил (+100);
+  SRS-повторение (+3, дневной потолок 120 начислений);
 - **Ранги** по `lifetime_prana`: Śiṣya → Adhyāyin → Snātaka → Ācārya → Paṇḍita
   (`config('prana.ranks')`, `PranaSettings::rankFor()`, `User::pranaRank()`);
 - **P2P-перевод** («подарить прану», `POST /dvaram/prana/transfer`,
@@ -160,7 +160,8 @@ draft → submitted → (needs_revision → submitted)* → accepted
 `resources/views/marathon/skins/{a,b,c,d}/content.blade.php` через
 `App\Support\MarathonVisual` (`MARATHON_LANDING_VISUAL_VARIANT`, дефолт `b`, QA-оверрайд
 `?skin=`). На 31-07-2026 готовы B (light island, дефолт), A (dark-native, H1976),
-C (warm paper, H1977); D (stepped, H1978) — в очереди.
+C (warm paper, H1977); D (stepped, H1978) — доставлены, все четыре варианта
+в `App\Support\MarathonVisual::VARIANTS`.
 
 Файлы: [MarathonController.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/MarathonController.php),
 [config/marathon.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/marathon.php),
@@ -204,7 +205,7 @@ C (warm paper, H1977); D (stepped, H1978) — в очереди.
    ([`/online`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/ShopController.php)), `Tariff::calculateFinalPriceForUser()`
    считает итоговую цену (лояльность/персональная скидка, зачет депозита,
    апгрейд-кредит, оплата праной). Оплата уходит в Точку Банк → вебхук
-   `/api/webhooks/tochka` → `PaymentObserver::grantAccess()` добавляет студента в
+   `/api/webhooks/tochka` → `Payment::grantAccess()` добавляет студента в
    нужную `Group`. **Ручного назначения групп нет** — доступ открывается фактом оплаты.
 2. **Покупка блока «половинами».** Дорогой блок можно взять за два захода:
    `block_N_h1`, затем `block_N_h2`. При докупке целого блока уже оплаченная
@@ -263,7 +264,7 @@ C (warm paper, H1977); D (stepped, H1978) — в очереди.
 
 | Слой | Технологии |
 |---|---|
-| Backend | Laravel 12, PHP 8.3 |
+| Backend | Laravel 13, PHP 8.3 |
 | Frontend | Vite 8 (Node.js 20.19+ или 22.12+), Tailwind CSS 4, Axios, Livewire |
 | Admin | Filament v3 (две панели: `admin` и `editor`) |
 | Очереди | Laravel Horizon + Redis |
@@ -324,7 +325,7 @@ php artisan test --filter=TestName
 Оплата (Точка Банк)
    → вебхук /api/webhooks/tochka
    → Payment переходит в один из Payment::PAID_STATUSES
-   → PaymentObserver::grantAccess()
+   → Payment::processSuccessfulPayment() → Payment::grantAccess()
    → пользователь добавляется в нужную Group
    → уроки фильтруются по группам пользователя на этапе запроса
 ```
@@ -404,7 +405,7 @@ LandingPage ──> JSON-блоки
 
 - [AdminPanelProvider.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Providers/Filament/AdminPanelProvider.php) — полная
   админка `/admin`, доступ по `is_admin` (ресурсы автообнаружением из
-  `app/Filament/Resources`, сейчас 37).
+  `app/Filament/Resources`, сейчас 62).
 - [LectureEditorPanelProvider.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Providers/Filament/LectureEditorPanelProvider.php)
   — редактор лекций `/editor`, доступ по `is_lecture_editor`.
 
@@ -445,8 +446,9 @@ LandingPage ──> JSON-блоки
 отзывы и др.). Последний маршрут в [routes/web.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/routes/web.php) перехватывает
 любой slug и ищет `LandingPage`.
 
-Добавление типа блока: создать Blade в [resources/views/promo/blocks/](resources/views/promo/blocks/),
-зарегистрировать в `LandingPage::renderBlock()`.
+Добавление типа блока: создать Blade в [resources/views/promo/blocks/](resources/views/promo/blocks/) —
+его подхватывает `@includeIf("promo.blocks.{$block['type']}")` в
+[resources/views/promo/show.blade.php](resources/views/promo/show.blade.php), отдельной регистрации в модели нет.
 
 ### 4. Система лекций (`/editor`)
 
@@ -459,7 +461,7 @@ HTML (микросервис `lecture-builder`) → публикация. Ест
 
 ### 5. Панель администратора (`/admin`)
 
-Filament v3, 37 автообнаруживаемых CRUD-ресурсов: пользователи, курсы, уроки, платежи, тарифы,
+Filament v3, 62 автообнаруживаемых CRUD-ресурса: пользователи, курсы, уроки, платежи, тарифы,
 промокоды, словари, преподаватели, расписание, объявления, статьи и т.д. Плюс
 медиа (Filament Curator), экспорт в Excel, мониторинг очередей (`/horizon`),
 резервное копирование БД (Spatie Backup).
@@ -490,7 +492,8 @@ funnel «начали / прошли» и таблица прогресса; с�
 
 Ленивый `users.referral_code` + `referred_by`; `CaptureReferral` middleware ловит
 `?ref=` в сессию, `ReferralService` идемпотентно привязывает реферера и начисляет
-ему **100 праны при первой оплате** приглашенного (через `PaymentObserver`).
+ему **денежный кредит** (`users.referral_credit`, дефолт 500 ₽) при первой оплате
+приглашенного (через `PaymentObserver`).
 Карточка-приглашение — во вкладке праны кабинета.
 
 ### 10. Социальная авторизация (scaffold)
@@ -498,8 +501,9 @@ funnel «начали / прошли» и таблица прогресса; с�
 `social_accounts` + `SocialAccount`, `SocialAuthService` (find-or-create,
 отвязан от Socialite ради тестируемости), маршруты `/auth/{provider}/redirect|callback`
 (whitelist-guard → 404). Кнопки на `/login` видны только при заданном `client_id`.
-Google работает из коробки; VK / Yandex требуют community-драйверов
-`socialiteproviders/*` (follow-up).
+Google работает из коробки; VK / Yandex — community-драйверы
+`socialiteproviders/vkontakte` + `/yandex` заведены (listener `SocialiteWasCalled` в
+`EventServiceProvider`), остаются креды VK/Yandex в `.env`.
 
 ### 11. Мобильный API (`/api/v1`, Sanctum)
 
