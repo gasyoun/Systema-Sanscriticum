@@ -18,8 +18,9 @@ use Illuminate\Support\Facades\Log;
  * (MG 31-08-2026) — голос привязан к cabinet-юзеру через users.telegram_id,
  * непривязанный чат получает инструкцию привязки и голоса не оставляет.
  *
- * Обрабатывает /zhdun и callback_query с префиксом "wl:"; вызывается из
- * ProcessTelegramMagnetUpdate только для глобального бота. Все ответы
+ * Обрабатывает /zhdun, /zhdun-stats (H6407 — только кураторский чат,
+ * конвенция CuratorNotifier) и callback_query с префиксом "wl:"; вызывается
+ * из ProcessTelegramMagnetUpdate только для глобального бота. Все ответы
  * Telegram глотаются с логом — ошибка отправки не должна ронять джобу
  * (Telegram сделает свой ретрай вебхука).
  */
@@ -59,6 +60,11 @@ final class WaitlistBotService
         $command = strtolower(explode('@', explode(' ', $text)[0])[0]);
         if ($command === '/zhdun') {
             $this->sendList((string) $chatId);
+
+            return true;
+        }
+        if ($command === '/zhdun-stats') {
+            $this->sendZhdunStats((string) $chatId);
 
             return true;
         }
@@ -259,6 +265,74 @@ final class WaitlistBotService
         })->implode("\n");
 
         $this->replace($chatId, $messageId, "🗳 <b>Ваши голоса</b>\n\n".$lines, [[['text' => '◀️ К списку курсов', 'callback_data' => self::CALLBACK_PREFIX.'page:0']]]);
+    }
+
+    /**
+     * /zhdun-stats (H6407): раскладка «кто за какой курс» — курс,
+     * голоса/кворум и каждый голосовавший (имя, дата, слот). Видна только
+     * кураторскому чату — получатель из конвенции CuratorNotifier
+     * (services.telegram.curators_chat_id); не задан или чужой чат —
+     * вежливый отказ без данных.
+     */
+    public function sendZhdunStats(string $chatId): void
+    {
+        $curatorsChatId = (string) (config('services.telegram.curators_chat_id') ?? '');
+        if ($curatorsChatId === '' || $chatId !== $curatorsChatId) {
+            $this->tg('sendMessage', [
+                'chat_id' => $chatId,
+                'text' => 'Эта команда доступна только кураторам ОРС. Голосовать за будущие группы — /zhdun',
+            ]);
+
+            return;
+        }
+
+        $items = $this->listedItems();
+        $votesByItem = WaitlistVote::query()
+            ->whereIn('course_waitlist_item_id', $items->modelKeys())
+            ->with('user:id,name')
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('course_waitlist_item_id');
+
+        $head = "📊 <b>Ждун — кто за какой курс</b>\n"
+            .'Курсов: '.$items->count().' · голосов: '.$votesByItem->sum(fn ($votes) => $votes->count())."\n";
+
+        $messages = [];
+        $current = $head;
+        foreach ($items as $index => $item) {
+            $block = "\n".($index + 1).'. <b>'.e($item->course_title ?: 'Курс').'</b> — '
+                .$item->votes_count.' / '.$item->min_payers."\n";
+
+            $votes = $votesByItem->get($item->getKey());
+            if ($votes === null || $votes->isEmpty()) {
+                $block .= '   <i>пока нет голосов</i>';
+            } else {
+                $block .= $votes->map(function (WaitlistVote $vote): string {
+                    $slot = $vote->slot_preference !== null && isset(WaitlistVote::SLOT_PREFERENCES[$vote->slot_preference])
+                        ? WaitlistVote::SLOT_PREFERENCES[$vote->slot_preference] : 'любое время';
+
+                    return '   • '.e($vote->user?->name ?? ('user #'.$vote->user_id))
+                        .' ('.$slot.') · '.$vote->created_at?->format('d.m.Y');
+                })->implode("\n");
+            }
+
+            if (mb_strlen($current.$block) > 3800) {
+                $messages[] = $current;
+                $current = '';
+            }
+            $current .= $block;
+        }
+        $messages[] = $current;
+
+        foreach ($messages as $message) {
+            $this->tg('sendMessage', [
+                'chat_id' => $chatId,
+                'text' => $message,
+                'parse_mode' => 'HTML',
+                'disable_web_page_preview' => true,
+            ]);
+        }
     }
 
     /**
