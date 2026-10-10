@@ -636,7 +636,7 @@ class PayoutRunCommand extends Command
         return implode("\n", $out);
     }
 
-    /** «Карта», «СБП», «Наличные», «Долями»…; null → «не определен». */
+    /** «Карта», «СБП», «Наличные», «Долями», «PayPal»…; null → «не определен». */
     private function methodLabel(?string $method): string
     {
         return match ($method) {
@@ -644,6 +644,7 @@ class PayoutRunCommand extends Command
             'sbp' => 'СБП',
             'dolyame' => 'Долями',
             'cash' => 'Наличные',
+            'paypal' => 'PayPal',
             null => 'не определен',
             default => (string) $method,
         };

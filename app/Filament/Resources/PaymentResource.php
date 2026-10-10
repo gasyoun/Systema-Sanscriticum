@@ -22,6 +22,7 @@ use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
@@ -248,10 +249,11 @@ class PaymentResource extends Resource
                                 'sbp' => 'СБП',
                                 'dolyame' => 'Долями',
                                 'cash' => 'Наличные',
+                                'paypal' => 'PayPal',
                             ])
                             ->native(false)
                             ->placeholder('Не задан (Точка проставит сама)')
-                            ->helperText('Для наличных и прочих ручных проводок ставьте явно. Карта/СБП/Долями приходят с вебхука Точки — не затирайте, если уже стоят.'),
+                            ->helperText('Для наличных и прочих ручных проводок ставьте явно. Карта/СБП/Долями приходят с вебхука Точки, PayPal проставляется сам по валютной заявке — не затирайте, если уже стоят.'),
 
                         Forms\Components\TextInput::make('transaction_id')
                             ->label('ID транзакции (Банк / Расход)')
@@ -387,7 +389,14 @@ class PaymentResource extends Resource
                     ->date('d.m.Y') // <-- Убрали время, оставили только компактную дату
                     ->sortable()
                     ->color('gray')
-                    ->size('sm'),
+                    ->size('sm')
+                    // Итог по ВСЕМУ отфильтрованному набору (не по странице):
+                    // сколько платежей попало в текущие фильтры.
+                    ->summarize(
+                        Tables\Columns\Summarizers\Count::make()
+                            ->label('Платежей')
+                            ->formatStateUsing(fn ($state): string => number_format((float) $state, 0, ',', ' ')),
+                    ),
 
                 // 2. СТУДЕНТ (Добавили wrap, чтобы сузить колонку)
                 Tables\Columns\TextColumn::make('user.name')
@@ -425,7 +434,14 @@ class PaymentResource extends Resource
                     ->sortable()
                     ->weight(FontWeight::ExtraBold)
                     ->color(fn (Payment $record) => $record->amount < 0 ? 'danger' : ($record->status === 'paid' ? 'success' : 'gray'))
-                    ->alignment(Alignment::End),
+                    ->alignment(Alignment::End)
+                    // Общая сумма по всем строкам, попавшим в фильтры
+                    // (возвраты с минусом уменьшают итог естественно).
+                    ->summarize(
+                        Tables\Columns\Summarizers\Sum::make()
+                            ->label('Сумма всего')
+                            ->money('RUB', locale: 'ru'),
+                    ),
 
                 // Пометка «по скидке»: бейдж «-10%» / «-1000 ₽», если платёж со скидкой.
                 Tables\Columns\TextColumn::make('discount')
@@ -449,10 +465,30 @@ class PaymentResource extends Resource
                     ->badge()
                     ->color(fn (?string $state): string => Payment::statusColor($state))
                     ->formatStateUsing(fn (?string $state): string => Payment::statusLabel($state))
-                    ->alignment(Alignment::Center),
+                    ->alignment(Alignment::Center)
+                    // Разбивка итога по статусам: «Оплачено / Ожидает». Pending
+                    // держит полную цену тарифа, поэтому смешивать его с оплаченным
+                    // в одной цифре нельзя — касса месяца искажается.
+                    ->summarize(
+                        Tables\Columns\Summarizers\Sum::make()
+                            ->label('Оплачено / Ожидает')
+                            // query(id) помечает суммаризатор «модифицирующим» —
+                            // Filament не станет считать его в общем select-батче
+                            // как sum(amount), а вызовет using() ниже.
+                            ->query(fn ($query) => $query)
+                            ->using(function (QueryBuilder $query): string {
+                                $paid = (clone $query)->whereIn('status', Payment::PAID_STATUSES)->sum('amount');
+                                $pending = (clone $query)->where('status', 'pending')->sum('amount');
 
-                // Способ оплаты из вебхука Точки (H226): card/sbp/dolyame. Пусто —
-                // ручной платёж, PayPal или вебхук до появления поля; такие в
+                                return 'Оплачено: '.number_format((float) $paid, 0, ',', ' ')
+                                    .' ₽ · Ожидает: '.number_format((float) $pending, 0, ',', ' ').' ₽';
+                            })
+                            ->formatStateUsing(fn ($state) => $state),
+                    ),
+
+                // Способ оплаты: card/sbp/dolyame — с вебхука Точки (H226),
+                // paypal — валютный канал (ставится моделью по provider).
+                // Пусто — ручной платёж или вебхук до появления поля; такие в
                 // юнит-экономике считаются вилкой эквайринга.
                 Tables\Columns\TextColumn::make('payment_method')
                     ->label('Способ')
@@ -462,6 +498,7 @@ class PaymentResource extends Resource
                         'sbp' => 'success',
                         'dolyame' => 'warning',
                         'cash' => 'gray',
+                        'paypal' => 'primary',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
@@ -469,6 +506,7 @@ class PaymentResource extends Resource
                         'sbp' => 'СБП',
                         'dolyame' => 'Долями',
                         'cash' => 'Наличные',
+                        'paypal' => 'PayPal',
                         default => (string) $state,
                     })
                     ->placeholder('—')
@@ -558,8 +596,9 @@ class PaymentResource extends Resource
                         'canceled' => 'Отменено',
                     ]),
 
-                // Способ оплаты Точки; «Не определён» = NULL (ручные платежи,
-                // PayPal, старые вебхуки) — их эквайринг в юнит-экономике вилка.
+                // Способ оплаты: card/sbp/dolyame — Точка, paypal — валютный
+                // канал; «Не определён» = NULL (ручные платежи, старые вебхуки) —
+                // их эквайринг в юнит-экономике вилка.
                 Tables\Filters\SelectFilter::make('payment_method')
                     ->label('Способ оплаты')
                     ->options([
@@ -567,6 +606,7 @@ class PaymentResource extends Resource
                         'sbp' => 'СБП',
                         'dolyame' => 'Долями (рассрочка)',
                         'cash' => 'Наличные',
+                        'paypal' => 'PayPal',
                         'unknown' => 'Не определён',
                     ])
                     ->query(fn ($query, array $data) => $query->when(
@@ -626,6 +666,34 @@ class PaymentResource extends Resource
                         false: fn ($query) => $query->where('tariff', '!=', 'deposit'),
                         blank: fn ($query) => $query,
                     ),
+
+                // Быстрый выбор месяца одним кликом («октябрь 2026»), вместо
+                // ручного ввода границ в «Периоде» ниже. Тот же created_at,
+                // поэтому комбинируется с остальными фильтрами как AND.
+                Tables\Filters\SelectFilter::make('month')
+                    ->label('Месяц')
+                    ->options(
+                        collect(range(0, 23))
+                            ->mapWithKeys(function (int $i): array {
+                                $month = now()->subMonthsNoOverflow($i);
+                                $ru = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+
+                                return [
+                                    $month->format('Y-m') => $ru[$month->month - 1].' '.$month->year,
+                                ];
+                            })
+                            ->all()
+                    )
+                    ->query(function ($query, array $data) {
+                        $value = $data['value'] ?? null;
+                        if (! $value || ! preg_match('/^(\d{4})-(\d{2})$/', (string) $value, $m)) {
+                            return $query;
+                        }
+
+                        return $query
+                            ->whereYear('created_at', (int) $m[1])
+                            ->whereMonth('created_at', (int) $m[2]);
+                    }),
 
                 Tables\Filters\Filter::make('created_at')
                     ->label('Период')
