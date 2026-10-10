@@ -9,6 +9,10 @@
     <meta name="description" content="@yield('meta_description', 'Статьи о санскрите, грамматике, философии и практике.')">
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
+    {{-- H6211 Low-1: PNG 512 + apple-touch + публичный манифест (иконка в мобильной выдаче) --}}
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('images/icon-512.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/icon-180.png') }}">
+    <link rel="manifest" href="{{ asset('manifest-site.webmanifest') }}">
 
     {{-- Open Graph — переопределяется страницами --}}
     <meta property="og:type" content="@yield('og_type', 'website')">
@@ -24,16 +28,14 @@
     <meta name="robots" content="@yield('robots', 'index, follow')">
 
     {{-- Шрифты: Montserrat (основной) + Lora (serif в статьях) грузятся из article.css --}}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    @vite('resources/css/fonts.css')
 
     {{-- Font Awesome (иконки часов, соцсетей и т.п. — используются и в шапке, и в статьях) --}}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 {{-- ═══════════════ АНАЛИТИКА БЛОГА ═══════════════ --}}
 @if(!empty($blogAnalytics['yandex_id']))
-<script type="text/javascript">
+@include('partials.analytics-gate')
+<script type="text/javascript">ssConsent.onAnalytics(function () {
    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
    m[i].l=1*new Date();
    for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
@@ -46,12 +48,13 @@
        accurateTrackBounce:true,
        webvisor:true
    });
+});
 </script>
-<noscript><div><img src="https://mc.yandex.ru/watch/{{ $blogAnalytics['yandex_id'] }}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 @endif
 
 @if(!empty($blogAnalytics['vk_id']))
-<script type="text/javascript">
+@include('partials.analytics-gate')
+<script type="text/javascript">ssConsent.onAnalytics(function () {
   var _tmr = window._tmr || (window._tmr = []);
   _tmr.push({id: "{{ $blogAnalytics['vk_id'] }}", type: "pageView", start: (new Date()).getTime()});
   (function (d, w, id) {
@@ -61,8 +64,8 @@
     var f = function () {var s = d.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ts, s);};
     if (w.opera == "[object Opera]") { d.addEventListener("DOMContentLoaded", f, false); } else { f(); }
   })(document, window, "tmr-code");
+});
 </script>
-<noscript><div><img src="https://top-fwz1.mail.ru/counter?id={{ $blogAnalytics['vk_id'] }};js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru" /></div></noscript>
 @endif
 
 {{-- Прокидываем ID в JS, чтобы скрипты целей могли их использовать --}}
@@ -87,7 +90,7 @@ window.sendGoal = function(goalName) {
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/css/article.css'])
 
     {{-- Alpine — нужен для модалок/интерактива в шапке и футере --}}
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @vite('resources/js/alpine-standalone.js')
 
     <style>
         body { font-family: 'Montserrat', sans-serif; }

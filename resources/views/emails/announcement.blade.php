@@ -56,5 +56,6 @@
             </td>
         </tr>
     </table>
+    @include('emails.partials.unsubscribe-footer')
 </body>
 </html>

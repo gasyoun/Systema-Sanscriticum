@@ -11,6 +11,7 @@ use App\Models\Payment;
 use App\Models\Tariff;
 use App\Models\User;
 use App\Services\AttributionService;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\CuratorNotifier;
 use App\Services\Payments\PaypalClaimAmountCheck;
 use App\Services\Payments\PaypalForeignPriceService;
@@ -681,6 +682,7 @@ final class PaypalClaimController extends Controller
             'name' => $request->validated('name'),
             'password' => Hash::make(Str::random(12)),
         ]);
+        app(ConsentRecorder::class)->fromForm($request, 'claim:paypal', $user);
 
         app(AttributionService::class)->applyToNewUser($user);
 

@@ -12,6 +12,7 @@ use App\Models\Teacher;
 use App\Models\User;
 use App\Support\TrialBookToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -191,6 +192,94 @@ class PublicScheduleFeedTest extends TestCase
 
         $response->assertJsonCount(1, 'data');
         $response->assertJsonPath('data.0.course.slug', $b['course']->slug);
+    }
+
+    /**
+     * H6313: у каждой строки фида есть kind — «обзорное» (is_overview),
+     * «разовое» (у всех постов курса cadence=null) или «обычное». Пробные
+     * строки полем kind не дублируются — они уже видны по bookable/book_token.
+     */
+    public function test_feed_labels_kind_overview_oneoff_and_regular(): void
+    {
+        $teacher = Teacher::factory()->create(['name' => 'Вид Тестов']);
+        $category = Category::factory()->create();
+
+        // Обычное: один еженедельный слот — ритм-строка выводится (cadence не null).
+        $regular = $this->makeSession('Обычный курс', $teacher, $category);
+
+        // Разовое: занятия по четырём разным дням недели — cadence null
+        // (та же семантика irregular, что в сортировке /raspisanie).
+        $open = Course::factory()->create([
+            'title' => 'Открытые занятия и вебинары',
+            'teacher_id' => $teacher->id,
+            'is_visible' => true,
+        ]);
+        $open->categories()->attach($category->id);
+        $openGroup = Group::factory()->create();
+        $openGroup->courses()->attach($open->id);
+        foreach (['2027-03-09', '2027-03-10', '2027-03-11', '2027-03-14'] as $i => $day) {
+            Schedule::create([
+                'title' => 'Разовое O'.$i,
+                'group_id' => $openGroup->id,
+                'course_id' => $open->id,
+                'start' => Carbon::parse($day.' 16:00'),
+            ]);
+        }
+
+        // Обзорное: строка is_overview обычного курса — тот же блок, что в
+        // «обзорном» блоке TG-поста (FullSchedulePost::forCourse).
+        Schedule::create([
+            'title' => 'Обзорное занятие',
+            'group_id' => $regular['group']->id,
+            'course_id' => $regular['course']->id,
+            'start' => now()->addDays(3)->setTime(18, 0),
+            'is_overview' => true,
+        ]);
+
+        $rows = collect($this->getJson(self::URL)->assertOk()->json('data'));
+
+        $this->assertSame('обычное', $rows->firstWhere('title', 'Обычный курс — занятие')['kind']);
+        $this->assertSame('разовое', $rows->firstWhere('title', 'Разовое O0')['kind']);
+        $this->assertSame('обзорное', $rows->firstWhere('title', 'Обзорное занятие')['kind']);
+    }
+
+    /** H6313: вид — семантика КУРСА, не отдельной строки: смешанный курс (есть недельный ритм) — «обычное». */
+    public function test_kind_is_course_level_mixed_course_rows_are_regular(): void
+    {
+        $teacher = Teacher::factory()->create(['name' => 'Смесь Потоков']);
+        $category = Category::factory()->create();
+
+        $course = Course::factory()->create([
+            'title' => 'Смешанный курс',
+            'teacher_id' => $teacher->id,
+            'is_visible' => true,
+        ]);
+        $course->categories()->attach($category->id);
+
+        $weekly = Group::factory()->create();
+        $weekly->courses()->attach($course->id);
+        Schedule::create([
+            'title' => 'Поток А',
+            'group_id' => $weekly->id,
+            'course_id' => $course->id,
+            'start' => now()->addDays(2)->setTime(18, 0),
+        ]);
+
+        $loose = Group::factory()->create();
+        $loose->courses()->attach($course->id);
+        foreach (['2027-03-09', '2027-03-10', '2027-03-11'] as $i => $day) {
+            Schedule::create([
+                'title' => 'Поток Б #'.$i,
+                'group_id' => $loose->id,
+                'course_id' => $course->id,
+                'start' => Carbon::parse($day.' 16:00'),
+            ]);
+        }
+
+        $rows = collect($this->getJson(self::URL)->assertOk()->json('data'));
+
+        $this->assertSame('обычное', $rows->firstWhere('title', 'Поток А')['kind']);
+        $this->assertSame('обычное', $rows->firstWhere('title', 'Поток Б #0')['kind']);
     }
 
     public function test_second_identical_request_is_served_from_cache(): void

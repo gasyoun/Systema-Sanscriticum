@@ -137,6 +137,9 @@
                 </li>
             @endforeach
         </ol>
+
+        {{-- Квизы этапов (мини-курсы) --}}
+        @include('student.partials.course-quizzes', ['courseQuizzes' => $courseQuizzes ?? collect()])
     </section>
 
     {{-- Материалы --}}

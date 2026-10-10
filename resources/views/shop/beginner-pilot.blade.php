@@ -33,9 +33,10 @@
         <p class="mb-3"><strong>Время:</strong> ориентир для вводных материалов — около 15 минут в день. Живая встреча занимает отдельное время и не входит в эти 15 минут.</p>
         <p class="mb-6">Пропустили день — вернитесь к материалам и продолжите со своего места. Нагрузка основного курса зависит от его программы: перед покупкой проверьте длительность занятий, время на практику и доступность записей.</p>
         <div class="border-t border-stone-200 pt-5 space-y-4">
-            <div>
+            <div class="rounded-xl border-2 border-brand bg-orange-50 p-5">
                 <h3 class="font-bold">Самостоятельно — бесплатно</h3>
-                <p>Вводные материалы и задания без личной проверки куратора. Этот вариант остается доступен.</p>
+                <p>Два дня записей и вводные задания без личной проверки куратора. Начать можно сейчас.</p>
+                <a href="{{ route('marathon.show') }}#marathon-form" class="inline-flex mt-4 rounded-xl bg-brand px-5 py-3 text-white font-bold">Начать бесплатно →</a>
             </div>
             <div>
                 <h3 class="font-bold">С проверкой — {{ $offer['price'] }} ₽</h3>
@@ -47,12 +48,11 @@
                     @if ($offer['sessionScheduled'])
                         <p class="mt-2 font-semibold" role="status">Запись на консультацию {{ $offer['scheduleLabel'] }} закрыта. Бесплатные материалы остаются доступны.</p>
                     @else
-                        <p class="mt-2 font-semibold" role="status">Новая дата групповой консультации пока не подтверждена. До подтверждения даты начните с бесплатных материалов.</p>
+                        <p class="mt-2 font-semibold" role="status">Оплата {{ $offer['price'] }} ₽ сейчас закрыта: новая дата групповой консультации пока не подтверждена. До подтверждения даты начните с бесплатных материалов.</p>
                     @endif
                 @endif
             </div>
         </div>
-        <a href="{{ route('marathon.show') }}#marathon-form" class="inline-block mt-6 underline underline-offset-4">Открыть вводные материалы и условия участия</a>
     </section>
 
     <section aria-labelledby="next-title" class="mb-8">

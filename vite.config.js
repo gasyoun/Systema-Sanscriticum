@@ -9,6 +9,8 @@ export default defineConfig({
                 'resources/js/app.js',
                 'resources/css/article.css', // ← стили страницы статьи
                 'resources/js/transliterate.js', // H1463 — /transliterate playground
+                'resources/css/fonts.css', // 152-ФЗ — шрифты и Font Awesome со своего сервера
+                'resources/js/alpine-standalone.js', // 152-ФЗ — Alpine без jsdelivr (страницы без Livewire)
             ],
             refresh: true,
         }),

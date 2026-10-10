@@ -258,7 +258,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <i class="fas fa-play text-xs"></i> {{ $ctaAb['label'] ?? 'Смотреть пробный урок' }}
                             </a>
                         @else
-                            <a href="{{ route('shop.index', $course->isLive() ? ['format' => 'live'] : ($course->isEnrolling() ? ['format' => 'enrolling'] : ($course->format === 'recorded' ? ['format' => 'recorded'] : []))) }}"
+                            {{-- H6211: прямой path-URL фильтра вместо ?format= (как на главной, Low-2) --}}
+                            <a href="{{ $course->isLive() ? '/online/format/live' : ($course->isEnrolling() ? '/online/format/enrolling' : ($course->format === 'recorded' ? '/online/format/recorded' : '/online')) }}"
                                class="inline-flex justify-center items-center px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-[#1F2636] hover:bg-[#2A344A] transition-all">
                                 @if($course->format === 'recorded')
                                     Библиотека записей
@@ -359,6 +360,45 @@ document.addEventListener('DOMContentLoaded', function () {
         @include('shop.partials.audience')
         @include('shop.partials.outcomes')
         @include('shop.partials.flagship-free-step')
+
+        {{-- ───── Запись потока: уникальные факты когорты (H6211 Medium-2) ─────
+             Записанные группы одного курса были похожи на ~72% (аудит H6160).
+             Блок собирает видимый текст ТОЛЬКО из реальных данных этого потока —
+             период учёбы по блокам, число занятий, модули, уровень. Нет данных —
+             нет строки: факты вне реальных данных сюда не вносятся. --}}
+        @if($course->format === 'recorded')
+            @php
+                $cohortDated = $course->blocks->filter(fn ($b) => $b->starts_at);
+                $cohortStart = $cohortDated->min('starts_at');
+                $cohortEnd = $course->blocks->filter(fn ($b) => $b->ends_at)->max('ends_at');
+                $cohortLessons = (int) ($course->lessons_count ?: 0);
+                $cohortModules = $course->blocks->filter(fn ($b) => filled($b->title))->count();
+                $cohortLevel = $course->levelLabel();
+                preg_match('/гр\.\s*\d+/u', $course->title, $cohortMatch);
+                $cohortLabel = $cohortMatch[0] ?? null;
+            @endphp
+            @if($cohortStart && $cohortLessons > 0)
+                <section class="mb-12 lg:mb-16 rounded-2xl bg-[#111622] border border-[#1F2636] p-6 lg:p-8">
+                    <h2 class="text-xl lg:text-2xl font-bold text-white mb-3">
+                        Запись потока{{ $cohortLabel ? ' '.$cohortLabel : '' }}
+                    </h2>
+                    <p class="text-slate-300 leading-relaxed">
+                        Это не живая группа, а запись прошедшего потока{{ $cohortLabel ? ' '.$cohortLabel : '' }}:
+                        занятия шли с {{ $cohortStart->translatedFormat('d F Y') }}@if($cohortEnd && ! $cohortEnd->isSameDay($cohortStart)) по {{ $cohortEnd->translatedFormat('d F Y') }}@endif —
+                        {{ $cohortLessons }} {{ \App\Support\Plural::ru($cohortLessons, 'онлайн-занятие', 'онлайн-занятия', 'онлайн-занятий') }}
+                        осталось в записи, смотреть можно в своём темпе, доступ открывается сразу после оплаты.@if($cohortModules > 1)
+                        Программа — {{ $cohortModules }} {{ \App\Support\Plural::ru($cohortModules, 'модуль', 'модуля', 'модулей') }}.@endif@if($cohortLevel)
+                        Уровень — {{ $cohortLevel }}.@endif
+                    </p>
+                    <p class="text-sm text-slate-400 mt-4">
+                        Предпочитаете живые занятия?
+                        <a href="/online/format/live" class="text-indigo-400 underline hover:text-indigo-300">Живые группы с преподавателем</a>
+                        ·
+                        <a href="/online/format/recorded" class="text-indigo-400 underline hover:text-indigo-300">Другие записи курсов</a>
+                    </p>
+                </section>
+            @endif
+        @endif
 
         {{-- ───── 1. О КУРСЕ (парная раскладка: текст + панель фактов) ───── --}}
         @php

@@ -919,6 +919,12 @@ class Course extends Model
         return $this->hasMany(CourseBlock::class)->orderBy('number');
     }
 
+    /** Квизы этапов (мини-курсы): один на block_number. */
+    public function quizzes(): HasMany
+    {
+        return $this->hasMany(CourseQuiz::class)->orderBy('block_number');
+    }
+
     public function certificateMilestones(): HasMany
     {
         return $this->hasMany(CertificateMilestone::class)->orderBy('start_block');

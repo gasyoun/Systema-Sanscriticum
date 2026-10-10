@@ -34,5 +34,6 @@
             Если у вас возникнут вопросы, просто ответьте на это письмо — мы поможем.
         </p>
     </div>
+    @include('emails.partials.unsubscribe-footer')
 </body>
 </html>
