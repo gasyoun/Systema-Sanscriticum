@@ -8,6 +8,7 @@ use App\Models\AnonsLinkClick;
 use App\Models\AnonsPlacement;
 use App\Services\Anons\AnonsArchiveIndexer;
 use App\Services\Anons\AnonsMetricsService;
+use App\Services\Anons\AnonsOccasionSelector;
 use App\Services\Anons\PublicationKey;
 use App\Services\Anons\PublicationManifest;
 use Carbon\Exceptions\InvalidFormatException;
@@ -35,7 +36,8 @@ final class AnonsOpsCommand extends Command
         {--link= : /ga/ ключ (journal-*)}
         {--campaign= : слаг кампании (journal-add — массово, journal-list — фильтр)}
         {--permalink= : ссылка поста (journal-fill)}
-        {--published-at= : время публикации, parseable date (journal-fill)}';
+        {--published-at= : время публикации, parseable date (journal-fill)}
+        {--kind= : вид кампании — обзорное | разовое | обычное (journal-add, H6329)}';
 
     protected $description = 'Anons operations: metrics, archive indexing/search, placements journal (H5049, H6095)';
 
@@ -141,6 +143,16 @@ final class AnonsOpsCommand extends Command
             return self::FAILURE;
         }
 
+        // H6329: вид кампании («по разовым»/«по обзорным»/«по обычным») —
+        // fail-closed к словарю канона; пусто = вид не задан (строки до
+        // H6329). Повторный journal-add без --kind вид не стирает.
+        $kind = trim((string) $this->option('kind'));
+        if ($kind !== '' && ! in_array($kind, AnonsOccasionSelector::KINDS, true)) {
+            $this->error('Unknown --kind "'.$kind.'"; known kinds: '.implode(', ', AnonsOccasionSelector::KINDS).'.');
+
+            return self::FAILURE;
+        }
+
         $links = (array) config('tracked_links.links', []);
         $keys = $link !== '' ? [$link] : array_values(array_filter(
             array_keys($links),
@@ -160,17 +172,22 @@ final class AnonsOpsCommand extends Command
                 return self::FAILURE;
             }
             $entry = $links[$key] ?? [];
+            $attributes = [
+                'campaign' => $parsed['campaign'],
+                'creative' => $parsed['creative'],
+                'channel' => $parsed['channel'],
+                'destination' => $entry['destination'] ?? null,
+                'utm' => $entry['utm'] ?? null,
+            ];
+            if ($kind !== '') {
+                $attributes['kind'] = $kind;
+            }
             $placement = AnonsPlacement::updateOrCreate(
                 ['link' => $key],
-                [
-                    'campaign' => $parsed['campaign'],
-                    'creative' => $parsed['creative'],
-                    'channel' => $parsed['channel'],
-                    'destination' => $entry['destination'] ?? null,
-                    'utm' => $entry['utm'] ?? null,
-                ],
+                $attributes,
             );
-            $this->line("placement #{$placement->id} {$placement->link} ({$placement->campaign}/{$placement->creative}@{$placement->channel})");
+            $kindSuffix = $placement->kind !== null ? ' ['.$placement->kind.']' : '';
+            $this->line("placement #{$placement->id} {$placement->link} ({$placement->campaign}/{$placement->creative}@{$placement->channel}){$kindSuffix}");
         }
 
         return self::SUCCESS;
@@ -236,9 +253,11 @@ final class AnonsOpsCommand extends Command
             return self::SUCCESS;
         }
         foreach ($rows as $row) {
+            $kindSuffix = $row->kind !== null ? ' ['.$row->kind.']' : '';
             $this->line(sprintf(
-                '#%d %s %s/%s@%s pub=%s 24h=%s 72h=%s %s',
+                '#%d %s %s/%s@%s%s pub=%s 24h=%s 72h=%s %s',
                 $row->id, $row->link, $row->campaign, $row->creative, $row->channel,
+                $kindSuffix,
                 $row->published_at?->format('d-m-Y H:i') ?? '—',
                 $row->clicks_24h ?? '—', $row->clicks_72h ?? '—',
                 $row->permalink ?? '',
