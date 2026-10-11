@@ -145,6 +145,14 @@ final class SlotNoticeService
                 continue;
             }
 
+            // H6343 (MG 10-10): пауза арифметики «4-е занятие → напоминание об
+            // оплате» на каникулах — пока флаг группы is_on_vacation стоит,
+            // блок-граница по номерам строк не триггерит биллинг-напоминание
+            // (лето-2026: фантомные строки #21–#38 будили группу зря).
+            if ($group->is_on_vacation) {
+                continue;
+            }
+
             $number = LessonSeriesInfo::number($row->title);
             if ($number === null || $number < 1 || $number % self::BLOCK_SIZE !== 0) {
                 continue;
