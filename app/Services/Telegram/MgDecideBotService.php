@@ -166,17 +166,17 @@ final class MgDecideBotService
             }
         }
 
+        // note: только непустая строка — схема типа string, null нарушает её
+        // (leg B смоука 11-10-2026 поймал именно это); требуется только {id, decision}.
+        $item = ['id' => (string) $card['id'], 'decision' => $decision];
+
         $pack = [
             'sheet_id' => $sheetId,
             'pack' => $next,
             'pack_size' => 1,
             'generated' => now()->format('d-m-Y'),
             'decided' => 1,
-            'items' => [[
-                'id' => (string) $card['id'],
-                'decision' => $decision,
-                'note' => null,
-            ]],
+            'items' => [$item],
         ];
 
         $name = sprintf('pack-%02d.json', $next);

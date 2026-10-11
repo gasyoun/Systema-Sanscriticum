@@ -126,7 +126,7 @@ class MgDecideBotServiceTest extends TestCase
         $this->assertSame(1, $pack['pack_size']);
         $this->assertMatchesRegularExpression('/^\d{2}-\d{2}-\d{4}$/', $pack['generated']);
         $this->assertSame(1, $pack['decided']);
-        $this->assertSame([['id' => 'kosha-year2', 'decision' => 'approve', 'note' => null]], $pack['items']);
+        $this->assertSame([['id' => 'kosha-year2', 'decision' => 'approve']], $pack['items']);
         $this->assertTrue($written['pushed']);
         $this->assertFileExists($this->inbox.'/decisions/uprava-mg-decide-test/pack-01.json');
 
