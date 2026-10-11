@@ -113,6 +113,7 @@ class MiniCourseProgress extends Page implements HasTable
     {
         return $table
             ->query($this->studentQuery())
+            ->actions([$this->detailsAction()])
             ->recordAction('details')
             ->columns([
                 TextColumn::make('name')
