@@ -105,7 +105,8 @@ class ScheduleKeeperTest extends TestCase
 
     public function test_role_off_by_default(): void
     {
-        config(['features.hermes_schedule_keeper' => false]);
+        // Забываем override из setUp — проверяем именно дефолт конфига.
+        config()->forget('features.hermes_schedule_keeper');
         $user = $this->studentInGroup();
 
         $result = $this->app->make(ScheduleKeeperService::class)->answerFor($user);
@@ -224,6 +225,19 @@ class ScheduleKeeperTest extends TestCase
         $result = $this->app->make(ScheduleKeeperService::class)->answerFor($user);
 
         // Каникулы объясняют дальнее занятие — источник не «устаревший».
+        $this->assertFalse($result['requires_human_verification']);
+    }
+
+    public function test_horizon_boundary_exactly_45_days_is_fresh(): void
+    {
+        $user = $this->studentInGroup();
+        $group = $user->activeGroups()->first();
+        $this->lesson($group, now()->addDays(45)->format('Y-m-d H:i:s'));
+        $this->backdateTimestamps(Schedule::latest('id')->first(), '2026-09-11 10:00:00');
+
+        $result = $this->app->make(ScheduleKeeperService::class)->answerFor($user);
+
+        // Строго «дальше» 45 дней — на самой границе источник ещё свеж.
         $this->assertFalse($result['requires_human_verification']);
     }
 
