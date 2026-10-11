@@ -20,6 +20,12 @@
                     <span>· категория {{ $draft->category }}</span>
                     <span>· {{ $draft->created_at?->format('d.m.Y H:i') }}</span>
 
+                    @if($draft->source_type === \App\Models\SupportAnswerSuggestion::SOURCE_CHAT_MESSAGE)
+                        <span class="rounded-md bg-sky-100 px-2 py-0.5 font-semibold text-sky-800 dark:bg-sky-500/20 dark:text-sky-300">
+                            web-чат
+                        </span>
+                    @endif
+
                     @if($draft->isDraftOnly())
                         <span class="rounded-md bg-amber-100 px-2 py-0.5 font-semibold text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
                             требует проверки — кнопки в Telegram нет
