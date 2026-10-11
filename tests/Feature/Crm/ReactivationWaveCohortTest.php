@@ -64,7 +64,7 @@ class ReactivationWaveCohortTest extends TestCase
     /** @test */
     public function splits_the_cohort_into_lapsed_and_non_continuers(): void
     {
-        $recent = User::factory()->create(['email' => 'recent@example.com', 'telegram_id' => null]);
+        $recent = User::factory()->create(['email' => 'recent@example.com', 'telegram_id' => null, 'wants_email_announcements' => true]);
         $this->payer($recent, 200);
 
         $old = User::factory()->create(['email' => 'old@example.com', 'telegram_id' => 900001]);
@@ -84,7 +84,7 @@ class ReactivationWaveCohortTest extends TestCase
         $bot = User::factory()->create(['email' => 'bot@example.com', 'telegram_id' => 900002]);
         $this->payer($bot, 400);
 
-        $mail = User::factory()->create(['email' => 'mail@example.com', 'telegram_id' => null]);
+        $mail = User::factory()->create(['email' => 'mail@example.com', 'telegram_id' => null, 'wants_email_announcements' => true]);
         $this->payer($mail, 400);
 
         $channels = $this->cohort()->evaluate()->channelCounts();
@@ -235,7 +235,7 @@ class ReactivationWaveCohortTest extends TestCase
     public function lapsed_pool_gets_dormancy_buckets_and_its_own_channel_split(): void
     {
         // Уснувшие: 500 дней (до 730) и 1200 дней (более 1095).
-        $younger = User::factory()->create(['email' => 'y@example.com', 'telegram_id' => null]);
+        $younger = User::factory()->create(['email' => 'y@example.com', 'telegram_id' => null, 'wants_email_announcements' => true]);
         $this->payer($younger, 500);
         $older = User::factory()->create(['email' => 'o@example.com', 'telegram_id' => 900020]);
         $this->payer($older, 1200);
