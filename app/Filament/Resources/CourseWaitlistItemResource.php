@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CourseWaitlistItemResource\Pages;
 use App\Filament\Resources\CourseWaitlistItemResource\RelationManagers\VotesRelationManager;
 use App\Models\CourseWaitlistItem;
+use App\Models\MarketingSetting;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
@@ -181,6 +182,17 @@ class CourseWaitlistItemResource extends Resource
                     ->label('Курс')
                     ->searchable()
                     ->sortable(),
+
+                // H6466 — прямая ссылка «проголосовать за этот курс» в боте
+                // (?start=wl_<slug> → карточка одного курса без списка).
+                Tables\Columns\TextColumn::make('bot_deep_link')
+                    ->label('Ссылка в боте')
+                    ->getStateUsing(fn (CourseWaitlistItem $record): string => 'https://t.me/'
+                        .(MarketingSetting::cached()?->tg_bot_username ?: 'samskrte_bot')
+                        .'?start=wl_'.$record->slug)
+                    ->copyable()
+                    ->copyMessage('Ссылка скопирована')
+                    ->extraAttributes(['class' => 'text-xs']),
 
                 Tables\Columns\TextColumn::make('teacher_name')
                     ->label('Преподаватель')
