@@ -39,7 +39,7 @@ class WaitlistForgetVotesCommandTest extends TestCase
         $first->castVoteBy($other, 'morning');
 
         $this->artisan('waitlist:forget-votes', ['user' => $anna->email, '--force' => true])
-            ->assertExit(0);
+            ->assertExitCode(0);
 
         $this->assertSame(0, WaitlistVote::query()->where('user_id', $anna->getKey())->count());
         $this->assertSame(1, $first->votesCount());
@@ -49,7 +49,7 @@ class WaitlistForgetVotesCommandTest extends TestCase
     public function test_unknown_user_fails_with_hint(): void
     {
         $this->artisan('waitlist:forget-votes', ['user' => 'nosuchperson@example.com'])
-            ->assertExit(1);
+            ->assertExitCode(1);
     }
 
     public function test_resolves_user_by_exact_name(): void
@@ -63,7 +63,7 @@ class WaitlistForgetVotesCommandTest extends TestCase
         $item->castVoteBy($anna, null);
 
         $this->artisan('waitlist:forget-votes', ['user' => 'Горбаченко Анастасия Владимировна, Витебск, Беларусь', '--force' => true])
-            ->assertExit(0);
+            ->assertExitCode(0);
 
         $this->assertSame(0, $item->votesCount());
     }
