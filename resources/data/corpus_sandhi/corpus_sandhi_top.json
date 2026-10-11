@@ -1,10 +1,10 @@
 {
- "schema": "corpus_sandhi_top_v1",
+ "schema": "corpus_sandhi_top_v2",
  "source": {
   "dataset": "corpus-sandhi",
   "repo": "https://github.com/gasyoun/kosha",
   "path": "data/sandhi/corpus_sandhi.tsv",
-  "commit": "3a9c35bd957cc47f6d9eb480f9c8b73428dd4611",
+  "commit": "3ccfd4050c3b68595cb333861183aae6befa6654",
   "blob": "985dc9e275de7d3441c1fb3b8f4f230b2f799346",
   "license": "CC BY-SA 4.0",
   "credit": "DCS (Oliver Hellwig), CC BY-SA 4.0; rule induction and ranking — kosha, Dr. Mārcis Gasūns"
@@ -4003,5 +4003,902 @@
     "split": "deva+dṛṣṭi"
    }
   }
- ]
+ ],
+ "curriculum": {
+  "source": {
+   "dataset": "sandhi-curriculum",
+   "repo": "https://github.com/gasyoun/kosha",
+   "path": "data/sandhi/sandhi_curriculum.tsv",
+   "commit": "3ccfd4050c3b68595cb333861183aae6befa6654",
+   "blob": "f65564d54d4bf7c75ad867cd58b7c57095d70023",
+   "license": "CC BY-SA 4.0",
+   "credit": "kosha graded sandhi curriculum (H902 Phase 4) — Dr. Mārcis Gasūns; over DCS (Oliver Hellwig)",
+   "weights": "data/sandhi/difficulty_weights.json (tunable)"
+  },
+  "method": "priority = frequency × class × environment-generality (MG ruling 14-07-2026); coverage shown on the page stays corpus-frequency coverage",
+  "teaching_order": [
+   {
+    "rank": 1,
+    "rule": "a a → ā",
+    "curriculum_rank": 1,
+    "lesson": 1
+   },
+   {
+    "rank": 2,
+    "rule": "m p → ṃ p",
+    "curriculum_rank": 2,
+    "lesson": 1
+   },
+   {
+    "rank": 3,
+    "rule": "m s → ṃ s",
+    "curriculum_rank": 3,
+    "lesson": 2
+   },
+   {
+    "rank": 4,
+    "rule": "m v → ṃ v",
+    "curriculum_rank": 4,
+    "lesson": 2
+   },
+   {
+    "rank": 5,
+    "rule": "m t → ṃ t",
+    "curriculum_rank": 5,
+    "lesson": 2
+   },
+   {
+    "rank": 7,
+    "rule": "m c → ṃ c",
+    "curriculum_rank": 6,
+    "lesson": 3
+   },
+   {
+    "rank": 9,
+    "rule": "m k → ṃ k",
+    "curriculum_rank": 7,
+    "lesson": 3
+   },
+   {
+    "rank": 11,
+    "rule": "m m → ṃ m",
+    "curriculum_rank": 8,
+    "lesson": 3
+   },
+   {
+    "rank": 12,
+    "rule": "m n → ṃ n",
+    "curriculum_rank": 9,
+    "lesson": 3
+   },
+   {
+    "rank": 10,
+    "rule": "a ā → ā",
+    "curriculum_rank": 10,
+    "lesson": 3
+   },
+   {
+    "rank": 6,
+    "rule": "ḥ t → s t",
+    "curriculum_rank": 11,
+    "lesson": 4
+   },
+   {
+    "rank": 13,
+    "rule": "m d → ṃ d",
+    "curriculum_rank": 12,
+    "lesson": 4
+   },
+   {
+    "rank": 8,
+    "rule": "ḥ c → ś c",
+    "curriculum_rank": 13,
+    "lesson": 4
+   },
+   {
+    "rank": 18,
+    "rule": "m ś → ṃ ś",
+    "curriculum_rank": 14,
+    "lesson": 4
+   },
+   {
+    "rank": 20,
+    "rule": "m y → ṃ y",
+    "curriculum_rank": 15,
+    "lesson": 5
+   },
+   {
+    "rank": 16,
+    "rule": "aḥ v → o v",
+    "curriculum_rank": 16,
+    "lesson": 5
+   },
+   {
+    "rank": 14,
+    "rule": "a u → o",
+    "curriculum_rank": 17,
+    "lesson": 5
+   },
+   {
+    "rank": 24,
+    "rule": "m bh → ṃ bh",
+    "curriculum_rank": 18,
+    "lesson": 5
+   },
+   {
+    "rank": 19,
+    "rule": "i a → y a",
+    "curriculum_rank": 19,
+    "lesson": 5
+   },
+   {
+    "rank": 17,
+    "rule": "ā a → ā",
+    "curriculum_rank": 20,
+    "lesson": 5
+   },
+   {
+    "rank": 26,
+    "rule": "m r → ṃ r",
+    "curriculum_rank": 21,
+    "lesson": 5
+   },
+   {
+    "rank": 21,
+    "rule": "aḥ m → o m",
+    "curriculum_rank": 22,
+    "lesson": 5
+   },
+   {
+    "rank": 15,
+    "rule": "a e → ai",
+    "curriculum_rank": 23,
+    "lesson": 6
+   },
+   {
+    "rank": 22,
+    "rule": "aḥ a → o '",
+    "curriculum_rank": 24,
+    "lesson": 6
+   },
+   {
+    "rank": 23,
+    "rule": "aḥ n → o n",
+    "curriculum_rank": 25,
+    "lesson": 6
+   },
+   {
+    "rank": 29,
+    "rule": "m g → ṃ g",
+    "curriculum_rank": 26,
+    "lesson": 6
+   },
+   {
+    "rank": 32,
+    "rule": "m h → ṃ h",
+    "curriculum_rank": 27,
+    "lesson": 6
+   },
+   {
+    "rank": 27,
+    "rule": "ḥ a → r a",
+    "curriculum_rank": 28,
+    "lesson": 6
+   },
+   {
+    "rank": 30,
+    "rule": "aḥ a → o a",
+    "curriculum_rank": 29,
+    "lesson": 6
+   },
+   {
+    "rank": 28,
+    "rule": "a i → e",
+    "curriculum_rank": 30,
+    "lesson": 6
+   },
+   {
+    "rank": 37,
+    "rule": "m b → ṃ b",
+    "curriculum_rank": 31,
+    "lesson": 6
+   },
+   {
+    "rank": 39,
+    "rule": "m j → ṃ j",
+    "curriculum_rank": 32,
+    "lesson": 6
+   },
+   {
+    "rank": 33,
+    "rule": "aḥ d → o d",
+    "curriculum_rank": 33,
+    "lesson": 6
+   },
+   {
+    "rank": 25,
+    "rule": "t a → d a",
+    "curriculum_rank": 34,
+    "lesson": 7
+   },
+   {
+    "rank": 31,
+    "rule": "ḥ u → Ø u",
+    "curriculum_rank": 35,
+    "lesson": 7
+   },
+   {
+    "rank": 38,
+    "rule": "aḥ bh → o bh",
+    "curriculum_rank": 36,
+    "lesson": 7
+   },
+   {
+    "rank": 41,
+    "rule": "aḥ r → o r",
+    "curriculum_rank": 37,
+    "lesson": 7
+   },
+   {
+    "rank": 42,
+    "rule": "aḥ y → o y",
+    "curriculum_rank": 38,
+    "lesson": 7
+   },
+   {
+    "rank": 34,
+    "rule": "ḥ v → r v",
+    "curriculum_rank": 39,
+    "lesson": 7
+   },
+   {
+    "rank": 36,
+    "rule": "ḥ v → Ø v",
+    "curriculum_rank": 40,
+    "lesson": 7
+   },
+   {
+    "rank": 40,
+    "rule": "ḥ i → Ø i",
+    "curriculum_rank": 41,
+    "lesson": 7
+   },
+   {
+    "rank": 47,
+    "rule": "m dh → ṃ dh",
+    "curriculum_rank": 42,
+    "lesson": 7
+   },
+   {
+    "rank": 49,
+    "rule": "e a → e '",
+    "curriculum_rank": 43,
+    "lesson": 7
+   },
+   {
+    "rank": 35,
+    "rule": "t v → d v",
+    "curriculum_rank": 44,
+    "lesson": 7
+   },
+   {
+    "rank": 44,
+    "rule": "aḥ h → o h",
+    "curriculum_rank": 45,
+    "lesson": 7
+   },
+   {
+    "rank": 45,
+    "rule": "ḥ m → Ø m",
+    "curriculum_rank": 46,
+    "lesson": 7
+   },
+   {
+    "rank": 46,
+    "rule": "ḥ m → r m",
+    "curriculum_rank": 47,
+    "lesson": 7
+   },
+   {
+    "rank": 48,
+    "rule": "u a → v a",
+    "curriculum_rank": 48,
+    "lesson": 7
+   },
+   {
+    "rank": 51,
+    "rule": "i e → y e",
+    "curriculum_rank": 49,
+    "lesson": 7
+   },
+   {
+    "rank": 65,
+    "rule": "m l → ṃ l",
+    "curriculum_rank": 50,
+    "lesson": 8
+   },
+   {
+    "rank": 43,
+    "rule": "ā e → ai",
+    "curriculum_rank": 51,
+    "lesson": 8
+   },
+   {
+    "rank": 58,
+    "rule": "aḥ b → o b",
+    "curriculum_rank": 52,
+    "lesson": 8
+   },
+   {
+    "rank": 54,
+    "rule": "ḥ n → Ø n",
+    "curriculum_rank": 53,
+    "lesson": 8
+   },
+   {
+    "rank": 55,
+    "rule": "ḥ n → r n",
+    "curriculum_rank": 54,
+    "lesson": 8
+   },
+   {
+    "rank": 50,
+    "rule": "ā i → e",
+    "curriculum_rank": 55,
+    "lesson": 8
+   },
+   {
+    "rank": 59,
+    "rule": "i u → y u",
+    "curriculum_rank": 56,
+    "lesson": 8
+   },
+   {
+    "rank": 64,
+    "rule": "aḥ j → o j",
+    "curriculum_rank": 57,
+    "lesson": 8
+   },
+   {
+    "rank": 57,
+    "rule": "n c → ṃś c",
+    "curriculum_rank": 58,
+    "lesson": 8
+   },
+   {
+    "rank": 60,
+    "rule": "ḥ r → Ø r",
+    "curriculum_rank": 59,
+    "lesson": 8
+   },
+   {
+    "rank": 68,
+    "rule": "i i → ī",
+    "curriculum_rank": 60,
+    "lesson": 8
+   },
+   {
+    "rank": 74,
+    "rule": "aḥ g → o g",
+    "curriculum_rank": 61,
+    "lesson": 8
+   },
+   {
+    "rank": 63,
+    "rule": "ḥ d → Ø d",
+    "curriculum_rank": 62,
+    "lesson": 8
+   },
+   {
+    "rank": 81,
+    "rule": "aḥ dh → o dh",
+    "curriculum_rank": 63,
+    "lesson": 8
+   },
+   {
+    "rank": 69,
+    "rule": "ḥ d → r d",
+    "curriculum_rank": 64,
+    "lesson": 8
+   },
+   {
+    "rank": 70,
+    "rule": "ḥ i → r i",
+    "curriculum_rank": 65,
+    "lesson": 8
+   },
+   {
+    "rank": 67,
+    "rule": "n t → ṃs t",
+    "curriculum_rank": 66,
+    "lesson": 8
+   },
+   {
+    "rank": 73,
+    "rule": "ḥ e → Ø e",
+    "curriculum_rank": 67,
+    "lesson": 8
+   },
+   {
+    "rank": 72,
+    "rule": "ā ā → ā",
+    "curriculum_rank": 68,
+    "lesson": 8
+   },
+   {
+    "rank": 76,
+    "rule": "ḥ bh → Ø bh",
+    "curriculum_rank": 69,
+    "lesson": 8
+   },
+   {
+    "rank": 78,
+    "rule": "ḥ t → Ø t",
+    "curriculum_rank": 70,
+    "lesson": 8
+   },
+   {
+    "rank": 80,
+    "rule": "ḥ u → r u",
+    "curriculum_rank": 71,
+    "lesson": 8
+   },
+   {
+    "rank": 79,
+    "rule": "ḥ a → ḥ '",
+    "curriculum_rank": 72,
+    "lesson": 8
+   },
+   {
+    "rank": 89,
+    "rule": "i ā → y ā",
+    "curriculum_rank": 73,
+    "lesson": 8
+   },
+   {
+    "rank": 52,
+    "rule": "t m → n m",
+    "curriculum_rank": 74,
+    "lesson": 8
+   },
+   {
+    "rank": 75,
+    "rule": "ā u → o",
+    "curriculum_rank": 75,
+    "lesson": 8
+   },
+   {
+    "rank": 56,
+    "rule": "s s → ḥ s",
+    "curriculum_rank": 76,
+    "lesson": 8
+   },
+   {
+    "rank": 86,
+    "rule": "ḥ y → Ø y",
+    "curriculum_rank": 77,
+    "lesson": 8
+   },
+   {
+    "rank": 53,
+    "rule": "t c → c c",
+    "curriculum_rank": 78,
+    "lesson": 8
+   },
+   {
+    "rank": 84,
+    "rule": "ḥ y → r y",
+    "curriculum_rank": 79,
+    "lesson": 9
+   },
+   {
+    "rank": 85,
+    "rule": "ḥ bh → r bh",
+    "curriculum_rank": 80,
+    "lesson": 9
+   },
+   {
+    "rank": 87,
+    "rule": "ḥ ā → r ā",
+    "curriculum_rank": 81,
+    "lesson": 9
+   },
+   {
+    "rank": 61,
+    "rule": "s p → ḥ p",
+    "curriculum_rank": 82,
+    "lesson": 9
+   },
+   {
+    "rank": 66,
+    "rule": "t d → d d",
+    "curriculum_rank": 83,
+    "lesson": 9
+   },
+   {
+    "rank": 71,
+    "rule": "t y → d y",
+    "curriculum_rank": 84,
+    "lesson": 9
+   },
+   {
+    "rank": 90,
+    "rule": "ḥ h → Ø h",
+    "curriculum_rank": 85,
+    "lesson": 9
+   },
+   {
+    "rank": 62,
+    "rule": "t n → n n",
+    "curriculum_rank": 86,
+    "lesson": 9
+   },
+   {
+    "rank": 77,
+    "rule": "t bh → d bh",
+    "curriculum_rank": 87,
+    "lesson": 9
+   },
+   {
+    "rank": 82,
+    "rule": "t i → d i",
+    "curriculum_rank": 88,
+    "lesson": 9
+   },
+   {
+    "rank": 88,
+    "rule": "t e → d e",
+    "curriculum_rank": 89,
+    "lesson": 9
+   },
+   {
+    "rank": 97,
+    "rule": "ḥ b → r b",
+    "curriculum_rank": 90,
+    "lesson": 9
+   },
+   {
+    "rank": 98,
+    "rule": "iḥ s → Ø s",
+    "curriculum_rank": 91,
+    "lesson": 9
+   },
+   {
+    "rank": 99,
+    "rule": "ḥ g → Ø g",
+    "curriculum_rank": 92,
+    "lesson": 9
+   },
+   {
+    "rank": 91,
+    "rule": "t r → d r",
+    "curriculum_rank": 93,
+    "lesson": 9
+   },
+   {
+    "rank": 92,
+    "rule": "t ā → d ā",
+    "curriculum_rank": 94,
+    "lesson": 9
+   },
+   {
+    "rank": 96,
+    "rule": "a ṛ → ar",
+    "curriculum_rank": 95,
+    "lesson": 9
+   },
+   {
+    "rank": 101,
+    "rule": "ḥ b → Ø b",
+    "curriculum_rank": 96,
+    "lesson": 9
+   },
+   {
+    "rank": 102,
+    "rule": "iḥ p → Ø p",
+    "curriculum_rank": 97,
+    "lesson": 9
+   },
+   {
+    "rank": 93,
+    "rule": "t u → d u",
+    "curriculum_rank": 98,
+    "lesson": 9
+   },
+   {
+    "rank": 114,
+    "rule": "aḥ l → o l",
+    "curriculum_rank": 99,
+    "lesson": 9
+   },
+   {
+    "rank": 95,
+    "rule": "t b → d b",
+    "curriculum_rank": 100,
+    "lesson": 9
+   },
+   {
+    "rank": 83,
+    "rule": "t ś → cch",
+    "curriculum_rank": 101,
+    "lesson": 9
+   },
+   {
+    "rank": 107,
+    "rule": "ḥ g → r g",
+    "curriculum_rank": 102,
+    "lesson": 9
+   },
+   {
+    "rank": 105,
+    "rule": "iḥ t → Ø t",
+    "curriculum_rank": 103,
+    "lesson": 9
+   },
+   {
+    "rank": 128,
+    "rule": "m gh → ṃ gh",
+    "curriculum_rank": 104,
+    "lesson": 9
+   },
+   {
+    "rank": 94,
+    "rule": "s k → ḥ k",
+    "curriculum_rank": 105,
+    "lesson": 9
+   },
+   {
+    "rank": 108,
+    "rule": "ḥ h → r h",
+    "curriculum_rank": 106,
+    "lesson": 9
+   },
+   {
+    "rank": 109,
+    "rule": "ḥ e → r e",
+    "curriculum_rank": 107,
+    "lesson": 9
+   },
+   {
+    "rank": 113,
+    "rule": "ḥ j → Ø j",
+    "curriculum_rank": 108,
+    "lesson": 9
+   },
+   {
+    "rank": 116,
+    "rule": "ḥ p → Ø p",
+    "curriculum_rank": 109,
+    "lesson": 9
+   },
+   {
+    "rank": 115,
+    "rule": "iḥ k → Ø k",
+    "curriculum_rank": 110,
+    "lesson": 9
+   },
+   {
+    "rank": 103,
+    "rule": "as a → o '",
+    "curriculum_rank": 111,
+    "lesson": 9
+   },
+   {
+    "rank": 104,
+    "rule": "as v → o v",
+    "curriculum_rank": 112,
+    "lesson": 9
+   },
+   {
+    "rank": 119,
+    "rule": "ḥ j → r j",
+    "curriculum_rank": 113,
+    "lesson": 9
+   },
+   {
+    "rank": 100,
+    "rule": "d p → t p",
+    "curriculum_rank": 114,
+    "lesson": 9
+   },
+   {
+    "rank": 122,
+    "rule": "a ī → e",
+    "curriculum_rank": 115,
+    "lesson": 9
+   },
+   {
+    "rank": 120,
+    "rule": "iḥ m → Ø m",
+    "curriculum_rank": 116,
+    "lesson": 9
+   },
+   {
+    "rank": 126,
+    "rule": "ḥ s → Ø s",
+    "curriculum_rank": 117,
+    "lesson": 9
+   },
+   {
+    "rank": 127,
+    "rule": "ḥ c → Ø c",
+    "curriculum_rank": 118,
+    "lesson": 9
+   },
+   {
+    "rank": 124,
+    "rule": "iḥ v → Ø v",
+    "curriculum_rank": 119,
+    "lesson": 9
+   },
+   {
+    "rank": 106,
+    "rule": "d k → t k",
+    "curriculum_rank": 120,
+    "lesson": 9
+   },
+   {
+    "rank": 112,
+    "rule": "t g → d g",
+    "curriculum_rank": 121,
+    "lesson": 9
+   },
+   {
+    "rank": 137,
+    "rule": "aḥ ayam → o 'yaṃ",
+    "curriculum_rank": 122,
+    "lesson": 9
+   },
+   {
+    "rank": 129,
+    "rule": "ḥ dh → Ø dh",
+    "curriculum_rank": 123,
+    "lesson": 9
+   },
+   {
+    "rank": 133,
+    "rule": "ḥ k → Ø k",
+    "curriculum_rank": 124,
+    "lesson": 9
+   },
+   {
+    "rank": 130,
+    "rule": "iḥ n → Ø n",
+    "curriculum_rank": 125,
+    "lesson": 9
+   },
+   {
+    "rank": 132,
+    "rule": "iḥ y → Ø y",
+    "curriculum_rank": 126,
+    "lesson": 9
+   },
+   {
+    "rank": 111,
+    "rule": "s ś → ḥ ś",
+    "curriculum_rank": 127,
+    "lesson": 9
+   },
+   {
+    "rank": 121,
+    "rule": "as d → o d",
+    "curriculum_rank": 128,
+    "lesson": 9
+   },
+   {
+    "rank": 135,
+    "rule": "ḥ ā → Ø ā",
+    "curriculum_rank": 129,
+    "lesson": 9
+   },
+   {
+    "rank": 134,
+    "rule": "ḥ dh → r dh",
+    "curriculum_rank": 130,
+    "lesson": 9
+   },
+   {
+    "rank": 136,
+    "rule": "u e → v e",
+    "curriculum_rank": 131,
+    "lesson": 9
+   },
+   {
+    "rank": 138,
+    "rule": "u i → v i",
+    "curriculum_rank": 132,
+    "lesson": 9
+   },
+   {
+    "rank": 123,
+    "rule": "t dh → d dh",
+    "curriculum_rank": 133,
+    "lesson": 9
+   },
+   {
+    "rank": 118,
+    "rule": "d s → t s",
+    "curriculum_rank": 134,
+    "lesson": 10
+   },
+   {
+    "rank": 146,
+    "rule": "e e → a e",
+    "curriculum_rank": 135,
+    "lesson": 10
+   },
+   {
+    "rank": 117,
+    "rule": "r p → ḥ p",
+    "curriculum_rank": 136,
+    "lesson": 10
+   },
+   {
+    "rank": 145,
+    "rule": "u ā → v ā",
+    "curriculum_rank": 137,
+    "lesson": 10
+   },
+   {
+    "rank": 110,
+    "rule": "n ś → ñ ś",
+    "curriculum_rank": 138,
+    "lesson": 10
+   },
+   {
+    "rank": 125,
+    "rule": "mpāyanaḥ u → ṃpāyana u",
+    "curriculum_rank": 139,
+    "lesson": 10
+   },
+   {
+    "rank": 147,
+    "rule": "iḥ d → Ø d",
+    "curriculum_rank": 141,
+    "lesson": 10
+   },
+   {
+    "rank": 139,
+    "rule": "ā ṛ → ar",
+    "curriculum_rank": 142,
+    "lesson": 10
+   },
+   {
+    "rank": 140,
+    "rule": "a o → au",
+    "curriculum_rank": 143,
+    "lesson": 10
+   },
+   {
+    "rank": 141,
+    "rule": "as m → o m",
+    "curriculum_rank": 148,
+    "lesson": 10
+   },
+   {
+    "rank": 142,
+    "rule": "as r → o r",
+    "curriculum_rank": 150,
+    "lesson": 10
+   },
+   {
+    "rank": 131,
+    "rule": "t j → j j",
+    "curriculum_rank": 154,
+    "lesson": 10
+   },
+   {
+    "rank": 144,
+    "rule": "s c → ś c",
+    "curriculum_rank": 162,
+    "lesson": 10
+   },
+   {
+    "rank": 143,
+    "rule": "t h → dd h",
+    "curriculum_rank": 166,
+    "lesson": 10
+   }
+  ]
+ }
 }

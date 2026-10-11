@@ -58,7 +58,11 @@ class VotesRelationManager extends RelationManager
                     ->label('Когда удобно')
                     ->options(WaitlistVote::SLOT_PREFERENCES),
             ])
-            ->actions([])
-            ->bulkActions([]);
+            ->actions([
+                Tables\Actions\DeleteAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\DeleteBulkAction::make(),
+            ]);
     }
 }

@@ -82,5 +82,47 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- H6393 (lila v2): по-лигатурная трудность — топ трудных чтений тренажёра «Лигатуры» --}}
+        @php $lig = $this->ligatureRows; @endphp
+        <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
+            <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                Лигатуры: трудные чтения (топ-{{ count($lig) }})
+            </div>
+            <div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                По событиям item_result (H4692): медиана времени до первой связки и доля раундов с ошибкой.
+                Включая режим «Близнецы» (band = twins).
+            </div>
+            @if (count($lig) === 0)
+                <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Пока нет завершённых раундов лигатур в окне — таблица наполнится после первых решений.
+                </div>
+            @else
+                <div class="mt-3 overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                            <tr>
+                                <th class="px-2 py-1">Уровень</th>
+                                <th class="px-2 py-1">Чтение (IAST)</th>
+                                <th class="px-2 py-1 text-right">Раунды</th>
+                                <th class="px-2 py-1 text-right">Медиана, мс</th>
+                                <th class="px-2 py-1 text-right">Была ошибка</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-white/5">
+                            @foreach ($lig as $row)
+                                <tr class="text-gray-800 dark:text-gray-200">
+                                    <td class="px-2 py-1">{{ $row['band'] ?? '—' }}</td>
+                                    <td class="px-2 py-1 font-medium">{{ $row['item'] }}</td>
+                                    <td class="px-2 py-1 text-right">{{ number_format($row['rounds']) }}</td>
+                                    <td class="px-2 py-1 text-right">{{ number_format($row['median_ms']) }}</td>
+                                    <td class="px-2 py-1 text-right">{{ $row['wrong_rate'] }}%</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
     </div>
 </x-filament-panels::page>
