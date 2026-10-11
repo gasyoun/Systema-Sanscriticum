@@ -121,6 +121,26 @@ class TrackedLinkTest extends TestCase
     }
 
     /** @test */
+    public function san26_zhdun_campaign_keys_route_to_the_course_card(): void
+    {
+        foreach ([
+            'san26-ors-c' => 'san26_c',
+            'san26-ors-t' => 'san26_t',
+            'san26-ors-h' => 'san26_h',
+        ] as $token => $content) {
+            $this->flushSession();
+            $this->get('/ga/'.$token)->assertRedirect('/k/filosofiia-sankhi');
+
+            $attribution = session(config('tracked_links.session_key'));
+            $this->assertSame('telegram_samskrte', $attribution['utm_source'], "{$token} source");
+            $this->assertSame('owned_channel', $attribution['utm_medium'], "{$token} medium");
+            $this->assertSame('sankhya_kurs_oct_2026', $attribution['utm_campaign'], "{$token} campaign");
+            $this->assertSame($content, $attribution['utm_content'], "{$token} content");
+            $this->assertSame('philosophy', $attribution['utm_term'], "{$token} term");
+        }
+    }
+
+    /** @test */
     public function demo_smoke_fixture_redirects_and_carries_demo_marked_attribution(): void
     {
         $this->get('/ga/demo-ors-h')->assertRedirect('/online');
