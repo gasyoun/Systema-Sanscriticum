@@ -108,6 +108,18 @@ Route::get('/u/{user}', function (User $user) {
 Route::get('/calendar/feed/{user}/{token}.ics', [CalendarFeedController::class, 'show'])
     ->whereNumber('user')->name('student.calendar.feed');
 
+// --- H6347: ВЫДАЧА FEED-ТОКЕНА ПРЕПОДАВАТЕЛЮ/АДМИНУ (будильник T−10) ---
+// До сих пор токен выдавался только в студкабинете (student.calendar); здесь —
+// та же фид-ссылка, но страница доступна teacher/admin-юзеру. ВАЖНО: до
+// catch-all /{slug}. regenerate() переиспользован — он делает back() без
+// привязки к имени маршрута.
+Route::middleware('auth')->group(function () {
+    Route::get('/teacher-calendar', [CalendarFeedController::class, 'teacherPage'])
+        ->name('teacher.calendar');
+    Route::post('/teacher-calendar/feed/regenerate', [CalendarFeedController::class, 'regenerate'])
+        ->name('teacher.calendar.feed.regenerate');
+});
+
 // --- ТРЕКИНГ-РЕДИРЕКТ «ПОДКЛЮЧИТЬСЯ К ЗАНЯТИЮ» (учёт посещаемости) ---
 // ВАЖНО: до catch-all /{slug}. Публичный: кабинетная ссылка ловит юзера из сессии,
 // бот/напоминания приходят подписанным URL с user id (внутри JoinClassController).

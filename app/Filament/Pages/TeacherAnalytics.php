@@ -30,7 +30,11 @@ class TeacherAnalytics extends Page
     {
         $user = auth()->user();
 
-        return (bool) ($user?->isTeacher() || $user?->isAdminLike());
+        // Fail-closed (тот же паттерн, что TeacherCoursePayments, PR #3032):
+        // роль teacher без карточки преподавателя (users.teacher_id = null,
+        // например после удаления Teacher — FK nullOnDelete, роль остаётся)
+        // НЕ получает доступ. Ветка «видно всё» — строго админ-подобные.
+        return (bool) (($user?->isTeacher() && $user->teacher_id !== null) || $user?->isAdminLike());
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -38,12 +42,16 @@ class TeacherAnalytics extends Page
         return static::canAccess();
     }
 
-    /** teacher_id для скоупа: у преподавателя — свой; у админа — null (все курсы). */
+    /** Несуществующий id: пустой скоуп для вырожденного случая teacher без карточки. */
+    private const EMPTY_SCOPE = -1;
+
+    /** teacher_id для скоупа: у преподавателя — свой; null — только админ-подобные (все курсы). */
     private function scopeTeacherId(): ?int
     {
         $user = auth()->user();
         if ($user && $user->isTeacher() && ! $user->isAdminLike()) {
-            return $user->teacher_id;
+            // teacher без карточки: null НЕ должен означать «всё» — пустой скоуп
+            return $user->teacher_id ?? self::EMPTY_SCOPE;
         }
 
         return null;

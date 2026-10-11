@@ -27,40 +27,56 @@
 <style>
     /* ============================================ */
     /* GRID-ЛЕЙАУТ УРОКА                            */
+    /* H6303 (L1, UX-аудит 2026): на узких экранах  */
+    /* боковая колонка (транскрипт/материалы/       */
+    /* заметки) стоит в DOM и на экране ПЕРЕД       */
+    /* домашним заданием — ДЗ вынесено в отдельную  */
+    /* колонку-контейнер .lesson-homework-col.      */
+    /* На десктопе (≥768px) grid-areas повторяют    */
+    /* прежнюю геометрию: main слева, sticky side   */
+    /* 420px справа, ДЗ слева под main.             */
     /* ============================================ */
     .lesson-layout {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
         width: 100%;
         position: relative;
     }
     .lesson-main-col {
         width: 100%;
+        min-width: 0;
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
     }
     .lesson-side-col {
         width: 100%;
-        margin-top: 1.5rem;
         display: flex;
         flex-direction: column;
         position: relative;
         z-index: 20;
     }
+    .lesson-homework-col {
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+    }
     @media (min-width: 768px) {
         .lesson-layout {
             display: grid !important;
             grid-template-columns: minmax(0, 1fr) 420px !important;
+            grid-template-areas:
+                "main side"
+                "homework side";
             gap: 1.5rem !important;
             align-items: start !important;
         }
-        .lesson-main-col {
-            min-width: 0 !important;
-            width: auto !important;
-        }
+        .lesson-main-col { grid-area: main; width: auto !important; }
         .lesson-side-col {
+            grid-area: side;
             width: 420px !important;
-            margin-top: 0 !important;
             position: sticky !important;
             top: 1.5rem !important;
             align-self: start !important;
@@ -70,6 +86,7 @@
             max-height: calc(100vh - 3rem);
             max-height: calc(100dvh - 3rem);
         }
+        .lesson-homework-col { grid-area: homework; width: auto !important; }
     }
 </style>
 
@@ -637,18 +654,8 @@
         </section>
         @endif
 
-        {{-- ДОМАШНЕЕ ЗАДАНИЕ — внутри центральной колонки (ширина как плеер/описание) --}}
-        @if($homeworkOpen ?? $lesson->homework_enabled)
-            @include('student.partials.homework')
-        @else
-            {{-- Явное состояние «ДЗ нет», чтобы студент не гадал, задано оно или еще нет. --}}
-            <section class="font-nunito">
-                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 md:p-6 flex items-center gap-3 text-gray-500">
-                    <i class="fas fa-mug-hot text-gray-300 text-lg shrink-0"></i>
-                    <p class="text-sm">Домашнего задания для этого урока нет.</p>
-                </div>
-            </section>
-        @endif
+        {{-- ДОМАШНЕЕ ЗАДАНИЕ вынесено в .lesson-homework-col (H6303) — снаружи,
+             после боковой колонки, чтобы на узких экранах материалы шли перед ДЗ. --}}
     </div>
 
     {{-- ========================================== --}}
@@ -864,6 +871,24 @@
         </div>
         @endif
 
+    </div>
+
+    {{-- ========================================== --}}
+    {{-- ДОМАШНЕЕ ЗАДАНИЕ (H6303): отдельная колонка-контейнер ПОСЛЕ боковой
+         колонки — на узких экранах транскрипт/материалы/заметки стоят перед ДЗ,
+         на десктопе grid-area "homework" возвращает блок в левую колонку. --}}
+    <div class="lesson-homework-col">
+        @if($homeworkOpen ?? $lesson->homework_enabled)
+            @include('student.partials.homework')
+        @else
+            {{-- Явное состояние «ДЗ нет», чтобы студент не гадал, задано оно или еще нет. --}}
+            <section class="font-nunito">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 md:p-6 flex items-center gap-3 text-gray-500">
+                    <i class="fas fa-mug-hot text-gray-300 text-lg shrink-0"></i>
+                    <p class="text-sm">Домашнего задания для этого урока нет.</p>
+                </div>
+            </section>
+        @endif
     </div>
 
 </div>
