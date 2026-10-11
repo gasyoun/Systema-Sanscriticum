@@ -92,7 +92,8 @@ class MgDecideBotServiceTest extends TestCase
             $cardMessages++;
 
             // рекомендация первой — строка «Рекомендация:» до текста вопроса
-            $this->assertMatchesRegularExpression('/Рекомендация:.*\n.*\n\?/s', (string) $request['text']);
+            $text = (string) $request['text'];
+            $this->assertMatchesRegularExpression('/Рекомендация: <b>[^<]+<\/b>\n\n.+/s', $text);
             $this->assertSame('mgd:approve:', mb_substr((string) $markup['inline_keyboard'][0][0]['callback_data'], 0, 12));
             $this->assertSame('mgd:reject:', mb_substr((string) $markup['inline_keyboard'][0][1]['callback_data'], 0, 11));
             $this->assertSame('mgd:defer:', mb_substr((string) $markup['inline_keyboard'][0][2]['callback_data'], 0, 10));
