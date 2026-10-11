@@ -268,6 +268,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `HEARTBEAT_CRON` | optional | `'*/5 * * * *'` | config/heartbeat.php:50 |
 | `HEARTBEAT_PING_URL` | optional | `''` | config/heartbeat.php:43 |
 | `HEARTBEAT_TIMEOUT` | optional | `10` | config/heartbeat.php:54 |
+| `HERMES_HUMAN_SEND` | optional | `false` | config/features.php:2004 |
 | `HERMES_SCHEDULE_KEEPER` | optional | `false` | config/features.php:1990 |
 | `HINDI_ATTACHMENT_DRILLS` | optional | `false` | config/features.php:1590 |
 | `HINDI_DICTIONARY_DRILLS` | optional | `false` | config/features.php:1616 |
