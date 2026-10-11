@@ -7,6 +7,7 @@ namespace App\Services\Support\ScheduleKeeper;
 use App\Models\Group;
 use App\Models\Schedule;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -141,7 +142,7 @@ final class ScheduleKeeperService
             return [];
         }
 
-        $since = \Illuminate\Support\Carbon::parse($observedAt)->subDays(self::CHANGE_WINDOW_DAYS);
+        $since = Carbon::parse($observedAt)->subDays(self::CHANGE_WINDOW_DAYS);
 
         /** @var Collection<int, Schedule> $touched */
         $touched = Schedule::query()
@@ -217,7 +218,7 @@ final class ScheduleKeeperService
         $nearest = $upcoming->first();
         if ($nearest !== null
             && $vacations->isEmpty()
-            && $nearest->start->gt(\Illuminate\Support\Carbon::parse($observedAt)->addDays(self::HORIZON_DAYS))
+            && $nearest->start->gt(Carbon::parse($observedAt)->addDays(self::HORIZON_DAYS))
         ) {
             return 'next_beyond_horizon';
         }
@@ -317,7 +318,7 @@ final class ScheduleKeeperService
             return null;
         }
 
-        $local = \Illuminate\Support\Carbon::parse($at)->timezone($userTz);
+        $local = Carbon::parse($at)->timezone($userTz);
 
         return [
             'time' => $local->format('H:i'),
