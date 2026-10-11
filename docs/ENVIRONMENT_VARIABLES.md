@@ -268,6 +268,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `HEARTBEAT_CRON` | optional | `'*/5 * * * *'` | config/heartbeat.php:50 |
 | `HEARTBEAT_PING_URL` | optional | `''` | config/heartbeat.php:43 |
 | `HEARTBEAT_TIMEOUT` | optional | `10` | config/heartbeat.php:54 |
+| `HERMES_SCHEDULE_KEEPER` | optional | `false` | config/features.php:1990 |
 | `HINDI_ATTACHMENT_DRILLS` | optional | `false` | config/features.php:1590 |
 | `HINDI_DICTIONARY_DRILLS` | optional | `false` | config/features.php:1616 |
 | `HINDI_MY_SRS_DECK` | optional | `false` | config/features.php:1599 |
@@ -633,6 +634,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `PUSHER_SCHEME` | optional | `'https'` | config/broadcasting.php:58<br>config/broadcasting.php:60 |
 | `QUEUE_CONNECTION` | optional | `'sync'` | config/queue.php:16 |
 | `QUEUE_FAILED_DRIVER` | optional | `'database-uuids'` | config/queue.php:128 |
+| `REACTIVATION_WAVE_CONTINUATION_DAYS` | optional | `365` | config/reactivation_wave.php:29 |
+| `REACTIVATION_WAVE_DORMANT_DAYS` | optional | `120` | config/reactivation_wave.php:22 |
+| `REACTIVATION_WAVE_RECENT_CONTACT_DAYS` | optional | `30` | config/reactivation_wave.php:42 |
 | `RECEIVABLES_ILLIQUID_DAYS` | optional | `14` | config/receivables.php:48 |
 | `RECEIVABLES_MAX_CONCURRENT` | optional | `50` | config/receivables.php:57 |
 | `RECEIVABLES_MAX_INSTALLMENT_SHARE` | optional | `30` | config/receivables.php:54 |
