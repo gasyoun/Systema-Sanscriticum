@@ -103,7 +103,7 @@ final class SupportHumanSendService
             $actor->userId(),
             self::EVENT_HUMAN_SEND_TG,
             [
-                'human_send' => $actor->describe(),
+                'human' => $actor->describe(),
                 'transport' => 'telegram',
             ],
         );

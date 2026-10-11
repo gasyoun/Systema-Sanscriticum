@@ -268,14 +268,14 @@ class HumanSendTest extends TestCase
 
     public function test_flag_off_disables_web_send_and_the_queue_hides_web_drafts(): void
     {
+        config(['features.hermes_human_send' => false]);
+
         [$draft] = $this->webDraft();
 
         $result = $this->service()->send($draft, HumanSendAuthorization::webUser($this->curator()));
         $this->assertSame('disabled', $result['status']);
         $this->assertSame(SupportAnswerSuggestion::STATUS_PENDING, $draft->fresh()->status);
         $this->assertSame(0, ChatMessage::query()->where('role', 'curator')->count());
-
-        config(['features.hermes_human_send' => false]);
 
         Livewire::actingAs($this->curator())
             ->test(TelegramSupportDraftQueue::class)
