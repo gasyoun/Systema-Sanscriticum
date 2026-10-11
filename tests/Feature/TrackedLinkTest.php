@@ -176,10 +176,10 @@ class TrackedLinkTest extends TestCase
     /** @test */
     public function zhdun_deep_link_overlay_redirects_to_bot_and_logs_click(): void
     {
-        $this->get('/ga/zhdun-filosofiya-sankhyi')
+        $this->get('/ga/filosofiya-sankhyi')
             ->assertRedirect('https://t.me/samskrte_bot?start=wl_filosofiya-sankhyi');
 
-        $click = \App\Models\AnonsLinkClick::query()->where('link', 'zhdun-filosofiya-sankhyi')->first();
+        $click = \App\Models\AnonsLinkClick::query()->where('link', 'filosofiya-sankhyi')->first();
         $this->assertNotNull($click, 'клик прослойки должен логироваться до перехода в бота');
         $this->assertSame('zhdun_share', $click->utm['utm_source']);
         $this->assertSame('bot_deeplink', $click->utm['utm_medium']);
@@ -196,11 +196,13 @@ class TrackedLinkTest extends TestCase
             'bxagavadgita-po-rukopisyam', 'arkhitektura-i-iskusstvo-buddizma', 'yoga-i-tantra',
             'grammatika-sanskrita-jan2027', 'kosmografiya',
         ] as $slug) {
-            $this->get('/ga/zhdun-'.$slug)
+            $this->get('/ga/'.$slug)
                 ->assertRedirect('https://t.me/samskrte_bot?start=wl_'.$slug);
             $this->flushSession();
         }
 
-        $this->assertSame(14, \App\Models\AnonsLinkClick::query()->where('link', 'like', 'zhdun-%')->count());
+        $this->assertSame(14, \App\Models\AnonsLinkClick::query()
+            ->where('utm->utm_source', 'zhdun_share')
+            ->count());
     }
 }

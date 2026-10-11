@@ -128,7 +128,11 @@ $zhdunCourses = [
 ];
 
 foreach ($zhdunCourses as $zhdunSlug) {
-    $links["zhdun-{$zhdunSlug}"] = [
+    // H6489 (MG 11-10-2026): ключ = голый <slug> без префикса zhdun- —
+    // «чересчур длинные» ссылки; коллизий с m26-/up26-/demo-/story-ключами
+    // нет (слаги курсов на эти префиксы не начинаются и story-regex не
+    // матчатся).
+    $links[$zhdunSlug] = [
         'destination' => 'https://t.me/samskrte_bot?start=wl_'.$zhdunSlug,
         'utm' => [
             'utm_source' => 'zhdun_share',
