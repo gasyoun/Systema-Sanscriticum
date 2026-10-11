@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Support;
 
 use App\Events\ChatMessageSent;
+use App\Filament\Pages\TelegramSupportDraftQueue;
 use App\Models\ChatMessage;
 use App\Models\SupportAiReplyEvent;
 use App\Models\SupportAnswerSuggestion;
@@ -23,8 +24,6 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 use Tests\TestCase;
-
-use App\Filament\Pages\TelegramSupportDraftQueue;
 
 /**
  * H6183 (пакет hermes-24-01a10bca): проверяемый human-send в TG и web.
