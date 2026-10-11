@@ -150,7 +150,8 @@ class ScheduleKeeperTest extends TestCase
         $result = $this->app->make(ScheduleKeeperService::class)->answerFor($user);
 
         $this->assertStringContainsString('· 18.10.2026 11:00 МСК', $result['draft']);
-        $this->assertStringNotContainsString('ваше', $result['draft']);
+        // «вашей группы» в тексте есть всегда, а вот суффикса дуал-времени быть не должно.
+        $this->assertStringNotContainsString('ваше)', $result['draft']);
         $this->assertNull($result['facts']['user_timezone']);
     }
 
