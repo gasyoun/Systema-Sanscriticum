@@ -32,6 +32,7 @@ final class WaitlistForgetVotesCommand extends Command
         $user = User::query()
             ->whereKey($needle)
             ->orWhere('email', $needle)
+            ->orWhere('name', $needle)
             ->when(ctype_digit($needle), fn ($q) => $q->orWhere('telegram_id', (int) $needle))
             ->get(['id', 'name', 'email', 'telegram_id'])
             ->first(function (User $candidate) use ($needle): bool {
