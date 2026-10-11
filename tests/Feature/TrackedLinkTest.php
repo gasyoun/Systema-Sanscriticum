@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\AnonsLinkClick;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -121,7 +122,7 @@ class TrackedLinkTest extends TestCase
     }
 
     /** @test */
-    public function san26_zhdun_campaign_keys_route_to_the_course_card(): void
+    public function san26_campaign_keys_route_to_the_zhdun_course_card(): void
     {
         foreach ([
             'san26-ors-c' => 'san26_c',
@@ -199,7 +200,7 @@ class TrackedLinkTest extends TestCase
         $this->get('/ga/filosofiya-sankhyi')
             ->assertRedirect('https://t.me/samskrte_bot?start=wl_filosofiya-sankhyi');
 
-        $click = \App\Models\AnonsLinkClick::query()->where('link', 'filosofiya-sankhyi')->first();
+        $click = AnonsLinkClick::query()->where('link', 'filosofiya-sankhyi')->first();
         $this->assertNotNull($click, 'клик прослойки должен логироваться до перехода в бота');
         $this->assertSame('zhdun_share', $click->utm['utm_source']);
         $this->assertSame('bot_deeplink', $click->utm['utm_medium']);
@@ -221,7 +222,7 @@ class TrackedLinkTest extends TestCase
             $this->flushSession();
         }
 
-        $this->assertSame(14, \App\Models\AnonsLinkClick::query()
+        $this->assertSame(14, AnonsLinkClick::query()
             ->where('utm->utm_source', 'zhdun_share')
             ->count());
     }
