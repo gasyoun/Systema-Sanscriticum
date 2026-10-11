@@ -1976,4 +1976,16 @@ return [
      | php artisan privacy:prune [--report]
      */
     'privacy_prune' => (bool) env('PRIVACY_PRUNE', false),
+
+    /*
+     | Hermes W1 роль 23 `schedule-keeper` (H6187, пакет hermes-24-01a10bca):
+     | детерминированный ответ о расписании из канонической таблицы schedules —
+     | время наблюдения, переносы/отмены за 14 дней, двойное время для не-МСК
+     | студентов, а пустое/подозрительно дальнее расписание помечается
+     | requires_human_verification вместо уверенного ответа. Только чтение,
+     | без LLM и без записи в расписание. ВЫКЛ по умолчанию (роль OFF —
+     | запуск волны W1 остаётся за гейтами E026): включение
+     | HERMES_SCHEDULE_KEEPER=true + config:cache — deploy-шаг человека.
+     */
+    'hermes_schedule_keeper' => (bool) env('HERMES_SCHEDULE_KEEPER', false),
 ];
