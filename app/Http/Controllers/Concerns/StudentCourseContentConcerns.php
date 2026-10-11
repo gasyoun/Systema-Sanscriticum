@@ -312,6 +312,13 @@ trait StudentCourseContentConcerns
             ]);
         }
 
+        // H6302: автосейв заметок (public/js/lesson-note-autosave.js) шлёт
+        // Accept: application/json — отвечаем JSON без редиректа. Обычная
+        // форма (ручной fallback) по-прежнему получает redirect()->back().
+        if ($request->expectsJson()) {
+            return response()->json(['saved' => true]);
+        }
+
         return redirect()->back()->with('success', 'Заметка сохранена');
     }
 
