@@ -271,7 +271,7 @@ final class ScheduleKeeperService
                     continue;
                 }
 
-                $title = $this->renderTitle($change['title']);
+                $title = $this->renderTitleQuoted($change['title']);
                 $when = $class->start?->format('d.m.Y H:i') ?? '';
 
                 $lines[] = match ($change['kind']) {
@@ -339,6 +339,12 @@ final class ScheduleKeeperService
     private function renderTitle(?string $title): string
     {
         return trim((string) $title) !== '' ? " — {$title}" : '';
+    }
+
+    /** «Занятие 12» в строках изменений — как у SupportAnswerFactResolver. */
+    private function renderTitleQuoted(?string $title): string
+    {
+        return trim((string) $title) !== '' ? " «{$title}»" : '';
     }
 
     /**
