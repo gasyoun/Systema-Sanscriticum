@@ -44,7 +44,7 @@ class ScheduleKeeperTest extends TestCase
     private function lesson(Group|int|null $group, string $start, ?string $title = null): Schedule
     {
         return Schedule::create([
-            'title' => $title,
+            'title' => $title ?? '',
             'group_id' => $group instanceof Group ? $group->id : $group,
             'start' => $start,
         ]);
