@@ -104,6 +104,7 @@ final class MgDecideBotService
 
     /**
      * Чистая сборка карточки (без сети) — для тестов и --fake-update смоука.
+     *
      * @return array{0: string, 1: string} [text, reply_markup json]
      */
     public function buildCardMessage(array $card): array
