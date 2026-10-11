@@ -172,4 +172,35 @@ class TrackedLinkTest extends TestCase
             }
         }
     }
+
+    /** @test */
+    public function zhdun_deep_link_overlay_redirects_to_bot_and_logs_click(): void
+    {
+        $this->get('/ga/zhdun-filosofiya-sankhyi')
+            ->assertRedirect('https://t.me/samskrte_bot?start=wl_filosofiya-sankhyi');
+
+        $click = \App\Models\AnonsLinkClick::query()->where('link', 'zhdun-filosofiya-sankhyi')->first();
+        $this->assertNotNull($click, 'клик прослойки должен логироваться до перехода в бота');
+        $this->assertSame('zhdun_share', $click->utm['utm_source']);
+        $this->assertSame('bot_deeplink', $click->utm['utm_medium']);
+        $this->assertSame('filosofiya-sankhyi', $click->utm['utm_content']);
+    }
+
+    /** @test */
+    public function every_listed_zhdun_course_has_a_tracked_overlay(): void
+    {
+        foreach ([
+            'likbez-po-lingvistike', 'lingvisticheskie-zadachi', 'kalligrafiya-devanagari',
+            'nachalnyi-sanskrit-litvinenko', 'gitarthasangraha-abhinavagputy', 'filosofiya-sankhyi',
+            'indiiskii-epos', 'kashmirskii-shivaizm', 'putevoditel-po-buddizmu',
+            'bxagavadgita-po-rukopisyam', 'arkhitektura-i-iskusstvo-buddizma', 'yoga-i-tantra',
+            'grammatika-sanskrita-jan2027', 'kosmografiya',
+        ] as $slug) {
+            $this->get('/ga/zhdun-'.$slug)
+                ->assertRedirect('https://t.me/samskrte_bot?start=wl_'.$slug);
+            $this->flushSession();
+        }
+
+        $this->assertSame(14, \App\Models\AnonsLinkClick::query()->where('link', 'like', 'zhdun-%')->count());
+    }
 }
