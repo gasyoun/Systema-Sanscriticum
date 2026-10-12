@@ -100,6 +100,42 @@ class DistributeVideoAnonsJobTest extends TestCase
         Http::assertSentCount(0);
     }
 
+    public function test_draft_network_failure_throws_and_releases_draft_key_for_retry(): void
+    {
+        // Живой случай 12-10-2026: копии доставлены (клейма продлены), черновик
+        // поймал DNS-таймаут → джоб бросает, ключ черновика отпущен; ретрай
+        // (клейма копий заняты) доставляет только черновик.
+        Redis::shouldReceive('set')->times(6)->andReturn(
+            true, true,   // прогон 1: два клейма копий
+            true,         // прогон 1: клейм черновика
+            false, false, // прогон 2 (ретрай): клейма копий заняты
+            true,         // прогон 2: клейм черновика заново
+        );
+        Redis::shouldReceive('expire')->times(3); // прогон 1: две копии; прогон 2: черновик
+        Redis::shouldReceive('del')->once();      // прогон 1: отпуск клейма черновика
+
+        Http::fake([
+            'api.telegram.org/botZAPISI-TOKEN/copyMessage' => Http::response(['ok' => true, 'result' => ['message_id' => 5001]]),
+            'api.telegram.org/botMAIN-TOKEN/sendMessage' => Http::sequence()
+                ->push(['ok' => false, 'description' => 'Internal Server Error: simulated network blip'], 500)
+                ->push(['ok' => true, 'result' => ['message_id' => 5002]]),
+        ]);
+
+        $job = $this->job();
+
+        try {
+            $job->handle();
+            $this->fail('draft failure must throw for retry');
+        } catch (\RuntimeException) {
+            $this->addToAssertionCount(1);
+        }
+
+        $job->handle();
+
+        Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'botMAIN-TOKEN/sendMessage')
+            && str_contains((string) $request['text'], 'Доставлено: 2/2'));
+    }
+
     public function test_empty_zapisi_token_skips_distribution(): void
     {
         MarketingSetting::query()->update(['zapisi_bot_token' => null]);
