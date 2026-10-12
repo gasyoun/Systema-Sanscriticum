@@ -1,6 +1,6 @@
 # Anons publishing v2 — operator manual
 
-_Created: 17-09-2026 · Last updated: 10-10-2026_
+_Created: 17-09-2026 · Last updated: 12-10-2026
 
 H5049 delivery: declarative announcement/Story publishing with visible CTA plaques burned into pixels, idempotent reruns, per-destination retries, explicit-missingness analytics, archive catalog and a safe test contour. Companion of the canonical [`/anons` skill](https://github.com/gasyoun/claude-config/blob/main/commands/anons.md).
 
@@ -129,6 +129,16 @@ php artisan anons:ops journal-list --campaign=up26
 - Живой пример отбора (прод 10-10-2026): `anons:plan-occasions --kind=разовое` → 3 повода «Открытые занятия и вебинары» (#1594–#1596); журнал на ту же дату — 37 строк, из них up26 [разовое] ×2 (бэкфилл).
 
 Идемпотентность — по `/ga/` ключу (повторный `journal-add` обновляет строку). Story-ключи (`st-`) команда отказывается принимать — они живут в `story_campaigns`-формате. Живой пример первого заполнения: up26, пост 633 (PR [#3008](https://github.com/gasyoun/Systema-Sanscriticum/pull/3008) — до команды хвост был ручным PR; после H6095 — одна команда). Читаемый md-журнал кампании (campaign-record-template) остаётся человеком-артефактом, команда его не патчит.
+
+## Video-anons lane (H6546)
+
+Учебные чаты: video от белого списка ([`config/video-anons.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/video-anons.php): MG, @ivanmolochko, лектор; ids каноничны, username — fallback, пер-курсовые преподаватели — `course_authors`) в чате из канонической карты курс→чаты автоматически копируется `copyMessage` от @zapisi_ORSbot (без плашки Forwarded from, подпись сохраняется) во все остальные чаты курса, админам уходит черновик (ops-канал [`TelegramAdminNotifier`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Access/TelegramAdminNotifier.php): доставлено N/M с message_id копий, ссылка t.me/c, причины отказов). Триггер — [ProcessTelegramZapisiUpdate](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Jobs/ProcessTelegramZapisiUpdate.php) → [VideoAnonsService](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Anons/VideoAnons/VideoAnonsService.php) (фильтр: флаг / карта / автор; кружки `video_note` сознательно не триггерят — личное адресное сообщение) → [DistributeVideoAnonsJob](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Jobs/DistributeVideoAnonsJob.php). Идемпотентность — TelegramSendGuard-клеймы на чат-цель и на черновик («на время полёта» 5 мин, после успеха продление на неделю); отказ Telegram на одном чате не блокирует остальные; транспортный обрыв ключ не отпускает (ретрай подавлен — дешевле дубля). Публичные поверхности (канал «Оповещения санскритян») в скоуп лейна не входят.
+
+Карта курс→чаты канонична в конфиге. Источник (12-10-2026): `groups.telegram_chat_id` прода, сверено с карточками Uprava `tools/welcome_post/cards/` — все шесть чатов одной команды курса (лектор Эдгар Лейтан), в строках Systema они относятся к пяти разным курсам, поэтому ключ карты — «команда курса». Сентябрьская строка «dead chat» из SERVER_SOFT_ALERT_PLAYBOOK (H4846) для `-1002917231272` устарела: `getChat` токеном Почтальона 12-10 отвечает `ok:true` (бот читает и постит; остальные .env-боты этот чат не видят — отправитель копий только Почтальон).
+
+Сторис по заголовку MG — за флагом `VIDEO_ANONS_STORIES_ENABLED` (по умолчанию off до первой поставки заголовка; решение грилла MG 12-10). Подсистема готова: video-сторис поддержаны ([`StoryPublisher::sendVideoStory`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Stories/StoryPublisher.php), `inputMediaUploadedDocument` + `documentAttributeVideo`, TL layer 225; github-first проверка 12-10: официальный danog/MadelineProto отдаёт `stories.sendStory` в IPC-клиенте, генерируемые namespace-форки подтверждают сигнатуру `sendStory(peer, media, caption, privacy_rules, period)`). Публикация по заголовку пойдёт по правилам сторис-раздела скилла anons (plaque, короткий `/ga/`-ключ, верификация `getStoriesByID`) — проводка reply-обработчика в основной вебхук отдельным шагом при включении флага (edit scope H6546 — Services/Jobs/config/tests/docs, без контроллеров).
+
+Офлайн-канарейка: `php artisan video-anons:replay --payload=<json с message>` ([`VideoAnonsReplayCommand`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/VideoAnonsReplayCommand.php)) — тот же путь, что live-вебхук (VideoAnonsService → очередь → DistributeVideoAnonsJob); дедуп лейна действует и на replay.
 
 ## Known limits
 
