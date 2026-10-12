@@ -85,9 +85,12 @@ final class WaitlistBotService
                 .'Оплата курсов и материалы — на https://samskrte.ru',
             'parse_mode' => 'HTML',
             'disable_web_page_preview' => true,
-            'reply_markup' => $this->keyboard([[
-                ['text' => '📋 Ждун — голосование за курсы', 'callback_data' => self::CALLBACK_PREFIX.'page:0'],
-            ]]),
+            'reply_markup' => $this->keyboard([
+                [['text' => '📋 Ждун — голосование за курсы', 'callback_data' => self::CALLBACK_PREFIX.'page:0']],
+                // H6566: трекед-прослойка /ga/volunteer → инвайт закрытой
+                // группы добровольцев разметки словарей (клик считается).
+                [['text' => '🤝 Стать добровольцем', 'url' => 'https://samskrte.ru/ga/volunteer']],
+            ]),
         ]);
     }
 
@@ -199,7 +202,7 @@ final class WaitlistBotService
             'Голос отозван: <b>'.e($item->course_title).'</b>'
             ."\nПрогресс: {$item->votesCount()} / {$item->min_payers}.",
             [[['text' => '🗳 Голосовать снова', 'callback_data' => self::CALLBACK_PREFIX.'vote:'.$item->getKey()]],
-            [['text' => '◀️ Ко всем курсам', 'callback_data' => self::CALLBACK_PREFIX.'page:0']]]);
+                [['text' => '◀️ Ко всем курсам', 'callback_data' => self::CALLBACK_PREFIX.'page:0']]]);
     }
 
     public function sendList(string $chatId, int $page = 0, ?int $editMessageId = null): void
@@ -234,6 +237,9 @@ final class WaitlistBotService
             $footer[] = ['text' => '🔄 Обновить', 'callback_data' => self::CALLBACK_PREFIX.'page:'.$page];
         }
         $rows[] = $footer;
+        // H6566: ссылка «Стать добровольцем» в самом ждуне — трекед-прослойка
+        // /ga/volunteer → закрытая TG-группа (клик пишется в anons_link_clicks).
+        $rows[] = [['text' => '🤝 Стать добровольцем', 'url' => 'https://samskrte.ru/ga/volunteer']];
 
         $payload = [
             'text' => $text,

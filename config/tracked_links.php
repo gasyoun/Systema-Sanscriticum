@@ -198,6 +198,23 @@ $links['vanons-tg-v1'] = [
     ],
 ];
 
+/*
+ * H6566 (MG 12-10-2026): «Стать добровольцем» — разметка санскритских
+ * словарей Кёльна, вход через закрытую TG-группу. Кнопка ждун-бота ведёт
+ * на прослойку /ga/volunteer, чтобы клик считался даже без входа в группу
+ * (паттерн H6466/H6489); utm_source помечен zhdun_ — не сайт-атрибуция.
+ */
+$links['volunteer'] = [
+    'destination' => 'https://t.me/+zl3hUJ632t03OGY6',
+    'utm' => [
+        'utm_source' => 'zhdun_share',
+        'utm_medium' => 'bot_deeplink',
+        'utm_campaign' => 'zhdun_volunteer_evergreen',
+        'utm_content' => 'volunteer',
+        'utm_term' => 'volunteer',
+    ],
+];
+
 return [
     'session_key' => 'tracked_link_attribution',
     'links' => $links,

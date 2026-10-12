@@ -240,4 +240,15 @@ class TrackedLinkTest extends TestCase
             ->where('utm->utm_source', 'zhdun_share')
             ->count());
     }
+
+    /** @test */
+    public function volunteer_overlay_redirects_to_the_private_group_and_logs_click(): void
+    {
+        $this->get('/ga/volunteer')
+            ->assertRedirect('https://t.me/+zl3hUJ632t03OGY6');
+
+        $click = AnonsLinkClick::query()->where('link', 'volunteer')->first();
+        $this->assertNotNull($click, 'клик по добровольческой прослойке должен логироваться до перехода в группу');
+        $this->assertSame('zhdun_volunteer_evergreen', $click->utm['utm_campaign']);
+    }
 }
