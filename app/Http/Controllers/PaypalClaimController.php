@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePaypalClaimRequest;
 use App\Mail\PaypalClaimReceivedMail;
 use App\Mail\PaypalClaimStudentAckMail;
+use App\Models\Course;
 use App\Models\Payment;
 use App\Models\Tariff;
 use App\Models\User;
@@ -78,6 +79,7 @@ final class PaypalClaimController extends Controller
             'foreignPrice' => $foreignPrice,
             'isSupplement' => $supplement,
             'blockOptions' => $supplement ? collect() : $this->multiBlockOptions($tariff),
+            'crossCourseGroups' => $supplement ? collect() : $this->crossCourseBlockOptions($tariff),
             'meLink' => (string) config('services.paypal.me_link'),
             'recipient' => (string) config('services.paypal.recipient'),
         ]);
@@ -295,6 +297,13 @@ final class PaypalClaimController extends Controller
         // без multi-меток, foreign_amount = заявленная сумма (как в одиночном
         // пути). Несколько блоков — разбивка по тарифам (H6534).
         $isMulti = $selected->count() > 1;
+        // H6554: выбранные блоки принадлежат более чем одному курсу.
+        $isCrossCourse = $selected->pluck('course_id')->unique()->count() > 1;
+        // Заголовки курсов выбора — только в кросс-курсовой заявке, чтобы
+        // одно-курсовые claim_meta остались бит-в-бит (H6534).
+        $courseTitles = $isCrossCourse
+            ? Course::query()->whereIn('id', $selected->pluck('course_id')->unique())->pluck('title', 'id')
+            : collect();
 
         $checker = app(PaypalClaimAmountCheck::class);
         $perTariff = $selected->map(fn (Tariff $t): array => [
@@ -334,7 +343,13 @@ final class PaypalClaimController extends Controller
         $this->rejectReplayedClaim($user, $selected->first(), $replayKeys[0]);
 
         // H5442 (P0 п.4, fail-closed): курс без групп доступа — не paid.
-        $accessBlocked = $tariff->course !== null && ! $tariff->course->groups()->exists();
+        // H6554: проверяем КАЖДЫЙ курс выбора — раньше достаточно было курса
+        // якоря, потому что мульти-выбор был в пределах одного курса.
+        $accessBlocked = $selected
+            ->pluck('course_id')
+            ->unique()
+            ->map(fn (int $courseId) => Course::find($courseId))
+            ->contains(fn ($course) => $course !== null && ! $course->groups()->exists());
         if ($trusted && (! $amountCheck['auto_confirm'] || $accessBlocked)) {
             $trusted = false;
         }
@@ -347,13 +362,25 @@ final class PaypalClaimController extends Controller
         ];
         if ($isMulti) {
             $claimMeta['multi_block'] = true;
-            $claimMeta['block_tariffs'] = $perTariff->map(fn (array $row): array => [
-                'tariff_id' => $row['tariff']->id,
-                'label' => $row['tariff']->title ?? $row['tariff']->accessKey(),
-                'block' => $row['tariff']->block_number,
-                'amount' => (float) $row['tariff']->price,
-                'foreign_amount' => $row['expected'],
-            ])->all();
+            if ($isCrossCourse) {
+                $claimMeta['cross_course'] = true;
+            }
+            // H6554: в кросс-курсовой заявке каждая строка разбивки несёт курс
+            // блока; одно-курсовая (H6534) — бит-в-бит без нового ключа.
+            $claimMeta['block_tariffs'] = $perTariff->map(function (array $row) use ($isCrossCourse, $courseTitles): array {
+                $entry = [
+                    'tariff_id' => $row['tariff']->id,
+                    'label' => $row['tariff']->title ?? $row['tariff']->accessKey(),
+                    'block' => $row['tariff']->block_number,
+                    'amount' => (float) $row['tariff']->price,
+                    'foreign_amount' => $row['expected'],
+                ];
+                if ($isCrossCourse) {
+                    $entry['course_title'] = (string) $courseTitles->get($row['tariff']->course_id, '');
+                }
+
+                return $entry;
+            })->all();
             $claimMeta['foreign_total'] = $claimedTotal;
         }
         if ($txn) {
@@ -468,8 +495,11 @@ final class PaypalClaimController extends Controller
     /**
      * H6534: blocks[] из формы → выбранные тарифы того же курса. Пусто — один
      * якорный тариф (старое одиночное поведение). Идентификаторы валидируются
-     * строго (тот же курс, активный блочный тариф) — fail-closed, без тихих
-     * срезов выбора. Порядок — по номеру блока: первая строка держит
+     * строго (активный блочный тариф) — fail-closed, без тихих срезов выбора.
+     * H6554: выбор больше не ограничен курсом якоря — блоки ДРУГИХ активных
+     * курсов тоже проходят (кросс-курсовый клейм). Порядок канонический:
+     * в пределах одного курса — по номеру блока (как в H6534, бит-в-бит),
+     * кросс-курсовый — по курсу, затем блоку; первая строка держит
      * канонический replay-ключ перевода.
      *
      * @return Collection<int, Tariff>
@@ -481,12 +511,21 @@ final class PaypalClaimController extends Controller
             return collect([$tariff]);
         }
 
-        $candidates = Tariff::query()
+        // Все id в курсе якоря — прежний запрос бит-в-бит (порядок по блоку).
+        $allInAnchorCourse = Tariff::query()
+            ->whereIn('id', $ids)
             ->where('course_id', $tariff->course_id)
+            ->count() === count($ids);
+
+        $candidates = Tariff::query()
             ->where('type', 'block')
             ->where('is_active', true)
             ->whereIn('id', $ids)
-            ->orderBy('block_number')
+            ->when(
+                $allInAnchorCourse,
+                fn ($query) => $query->orderBy('block_number'),
+                fn ($query) => $query->orderBy('course_id')->orderBy('block_number'),
+            )
             ->get();
 
         if ($candidates->count() !== count($ids)) {
@@ -496,6 +535,53 @@ final class PaypalClaimController extends Controller
         }
 
         return $candidates;
+    }
+
+    /**
+     * H6554: блочные тарифы ДРУГИХ активных курсов для кросс-курсового
+     * селектора «один перевод — блоки нескольких курсов». Развилка из миссии
+     * пробита live-пробой каталога 12-10-2026 (.92: 15 курсов с активными
+     * блочными тарифами) и текстом миссии («только активные блочные»):
+     * в селектор идут ВСЕ курсы с активными блочными тарифами, сгруппированные
+     * по курсу; отдельного понятия «родственный поток» в коде нет. Якорный
+     * курс не повторяется — его блоки уже в multiBlockOptions(). Цены — из
+     * того же источника, что и сверка (expectedPrice).
+     *
+     * @return Collection<int, array{course: Course, options: Collection<int, array{tariff: Tariff, eur: ?float, usd: ?float}>}>
+     */
+    private function crossCourseBlockOptions(Tariff $tariff): Collection
+    {
+        if ($tariff->course === null || $tariff->type !== 'block') {
+            return collect();
+        }
+
+        $foreign = Tariff::query()
+            ->where('type', 'block')
+            ->where('is_active', true)
+            ->where('course_id', '!=', $tariff->course_id)
+            ->whereHas('course', fn ($query) => $query->where('is_active', true))
+            ->with('course')
+            ->orderBy('course_id')
+            ->orderBy('block_number')
+            ->get();
+        if ($foreign->isEmpty()) {
+            return collect();
+        }
+
+        $checker = app(PaypalClaimAmountCheck::class);
+        $user = auth()->user();
+
+        return $foreign
+            ->groupBy('course_id')
+            ->values()
+            ->map(fn (Collection $blocks): array => [
+                'course' => $blocks->first()->course,
+                'options' => $blocks->map(fn (Tariff $t): array => [
+                    'tariff' => $t,
+                    'eur' => $checker->expectedPrice($t, 'EUR', $user),
+                    'usd' => $checker->expectedPrice($t, 'USD', $user),
+                ]),
+            ]);
     }
 
     /** Русское склонение для сообщения о количестве блоков (n ≥ 2). */
