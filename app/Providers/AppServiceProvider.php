@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Models\ArticleView;
 use App\Models\ContentCandidate;
 use App\Models\Course;
+use App\Models\CourseBlock;
 use App\Models\IpExpense;
 use App\Models\LandingPage;
 use App\Models\Lead;
@@ -16,6 +17,7 @@ use App\Models\Payment;
 use App\Models\Schedule;
 use App\Observers\ArticleViewObserver;
 use App\Observers\ContentCandidateObserver;
+use App\Observers\CourseBlockObserver;
 use App\Observers\CourseCoverWebpObserver;
 use App\Observers\IpExpenseAuditObserver;
 use App\Observers\LandingPageObserver;
@@ -182,6 +184,10 @@ class AppServiceProvider extends ServiceProvider
         // Обложка витрины переводится в WebP в том же запросе, в котором её
         // загрузили (H3082). Второй рубеж — ежедневная media:covers-to-webp.
         Course::observe(CourseCoverWebpObserver::class);
+
+        // Каскад дат блока курса → будущие занятия Schedule, правило translate
+        // (H6369, Phase 4 роадмапа Google-календаря).
+        CourseBlock::observe(CourseBlockObserver::class);
 
         Payment::observe(PaymentObserver::class);
 

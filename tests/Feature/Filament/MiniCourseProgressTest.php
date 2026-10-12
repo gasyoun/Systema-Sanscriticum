@@ -153,6 +153,18 @@ class MiniCourseProgressTest extends TestCase
         $this->assertSame('PREP50-'.$student->id, $row->promo_code);
         $this->assertTrue($row->promo_redeemed);
         $this->assertSame('vk', $row->signup_source);
+
+        // Детальная воронка для модалки: уроки с отметками, попытки, промо с погашением.
+        $details = \App\Support\MiniCourseProgress::details($this->course->id, $student->id);
+        $this->assertSame('Прогресс Тест', $details['name']);
+        $this->assertCount(3, $details['lessons']);
+        $this->assertTrue($details['lessons'][0]['completed']);
+        $this->assertFalse($details['lessons'][1]['completed']);
+        $this->assertCount(2, $details['attempts']);
+        $this->assertTrue($details['attempts'][0]['passed']);
+        $this->assertSame('accepted', $details['homework'][0]['status']);
+        $this->assertSame('PREP50-'.$student->id, $details['promo']['code']);
+        $this->assertNotNull($details['promo']['redeemed']);
     }
 
     /** @test */

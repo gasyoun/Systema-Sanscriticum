@@ -11,12 +11,15 @@ use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
+use Filament\Support\Enums\MaxWidth;
+use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -81,10 +84,38 @@ class MiniCourseProgress extends Page implements HasTable
         ];
     }
 
+    /**
+     * Модалка «подробная воронка студента»: открывается и кликом по строке
+     * (recordAction), и кнопкой в строке. Паттерн — previewAction из
+     * CourseDesignAssets.
+     */
+    private function detailsAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('details')
+            ->label('Воронка')
+            ->icon('heroicon-o-funnel')
+            ->color('gray')
+            ->modalHeading(fn ($record): string => 'Воронка: '.$record->name)
+            ->modalWidth(MaxWidth::FourExtraLarge)
+            ->modalSubmitAction(false)
+            ->modalContent(fn ($record): View => view(
+                'filament.pages.mini-course-progress-details',
+                [
+                    'course' => MiniCourseProgressData::course(),
+                    'details' => MiniCourseProgressData::details(
+                        (int) $this->miniCourse?->id,
+                        (int) $record->id,
+                    ),
+                ],
+            ));
+    }
+
     public function table(Table $table): Table
     {
         return $table
             ->query($this->studentQuery())
+            ->actions([$this->detailsAction()])
+            ->recordAction('details')
             ->columns([
                 TextColumn::make('name')
                     ->label('Студент')
