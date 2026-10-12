@@ -17,6 +17,7 @@ use App\Services\Payments\PaypalClaimAmountCheck;
 use App\Services\Payments\PaypalForeignPriceService;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -76,6 +77,7 @@ final class PaypalClaimController extends Controller
             'price' => (float) $tariff->price,
             'foreignPrice' => $foreignPrice,
             'isSupplement' => $supplement,
+            'blockOptions' => $supplement ? collect() : $this->multiBlockOptions($tariff),
             'meLink' => (string) config('services.paypal.me_link'),
             'recipient' => (string) config('services.paypal.recipient'),
         ]);
@@ -87,6 +89,14 @@ final class PaypalClaimController extends Controller
 
         if ($request->boolean('supplement_mode')) {
             return $this->storeSupplement($request, $tariff, $curators);
+        }
+
+        // H6534: форма может пометить НЕСКОЛЬКО блоков курса под один перевод.
+        // Ничего не выбрано или выбран один блок — старый одиночный путь без
+        // изменений (бит-в-бит).
+        $selected = $this->resolveSelectedTariffs($request, $tariff);
+        if ($selected->count() > 1) {
+            return $this->storeMultiBlock($request, $tariff, $selected, $curators);
         }
 
         // Ruling 22-08-2026: заявка СУЩЕСТВУЮЩЕГО ученика (вошедшего в кабинет)
@@ -251,6 +261,247 @@ final class PaypalClaimController extends Controller
         return redirect()
             ->route('paypal.claim.show', $tariff)
             ->with('success', $success);
+    }
+
+    /**
+     * H6534 (кейс 12-10-2026, Цыди): один PayPal-перевод покрывает НЕСКОЛЬКО
+     * блоков курса. Expected = сумма expectedPrice() выбранных тарифов, вердикт
+     * сверки — по ОБЩЕЙ сумме перевода. Создаётся ОДИН Payment на каждый
+     * выбранный тариф (amount = рублёвый номинал тарифа, foreign_amount = его
+     * иностранная цена), claim_meta у всех строк общий: txn + список блоков.
+     *
+     * Механика H5007/H5442 на месте: дубли per user+course+tariff+txn,
+     * replay-ключи per user+tariff+txn — первая строка (низший блок) держит
+     * канонический ключ перевода, остальные солёные по тарифу (unique-индекс
+     * требует различных значений, а тот же txn нельзя повторно заявить ни
+     * мульти-, ни одиночной формой).
+     *
+     * @param  Collection<int, Tariff>  $selected
+     */
+    private function storeMultiBlock(StorePaypalClaimRequest $request, Tariff $tariff, Collection $selected, CuratorNotifier $curators): RedirectResponse
+    {
+        // Флаг доверия читаем ДО resolveUser — он логинит созданного гостя
+        // (см. комментарий в store()).
+        $trusted = auth()->check()
+            && auth()->user()->isEstablishedClaimStudent()
+            && (bool) config('services.paypal.trust_existing_students', true);
+
+        $user = $this->resolveUser($request);
+
+        $currency = (string) $request->validated('foreign_currency');
+        $claimedTotal = (float) $request->validated('foreign_amount');
+        $txn = $request->validated('paypal_txn');
+
+        $checker = app(PaypalClaimAmountCheck::class);
+        $perTariff = $selected->map(fn (Tariff $t): array => [
+            'tariff' => $t,
+            'expected' => $checker->expectedPrice($t, $currency, $user),
+        ]);
+
+        // Дубль-защита per user+course+tariff+txn (H5007) — по каждому блоку.
+        foreach ($selected as $t) {
+            $this->rejectDuplicateClaim($user, $t, (string) ($txn ?? ''), 'блок '.$t->block_number);
+        }
+
+        // Нет прайса хотя бы у одного блока в этой валюте — нет автоподтверждения.
+        $expectedTotal = $perTariff->contains(fn (array $row): bool => $row['expected'] === null)
+            ? null
+            : round($perTariff->sum(fn (array $row): float => (float) $row['expected']), 2);
+
+        // H5442 (D20): вердикт по ОБЩЕЙ сумме перевода.
+        $amountCheck = PaypalClaimAmountCheck::classify($currency, $claimedTotal, $expectedTotal);
+
+        // H5442-ключи: первая строка — канонический ключ перевода, остальные
+        // солёные, чтобы разойтись по unique-индексу claim_replay_key.
+        $replayKeys = $perTariff->map(function (array $row, int $i) use ($user, $txn, $currency, $claimedTotal, $request): string {
+            $block = $row['tariff'];
+            $key = PaypalClaimAmountCheck::replayKey(
+                (int) $user->id,
+                (int) $block->id,
+                $txn,
+                (string) $request->validated('paid_on'),
+                $currency,
+                $row['expected'] ?? $claimedTotal,
+            );
+
+            return $i === 0 ? $key : hash('sha256', $key.'|multi|'.$block->id);
+        })->all();
+
+        $this->rejectReplayedClaim($user, $selected->first(), $replayKeys[0]);
+
+        // H5442 (P0 п.4, fail-closed): курс без групп доступа — не paid.
+        $accessBlocked = $tariff->course !== null && ! $tariff->course->groups()->exists();
+        if ($trusted && (! $amountCheck['auto_confirm'] || $accessBlocked)) {
+            $trusted = false;
+        }
+
+        $proofPath = $request->file('proof')?->store('paypal-proofs', 'local') ?: null;
+
+        $claimMeta = [
+            'paypal_payer' => (string) $request->validated('paypal_payer'),
+            'paid_on' => (string) $request->validated('paid_on'),
+            'multi_block' => true,
+            'block_tariffs' => $perTariff->map(fn (array $row): array => [
+                'tariff_id' => $row['tariff']->id,
+                'label' => $row['tariff']->title ?? $row['tariff']->accessKey(),
+                'block' => $row['tariff']->block_number,
+                'amount' => (float) $row['tariff']->price,
+                'foreign_amount' => $row['expected'],
+            ])->all(),
+            'foreign_total' => $claimedTotal,
+        ];
+        if ($txn) {
+            $claimMeta['txn'] = (string) $txn;
+        }
+        if ($trusted) {
+            $claimMeta['auto_trusted'] = true;
+            $claimMeta['trusted_at'] = now()->toIso8601String();
+        }
+        $claimMeta['amount_check'] = $amountCheck + ['checked_at' => now()->toIso8601String()];
+        if ($accessBlocked) {
+            $claimMeta['reconciliation_exception'] = 'no_access_groups';
+        }
+
+        try {
+            $payments = DB::transaction(function () use ($perTariff, $replayKeys, $user, $claimMeta, $request, $proofPath, $currency, $trusted): array {
+                return $perTariff->map(function (array $row, int $i) use ($replayKeys, $user, $claimMeta, $request, $proofPath, $currency, $trusted): Payment {
+                    $block = $row['tariff'];
+                    [$startBlock, $endBlock] = $this->blocksFor($block);
+
+                    return Payment::create([
+                        'claim_replay_key' => $replayKeys[$i],
+                        'user_id' => $user->id,
+                        'course_id' => $block->course_id,
+                        // Рублёвый номинал СВОЕГО тарифа; реально уплаченная общая
+                        // сумма — в claim_meta.foreign_total (см. CuratorNotifier).
+                        'amount' => (float) $block->price,
+                        'foreign_amount' => $row['expected'],
+                        'foreign_currency' => $currency,
+                        'tariff' => $block->accessKey(),
+                        'start_block' => $startBlock,
+                        'end_block' => $endBlock,
+                        // trusted → сразу paid: fireOnPaid на created открывает
+                        // доступ по каждому блоку штатным Payment::booted().
+                        'status' => $trusted ? 'paid' : 'pending',
+                        'provider' => Payment::PROVIDER_PAYPAL,
+                        'proof_path' => $proofPath,
+                        'claim_meta' => $claimMeta,
+                        'payer_note' => $this->buildNote($request),
+                    ]);
+                })->all();
+            });
+        } catch (UniqueConstraintViolationException $e) {
+            // H5442: гонка двух одновременных submit'ов — unique-индекс отбил
+            // вторую; отказ, не 500.
+            $this->rejectReplayedClaim($user, $selected->first(), $replayKeys[0]);
+
+            throw $e;
+        }
+
+        // Один перевод — один комплект уведомлений: карточка куратора с
+        // разбивкой, письмо админу и ack студенту уходят по первой строке;
+        // полный список блоков карточка читает из общего claim_meta.
+        $first = $payments[0];
+        $curators->paypalClaimReceived($first);
+
+        $adminEmail = (string) config('services.admin.email');
+        if ($adminEmail !== '') {
+            Mail::to($adminEmail)->send(new PaypalClaimReceivedMail($first));
+        }
+        Mail::to($user)->send(new PaypalClaimStudentAckMail($first));
+
+        $count = count($payments);
+        $success = $trusted
+            ? 'Спасибо, заявка на '.$count.' '.$this->blocksPlural($count).' получена — доступ к курсу открыт. Подтверждение с деталями уходит на ваш email.'
+            : 'Спасибо, заявка на '.$count.' '.$this->blocksPlural($count).' получена — подтверждение уже уходит на ваш email. Мы сверим платеж, обычно в течение одного рабочего дня, и откроем доступ; для нового аккаунта пароль придет на email.';
+        if ($trusted && ($amountCheck['notify_underpayment'] ?? false)) {
+            $success .= ' '.self::underpaymentNotice($amountCheck);
+        }
+
+        return redirect()
+            ->route('paypal.claim.show', $tariff)
+            ->with('success', $success);
+    }
+
+    /**
+     * H6534: блочные тарифы курса для селектора «один перевод — несколько
+     * блоков». Только когда есть из чего выбирать (≥2 активных блочных
+     * тарифа) и якорь — блочный тариф. Цены — из того же источника, что и
+     * сверка (expectedPrice), чтобы форма никогда не обещала лишнего.
+     *
+     * @return Collection<int, array{tariff: Tariff, eur: ?float, usd: ?float}>
+     */
+    private function multiBlockOptions(Tariff $tariff): Collection
+    {
+        if ($tariff->course === null || $tariff->type !== 'block') {
+            return collect();
+        }
+
+        $siblings = Tariff::query()
+            ->where('course_id', $tariff->course_id)
+            ->where('type', 'block')
+            ->where('is_active', true)
+            ->orderBy('block_number')
+            ->get();
+        if ($siblings->count() < 2) {
+            return collect();
+        }
+
+        $checker = app(PaypalClaimAmountCheck::class);
+        $user = auth()->user();
+
+        return $siblings->map(fn (Tariff $t): array => [
+            'tariff' => $t,
+            'eur' => $checker->expectedPrice($t, 'EUR', $user),
+            'usd' => $checker->expectedPrice($t, 'USD', $user),
+        ]);
+    }
+
+    /**
+     * H6534: blocks[] из формы → выбранные тарифы того же курса. Пусто — один
+     * якорный тариф (старое одиночное поведение). Идентификаторы валидируются
+     * строго (тот же курс, активный блочный тариф) — fail-closed, без тихих
+     * срезов выбора. Порядок — по номеру блока: первая строка держит
+     * канонический replay-ключ перевода.
+     *
+     * @return Collection<int, Tariff>
+     */
+    private function resolveSelectedTariffs(StorePaypalClaimRequest $request, Tariff $tariff): Collection
+    {
+        $ids = array_values(array_unique(array_map('intval', (array) $request->validated('blocks', []))));
+        if ($ids === []) {
+            return collect([$tariff]);
+        }
+
+        $candidates = Tariff::query()
+            ->where('course_id', $tariff->course_id)
+            ->where('type', 'block')
+            ->where('is_active', true)
+            ->whereIn('id', $ids)
+            ->orderBy('block_number')
+            ->get();
+
+        if ($candidates->count() !== count($ids)) {
+            throw ValidationException::withMessages([
+                'blocks' => 'Некоторые отмеченные блоки недоступны для оплаты — обновите страницу и отметьте блоки заново.',
+            ]);
+        }
+
+        return $candidates;
+    }
+
+    /** Русское склонение для сообщения о количестве блоков (n ≥ 2). */
+    private function blocksPlural(int $n): string
+    {
+        if ($n % 100 >= 11 && $n % 100 <= 14) {
+            return 'блоков';
+        }
+
+        return match (true) {
+            $n % 10 === 1 => 'блок',
+            $n % 10 >= 2 && $n % 10 <= 4 => 'блока',
+            default => 'блоков',
+        };
     }
 
     /**
@@ -550,7 +801,7 @@ final class PaypalClaimController extends Controller
      * pending/paid — отклоняется. Ничего не пишем: доступ/выручка/прана по
      * первой заявке уже проведены штатно.
      */
-    private function rejectDuplicateClaim(User $user, Tariff $tariff, string $txn): void
+    private function rejectDuplicateClaim(User $user, Tariff $tariff, string $txn, string $label = ''): void
     {
         $query = Payment::query()
             ->where('provider', Payment::PROVIDER_PAYPAL)
@@ -580,6 +831,7 @@ final class PaypalClaimController extends Controller
 
         throw ValidationException::withMessages([
             'paypal_txn' => 'Эта заявка уже получена'
+                .($label !== '' ? ' ('.$label.')' : '')
                 .($txn !== '' ? ' (транзакция '.$txn.')' : ' сегодня')
                 .' — повторно отправлять не нужно. Если это другой платёж, укажите его номер транзакции PayPal.',
         ]);
