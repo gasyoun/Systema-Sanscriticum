@@ -39,10 +39,10 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `AWS_URL` | required | `—` | config/filesystems.php:69 |
 | `AWS_USE_PATH_STYLE_ENDPOINT` | optional | `false` | config/filesystems.php:71 |
 | `BACKUP_ARCHIVE_PASSWORD` | secret | `—` | config/backup.php:125 |
-| `BACKUP_CLEANUP_MB` | optional | `1000` | config/backup.php:202 |
+| `BACKUP_CLEANUP_MB` | optional | `1000` | config/backup.php:207 |
 | `BACKUP_KEEP_PARTS_DAYS` | optional | `16` | config/backup.php:105 |
-| `BACKUP_MAX_AGE_DAYS` | optional | `8` | config/backup.php:184 |
-| `BACKUP_MAX_STORAGE_MB` | optional | `1200` | config/backup.php:185 |
+| `BACKUP_MAX_AGE_DAYS` | optional | `8` | config/backup.php:189 |
+| `BACKUP_MAX_STORAGE_MB` | optional | `15000` | config/backup.php:190 |
 | `BACKUP_RESUME_BUDGET_SECONDS` | optional | `900` | config/backup.php:121 |
 | `BACKUP_SPLIT_PART_MB` | optional | `20` | config/backup.php:103 |
 | `BACKUP_VERIFY_PARTS` | optional | `true` | config/backup.php:109 |
