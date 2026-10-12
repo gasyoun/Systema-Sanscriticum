@@ -15,6 +15,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -157,9 +158,18 @@ class DistributeVideoAnonsJob implements ShouldQueue
         $notifier = app(TelegramAdminNotifier::class);
         $recipients = $notifier->notifyAdmins($text);
 
-        if ($recipients !== []) {
-            TelegramSendGuard::extendKey($draftKey, self::DONE_TTL);
+        if ($recipients === []) {
+            // Черновик — обязательная часть лейна (решение 1): сетевой сбой
+            // (живой случай 12-10-2026 — cURL 28, DNS-резолв > 2 с у
+            // TelegramTransport) не имеет права терять его молча. Ключ
+            // отпускаем и бросаем — бэкофф-ретрай джоба повторит ТОЛЬКО
+            // черновик: копии уже держат недельные клейма и не задвоятся.
+            $this->releaseKey($draftKey);
+
+            throw new RuntimeException('VideoAnons: draft to admins not delivered, retry scheduled');
         }
+
+        TelegramSendGuard::extendKey($draftKey, self::DONE_TTL);
 
         Log::info('VideoAnons: draft sent to admins', [
             'course' => $this->courseKey,
