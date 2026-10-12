@@ -147,8 +147,9 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-800 mb-1">Какие блоки покрывает перевод</label>
                             <p class="text-xs text-gray-600 leading-relaxed">
-                                Если перевели одной суммой сразу за несколько блоков — отметьте их все.
-                                Ожидаемая сумма пересчитается ниже; сверка пойдет по общей сумме перевода.
+                                Отмечены все блоки курса — типовой перевод идет сразу за год.
+                                Снимите те, что перевод не покрывает; ожидаемая сумма пересчитается ниже,
+                                сверка пойдет по общей сумме перевода.
                             </p>
                         </div>
                         <div class="space-y-2">
@@ -156,7 +157,8 @@
                                 <label class="flex items-center gap-3 rounded-xl bg-white border border-gray-200 px-4 py-3 text-sm cursor-pointer hover:border-indigo-300 transition">
                                     <input type="checkbox" name="blocks[]" value="{{ $option['tariff']->id }}"
                                            data-eur="{{ $option['eur'] ?? '' }}" data-usd="{{ $option['usd'] ?? '' }}"
-                                           @checked(in_array($option['tariff']->id, array_map('intval', (array) old('blocks', [$tariff->id]))))
+                                           {{-- H6544: дефолт — все блоки (типовой перевод за год); old() на редиректе сохраняет фактический выбор. --}}
+                                           @checked(in_array($option['tariff']->id, array_map('intval', (array) old('blocks', $blockOptions->pluck('tariff.id')->all()))))
                                            class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 multi-block-checkbox">
                                     <span class="font-medium text-gray-900">{{ $option['tariff']->title ?? $option['tariff']->accessKey() }}</span>
                                     <span class="ml-auto text-xs text-gray-500 whitespace-nowrap">
