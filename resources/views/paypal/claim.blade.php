@@ -141,6 +141,37 @@
                     </div>
                 </div>
 
+                {{-- H6534: один перевод может покрывать несколько блоков курса. --}}
+                @if(! $isSupplement && $blockOptions->count() >= 2)
+                    <div id="paypal-multi-blocks" class="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 sm:p-5 space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-800 mb-1">Какие блоки покрывает перевод</label>
+                            <p class="text-xs text-gray-600 leading-relaxed">
+                                Если перевели одной суммой сразу за несколько блоков — отметьте их все.
+                                Ожидаемая сумма пересчитается ниже; сверка пойдет по общей сумме перевода.
+                            </p>
+                        </div>
+                        <div class="space-y-2">
+                            @foreach($blockOptions as $option)
+                                <label class="flex items-center gap-3 rounded-xl bg-white border border-gray-200 px-4 py-3 text-sm cursor-pointer hover:border-indigo-300 transition">
+                                    <input type="checkbox" name="blocks[]" value="{{ $option['tariff']->id }}"
+                                           data-eur="{{ $option['eur'] ?? '' }}" data-usd="{{ $option['usd'] ?? '' }}"
+                                           @checked(in_array($option['tariff']->id, array_map('intval', (array) old('blocks', [$tariff->id]))))
+                                           class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 multi-block-checkbox">
+                                    <span class="font-medium text-gray-900">{{ $option['tariff']->title ?? $option['tariff']->accessKey() }}</span>
+                                    <span class="ml-auto text-xs text-gray-500 whitespace-nowrap">
+                                        @if($option['eur']){{ $option['eur'] }} €@endif
+                                        @if($option['eur'] && $option['usd']) · @endif
+                                        @if($option['usd']){{ $option['usd'] }} $@endif
+                                        @if(! $option['eur'] && ! $option['usd'])—@endif
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                        <p class="text-sm font-semibold text-gray-900">Ожидаемая сумма: <span id="multi-block-total">—</span></p>
+                    </div>
+                @endif
+
                 {{-- H2017: personal PayPal has no API — admin reconciles by from + date + amount. --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">С какого PayPal платили <span class="text-red-500">*</span></label>
@@ -275,4 +306,56 @@
 
 @push('scripts')
     <script src="{{ asset('js/paypal-claim-paste.js') }}?v={{ filemtime(public_path('js/paypal-claim-paste.js')) }}" defer></script>
+    @if(! $isSupplement && $blockOptions->count() >= 2)
+        {{-- H6534: живой пересчёт ожидаемой суммы по отмеченным блокам и валюте. --}}
+        <script>
+            (function () {
+                var boxes = document.querySelectorAll('.multi-block-checkbox');
+                if (!boxes.length) {
+                    return;
+                }
+                var currency = document.querySelector('select[name="foreign_currency"]');
+                var total = document.getElementById('multi-block-total');
+
+                function symbol() {
+                    return currency && currency.value === 'USD' ? '$' : '€';
+                }
+
+                function update() {
+                    if (!total) {
+                        return;
+                    }
+                    var sum = 0;
+                    var any = false;
+                    var unknown = false;
+                    boxes.forEach(function (box) {
+                        if (!box.checked) {
+                            return;
+                        }
+                        any = true;
+                        var price = parseFloat(box.getAttribute(currency && currency.value === 'USD' ? 'data-usd' : 'data-eur'));
+                        if (!isFinite(price)) {
+                            unknown = true;
+                            return;
+                        }
+                        sum += price;
+                    });
+                    if (!any) {
+                        total.textContent = 'отметьте блоки';
+                        return;
+                    }
+                    var value = unknown ? '≈ ' + sum.toFixed(2) : sum.toFixed(2);
+                    total.textContent = value + ' ' + symbol() + (unknown ? ' (часть блоков без прайса — сверим вручную)' : '');
+                }
+
+                boxes.forEach(function (box) {
+                    box.addEventListener('change', update);
+                });
+                if (currency) {
+                    currency.addEventListener('change', update);
+                }
+                update();
+            })();
+        </script>
+    @endif
 @endpush
