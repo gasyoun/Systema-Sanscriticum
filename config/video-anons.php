@@ -17,9 +17,15 @@ return [
     // Рубильник лейна целиком (kill switch без деплоя).
     'enabled' => (bool) env('VIDEO_ANONS_ENABLED', true),
 
-    // Сторис по заголовку MG: off до первой поставки заголовка (решение 1,
-    // «границы»). Публикация пойдёт через StoryPublisher::sendVideoStory.
-    'stories_enabled' => (bool) env('VIDEO_ANONS_STORIES_ENABLED', false),
+    // Авто-копии по чатам курса. MG 12-10-2026 (вечер, по живой пробе):
+    // «главное не в чаты, чаты сейчас не нужны, а в сторисы разных платформ»
+    // — дефолт off; лейн остаётся приёмкой заголовка для сторис.
+    'copies_enabled' => (bool) env('VIDEO_ANONS_COPIES_ENABLED', false),
+
+    // Сторис по заголовку MG: MG 12-10-2026 (вечер) — «вооружить сейчас».
+    // Публикация — approved-строка StoryPost (lane=persona), издатель —
+    // планировщик stories:publish-story (каждый час, под madeline-локом).
+    'stories_enabled' => (bool) env('VIDEO_ANONS_STORIES_ENABLED', true),
 
     /*
      * Авторы, чьё видео триггерит рассылку (решение 3: MG, Иван, преподаватель

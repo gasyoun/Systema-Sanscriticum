@@ -1011,8 +1011,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TRUST_GRADUATES_COUNT` | required | `—` | config/trust.php:19<br>config/trust.php:20 |
 | `TRUST_SINCE_YEAR` | optional | `2005` | config/trust.php:14 |
 | `UPGRADE_CREDIT_REFUND_LINK` | optional | `false` | config/features.php:1164 |
+| `VIDEO_ANONS_COPIES_ENABLED` | feature-flag | `false` | config/video-anons.php:23 |
 | `VIDEO_ANONS_ENABLED` | feature-flag | `true` | config/video-anons.php:18 |
-| `VIDEO_ANONS_STORIES_ENABLED` | feature-flag | `false` | config/video-anons.php:22 |
+| `VIDEO_ANONS_STORIES_ENABLED` | feature-flag | `true` | config/video-anons.php:28 |
 | `VIDEO_RESUME` | optional | `false` | config/features.php:959 |
 | `VIEW_COMPILED_PATH` | optional | `realpath(storage_path('framework/views'))` | config/view.php:31 |
 | `VISUALDCS_COURSE_SLUGS` | optional | `''` | config/visualdcs.php:30 |
