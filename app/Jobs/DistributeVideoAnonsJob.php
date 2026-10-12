@@ -19,6 +19,7 @@ use Throwable;
 
 /**
  * H6546: рассылка копий видео по чатам курса (Bot API copyMessage от
+ *
  * @zapisi_ORSbot — без плашки Forwarded from, подпись сохраняется) + черновик
  * админам (TelegramAdminNotifier — существующий ops-канал).
  *
