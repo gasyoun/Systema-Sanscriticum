@@ -297,6 +297,26 @@ class PaypalClaimMultiBlockTest extends TestCase
     }
 
     /** @test */
+    public function all_blocks_are_checked_by_default_for_the_typical_year_transfer(): void
+    {
+        // H6544 (MG 12-10): типовой перевод — сразу весь год (4 блока), пары
+        // блоков редки. Дефолт формы — ВСЕ блоки отмечены: студент, заплативший
+        // 240 €, не должен попасть в beyond_5 из-за неотмеченных блоков 2-4.
+        [, $tariffs] = $this->courseWithBlocks(3);
+
+        $html = (string) $this->get(route('paypal.claim.show', $tariffs[1]))
+            ->assertOk()
+            ->getContent();
+
+        // 3 опции селектора — каждая с предустановленным checked-атрибутом
+        // (@checked в Blade рендерит голое слово checked внутри тега).
+        preg_match_all('/<input[^>]*name="blocks\[\]"[^>]*>/', $html, $inputs);
+        $this->assertSame(3, count($inputs[0]), 'Все блоки курса в селекторе.');
+        $checked = array_filter($inputs[0], fn (string $tag): bool => str_contains($tag, 'checked'));
+        $this->assertCount(3, $checked, 'Все блоки должны быть предотмечены по умолчанию.');
+    }
+
+    /** @test */
     public function single_block_course_and_supplement_page_have_no_selector(): void
     {
         $course = Course::factory()->create();
