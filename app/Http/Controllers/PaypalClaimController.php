@@ -92,10 +92,10 @@ final class PaypalClaimController extends Controller
         }
 
         // H6534: форма может пометить НЕСКОЛЬКО блоков курса под один перевод.
-        // Ничего не выбрано или выбран один блок — старый одиночный путь без
-        // изменений (бит-в-бит).
+        // Ничего не выбрано или выбран якорный тариф — старый одиночный путь
+        // без изменений (бит-в-бит); отмечен один ЧУЖОЙ блок — заявка по нему.
         $selected = $this->resolveSelectedTariffs($request, $tariff);
-        if ($selected->count() > 1) {
+        if ($selected->count() > 1 || ! $selected->first()->is($tariff)) {
             return $this->storeMultiBlock($request, $tariff, $selected, $curators);
         }
 
@@ -291,6 +291,10 @@ final class PaypalClaimController extends Controller
         $currency = (string) $request->validated('foreign_currency');
         $claimedTotal = (float) $request->validated('foreign_amount');
         $txn = $request->validated('paypal_txn');
+        // Один выбранный блок (не якорь) — обычная одиночная заявка по нему:
+        // без multi-меток, foreign_amount = заявленная сумма (как в одиночном
+        // пути). Несколько блоков — разбивка по тарифам (H6534).
+        $isMulti = $selected->count() > 1;
 
         $checker = app(PaypalClaimAmountCheck::class);
         $perTariff = $selected->map(fn (Tariff $t): array => [
@@ -313,7 +317,7 @@ final class PaypalClaimController extends Controller
 
         // H5442-ключи: первая строка — канонический ключ перевода, остальные
         // солёные, чтобы разойтись по unique-индексу claim_replay_key.
-        $replayKeys = $perTariff->map(function (array $row, int $i) use ($user, $txn, $currency, $claimedTotal, $request): string {
+        $replayKeys = $perTariff->map(function (array $row, int $i) use ($user, $txn, $currency, $claimedTotal, $request, $isMulti): string {
             $block = $row['tariff'];
             $key = PaypalClaimAmountCheck::replayKey(
                 (int) $user->id,
@@ -321,7 +325,7 @@ final class PaypalClaimController extends Controller
                 $txn,
                 (string) $request->validated('paid_on'),
                 $currency,
-                $row['expected'] ?? $claimedTotal,
+                $isMulti ? ($row['expected'] ?? $claimedTotal) : $claimedTotal,
             );
 
             return $i === 0 ? $key : hash('sha256', $key.'|multi|'.$block->id);
@@ -340,16 +344,18 @@ final class PaypalClaimController extends Controller
         $claimMeta = [
             'paypal_payer' => (string) $request->validated('paypal_payer'),
             'paid_on' => (string) $request->validated('paid_on'),
-            'multi_block' => true,
-            'block_tariffs' => $perTariff->map(fn (array $row): array => [
+        ];
+        if ($isMulti) {
+            $claimMeta['multi_block'] = true;
+            $claimMeta['block_tariffs'] = $perTariff->map(fn (array $row): array => [
                 'tariff_id' => $row['tariff']->id,
                 'label' => $row['tariff']->title ?? $row['tariff']->accessKey(),
                 'block' => $row['tariff']->block_number,
                 'amount' => (float) $row['tariff']->price,
                 'foreign_amount' => $row['expected'],
-            ])->all(),
-            'foreign_total' => $claimedTotal,
-        ];
+            ])->all();
+            $claimMeta['foreign_total'] = $claimedTotal;
+        }
         if ($txn) {
             $claimMeta['txn'] = (string) $txn;
         }
@@ -363,8 +369,8 @@ final class PaypalClaimController extends Controller
         }
 
         try {
-            $payments = DB::transaction(function () use ($perTariff, $replayKeys, $user, $claimMeta, $request, $proofPath, $currency, $trusted): array {
-                return $perTariff->map(function (array $row, int $i) use ($replayKeys, $user, $claimMeta, $request, $proofPath, $currency, $trusted): Payment {
+            $payments = DB::transaction(function () use ($perTariff, $replayKeys, $user, $claimMeta, $request, $proofPath, $currency, $trusted, $isMulti, $claimedTotal): array {
+                return $perTariff->map(function (array $row, int $i) use ($replayKeys, $user, $claimMeta, $request, $proofPath, $currency, $trusted, $isMulti, $claimedTotal): Payment {
                     $block = $row['tariff'];
                     [$startBlock, $endBlock] = $this->blocksFor($block);
 
@@ -375,7 +381,9 @@ final class PaypalClaimController extends Controller
                         // Рублёвый номинал СВОЕГО тарифа; реально уплаченная общая
                         // сумма — в claim_meta.foreign_total (см. CuratorNotifier).
                         'amount' => (float) $block->price,
-                        'foreign_amount' => $row['expected'],
+                        // Мульти: иностранная цена СВОЕГО тарифа; одиночная заявка
+                        // хранит заявленную сумму (как раньше).
+                        'foreign_amount' => $isMulti ? $row['expected'] : $claimedTotal,
                         'foreign_currency' => $currency,
                         'tariff' => $block->accessKey(),
                         'start_block' => $startBlock,

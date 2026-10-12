@@ -256,8 +256,10 @@ class PaypalClaimMultiBlockTest extends TestCase
     }
 
     /** @test */
-    public function single_selected_block_takes_the_single_path(): void
+    public function single_selected_block_claims_that_block_not_the_anchor(): void
     {
+        // Открыли страницу блока 1, отметили только блок 2 → заявка по блоку 2,
+        // но в одиночной форме: без multi-меток, foreign_amount = заявленная сумма.
         [, $tariffs] = $this->courseWithBlocks(3);
         $user = User::factory()->create();
 
@@ -273,7 +275,9 @@ class PaypalClaimMultiBlockTest extends TestCase
         $payments = Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->get();
         $this->assertSame(1, $payments->count());
         $this->assertSame('block_2', $payments[0]->tariff);
+        $this->assertSame(2, $payments[0]->start_block);
         $this->assertNull($payments[0]->claimMeta('multi_block'), 'Один блок — обычная заявка без multi-меток.');
+        $this->assertSame(60.0, (float) $payments[0]->foreign_amount);
     }
 
     /** @test */
