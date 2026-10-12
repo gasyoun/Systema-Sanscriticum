@@ -109,6 +109,10 @@ class PublicWaitlistController extends Controller
         // Страница перезагрузится после ответа — там покажем «Спасибо, ваш голос учтён!».
         if ($request->hasSession()) {
             $request->session()->flash(self::VOTED_FLASH_KEY, true);
+            // H6521: веб-воронка Ждуна — waitlist_join стреляет flash-маркером
+            // на перезагрузке /online/zhdun (канал shop-metrika). JSON-ответу
+            // (fetch) флеш не мешает; wl:* из бота сюда не входит.
+            $request->session()->flash('metrika_goal', 'waitlist_join');
         }
 
         if (! $request->expectsJson()) {
