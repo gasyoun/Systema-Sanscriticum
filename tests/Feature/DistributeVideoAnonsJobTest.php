@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Jobs\DistributeVideoAnonsJob;
 use App\Models\MarketingSetting;
+use GuzzleHttp\Exception\ConnectException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
@@ -131,6 +132,38 @@ class DistributeVideoAnonsJobTest extends TestCase
         }
 
         $job->handle();
+
+        Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'botMAIN-TOKEN/sendMessage')
+            && str_contains((string) $request['text'], 'Доставлено: 2/2'));
+    }
+
+    public function test_draft_network_failure_falls_back_to_queue_budget_direct_send(): void
+    {
+        // Живой случай 12-10 (прод): 2-секундный TelegramTransport ловит cURL 28
+        // (резолв ~2.15с), копии с бюджетом 5с живы. Прогон: нотификатор упал
+        // по сети → фолбэк тем же каналом доставляет черновик → без throw.
+        Redis::shouldReceive('set')->times(3)->andReturn(true);
+        Redis::shouldReceive('expire')->times(3);
+
+        Http::fake(function (Request $request) {
+            if (str_contains($request->url(), 'copyMessage')) {
+                return Http::response(['ok' => true, 'result' => ['message_id' => 5001]]);
+            }
+
+            // Первый вызов sendMessage — сетевой сбой (как у нотификатора на проде),
+            // второй — фолбэк тем же каналом доставил.
+            static $sendMessageCalls = 0;
+            if ($sendMessageCalls++ === 0) {
+                throw new ConnectException(
+                    'cURL error 28: Resolving timed out after 2001 milliseconds',
+                    new \GuzzleHttp\Psr7\Request('POST', 'https://api.telegram.org'),
+                );
+            }
+
+            return Http::response(['ok' => true, 'result' => ['message_id' => 5002]]);
+        });
+
+        $this->job()->handle();
 
         Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'botMAIN-TOKEN/sendMessage')
             && str_contains((string) $request['text'], 'Доставлено: 2/2'));

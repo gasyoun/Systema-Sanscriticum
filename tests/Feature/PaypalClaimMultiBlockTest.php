@@ -224,16 +224,24 @@ class PaypalClaimMultiBlockTest extends TestCase
     }
 
     /** @test */
-    public function blocks_from_another_course_are_rejected(): void
+    public function blocks_of_another_course_are_accepted_as_cross_course_claim(): void
     {
+        // H6554: выбор больше не ограничен курсом якоря — блок другого курса
+        // проходит как кросс-курсовый клейм (валидация была перенесена в
+        // H6534-эпоху; снята рулингом MG 12-10-2026 о переводах «на год
+        // вперёд» за блоки другого/будущего потока).
         [, $tariffs] = $this->courseWithBlocks(2);
-        $foreign = Tariff::factory()->for(Course::factory())->block(1)->create();
+        $foreignCourse = Course::factory()->create();
+        $foreign = Tariff::factory()->for($foreignCourse)->block(1)->create(['price' => 4800]);
         $user = User::factory()->create();
 
         $this->actingAs($user)->postClaim([$tariffs[1], $foreign])
-            ->assertSessionHasErrors('blocks');
+            ->assertSessionHasNoErrors();
 
-        $this->assertSame(0, Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->count());
+        $payments = Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->orderBy('id')->get();
+        $this->assertSame(2, $payments->count());
+        $this->assertSame($foreignCourse->id, $payments[1]->course_id, 'Payment чужого курса — в СВОЁМ курсе.');
+        $this->assertTrue((bool) $payments[0]->claimMeta('cross_course'), 'Кросс-курсовая метка на всех строках.');
     }
 
     /** @test */

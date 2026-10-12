@@ -159,11 +159,21 @@ class DistributeVideoAnonsJob implements ShouldQueue
         $recipients = $notifier->notifyAdmins($text);
 
         if ($recipients === []) {
-            // Черновик — обязательная часть лейна (решение 1): сетевой сбой
-            // (живой случай 12-10-2026 — cURL 28, DNS-резолв > 2 с у
-            // TelegramTransport) не имеет права терять его молча. Ключ
-            // отпускаем и бросаем — бэкофф-ретрай джоба повторит ТОЛЬКО
-            // черновик: копии уже держат недельные клейма и не задвоятся.
+            // Черновик — обязательная часть лейна (решение 1). Сначала пробуем
+            // тот же ops-канал напрямую бюджетом очередей (5с/15с, как у
+            // SendZapisiBotMessageJob): TelegramTransport держит 2с на connect
+            // ради FPM-воркеров, а прод 12-10-2026 отдаёт api.telegram.org за
+            // ~2.15с (деградировавший резолвер) — 3 черновика подряд погибли
+            // на cURL 28 при живых copyMessage (там бюджет 5с).
+            if ($notifier->lastSendWasNetworkFailure()) {
+                $recipients = $this->sendDraftDirect($text, $notifier->adminChatIds());
+            }
+        }
+
+        if ($recipients === []) {
+            // Сетевой сбой пережил и фолбэк: ключ отпускаем и бросаем —
+            // бэкофф-ретрай джоба повторит ТОЛЬКО черновик: копии уже держат
+            // недельные клейма и не задвоятся.
             $this->releaseKey($draftKey);
 
             throw new RuntimeException('VideoAnons: draft to admins not delivered, retry scheduled');
@@ -179,6 +189,53 @@ class DistributeVideoAnonsJob implements ShouldQueue
             'failed' => array_keys($failed),
             'draft_recipients' => $recipients,
         ]);
+    }
+
+    /**
+     * Прямая отправка черновика бюджетом очередей (тот же ops-канал: основной
+     * бот -> ADMIN_TELEGRAM_ID). Возврат — кому реально ушло.
+     *
+     * @param  list<string>  $chatIds
+     * @return list<string>
+     */
+    private function sendDraftDirect(string $text, array $chatIds): array
+    {
+        $token = (string) config('services.telegram.bot_token');
+        $delivered = [];
+        if ($token === '' || $chatIds === []) {
+            return $delivered;
+        }
+
+        foreach ($chatIds as $chatId) {
+            $chatId = (string) $chatId;
+            try {
+                $response = Http::connectTimeout(5)->timeout(15)
+                    ->post("https://api.telegram.org/bot{$token}/sendMessage", [
+                        'chat_id' => $chatId,
+                        'text' => $text,
+                        'parse_mode' => 'HTML',
+                        'disable_web_page_preview' => true,
+                    ]);
+            } catch (Throwable $exception) {
+                Log::warning('VideoAnons: draft direct send transport failure', [
+                    'chat_id' => $chatId,
+                    'error' => $exception->getMessage(),
+                ]);
+
+                continue;
+            }
+
+            if ($response->successful() && ($response->json('ok') ?? false)) {
+                $delivered[] = $chatId;
+            } else {
+                Log::warning('VideoAnons: draft direct send declined', [
+                    'chat_id' => $chatId,
+                    'status' => $response->status(),
+                ]);
+            }
+        }
+
+        return $delivered;
     }
 
     private function releaseKey(string $key): void

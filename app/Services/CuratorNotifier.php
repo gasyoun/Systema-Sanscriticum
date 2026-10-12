@@ -109,20 +109,29 @@ class CuratorNotifier
      * Разбивка мульти-блочного клейма (H6534). Список блоков — общий для всех
      * строк заявки, живёт в claim_meta.block_tariffs; итог — переведённая
      * сумма одним переводом (claim_meta.foreign_total) и вердикт сверки.
+     * H6554: в кросс-курсовой заявке (claim_meta.cross_course) каждая строка
+     * помечена курсом блока — куратор подтверждает с разбивкой по курсам.
      *
      * @return array<int, string>
      */
     private function multiBlockBreakdownLines(Payment $payment): array
     {
         $currency = (string) ($payment->foreign_currency ?: 'EUR');
+        $isCrossCourse = (bool) $payment->claimMeta('cross_course');
         $blocks = array_values(array_filter(
             (array) $payment->claimMeta('block_tariffs', []),
             fn ($block): bool => is_array($block),
         ));
 
-        $lines = ['<b>Один перевод на несколько блоков:</b>'];
+        $lines = [$isCrossCourse
+            ? '<b>Один перевод на блоки разных курсов:</b>'
+            : '<b>Один перевод на несколько блоков:</b>'];
         foreach ($blocks as $block) {
-            $line = '· '.e((string) ($block['label'] ?? 'блок')).' — '.$this->money((float) ($block['amount'] ?? 0));
+            $line = '· ';
+            if ($isCrossCourse && ! empty($block['course_title'])) {
+                $line .= e((string) $block['course_title']).' · ';
+            }
+            $line .= e((string) ($block['label'] ?? 'блок')).' — '.$this->money((float) ($block['amount'] ?? 0));
             if (! empty($block['foreign_amount'])) {
                 $line .= ' ('.$this->foreignMoney((float) $block['foreign_amount'], $currency).')';
             }
