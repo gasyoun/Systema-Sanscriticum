@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
+use App\Models\Tariff;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -264,8 +265,16 @@ class StudentDebtsService
      *
      * Возвращает коллекцию объектов {course_id, block (CourseBlock),
      * amount_paid, next_block (?CourseBlock), next_payment_deadline (?Carbon),
-     * extra_paid_blocks (list<int>), extra_paid_blocks_label (?string)},
+     * extra_paid_blocks (list<int>), extra_paid_blocks_label (?string),
+     * next_block_pay (?array{number: int, title: string, url: string, amount: float})},
      * ключ — course_id.
+     *
+     * Рядом с next_block идёт готовая кнопка самостоятельной оплаты (MG
+     * 12-10-2026, «явная возможность оплатить следующий блок» в кабинете):
+     * активный тариф целого блока (block_N) и цена для студента — та же, что
+     * в чекауте (персональная скидка/лояльность, зачёты докупки и депозита).
+     * next_block_pay = null — тарифа нет, кнопку не рисуем (оплата через
+     * куратора, как и раньше).
      *
      * @param  iterable<int>  $courseIds
      * @return Collection<int, object>
@@ -281,6 +290,12 @@ class StudentDebtsService
             ->whereIn('course_id', $courseIds)
             ->orderBy('course_id')
             ->orderBy('number')
+            ->get()
+            ->groupBy('course_id');
+
+        $tariffsByCourse = Tariff::query()
+            ->whereIn('course_id', $courseIds)
+            ->where('is_active', true)
             ->get()
             ->groupBy('course_id');
 
@@ -360,10 +375,41 @@ class StudentDebtsService
                 'extra_paid_blocks_label' => $extraPaidBlocks === []
                     ? null
                     : DebtorsReport::formatBlockRanges($extraPaidBlocks),
+                'next_block_pay' => $nextBlock === null
+                    ? null
+                    : $this->nextBlockPayOption($courseId, $nextBlock, $user, $tariffsByCourse),
             ]);
         }
 
         return $result->keyBy('course_id');
+    }
+
+    /**
+     * Кнопка «Оплатить следующий блок»: активный тариф целого блока (block_N,
+     * без половин — половинщики платят через куратора, как и раньше) и цена
+     * для студента. URL — штатный чекаут тарифа: сам платёжный путь и выдачу
+     * доступа не трогаем (PaymentObserver → grantAccess).
+     *
+     * @param  Collection<int, Collection<int, Tariff>>  $tariffsByCourse
+     * @return array{number: int, title: string, url: string, amount: float}|null
+     */
+    private function nextBlockPayOption(int $courseId, CourseBlock $nextBlock, ?User $user, Collection $tariffsByCourse): ?array
+    {
+        $tariff = ($tariffsByCourse->get($courseId) ?? collect())
+            ->first(fn (Tariff $t) => $t->type === 'block'
+                && (int) $t->block_number === (int) $nextBlock->number
+                && $t->block_half === null);
+
+        if (! $tariff instanceof Tariff) {
+            return null;
+        }
+
+        return [
+            'number' => (int) $nextBlock->number,
+            'title' => (string) $tariff->title,
+            'url' => route('checkout.show', $tariff),
+            'amount' => round($tariff->calculateFinalPriceForUser($user), 2),
+        ];
     }
 
     /**
