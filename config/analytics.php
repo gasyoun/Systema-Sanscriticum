@@ -25,6 +25,34 @@ return [
     'vk_pixel' => [
         'shop_pixel_id' => env('VK_PIXEL_SHOP_ID'),
         'enabled' => filter_var(env('VK_PIXEL_SHOP_ENABLED', true), FILTER_VALIDATE_BOOL),
+
+        /*
+        | Кампанийные пиксели VK Ads: отдельные счётчики под конкретные
+        | рекламные кампании — pageView уходит только с перечисленных путей
+        | витрины (без ведущего слэша), цели из forward_goals дублируются
+        | в пиксель на тех же путях, click_goals — делегированные клик-цели
+        | (goal => CSS-селектор). Первый: «Мини-курс санскрита» (3800959,
+        | рекламный отдел 12-10-2026) — лендинг /k/podgotovitelnaya-gruppa-
+        | sanskrita и чекаут тарифа 5135, клик «Записаться на курс» =
+        | enroll_click. Конвенция репо: default OFF, включение — env в проде.
+        */
+        'campaign_pixels' => [
+            'minikurs' => [
+                'id' => env('VK_PIXEL_MINIKURS_ID', '3800959'),
+                'enabled' => filter_var(env('VK_PIXEL_MINIKURS_ENABLED', false), FILTER_VALIDATE_BOOL),
+                'paths' => [
+                    'k/podgotovitelnaya-gruppa-sanskrita',
+                    'checkout/5135',
+                ],
+                // Клик-цели — не на всех путях пикселя: на чекауте есть свои
+                // ссылки на /checkout/* («Подарить», смена режима), и клик по
+                // ним не должен считаться кликом «Записаться» с лендинга.
+                // Ключ отсутствует = все пути пикселя; [] = клик-целей нигде.
+                'click_paths' => ['k/podgotovitelnaya-gruppa-sanskrita'],
+                'forward_goals' => ['enroll_click'],
+                'click_goals' => ['enroll_click' => 'a[href*="/checkout/"]'],
+            ],
+        ],
     ],
 
     /*
