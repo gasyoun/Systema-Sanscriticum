@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Jobs\SendTelegramChatMessageJob;
+use App\Mail\PaypalClaimReceivedMail;
+use App\Mail\PaypalClaimStudentAckMail;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Payment;
@@ -15,6 +17,7 @@ use App\Services\Payments\PaypalClaimAmountCheck;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
@@ -57,7 +60,7 @@ class PaypalClaimMultiBlockTest extends TestCase
     }
 
     /** @param  array<int, Tariff>  $tariffs */
-    private function postClaim(array $tariffs, array $overrides = []): \Illuminate\Testing\TestResponse
+    private function postClaim(array $tariffs, array $overrides = []): TestResponse
     {
         $anchor = $tariffs[0];
 
@@ -118,8 +121,8 @@ class PaypalClaimMultiBlockTest extends TestCase
         );
 
         // Один комплект уведомлений на один перевод.
-        Mail::assertQueued(\App\Mail\PaypalClaimStudentAckMail::class, 1);
-        Mail::assertQueued(\App\Mail\PaypalClaimReceivedMail::class, 1);
+        Mail::assertQueued(PaypalClaimStudentAckMail::class, 1);
+        Mail::assertQueued(PaypalClaimReceivedMail::class, 1);
     }
 
     /** @test */
