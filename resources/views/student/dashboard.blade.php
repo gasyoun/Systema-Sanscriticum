@@ -536,6 +536,16 @@
                                                     <span class="text-gray-700">{{ $paidUntil->next_payment_deadline->format('d.m.Y') }}, 00:00 (МСК)</span>
                                                 </div>
                                             @endif
+                                            {{-- Явная кнопка оплаты следующего блока (MG 12-10-2026):
+                                                 тариф block_N + цена как в чекауте; null — тарифа нет. --}}
+                                            @if(! empty($paidUntil->next_block_pay))
+                                                <a href="{{ $paidUntil->next_block_pay['url'] }}"
+                                                   data-track-event="access.renewal.start" data-track-kind="block" data-track-surface="paid-until"
+                                                   class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-brand hover:bg-brand-hover text-white text-xs font-bold rounded-lg transition-colors">
+                                                    <i class="fas fa-credit-card text-[10px]"></i>
+                                                    <span>Оплатить блок №{{ $paidUntil->next_block_pay['number'] }}@if($paidUntil->next_block_pay['amount'] > 0) — {{ number_format($paidUntil->next_block_pay['amount'], 0, '.', ' ') }} ₽@endif</span>
+                                                </a>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
