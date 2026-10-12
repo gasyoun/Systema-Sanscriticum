@@ -242,6 +242,38 @@ document.addEventListener('DOMContentLoaded', function () {
                         </p>
                     @endif
                     
+                    {{-- H6570: расписание ещё не стартовавшего курса — слева
+                         сверху, свёрнутый блок (полный список дат по клику,
+                         канон формата «Расписание курса …»). Контент —
+                         resources/data/course-hero-schedules.json (ключ = slug);
+                         даты считает App\Support\CourseHeroSchedule. У курса с
+                         живым расписанием из БД блок гасим — cadence-строка
+                         выше не должна задваиваться. --}}
+                    @if(isset($heroSchedule) && $heroSchedule && ! $cadenceSlot && ! $cadenceNext)
+                        <div class="mb-8 max-w-xl" data-testid="course-hero-schedule">
+                            <details class="group bg-[#111622] border border-[#1F2636] rounded-xl px-5 py-4">
+                                <summary class="cursor-pointer list-none flex items-start gap-2 text-sm text-slate-300 hover:text-white transition-colors">
+                                    <i class="far fa-calendar-alt text-[#38BDF8] mt-0.5"></i>
+                                    <span>
+                                        Расписание курса — {{ $heroSchedule['summary'] }},
+                                        начало {{ \App\Support\CourseHeroSchedule::ruDate($heroSchedule['start']) }}.
+                                        <span class="text-[#38BDF8] group-open:hidden">Все {{ count($heroSchedule['rows']) }} дат ▸</span>
+                                    </span>
+                                </summary>
+                                <div class="mt-4 border-t border-[#1F2636] pt-4 text-sm text-slate-300 leading-relaxed">
+                                    <p class="font-bold text-white">{{ $course->title }}</p>
+                                    <p class="mb-3">{{ $heroSchedule['cadence'] }}</p>
+                                    @foreach($heroSchedule['rows'] as $row)
+                                        @if($row['n'] > 1 && ($row['n'] - 1) % 4 === 0)
+                                            <div class="h-3"></div>
+                                        @endif
+                                        <p>{{ $row['n'] }}-е занятие: {{ \App\Support\CourseHeroSchedule::ruDate($row['date']) }}, {{ $row['time'] }}</p>
+                                    @endforeach
+                                </div>
+                            </details>
+                        </div>
+                    @endif
+
                     {{-- One primary CTA (tariff) + optional secondary (sample).
                          H6559: курс, ещё не стартовавший и собирающий голоса
                          ждун-строки, на первом экране вместо этой пары показывает
