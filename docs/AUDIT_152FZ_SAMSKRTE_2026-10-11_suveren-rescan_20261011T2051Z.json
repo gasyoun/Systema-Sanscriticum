@@ -1,0 +1,266 @@
+{
+  "tool": "suveren",
+  "target": "samskrte.ru",
+  "started_at": "2026-10-11T20:51:50.808931+00:00",
+  "finished_at": "2026-10-11T20:51:54.203053+00:00",
+  "score": 96,
+  "grade": "A",
+  "countries": {
+    "RU": 89,
+    "US": 11
+  },
+  "findings": [
+    {
+      "category": "tls",
+      "title": "SSL-сертификат: Let's Encrypt (США)",
+      "severity": "low",
+      "description": "Сертификат выпустил иностранный удостоверяющий центр. Он может отозвать сертификат или отказать в продлении: в 2022 году так поступали с рядом российских организаций.",
+      "recommendation": "Настроить автоматический выпуск по ACME, чтобы быстро сменить УЦ. Для аудитории в России можно дополнительно выпустить сертификат НУЦ Минцифры.",
+      "services": [
+        "Let's Encrypt"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "category": "zone",
+      "category_title": "Доменная зона",
+      "service": ".ru — Координационный центр доменов .RU/.РФ",
+      "country": "RU",
+      "foreign": false,
+      "evidence": "samskrte.ru",
+      "severity": null,
+      "note": ""
+    },
+    {
+      "category": "registrar",
+      "category_title": "Регистратор домена",
+      "service": "REG.RU",
+      "country": "RU",
+      "foreign": false,
+      "evidence": "REGRU-RU",
+      "severity": null,
+      "note": ""
+    },
+    {
+      "category": "dns",
+      "category_title": "DNS-серверы",
+      "service": "REG.RU",
+      "country": "RU",
+      "foreign": false,
+      "evidence": "NS ns1.reg.ru, NS ns2.reg.ru",
+      "severity": null,
+      "note": ""
+    },
+    {
+      "category": "hosting",
+      "category_title": "Хостинг сайта",
+      "service": "RU-PUDLINK-AS",
+      "country": "RU",
+      "foreign": false,
+      "evidence": "IP 193.232.229.92 (AS198070)",
+      "severity": null,
+      "note": ""
+    },
+    {
+      "category": "tls",
+      "category_title": "SSL-сертификат",
+      "service": "Let's Encrypt",
+      "country": "US",
+      "foreign": true,
+      "evidence": "Let's Encrypt",
+      "severity": "low",
+      "note": ""
+    },
+    {
+      "category": "analytics",
+      "category_title": "Аналитика и пиксели",
+      "service": "Яндекс Метрика",
+      "country": "RU",
+      "foreign": false,
+      "evidence": "mc.yandex.ru · /geography",
+      "severity": null,
+      "note": ""
+    },
+    {
+      "category": "analytics",
+      "category_title": "Аналитика и пиксели",
+      "service": "Top.Mail.ru",
+      "country": "RU",
+      "foreign": false,
+      "evidence": "top-fwz1.mail.ru · /philosophy",
+      "severity": null,
+      "note": ""
+    },
+    {
+      "category": "video",
+      "category_title": "Встроенное видео",
+      "service": "RUTUBE",
+      "country": "RU",
+      "foreign": false,
+      "evidence": "rutube.ru/play/embed · /philosophy",
+      "severity": null,
+      "note": ""
+    },
+    {
+      "category": "video",
+      "category_title": "Встроенное видео",
+      "service": "VK Видео",
+      "country": "RU",
+      "foreign": false,
+      "evidence": "vk.com/video_ext.php · /hindi",
+      "severity": null,
+      "note": ""
+    }
+  ],
+  "checks": [
+    {
+      "group": "Персональные данные (152-ФЗ)",
+      "title": "Политика обработки персональных данных",
+      "status": "ok",
+      "details": "Политика опубликована.",
+      "recommendation": "",
+      "link": "https://samskrte.ru/dokumenty/privacy",
+      "law": "152-ФЗ, ст. 18.1",
+      "law_url": "https://www.consultant.ru/document/cons_doc_LAW_61801/"
+    },
+    {
+      "group": "Персональные данные (152-ФЗ)",
+      "title": "Содержание политики",
+      "status": "ok",
+      "details": "В политике есть основные обязательные разделы.",
+      "recommendation": "",
+      "link": null,
+      "law": "152-ФЗ, ст. 18.1",
+      "law_url": "https://www.consultant.ru/document/cons_doc_LAW_61801/"
+    },
+    {
+      "group": "Персональные данные (152-ФЗ)",
+      "title": "Согласие на обработку в формах",
+      "status": "ok",
+      "details": "Форм с персональными данными: 3, во всех есть согласие.",
+      "recommendation": "",
+      "link": null,
+      "law": "152-ФЗ, ст. 9",
+      "law_url": "https://www.consultant.ru/document/cons_doc_LAW_61801/"
+    },
+    {
+      "group": "Персональные данные (152-ФЗ)",
+      "title": "Уведомление о cookies",
+      "status": "ok",
+      "details": "Сайт использует Яндекс Метрика, Top.Mail.ru и показывает уведомление о cookies.",
+      "recommendation": "",
+      "link": null,
+      "law": "152-ФЗ, ст. 9",
+      "law_url": "https://www.consultant.ru/document/cons_doc_LAW_61801/"
+    },
+    {
+      "group": "Персональные данные (152-ФЗ)",
+      "title": "Трансграничная передача данных",
+      "status": "ok",
+      "details": "Скрипты иностранных сервисов, получающие данные посетителей, не найдены.",
+      "recommendation": "",
+      "link": null,
+      "law": "152-ФЗ, ст. 12",
+      "law_url": "https://www.consultant.ru/document/cons_doc_LAW_61801/"
+    },
+    {
+      "group": "Персональные данные (152-ФЗ)",
+      "title": "Хранение данных в России",
+      "status": "ok",
+      "details": "Сервер сайта в России.",
+      "recommendation": "",
+      "link": null,
+      "law": "152-ФЗ, ст. 18 ч. 5",
+      "law_url": "https://www.consultant.ru/document/cons_doc_LAW_61801/"
+    },
+    {
+      "group": "Персональные данные (152-ФЗ)",
+      "title": "Защищённое соединение",
+      "status": "ok",
+      "details": "Сайт работает по HTTPS.",
+      "recommendation": "",
+      "link": null,
+      "law": "152-ФЗ, ст. 19",
+      "law_url": "https://www.consultant.ru/document/cons_doc_LAW_61801/"
+    },
+    {
+      "group": "Персональные данные (152-ФЗ)",
+      "title": "Реестр операторов персональных данных",
+      "status": "ok",
+      "details": "Индивидуальный предприниматель ГАСУНС МАРЦИС (ИНН 540861224623) в реестре: № 77-26-533694 от 09.02.2026.",
+      "recommendation": "",
+      "link": "https://pd.rkn.gov.ru/operators-registry/operators-list/?id=77-26-533694",
+      "law": "152-ФЗ, ст. 22",
+      "law_url": "https://www.consultant.ru/document/cons_doc_LAW_61801/"
+    },
+    {
+      "group": "Блокировки в России",
+      "title": "Домен в реестре блокировок",
+      "status": "ok",
+      "details": "Домен не заблокирован.",
+      "recommendation": "",
+      "link": null,
+      "law": null,
+      "law_url": null
+    },
+    {
+      "group": "Блокировки в России",
+      "title": "IP-адреса сайта",
+      "status": "ok",
+      "details": "IP сайта не заблокированы.",
+      "recommendation": "",
+      "link": null,
+      "law": null,
+      "law_url": null
+    }
+  ],
+  "facts": {
+    "host": "samskrte.ru",
+    "domain": "samskrte.ru",
+    "ns": [
+      {
+        "host": "ns1.reg.ru",
+        "ip": "176.99.13.11",
+        "asn": "AS197695",
+        "as_name": "AS-REG",
+        "country": "RU"
+      },
+      {
+        "host": "ns2.reg.ru",
+        "ip": "176.99.13.12",
+        "asn": "AS197695",
+        "as_name": "AS-REG",
+        "country": "RU"
+      }
+    ],
+    "mx": [],
+    "web": [
+      {
+        "ip": "193.232.229.92",
+        "asn": "AS198070",
+        "as_name": "RU-PUDLINK-AS",
+        "country": "RU"
+      }
+    ],
+    "registrar": "REGRU-RU",
+    "tls_issuer": "Let's Encrypt",
+    "tls_trusted": true,
+    "final_url": "https://samskrte.ru/",
+    "page_status": 200,
+    "rendered": false,
+    "page_problem": null,
+    "extra_pages": [
+      "https://samskrte.ru/geography",
+      "https://samskrte.ru/philosophy",
+      "https://samskrte.ru/sans",
+      "https://samskrte.ru/hanuman",
+      "https://samskrte.ru/calendary",
+      "https://samskrte.ru/hindi"
+    ],
+    "unknown_domains": []
+  },
+  "notes": [
+    "Проверено страниц: 7 (главная и ещё 6). Скрипты искались в коде страниц: то, что подгружается скриптами, может не попасть в отчёт (режим --browser находит больше)."
+  ]
+}

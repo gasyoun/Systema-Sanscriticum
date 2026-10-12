@@ -1988,4 +1988,18 @@ return [
      | HERMES_SCHEDULE_KEEPER=true + config:cache — deploy-шаг человека.
      */
     'hermes_schedule_keeper' => (bool) env('HERMES_SCHEDULE_KEEPER', false),
+
+    /*
+     | Hermes human-send в TG и web (H6183, пакет hermes-24-01a10bca):
+     | отправка черновика одним нажатием аутентифицированного куратора через
+     | SupportHumanSendService — актёр обязан быть человеком (агентский вызов
+     | отказ без единой записи), идемпотент по повтору approval и повтору
+     | webhook (статус pending + клейм (конвертация, текст)), доставка пишет
+     | только в стор (pending TelegramSupportMessage / ChatMessage +
+     | broadcast) без сетевых вызовов. Под флагом очередь черновиков
+     | дополнительно принимает web-черновики (chat_message). ВЫКЛ по
+     | умолчанию: включение HERMES_HUMAN_SEND=true + config:cache —
+     | deploy-шаг человека.
+     */
+    'hermes_human_send' => (bool) env('HERMES_HUMAN_SEND', false),
 ];

@@ -24,7 +24,9 @@ use Illuminate\Support\Facades\Log;
  * B. Оплата за блок — после каждого 4-го занятия блока ({N} % 4 === 0,
  *    blockSize=4 у TemplateRenderer): до какого числа ждём оплату (дата
  *    ближайшего занятия = начало следующего блока) и что будет с доступом
- *    неоплатившим и не предупредившим.
+ *    неоплатившим и не предупредившим. С 12-10-2026 в обоих платёжных текстах
+ *    есть ссылка на личный кабинет (/dvaram) — кабинетная кнопка «Оплатить
+ *    следующий блок» закрывает вопрос «где платить» без куратора.
  *
  * Дедуп — клеймы TelegramSendGuard: A на (чат, дата) на сутки, B на строку
  * расписания на неделю. Отпуск группы/преподавателя (H3790/H4253) гасит A —
@@ -260,6 +262,7 @@ final class SlotNoticeService
 
         $text = '💳 <b>Блок занятий завершён'.($number !== null && $total !== null ? ' — '.$number.'-е из '.$total : '')."</b>\n\n";
         $text .= 'Оплату за следующий блок ждём до <b>'.$next->start->format('d.m.Y').'</b> (до ближайшего занятия).'."\n";
+        $text .= self::cabinetPayLine();
         $text .= self::accessClosingLine();
 
         return $text;
@@ -273,9 +276,16 @@ final class SlotNoticeService
         $text = "💳 <b>Напоминание об оплате</b>\n\n";
         $text .= ($started ? 'Идёт ' : 'Начинается ').$block.'. Кто ещё не оплатил — оплатите, пожалуйста, до <b>'
             .$next->start->format('d.m.Y').'</b> (до ближайшего занятия).'."\n";
+        $text .= self::cabinetPayLine();
         $text .= self::accessClosingLine();
 
         return $text;
+    }
+
+    /** Строка-ссылка на кабинет: чат групповой, у каждого своя кнопка/цена — ведём в /dvaram. */
+    private static function cabinetPayLine(): string
+    {
+        return '👉 <a href="'.route('student.dashboard').'">Оплатить в личном кабинете</a>'."\n";
     }
 
     private static function accessClosingLine(): string

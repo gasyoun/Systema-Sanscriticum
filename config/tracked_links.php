@@ -69,6 +69,28 @@ foreach ($up26Destinations as $creative => $up26Destination) {
 }
 
 /*
+ * san26 — волна набора «Философия санкхьи» (курс 459, старт по кворуму
+ * ждуна 8 голосов, слот пн 18:00): один читательский маршрут — намерение
+ * на карточке курса, поэтому слот -p осознанно выброшен (оплаты до
+ * кворума нет). Креативы = гипотезы поста: c — программа, t —
+ * преподаватель, h — время/слот.
+ */
+$san26Campaign = 'sankhya_kurs_oct_2026';
+
+foreach (['c', 't', 'h'] as $creative) {
+    $links["san26-ors-{$creative}"] = [
+        'destination' => '/k/filosofiia-sankhi',
+        'utm' => [
+            'utm_source' => $channels['ors']['source'],
+            'utm_medium' => $channels['ors']['medium'],
+            'utm_campaign' => $san26Campaign,
+            'utm_content' => "san26_{$creative}",
+            'utm_term' => 'philosophy',
+        ],
+    ];
+}
+
+/*
  * Демо-кампания — постоянная смок-фикстура скилла anons-attribution-mint
  * (H5934): живые /ga/demo-* ключи, чтобы прогонять редирект + метки без
  * реального набора. Синтетические utm_source помечены demo_, поэтому
