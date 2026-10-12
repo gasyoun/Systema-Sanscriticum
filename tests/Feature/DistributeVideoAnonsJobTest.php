@@ -67,12 +67,12 @@ class DistributeVideoAnonsJobTest extends TestCase
         Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'botMAIN-TOKEN/sendMessage')
             && str_contains((string) $request['text'], 'Доставлено: 2/2')
             && str_contains((string) $request['text'], 'https://t.me/c/111/1067'));
-        Redis::shouldHaveReceived('set')->once()->with(
+        Redis::shouldHaveReceived('set')->with(
             \Mockery::pattern('~^video-anons:pending:427307131:5002$~'),
-            \Mockery::on(fn (string $json): bool => str_contains($json, '"media_path":"\/tmp\/fake\/1067_video.mp4"')),
+            \Mockery::on(fn (string $json): bool => str_contains($json, '/tmp/fake/1067_video.mp4')),
             'EX',
             604800,
-        );
+        )->once();
     }
 
     public function test_copies_off_draft_still_sends_with_stories_instructions(): void

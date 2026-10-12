@@ -237,7 +237,7 @@ class DistributeVideoAnonsJob implements ShouldQueue
             'source_message_id' => $this->sourceMessageId,
             'course' => $this->courseKey,
             'media_path' => $this->mediaPath,
-        ], JSON_UNESCAPED_UNICODE);
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         foreach ($deliveredDrafts as $chatId => $draftMessageId) {
             try {

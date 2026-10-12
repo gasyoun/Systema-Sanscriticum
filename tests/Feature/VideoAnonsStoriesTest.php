@@ -107,12 +107,13 @@ class VideoAnonsStoriesTest extends TestCase
     public function test_second_reply_is_idempotent_by_source_key(): void
     {
         Redis::shouldReceive('get')->twice()->andReturn($this->pendingContext());
+        Redis::shouldReceive('del')->once();
 
         (new VideoAnonsStoriesService)->handleAdminReply($this->replyMessage());
         (new VideoAnonsStoriesService)->handleAdminReply($this->replyMessage('Другой заголовок'));
 
         $this->assertSame(1, StoryPost::query()->count());
-        Http::assertSent(fn (Request $request): bool => str_contains((string) $request['text'], 'уже в очереди'));
+        Http::assertSent(fn (Request $request): bool => str_contains((string) $request['text'], 'уже в сторис-очереди'));
     }
 
     public function test_non_admin_reply_returns_false(): void

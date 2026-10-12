@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Jobs\DistributeVideoAnonsJob;
 use App\Jobs\ProcessTelegramZapisiUpdate;
 use App\Services\Anons\VideoAnons\VideoAnonsService;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\File;
@@ -75,7 +76,8 @@ class VideoAnonsTest extends TestCase
 
     private function downloadedMedia(int $messageId = 1067): string
     {
-        $dir = $this->store.'/zapisi_media/'.self::SOURCE_CHAT.'/2026-07-01';
+        $date = CarbonImmutable::createFromTimestamp(1791820906, config('app.timezone'))->toDateString();
+        $dir = $this->store.'/zapisi_media/'.self::SOURCE_CHAT.'/'.$date;
         File::ensureDirectoryExists($dir);
         $path = $dir.'/'.$messageId.'_video.mp4';
         File::put($path, 'fake-mp4-bytes');
