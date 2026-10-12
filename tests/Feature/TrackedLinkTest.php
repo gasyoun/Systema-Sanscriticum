@@ -142,6 +142,20 @@ class TrackedLinkTest extends TestCase
     }
 
     /** @test */
+    public function beginner_intro_channel_link_leads_to_the_free_first_step_and_keeps_source(): void
+    {
+        $this->get('/ga/bi26-ors-c')->assertRedirect('/online/poprobovat');
+
+        $this->assertSame([
+            'utm_source' => 'telegram_samskrte',
+            'utm_medium' => 'owned_channel',
+            'utm_campaign' => 'beginner_intro_oct_2026',
+            'utm_content' => 'bi26_c',
+            'utm_term' => 'beginner',
+        ], session(config('tracked_links.session_key')));
+    }
+
+    /** @test */
     public function demo_smoke_fixture_redirects_and_carries_demo_marked_attribution(): void
     {
         $this->get('/ga/demo-ors-h')->assertRedirect('/online');
