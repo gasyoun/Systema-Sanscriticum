@@ -6,7 +6,6 @@ namespace Tests\Feature;
 
 use App\Jobs\DistributeVideoAnonsJob;
 use App\Models\MarketingSetting;
-use GuzzleHttp\Exception\ConnectException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
@@ -15,9 +14,10 @@ use Illuminate\Support\Facades\Redis;
 use Tests\TestCase;
 
 /**
- * H6546: рассылка копий (copyMessage от @zapisi_ORSbot) + черновик админам.
- * Идемпотентность на TelegramSendGuard-клеймах: ретрай/повтор не даёт вторую
- * копию в чате и второй черновик.
+ * H6546/H6547: рассылка копий (copyMessage от @zapisi_ORSbot; copies off —
+ * вердикт MG 12-10 вечер) + черновик админам прямой отправкой бюджетом очередей
+ * с pending-контекстом для reply-обработчика сторис. Идемпотентность на
+ * TelegramSendGuard-клеймах: ретрай/повтор не даёт вторую копию и второй черновик.
  */
 class DistributeVideoAnonsJobTest extends TestCase
 {
@@ -31,22 +31,24 @@ class DistributeVideoAnonsJobTest extends TestCase
         config([
             'services.telegram.bot_token' => 'MAIN-TOKEN',
             'services.telegram.admin_id' => '427307131',
-            'video-anons.stories_enabled' => false,
+            'video-anons.stories_enabled' => true,
+            'video-anons.copies_enabled' => true,
             'video-anons.courses' => [
                 'leitana' => ['title' => 'Курс Эдгара Лейтана', 'chat_ids' => [-100111, -100222, -100333]],
             ],
         ]);
     }
 
-    private function job(): DistributeVideoAnonsJob
+    private function job(array $targets = [-100222, -100333], ?string $mediaPath = '/tmp/fake/1067_video.mp4'): DistributeVideoAnonsJob
     {
-        return new DistributeVideoAnonsJob(-100111, 1067, 'leitana', [-100222, -100333], 'video-anons:lane:-100111:1067');
+        return new DistributeVideoAnonsJob(-100111, 1067, 'leitana', $targets, 'video-anons:lane:-100111:1067', $mediaPath);
     }
 
-    public function test_copies_to_all_targets_and_draft_to_admins(): void
+    public function test_copies_to_all_targets_and_draft_with_pending_context(): void
     {
-        // 2 клейма копий + 1 клейм черновика, все успешны → 3 продления.
-        Redis::shouldReceive('set')->times(3)->andReturn(true);
+        // Клейма: 2 копии + черновик; продления: 2 копии + черновик;
+        // pending-контекст на доставленный черновик в личке админа.
+        Redis::shouldReceive('set')->times(4)->andReturn(true);
         Redis::shouldReceive('expire')->times(3);
 
         Http::fake([
@@ -64,14 +66,41 @@ class DistributeVideoAnonsJobTest extends TestCase
             && $request['chat_id'] === -100333);
         Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'botMAIN-TOKEN/sendMessage')
             && str_contains((string) $request['text'], 'Доставлено: 2/2')
-            && str_contains((string) $request['text'], 'https://t.me/c/111/1067')
-            && str_contains((string) $request['text'], 'флаг off'));
+            && str_contains((string) $request['text'], 'https://t.me/c/111/1067'));
+        Redis::shouldHaveReceived('set')->with(
+            \Mockery::pattern('~^video-anons:pending:427307131:5002$~'),
+            \Mockery::on(fn (string $json): bool => str_contains($json, '/tmp/fake/1067_video.mp4')),
+            'EX',
+            604800,
+        )->once();
+    }
+
+    public function test_copies_off_draft_still_sends_with_stories_instructions(): void
+    {
+        // Вердикт MG 12-10 вечер: копии выключены — джоб идёт с пустыми целями,
+        // черновик остаётся приёмкой заголовка сторис.
+        config(['video-anons.copies_enabled' => false]);
+        Redis::shouldReceive('set')->times(2)->andReturn(true);
+        Redis::shouldReceive('expire')->once();
+
+        Http::fake([
+            'api.telegram.org/botZAPISI-TOKEN/*' => Http::response(['ok' => true]),
+            'api.telegram.org/botMAIN-TOKEN/sendMessage' => Http::response(['ok' => true, 'result' => ['message_id' => 5002]]),
+        ]);
+
+        $this->job(targets: [])->handle();
+
+        Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), 'copyMessage'));
+        Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'botMAIN-TOKEN/sendMessage')
+            && str_contains((string) $request['text'], 'копии по чатам выключены')
+            && str_contains((string) $request['text'], 'ЗАГОЛОВКОМ')
+            && str_contains((string) $request['text'], 'готов к сторис'));
     }
 
     public function test_declined_copy_does_not_block_other_targets_or_draft(): void
     {
         // Первый чат: Telegram отказал (ключ отпущен). Второй: доставлен.
-        Redis::shouldReceive('set')->times(3)->andReturn(true);
+        Redis::shouldReceive('set')->times(4)->andReturn(true);
         Redis::shouldReceive('expire')->times(2);
         Redis::shouldReceive('del')->once();
 
@@ -101,24 +130,19 @@ class DistributeVideoAnonsJobTest extends TestCase
         Http::assertSentCount(0);
     }
 
-    public function test_draft_network_failure_throws_and_releases_draft_key_for_retry(): void
+    public function test_draft_failure_throws_and_releases_draft_key_for_retry(): void
     {
-        // Живой случай 12-10-2026: копии доставлены (клейма продлены), черновик
-        // поймал DNS-таймаут → джоб бросает, ключ черновика отпущен; ретрай
-        // (клейма копий заняты) доставляет только черновик.
-        Redis::shouldReceive('set')->times(6)->andReturn(
-            true, true,   // прогон 1: два клейма копий
-            true,         // прогон 1: клейм черновика
-            false, false, // прогон 2 (ретрай): клейма копий заняты
-            true,         // прогон 2: клейм черновика заново
-        );
-        Redis::shouldReceive('expire')->times(3); // прогон 1: две копии; прогон 2: черновик
-        Redis::shouldReceive('del')->once();      // прогон 1: отпуск клейма черновика
+        // Прогон 1: копии доставлены (клейма продлены), черновик поймал отказ →
+        // джоб бросает, ключ черновика отпущен; ретрай (клейма копий заняты)
+        // доставляет только черновик + пишет pending.
+        Redis::shouldReceive('set')->times(7)->andReturn(true, true, true, false, false, true, true);
+        Redis::shouldReceive('expire')->times(3);
+        Redis::shouldReceive('del')->once();
 
         Http::fake([
             'api.telegram.org/botZAPISI-TOKEN/copyMessage' => Http::response(['ok' => true, 'result' => ['message_id' => 5001]]),
             'api.telegram.org/botMAIN-TOKEN/sendMessage' => Http::sequence()
-                ->push(['ok' => false, 'description' => 'Internal Server Error: simulated network blip'], 500)
+                ->push(['ok' => false, 'description' => 'Internal Server Error: simulated blip'], 500)
                 ->push(['ok' => true, 'result' => ['message_id' => 5002]]),
         ]);
 
@@ -132,38 +156,6 @@ class DistributeVideoAnonsJobTest extends TestCase
         }
 
         $job->handle();
-
-        Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'botMAIN-TOKEN/sendMessage')
-            && str_contains((string) $request['text'], 'Доставлено: 2/2'));
-    }
-
-    public function test_draft_network_failure_falls_back_to_queue_budget_direct_send(): void
-    {
-        // Живой случай 12-10 (прод): 2-секундный TelegramTransport ловит cURL 28
-        // (резолв ~2.15с), копии с бюджетом 5с живы. Прогон: нотификатор упал
-        // по сети → фолбэк тем же каналом доставляет черновик → без throw.
-        Redis::shouldReceive('set')->times(3)->andReturn(true);
-        Redis::shouldReceive('expire')->times(3);
-
-        Http::fake(function (Request $request) {
-            if (str_contains($request->url(), 'copyMessage')) {
-                return Http::response(['ok' => true, 'result' => ['message_id' => 5001]]);
-            }
-
-            // Первый вызов sendMessage — сетевой сбой (как у нотификатора на проде),
-            // второй — фолбэк тем же каналом доставил.
-            static $sendMessageCalls = 0;
-            if ($sendMessageCalls++ === 0) {
-                throw new ConnectException(
-                    'cURL error 28: Resolving timed out after 2001 milliseconds',
-                    new \GuzzleHttp\Psr7\Request('POST', 'https://api.telegram.org'),
-                );
-            }
-
-            return Http::response(['ok' => true, 'result' => ['message_id' => 5002]]);
-        });
-
-        $this->job()->handle();
 
         Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'botMAIN-TOKEN/sendMessage')
             && str_contains((string) $request['text'], 'Доставлено: 2/2'));
