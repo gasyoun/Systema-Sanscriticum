@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\AnonsLinkClick;
 use App\Models\AnonsPlacement;
+use App\Models\Lead;
 use App\Services\Anons\AnonsArchiveIndexer;
 use App\Services\Anons\AnonsMetricsService;
 use App\Services\Anons\AnonsOccasionSelector;
@@ -37,7 +38,8 @@ final class AnonsOpsCommand extends Command
         {--campaign= : слаг кампании (journal-add — массово, journal-list — фильтр)}
         {--permalink= : ссылка поста (journal-fill)}
         {--published-at= : время публикации, parseable date (journal-fill)}
-        {--kind= : вид кампании — обзорное | разовое | обычное (journal-add, H6329)}';
+        {--kind= : вид кампании — обзорное | разовое | обычное (journal-add, H6329)}
+        {--days= : окно агрегата hdyhau в днях, по умолчанию 30 (H6531)}';
 
     protected $description = 'Anons operations: metrics, archive indexing/search, placements journal (H5049, H6095)';
 
@@ -53,7 +55,8 @@ final class AnonsOpsCommand extends Command
             'journal-add' => $this->runJournalAdd(),
             'journal-fill' => $this->runJournalFill(),
             'journal-list' => $this->runJournalList(),
-            default => throw new RuntimeException("Unknown op '{$op}' (metrics|history|archive-index|archive-search|journal-add|journal-fill|journal-list)."),
+            'hdyhau' => $this->runHdyhau(),
+            default => throw new RuntimeException("Unknown op '{$op}' (metrics|history|archive-index|archive-search|journal-add|journal-fill|journal-list|hdyhau)."),
         };
     }
 
@@ -262,6 +265,36 @@ final class AnonsOpsCommand extends Command
                 $row->clicks_24h ?? '—', $row->clicks_72h ?? '—',
                 $row->permalink ?? '',
             ));
+        }
+
+        return self::SUCCESS;
+    }
+
+    /**
+     * H6531 — агрегат самоотчётов «откуда узнали» (HDYHAU): counts по
+     * leads.reported_source за окно (--days, по умолчанию 30). Четвёртая
+     * нога атрибуции журнала рядом с UTM-разрезами: канонические ключи
+     * рендерятся подписью, ветка «Другое» — слова человека как есть.
+     * Только агрегаты, без персональных данных (правило anons-журнала).
+     */
+    private function runHdyhau(): int
+    {
+        $days = max(1, (int) ($this->option('days') ?: 30));
+        $since = Carbon::now()->subDays($days);
+
+        $rows = Lead::query()
+            ->whereNotNull('reported_source')
+            ->where('created_at', '>=', $since)
+            ->selectRaw('reported_source, count(*) as total')
+            ->groupBy('reported_source')
+            ->orderByDesc('total')
+            ->get();
+
+        $options = Lead::hdyhauOptions();
+        $this->line(sprintf('HDYHAU reported_source last %dd: %d answer(s)', $days, $rows->sum('total')));
+        foreach ($rows as $row) {
+            $label = $options[$row->reported_source] ?? $row->reported_source;
+            $this->line(sprintf('%4d  %s', $row->total, $label));
         }
 
         return self::SUCCESS;
