@@ -6,6 +6,7 @@ namespace App\Services\Anons\VideoAnons;
 
 use App\Jobs\DistributeVideoAnonsJob;
 use App\Support\TelegramSendGuard;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -13,9 +14,13 @@ use Illuminate\Support\Facades\Log;
  *
  * Вызывается из ProcessTelegramZapisiUpdate на КАЖДОЕ сообщение учебного чата:
  * video от автора из белого списка (config/video-anons.php) в чате из карты
- * курс→чаты диспатчит рассылку копий (DistributeVideoAnonsJob), всё остальное
+ * курс→чаты диспатчит рассылку (DistributeVideoAnonsJob), всё остальное
  * молча игнорирует. Кружки (video_note) сознательно не триггерят — это личное
  * адресное сообщение, не видеопост (в корпусе оба идут media_type=video).
+ *
+ * С 12-10-2026 (вечер, вердикт MG по живой пробе) авто-копии по чатам выключены
+ * (copies_enabled=false): лейн = приёмка видео + черновик MG, из которого по
+ * заголовку MG уходит сторис персоны (@rusamskrtam, VideoAnonsStoriesService).
  *
  * Дедуп на клейме (TelegramSendGuard): повторный заход того же сообщения
  * (ределивери вебхука, ручной replay) подавляется; клейм короткий — джоб
@@ -47,6 +52,7 @@ class VideoAnonsService
 
         $chatId = (int) $message['chat']['id'];
         $messageId = (int) $message['message_id'];
+        $dateTs = (int) ($message['date'] ?? 0);
         $laneKey = sprintf('video-anons:lane:%d:%d', $chatId, $messageId);
         if (! TelegramSendGuard::claimKey($laneKey, self::LANE_CLAIM_TTL)) {
             Log::info('VideoAnons: video already distributed, duplicate suppressed', [
@@ -57,15 +63,20 @@ class VideoAnonsService
             return;
         }
 
-        $targets = array_values(array_diff($course['chat_ids'], [$chatId]));
+        $targets = config('video-anons.copies_enabled')
+            ? array_values(array_diff($course['chat_ids'], [$chatId]))
+            : [];
+        $mediaPath = $this->mediaPathFor($chatId, $messageId, $dateTs);
 
-        DistributeVideoAnonsJob::dispatch($chatId, $messageId, $course['key'], $targets, $laneKey);
+        DistributeVideoAnonsJob::dispatch($chatId, $messageId, $course['key'], $targets, $laneKey, $mediaPath);
 
         Log::info('VideoAnons: distribution dispatched', [
             'chat_id' => $chatId,
             'message_id' => $messageId,
             'course' => $course['key'],
+            'copies_enabled' => (bool) config('video-anons.copies_enabled'),
             'targets' => $targets,
+            'media_path' => $mediaPath,
         ]);
     }
 
@@ -117,5 +128,25 @@ class VideoAnonsService
         $username = strtolower(trim((string) ($from['username'] ?? '')));
 
         return in_array($userId, $allowedIds, true) || ($username !== '' && in_array($username, $allowedUsernames, true));
+    }
+
+    /**
+     * Локальный путь скачанного медиа (DownloadTelegramZapisiMedia пишет
+     * {store}/zapisi_media/{chat}/{date}/{msg}_{type}.{ext}); расширение
+     * не фиксировано — glob. null = файл ещё не скачан/не найден (сторис
+     * тогда не собрать, но черновик всё равно уходит).
+     */
+    public function mediaPathFor(int $chatId, int $messageId, int $dateTs): ?string
+    {
+        if ($dateTs <= 0) {
+            return null;
+        }
+
+        $base = (string) config('services.telegram_harvest.store_path', storage_path('app/telegram-harvest/raw'));
+        $date = CarbonImmutable::createFromTimestamp($dateTs, config('app.timezone'))->toDateString();
+
+        $candidates = glob($base."/zapisi_media/{$chatId}/{$date}/{$messageId}_video.*") ?: [];
+
+        return $candidates === [] ? null : $candidates[0];
     }
 }
