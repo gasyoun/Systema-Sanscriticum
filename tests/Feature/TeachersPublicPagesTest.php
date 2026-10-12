@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Course;
+use App\Models\CourseWaitlistItem;
 use App\Models\Teacher;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -206,6 +208,147 @@ class TeachersPublicPagesTest extends TestCase
             'Панини "Аштадхьяйи" व्याकरण </script>',
             $breadcrumbs['itemListElement'][2]['name']
         );
+    }
+
+    // ================= ждун на карточке курса преподавателя =================
+
+    /**
+     * Курс без тарифов, привязанный к строке списка ожидания, на странице
+     * преподавателя не тупик «Набор закрыт»: статус ждуна, прогресс голосов
+     * и кнопка «Намерен участвовать» — как на карточке каталога (прод-кейс
+     * «Философия санкхьи» Леонова).
+     */
+    public function test_course_card_on_teacher_page_shows_waitlist_vote_instead_of_lock(): void
+    {
+        config(['features.waitlist_voting' => true]);
+
+        $teacher = Teacher::factory()->create([
+            'page_enabled' => true,
+            'page_slug' => 'leonov',
+        ]);
+        $course = Course::factory()->create([
+            'title' => 'Философия санкхьи',
+            'teacher_id' => $teacher->id,
+            'is_visible' => true,
+            'is_active' => true,
+        ]);
+        $item = CourseWaitlistItem::create([
+            'slug' => 'sankhya-zhdun',
+            'course_id' => $course->id,
+            'course_title' => 'Философия санкхьи',
+            'teacher_name' => 'Леонов Максим Владимирович',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'status' => CourseWaitlistItem::STATUS_COLLECTING,
+            'earliest_start_at' => '2026-11-01',
+        ]);
+        foreach (User::factory()->count(3)->create() as $voter) {
+            $item->votes()->create(['user_id' => $voter->id]);
+        }
+
+        $this->get('/prepodavately/leonov')
+            ->assertOk()
+            ->assertSee('Сбор голосов')
+            ->assertSee('3 из 8')
+            ->assertSee('Старт не раньше 01.11.2026')
+            ->assertSee('data-testid="waitlist-vote-form"', false)
+            ->assertSee('Намерен участвовать')
+            ->assertDontSee('Набор закрыт');
+    }
+
+    public function test_voted_course_card_on_teacher_page_shows_vote_taken(): void
+    {
+        config(['features.waitlist_voting' => true]);
+
+        $teacher = Teacher::factory()->create([
+            'page_enabled' => true,
+            'page_slug' => 'leonov',
+        ]);
+        $course = Course::factory()->create([
+            'teacher_id' => $teacher->id,
+            'is_visible' => true,
+            'is_active' => true,
+        ]);
+        $item = CourseWaitlistItem::create([
+            'slug' => 'sankhya-zhdun',
+            'course_id' => $course->id,
+            'course_title' => 'Философия санкхьи',
+            'teacher_name' => 'Леонов Максим Владимирович',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'status' => CourseWaitlistItem::STATUS_COLLECTING,
+        ]);
+        $voter = User::factory()->create();
+        $item->votes()->create(['user_id' => $voter->id]);
+
+        $this->actingAs($voter)
+            ->get('/prepodavately/leonov')
+            ->assertOk()
+            ->assertSee('Голос учтен')
+            ->assertSee('data-testid="waitlist-unvote"', false)
+            ->assertDontSee('data-testid="waitlist-vote-form"', false);
+    }
+
+    /**
+     * Не витринная ждун-строка (closed) ничего не меняет: замок остаётся —
+     * тот же скоуп, что в каталоге и на /online/zhdun.
+     */
+    public function test_closed_waitlist_item_keeps_lock_on_teacher_page(): void
+    {
+        config(['features.waitlist_voting' => true]);
+
+        $teacher = Teacher::factory()->create([
+            'page_enabled' => true,
+            'page_slug' => 'leonov',
+        ]);
+        $course = Course::factory()->create([
+            'teacher_id' => $teacher->id,
+            'is_visible' => true,
+            'is_active' => true,
+        ]);
+        CourseWaitlistItem::create([
+            'slug' => 'sankhya-closed',
+            'course_id' => $course->id,
+            'course_title' => 'Философия санкхьи',
+            'teacher_name' => 'Леонов Максим Владимирович',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'status' => CourseWaitlistItem::STATUS_CLOSED,
+        ]);
+
+        $this->get('/prepodavately/leonov')
+            ->assertOk()
+            ->assertSee('Набор закрыт')
+            ->assertDontSee('data-testid="waitlist-vote-form"', false);
+    }
+
+    public function test_waitlist_voting_flag_off_keeps_lock_on_teacher_page(): void
+    {
+        config(['features.waitlist_voting' => false]);
+
+        $teacher = Teacher::factory()->create([
+            'page_enabled' => true,
+            'page_slug' => 'leonov',
+        ]);
+        $course = Course::factory()->create([
+            'teacher_id' => $teacher->id,
+            'is_visible' => true,
+            'is_active' => true,
+        ]);
+        CourseWaitlistItem::create([
+            'slug' => 'sankhya-zhdun',
+            'course_id' => $course->id,
+            'course_title' => 'Философия санкхьи',
+            'teacher_name' => 'Леонов Максим Владимирович',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'status' => CourseWaitlistItem::STATUS_COLLECTING,
+        ]);
+
+        $this->get('/prepodavately/leonov')
+            ->assertOk()
+            ->assertSee('Набор закрыт')
+            ->assertDontSee('data-testid="waitlist-vote-form"', false);
     }
 
     /**
