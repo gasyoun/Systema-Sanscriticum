@@ -99,6 +99,66 @@ class NextBlockPayTest extends TestCase
     }
 
     /** @test */
+    public function leaver_gets_summary_but_no_renewal_button(): void
+    {
+        // Кейс Горбуновой (12-10-2026): «Покинул» после блока 1 — «оплачено до»
+        // остаётся честной сводкой, но кнопку «Оплатить блок №N» ушедшему не даём.
+        ['user' => $user, 'course' => $course] = $this->paidThroughCurrentBlock();
+
+        $user->courses()->syncWithoutDetaching([
+            $course->id => ['status' => 'Покинул', 'joined_at_block' => 1, 'left_after_block' => 1],
+        ]);
+
+        $paidUntil = app(StudentDebtsService::class)
+            ->paidUntilForUser($user, [$course->id])
+            ->get($course->id);
+
+        $this->assertNotNull($paidUntil, 'Сводка «оплачено до» у ушедшего не исчезает.');
+        $this->assertNull($paidUntil->next_block_pay, 'Кнопку продления ушедшему не показываем.');
+
+        config(['features.cabinet_hybrid' => true]);
+        $this->actingAs($user)
+            ->get(route('student.access'))
+            ->assertOk()
+            ->assertDontSee('Продление', false)
+            ->assertDontSee('Оплатить блок №3', false);
+    }
+
+    /** @test */
+    public function renewal_stops_at_left_after_block_even_for_active_student(): void
+    {
+        // «Блок выхода» = 2: студент ещё «Записался», но дальше блока 2 оплат
+        // не ждать — кнопки за его пределом нет.
+        ['user' => $user, 'course' => $course] = $this->paidThroughCurrentBlock();
+
+        $user->courses()->syncWithoutDetaching([
+            $course->id => ['status' => 'Записался', 'left_after_block' => 2],
+        ]);
+
+        $paidUntil = app(StudentDebtsService::class)
+            ->paidUntilForUser($user, [$course->id])
+            ->get($course->id);
+
+        $this->assertNull($paidUntil->next_block_pay);
+    }
+
+    /** @test */
+    public function active_student_without_exit_block_keeps_renewal_button(): void
+    {
+        // Наличие course_user-строки со статусом «Записался» без «Блока выхода»
+        // кнопку не гасит (регресс-страховка на запрос pivot'а).
+        ['user' => $user, 'course' => $course] = $this->paidThroughCurrentBlock();
+
+        $user->courses()->syncWithoutDetaching([$course->id => ['status' => 'Записался']]);
+
+        $paidUntil = app(StudentDebtsService::class)
+            ->paidUntilForUser($user, [$course->id])
+            ->get($course->id);
+
+        $this->assertNotNull($paidUntil->next_block_pay);
+    }
+
+    /** @test */
     public function hybrid_home_shows_next_block_pay_button(): void
     {
         config(['features.cabinet_hybrid' => true]);

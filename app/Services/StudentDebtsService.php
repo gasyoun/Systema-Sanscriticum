@@ -274,7 +274,9 @@ class StudentDebtsService
      * активный тариф целого блока (block_N) и цена для студента — та же, что
      * в чекауте (персональная скидка/лояльность, зачёты докупки и депозита).
      * next_block_pay = null — тарифа нет, кнопку не рисуем (оплата через
-     * куратора, как и раньше).
+     * куратора, как и раньше); также null ушедшим с курса (статус из
+     * NON_DEBT_STATUSES) и когда следующий блок за пределом «Блока выхода»
+     * (course_user.left_after_block).
      *
      * @param  iterable<int>  $courseIds
      * @return Collection<int, object>
@@ -312,6 +314,15 @@ class StudentDebtsService
             ->whereIn('course_id', $courseIds)
             ->whereNotNull('joined_at_block')
             ->pluck('joined_at_block', 'course_id');
+
+        // Полная строка course_user: статус и «Блок выхода» нужны кнопке
+        // продления (ушедшим и за пределом блока выхода оплату не предлагаем),
+        // сама сводка «оплачено до» от них не зависит.
+        $pivotByCourse = DB::table('course_user')
+            ->where('user_id', $user->id)
+            ->whereIn('course_id', $courseIds)
+            ->get(['course_id', 'status', 'joined_at_block', 'left_after_block'])
+            ->keyBy('course_id');
 
         $result = collect();
         foreach ($courseIds as $courseId) {
@@ -377,7 +388,13 @@ class StudentDebtsService
                     : DebtorsReport::formatBlockRanges($extraPaidBlocks),
                 'next_block_pay' => $nextBlock === null
                     ? null
-                    : $this->nextBlockPayOption($courseId, $nextBlock, $user, $tariffsByCourse),
+                    : $this->nextBlockPayOption(
+                        $courseId,
+                        $nextBlock,
+                        $user,
+                        $tariffsByCourse,
+                        $pivotByCourse->get($courseId),
+                    ),
             ]);
         }
 
@@ -390,11 +407,28 @@ class StudentDebtsService
      * для студента. URL — штатный чекаут тарифа: сам платёжный путь и выдачу
      * доступа не трогаем (PaymentObserver → grantAccess).
      *
+     * Ушедшим с курса (статус из NON_DEBT_STATUSES: «Покинул»/«Исключен»/
+     * «Льготник»/«Выпускник») продление не предлагаем — зеркально долгам,
+     * сводка «оплачено до» у них остаётся. «Блок выхода» (left_after_block) —
+     * потолок: блоки после него системе от студента не ждать, кнопку за ним
+     * не рисуем.
+     *
      * @param  Collection<int, Collection<int, Tariff>>  $tariffsByCourse
+     * @param  object{status: ?string, joined_at_block: ?int, left_after_block: ?int}|null  $pivot
      * @return array{number: int, title: string, url: string, amount: float}|null
      */
-    private function nextBlockPayOption(int $courseId, CourseBlock $nextBlock, ?User $user, Collection $tariffsByCourse): ?array
+    private function nextBlockPayOption(int $courseId, CourseBlock $nextBlock, ?User $user, Collection $tariffsByCourse, ?object $pivot = null): ?array
     {
+        if ($pivot !== null) {
+            if (in_array((string) $pivot->status, DebtorsReport::NON_DEBT_STATUSES, true)) {
+                return null;
+            }
+
+            if ($pivot->left_after_block !== null && (int) $nextBlock->number > (int) $pivot->left_after_block) {
+                return null;
+            }
+        }
+
         $tariff = ($tariffsByCourse->get($courseId) ?? collect())
             ->first(fn (Tariff $t) => $t->type === 'block'
                 && (int) $t->block_number === (int) $nextBlock->number
