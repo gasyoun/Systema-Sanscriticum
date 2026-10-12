@@ -10,12 +10,13 @@ use App\Services\Anons\VideoAnons\VideoAnonsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use Tests\TestCase;
 
 /**
- * H6546: лейн «видео-анонс» — фильтр и роутинг (VideoAnonsService) и
- * триггерная точка в ProcessTelegramZapisiUpdate.
+ * H6546/H6547: лейн «видео-анонс» — фильтр, роутинг, копии off (вердикт MG
+ * 12-10 вечер), и триггерная точка в ProcessTelegramZapisiUpdate.
  */
 class VideoAnonsTest extends TestCase
 {
@@ -32,7 +33,8 @@ class VideoAnonsTest extends TestCase
         parent::setUp();
         config([
             'video-anons.enabled' => true,
-            'video-anons.stories_enabled' => false,
+            'video-anons.stories_enabled' => true,
+            'video-anons.copies_enabled' => false,
             'video-anons.author_ids' => [427307131, 1243819140],
             'video-anons.author_usernames' => ['ivanmolochko', 'edgars_leitans'],
             'video-anons.course_authors' => [],
@@ -71,9 +73,32 @@ class VideoAnonsTest extends TestCase
         ];
     }
 
-    public function test_video_from_whitelisted_author_dispatches_to_other_course_chats(): void
+    private function downloadedMedia(int $messageId = 1067): string
+    {
+        $dir = $this->store.'/zapisi_media/'.self::SOURCE_CHAT.'/2026-07-01';
+        File::ensureDirectoryExists($dir);
+        $path = $dir.'/'.$messageId.'_video.mp4';
+        File::put($path, 'fake-mp4-bytes');
+
+        return $path;
+    }
+
+    public function test_copies_disabled_dispatches_with_empty_targets_but_media_path(): void
     {
         Bus::fake();
+        $mediaPath = $this->downloadedMedia();
+
+        (new VideoAnonsService)->handle($this->videoMessage());
+
+        Bus::assertDispatched(DistributeVideoAnonsJob::class, function (DistributeVideoAnonsJob $job) use ($mediaPath): bool {
+            return $job->targetChatIds === [] && $job->mediaPath === $mediaPath;
+        });
+    }
+
+    public function test_copies_enabled_dispatches_to_other_course_chats(): void
+    {
+        Bus::fake();
+        config(['video-anons.copies_enabled' => true]);
 
         (new VideoAnonsService)->handle($this->videoMessage());
 
@@ -195,5 +220,27 @@ class VideoAnonsTest extends TestCase
         ]))->handle();
 
         Bus::assertNotDispatched(DistributeVideoAnonsJob::class);
+    }
+
+    public function test_media_path_resolves_downloaded_video_file(): void
+    {
+        $service = new VideoAnonsService;
+        $this->assertNull($service->mediaPathFor(self::SOURCE_CHAT, 1067, 1791820906));
+
+        $path = $this->downloadedMedia();
+        $this->assertSame($path, $service->mediaPathFor(self::SOURCE_CHAT, 1067, 1791820906));
+    }
+
+    public function test_tracked_vanons_link_is_registered(): void
+    {
+        // Вечнозелёный /ga/-ключ сторис-лейна резолвится и несёт UTM кампании.
+        $links = config('tracked_links.links');
+        $this->assertArrayHasKey('vanons-tg-v1', $links);
+        $this->assertSame('video_anons_evergreen', $links['vanons-tg-v1']['utm']['utm_campaign']);
+        $this->assertArrayHasKey('vanons', config('tracked_links.story_campaigns'));
+
+        Http::fake(['*' => Http::response('moved', 302)]);
+        $response = $this->get('/ga/vanons-tg-v1');
+        $response->assertRedirect();
     }
 }

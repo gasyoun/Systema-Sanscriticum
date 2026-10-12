@@ -22,7 +22,19 @@ use Throwable;
  * H6546: рассылка копий видео по чатам курса (Bot API copyMessage от
  *
  * @zapisi_ORSbot — без плашки Forwarded from, подпись сохраняется) + черновик
- * админам (TelegramAdminNotifier — существующий ops-канал).
+ * админам (ops-канал: основной бот → ADMIN_TELEGRAM_ID).
+ *
+ * С 12-10-2026 (вечер, вердикт MG) copies_enabled=false по умолчанию: джоб
+ * диспетчится с ПУСТЫМ списком целей — копий нет, черновик остаётся приёмкой
+ * заголовка для сторис персоны.
+ *
+ * Черновик шлём ПРЯМО бюджетом очередей (connect 5с / всего 15с, как у
+ * SendZapisiBotMessageJob): живой случай 12-10 — прод-резолвер отвечает за
+ * ~2.15с, 2-секундный TelegramTransport (контракт FPM-путей) ронял черновики
+ * на cURL 28 при живых copyMessage. Прямая отправка даёт message_id черновика
+ * в личке каждого админа — на него вешается pending-ключ
+ * video-anons:pending:{chat}:{msg} (контекст видео для reply-обработчика
+ * сторис, VideoAnonsStoriesService, TTL 7 дней).
  *
  * Идемпотентность в два слоя: на каждый целевой чат свой клейм
  * video-anons:copy:{from}:{msg}:{target} (ретрай джоба не даёт вторую копию
@@ -33,7 +45,8 @@ use Throwable;
  * Отказ Telegram на ОДНОМ чате (например, бот не участник) не блокирует
  * остальные: ключ отпускается, отказ попадает в черновик и лог. Транспортный
  * обрыв ключ НЕ отпускает — доставка под вопросом, подавленный ретрай дешевле
- * дубля (контракт SendZapisiBotMessageJob).
+ * дубля (контракт SendZapisiBotMessageJob). Полный провал черновика = отпуск
+ * клейма + throw (бэкофф-ретрай повторит только черновик).
  */
 class DistributeVideoAnonsJob implements ShouldQueue
 {
@@ -53,6 +66,7 @@ class DistributeVideoAnonsJob implements ShouldQueue
         public readonly string $courseKey,
         public readonly array $targetChatIds,
         public readonly string $laneKey,
+        public readonly ?string $mediaPath = null,
     ) {}
 
     /** @return array<int, int> */
@@ -121,8 +135,9 @@ class DistributeVideoAnonsJob implements ShouldQueue
     }
 
     /**
-     * Черновик MG/админам (решение 1: «чаты курса — авто, всё остальное —
-     * черновик со словом»). Сейчас «остальное» — сторис, и тот флаг off.
+     * Черновик админам — приёмка заголовка сторис. Прямая отправка (бюджет
+     * очередей) на каждый админ-чат; по доставленным message_id вешаются
+     * pending-ключи reply-обработчика сторис.
      *
      * @param  array<int, int>  $delivered  target => message_id копии
      * @param  array<int, string>  $failed  target => причина
@@ -134,44 +149,12 @@ class DistributeVideoAnonsJob implements ShouldQueue
             return;
         }
 
-        $lines = [];
-        foreach ($delivered as $target => $copyMessageId) {
-            $lines[] = '• <code>'.$target.'</code> → копия message_id '.$copyMessageId;
-        }
-        foreach ($failed as $target => $reason) {
-            $lines[] = '• <code>'.$target.'</code> → НЕ доставлено: '.htmlspecialchars($reason, ENT_QUOTES, 'UTF-8');
-        }
+        $adminIds = app(TelegramAdminNotifier::class)->adminChatIds();
+        $deliveredDrafts = $this->sendDraftDirect($adminIds, $this->draftText($delivered, $failed));
 
-        $internalId = preg_replace('/^-100/', '', (string) $this->sourceChatId);
-        $stories = config('video-anons.stories_enabled')
-            ? 'Сторис: включены — ответьте на это сообщение заголовком для публикации.'
-            : 'Сторис: флаг off (VIDEO_ANONS_STORIES_ENABLED) — публикация по заголовку начнётся после включения.';
-
-        $text = "🎬 <b>Видео-анонс</b> — копия видео разослана по чатам курса\n"
-            .'Автор видео в учебном чате, курс: '.htmlspecialchars($this->courseKey, ENT_QUOTES, 'UTF-8')."\n"
-            .'Источник: <code>'.$this->sourceChatId.'</code>, сообщение '
-            ."<a href=\"https://t.me/c/{$internalId}/{$this->sourceMessageId}\">{$this->sourceMessageId}</a>\n"
-            .'Доставлено: '.count($delivered).'/'.count($this->targetChatIds)."\n"
-            .implode("\n", $lines)."\n"
-            .$stories;
-
-        $notifier = app(TelegramAdminNotifier::class);
-        $recipients = $notifier->notifyAdmins($text);
-
-        if ($recipients === []) {
-            // Черновик — обязательная часть лейна (решение 1). Сначала пробуем
-            // тот же ops-канал напрямую бюджетом очередей (5с/15с, как у
-            // SendZapisiBotMessageJob): TelegramTransport держит 2с на connect
-            // ради FPM-воркеров, а прод 12-10-2026 отдаёт api.telegram.org за
-            // ~2.15с (деградировавший резолвер) — 3 черновика подряд погибли
-            // на cURL 28 при живых copyMessage (там бюджет 5с).
-            if ($notifier->lastSendWasNetworkFailure()) {
-                $recipients = $this->sendDraftDirect($text, $notifier->adminChatIds());
-            }
-        }
-
-        if ($recipients === []) {
-            // Сетевой сбой пережил и фолбэк: ключ отпускаем и бросаем —
+        if ($deliveredDrafts === []) {
+            // Черновик — обязательная часть лейна (решение 1): сетевой сбой не
+            // имеет права терять его молча. Ключ отпускаем и бросаем —
             // бэкофф-ретрай джоба повторит ТОЛЬКО черновик: копии уже держат
             // недельные клейма и не задвоятся.
             $this->releaseKey($draftKey);
@@ -180,6 +163,7 @@ class DistributeVideoAnonsJob implements ShouldQueue
         }
 
         TelegramSendGuard::extendKey($draftKey, self::DONE_TTL);
+        $this->storePendingContext($deliveredDrafts);
 
         Log::info('VideoAnons: draft sent to admins', [
             'course' => $this->courseKey,
@@ -187,18 +171,94 @@ class DistributeVideoAnonsJob implements ShouldQueue
             'source_message_id' => $this->sourceMessageId,
             'delivered' => array_keys($delivered),
             'failed' => array_keys($failed),
-            'draft_recipients' => $recipients,
+            'draft_recipients' => array_keys($deliveredDrafts),
+            'pending_stored' => count($deliveredDrafts),
         ]);
     }
 
     /**
+     * Текст черновика по конфигурации лейна.
+     *
+     * @param  array<int, int>  $delivered
+     * @param  array<int, string>  $failed
+     */
+    private function draftText(array $delivered, array $failed): string
+    {
+        $internalId = preg_replace('/^-100/', '', (string) $this->sourceChatId);
+        $lines = [];
+        foreach ($delivered as $target => $copyMessageId) {
+            $lines[] = '• <code>'.$target.'</code> → копия message_id '.$copyMessageId;
+        }
+        foreach ($failed as $target => $reason) {
+            $lines[] = '• <code>'.$target.'</code> → НЕ доставлено: '.htmlspecialchars($reason, ENT_QUOTES, 'UTF-8');
+        }
+
+        $source = 'Источник: <code>'.$this->sourceChatId.'</code>, сообщение '
+            ."<a href=\"https://t.me/c/{$internalId}/{$this->sourceMessageId}\">{$this->sourceMessageId}</a>";
+
+        if (! config('video-anons.copies_enabled')) {
+            $stories = config('video-anons.stories_enabled')
+                ? 'Ответьте на ЭТО сообщение ЗАГОЛОВКОМ — видео уйдёт в сторис @rusamskrtam (/ga/-ключ прицепится, публикация планировщиком stories:publish-story).'
+                : 'Сторис: флаг off (VIDEO_ANONS_STORIES_ENABLED) — публикация по заголовку начнётся после включения.';
+
+            return "🎬 <b>Видео-анонс</b> — копии по чатам выключены (решение MG 12-10: «главное — сторис»)\n"
+                .$source."\n"
+                .'Медиа: '.($this->mediaPath !== null ? 'скачан, готов к сторис' : 'НЕ найден в харвест-сторе — сторис не соберётся')."\n"
+                .$stories;
+        }
+
+        $stories = config('video-anons.stories_enabled')
+            ? 'Сторис: включены — ответьте на это сообщение заголовком для публикации.'
+            : 'Сторис: флаг off (VIDEO_ANONS_STORIES_ENABLED) — публикация по заголовку начнётся после включения.';
+
+        return "🎬 <b>Видео-анонс</b> — копия видео разослана по чатам курса\n"
+            .'Курс: '.htmlspecialchars($this->courseKey, ENT_QUOTES, 'UTF-8')."\n"
+            .$source."\n"
+            .'Доставлено: '.count($delivered).'/'.count($this->targetChatIds)."\n"
+            .implode("\n", $lines)."\n"
+            .$stories;
+    }
+
+    /**
+     * Pending-контекст для reply-обработчика сторис: ключ на каждое сообщение
+     * черновика в личке админа — reply по нему находит видео. TTL = окно
+     * приёмки заголовка (неделя).
+     *
+     * @param  array<string, int>  $deliveredDrafts  chat_id => draft message_id
+     */
+    private function storePendingContext(array $deliveredDrafts): void
+    {
+        if (! config('video-anons.stories_enabled')) {
+            return;
+        }
+
+        $context = json_encode([
+            'source_chat_id' => $this->sourceChatId,
+            'source_message_id' => $this->sourceMessageId,
+            'course' => $this->courseKey,
+            'media_path' => $this->mediaPath,
+        ], JSON_UNESCAPED_UNICODE);
+
+        foreach ($deliveredDrafts as $chatId => $draftMessageId) {
+            try {
+                Redis::set(sprintf('video-anons:pending:%s:%d', $chatId, $draftMessageId), $context, 'EX', self::DONE_TTL);
+            } catch (Throwable $exception) {
+                Log::warning('VideoAnons: pending context store failed', [
+                    'chat_id' => $chatId,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    /**
      * Прямая отправка черновика бюджетом очередей (тот же ops-канал: основной
-     * бот -> ADMIN_TELEGRAM_ID). Возврат — кому реально ушло.
+     * бот → ADMIN_TELEGRAM_ID). Возврат — chat_id => message_id доставленных.
      *
      * @param  list<string>  $chatIds
-     * @return list<string>
+     * @return array<string, int>
      */
-    private function sendDraftDirect(string $text, array $chatIds): array
+    private function sendDraftDirect(array $chatIds, string $text): array
     {
         $token = (string) config('services.telegram.bot_token');
         $delivered = [];
@@ -226,7 +286,7 @@ class DistributeVideoAnonsJob implements ShouldQueue
             }
 
             if ($response->successful() && ($response->json('ok') ?? false)) {
-                $delivered[] = $chatId;
+                $delivered[$chatId] = (int) $response->json('result.message_id');
             } else {
                 Log::warning('VideoAnons: draft direct send declined', [
                     'chat_id' => $chatId,
