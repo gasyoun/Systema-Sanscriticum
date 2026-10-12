@@ -242,7 +242,22 @@ document.addEventListener('DOMContentLoaded', function () {
                         </p>
                     @endif
                     
-                    {{-- One primary CTA (tariff) + optional secondary (sample) --}}
+                    {{-- One primary CTA (tariff) + optional secondary (sample).
+                         H6559: курс, ещё не стартовавший и собирающий голоса
+                         ждун-строки, на первом экране вместо этой пары показывает
+                         кнопку «Намерен участвовать» — голос решает, откроется ли
+                         оплата. Крупный variant того же шаред-партиала, что и в
+                         блоке «Сбор голосов» ниже (состояния voted/оплата — те же). --}}
+                    @if(isset($waitlistItem) && $waitlistItem)
+                        <div class="w-full max-w-xs" data-testid="course-hero-waitlist">
+                            @include('shop.partials.waitlist-join-actions', [
+                                'item' => $waitlistItem,
+                                'voted' => $waitlistVoted,
+                                'myPref' => $waitlistPref,
+                                'variant' => 'hero',
+                            ])
+                        </div>
+                    @else
                     <div class="flex flex-wrap gap-3">
                         <a href="#tariffs" class="inline-flex justify-center items-center px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-brand hover:bg-brand-hover transition-all hover:-translate-y-1 shadow-[0_0_20px_rgba(232,92,36,0.3)]">
                             Выбрать тариф
@@ -273,6 +288,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             </a>
                         @endif
                     </div>
+                    @endif
 
                     {{-- Кликабельный бейдж преподавателя — visual continuity with card teacher line.
                          Есть публичная страница /prepodavately — ведём на неё (студент ждёт анкету,
