@@ -1976,4 +1976,30 @@ return [
      | php artisan privacy:prune [--report]
      */
     'privacy_prune' => (bool) env('PRIVACY_PRUNE', false),
+
+    /*
+     | Hermes W1 роль 23 `schedule-keeper` (H6187, пакет hermes-24-01a10bca):
+     | детерминированный ответ о расписании из канонической таблицы schedules —
+     | время наблюдения, переносы/отмены за 14 дней, двойное время для не-МСК
+     | студентов, а пустое/подозрительно дальнее расписание помечается
+     | requires_human_verification вместо уверенного ответа. Только чтение,
+     | без LLM и без записи в расписание. ВЫКЛ по умолчанию (роль OFF —
+     | запуск волны W1 остаётся за гейтами E026): включение
+     | HERMES_SCHEDULE_KEEPER=true + config:cache — deploy-шаг человека.
+     */
+    'hermes_schedule_keeper' => (bool) env('HERMES_SCHEDULE_KEEPER', false),
+
+    /*
+     | Hermes human-send в TG и web (H6183, пакет hermes-24-01a10bca):
+     | отправка черновика одним нажатием аутентифицированного куратора через
+     | SupportHumanSendService — актёр обязан быть человеком (агентский вызов
+     | отказ без единой записи), идемпотент по повтору approval и повтору
+     | webhook (статус pending + клейм (конвертация, текст)), доставка пишет
+     | только в стор (pending TelegramSupportMessage / ChatMessage +
+     | broadcast) без сетевых вызовов. Под флагом очередь черновиков
+     | дополнительно принимает web-черновики (chat_message). ВЫКЛ по
+     | умолчанию: включение HERMES_HUMAN_SEND=true + config:cache —
+     | deploy-шаг человека.
+     */
+    'hermes_human_send' => (bool) env('HERMES_HUMAN_SEND', false),
 ];

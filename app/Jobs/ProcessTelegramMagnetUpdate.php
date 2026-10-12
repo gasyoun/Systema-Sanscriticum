@@ -98,6 +98,15 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
         $parts = explode(' ', $text, 2);
         $token = $parts[1] ?? null;
 
+        // H6466 — deep-link t.me/<бот>?start=wl_<slug>: сразу карточка одного
+        // курса ждуна, без списка. Префикс wl_ зарезервирован за ждуном и
+        // в магнитный поиск не попадает.
+        if ($token !== null && str_starts_with($token, 'wl_')) {
+            app(WaitlistBotService::class)->sendCourseBySlug((string) $chatId, substr($token, 3));
+
+            return;
+        }
+
         if (! $token) {
             // /start без токена — юзер нашёл бота сам, не через форму.
             // Короткое приветствие с меню ждуна (MG 04-10-2026).

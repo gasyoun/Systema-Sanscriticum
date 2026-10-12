@@ -67,7 +67,7 @@
                     <div class="bg-indigo-600 text-white p-5">
                         <p class="text-[10px] font-bold uppercase tracking-widest opacity-85">🎓 Награда за итоговый тест</p>
                         <p class="font-extrabold text-lg mt-1">Ваш промокод на «{{ $rewards['grammar_course']->title ?? 'Грамматику санскрита' }}»</p>
-                        <p class="text-sm opacity-90 mt-1">Скидка {{ (int) config('mini_courses.promo_percent', 50) }}% на любой тариф курса
+                        <p class="text-sm opacity-90 mt-1">Скидка {{ (int) config('mini_courses.promo_percent', 50) }}% на первый блок курса
                             @if ($rewards['promo_expires_at'])
                                 — действует до {{ $rewards['promo_expires_at']->timezone(config('app.timezone'))->translatedFormat('d F Y') }}.
                             @endif
