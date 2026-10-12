@@ -59,17 +59,26 @@ final class ShopVkPixel
                 continue;
             }
 
+            // Клик-цели — только на click_paths (по умолчанию все пути пикселя):
+            // на чекауте ссылки /checkout/* означают смену режима, не запись.
+            $clickPaths = array_map(
+                static fn (string $p): string => trim($p, '/'),
+                (array) ($pixel['click_paths'] ?? $pixel['paths'] ?? []),
+            );
+
             $matched[] = [
                 'id' => $id,
                 'forward_goals' => array_values(array_filter(
                     (array) ($pixel['forward_goals'] ?? []),
                     static fn ($goal): bool => is_string($goal) && $goal !== '',
                 )),
-                'click_goals' => array_filter(
-                    (array) ($pixel['click_goals'] ?? []),
-                    static fn ($selector, $goal): bool => is_string($goal) && $goal !== '' && is_string($selector) && $selector !== '',
-                    ARRAY_FILTER_USE_BOTH,
-                ),
+                'click_goals' => in_array($normalized, $clickPaths, true)
+                    ? array_filter(
+                        (array) ($pixel['click_goals'] ?? []),
+                        static fn ($selector, $goal): bool => is_string($goal) && $goal !== '' && is_string($selector) && $selector !== '',
+                        ARRAY_FILTER_USE_BOTH,
+                    )
+                    : [],
             ];
         }
 

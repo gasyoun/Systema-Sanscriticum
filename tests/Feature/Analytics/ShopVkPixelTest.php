@@ -4,6 +4,7 @@ namespace Tests\Feature\Analytics;
 
 use App\Models\Course;
 use App\Models\Payment;
+use App\Models\Tariff;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -117,6 +118,38 @@ class ShopVkPixelTest extends TestCase
         $this->assertStringNotContainsString('alert(3)', $html);
         // основной пиксель кампанийными настройками не тронут
         $this->assertSame(1, substr_count($html, '_tmr.push({id: "3512345", type: "pageView"'));
+    }
+
+    public function test_campaign_pixel_pageview_on_checkout_but_no_click_goal(): void
+    {
+        $tariff = Tariff::factory()->for($this->course)->create([
+            'type' => 'block',
+            'block_number' => 1,
+            'price' => 0,
+            'is_active' => true,
+        ]);
+
+        config()->set('analytics.vk_pixel.shop_pixel_id', '3512345');
+        config()->set('analytics.vk_pixel.campaign_pixels', [
+            'test' => [
+                'id' => '9876543',
+                'enabled' => true,
+                'paths' => ['k/vk-pixel-test', 'checkout/'.$tariff->id],
+                // клик-цель — только на лендинге: на чекауте свои ссылки
+                // на /checkout/* («Подарить» и пр.), это не «Записаться»
+                'click_paths' => ['k/vk-pixel-test'],
+                'forward_goals' => ['enroll_click'],
+                'click_goals' => ['enroll_click' => 'a[href*="/checkout/"]'],
+            ],
+        ]);
+
+        $html = $this->get(route('checkout.show', $tariff))->assertOk()->getContent();
+
+        // pageView кампанийного пикселя на чекауте есть, форвард целей — есть
+        $this->assertSame(1, substr_count($html, '_tmr.push({id: "9876543", type: "pageView"'));
+        $this->assertStringContainsString('var campaignId = "9876543"', $html);
+        // делегированного клик-слушателя на чекауте нет
+        $this->assertStringNotContainsString('a[href*=\u0022', $html);
     }
 
     public function test_confirmed_payment_fires_shop_vk_goal_once_with_amount_and_once_key(): void
