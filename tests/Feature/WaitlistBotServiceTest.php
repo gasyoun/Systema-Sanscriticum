@@ -328,4 +328,67 @@ class WaitlistBotServiceTest extends TestCase
             && str_contains((string) $request['text'], 'только кураторам')
             && ! str_contains((string) $request['text'], 'Руководство по Бюлеру'));
     }
+
+    public function test_start_wl_slug_deep_link_shows_single_course_card(): void
+    {
+        User::factory()->create(['name' => 'Анна', 'telegram_id' => 4242]);
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+        (new ProcessTelegramMagnetUpdate([
+            'message' => ['chat' => ['id' => 4242], 'text' => '/start wl_buhler-guide-wl'],
+        ]))->handle();
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/sendMessage')
+            && str_contains((string) $request['text'], 'Руководство по Бюлеру')
+            && str_contains((string) $request['reply_markup'], 'Голосовать за этот курс')
+            && ! str_contains((string) $request['text'], 'Каллиграфия'));
+    }
+
+    public function test_start_wl_unknown_slug_gets_polite_fallback(): void
+    {
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+        (new ProcessTelegramMagnetUpdate([
+            'message' => ['chat' => ['id' => 4242], 'text' => '/start wl_no-such-course'],
+        ]))->handle();
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/sendMessage')
+            && str_contains((string) $request['text'], 'не собирается'));
+    }
+
+    public function test_unvote_callback_removes_vote_and_offers_revote(): void
+    {
+        $anna = User::factory()->create(['name' => 'Анна', 'telegram_id' => 4242]);
+        $this->item->castVoteBy($anna, 'evening');
+        $this->assertSame(1, $this->item->votesCount());
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+        $consumed = (new WaitlistBotService)->handleUpdate([
+            'callback_query' => [
+                'id' => 'cb1',
+                'data' => 'wl:unvote:'.$this->item->getKey(),
+                'message' => ['chat' => ['id' => 4242], 'message_id' => 55],
+            ],
+        ]);
+
+        $this->assertTrue($consumed);
+        $this->assertSame(0, $this->item->votesCount());
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/editMessageText')
+            && str_contains((string) $request['text'], 'Голос отозван')
+            && str_contains((string) $request['reply_markup'], 'Голосовать снова'));
+    }
+
+    public function test_course_card_for_voter_shows_unvote_and_slot(): void
+    {
+        $anna = User::factory()->create(['name' => 'Анна', 'telegram_id' => 4242]);
+        $this->item->castVoteBy($anna, 'evening');
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+        (new WaitlistBotService)->sendCourseBySlug('4242', 'buhler-guide-wl');
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/sendMessage')
+            && str_contains((string) $request['text'], 'Вы уже голосовали')
+            && str_contains((string) $request['text'], 'Вечером')
+            && str_contains((string) $request['reply_markup'], 'Отозвать голос'));
+    }
 }
