@@ -146,5 +146,27 @@ return [
             'metrika_goal' => 'sample_play',
             'surfaces' => ['/k/{slug}/preview on the CTA A/B flagship'],
         ],
+        /*
+         | H6521 (MG «да ждуну» 12-10-2026): воронка Ждуна. /ga/{link} — 302,
+         | Метрика redirect не видит, поэтому цель стреляет маркером на ЦЕЛИ
+         | перехода — домашний паттерн access_renewal_complete /
+         | lesson_mark_mastered: контроллер делает session()->flash('metrika_goal', …),
+         | канал маркеров в shop-metrika.blade.php добивает на следующей
+         | загрузке. Внутренние destination только: t.me-хоп
+         * (?start=wl_<slug>, tracked_links zhdun) в веб-воронку не входит —
+         | его считает бот.
+         */
+        'ga_interstitial_view' => [
+            'name' => 'ga_interstitial_view',
+            'dedup' => 'once per tracked-link click (flash fires on the internal destination load)',
+            'metrika_goal' => 'ga_interstitial_view',
+            'surfaces' => ['destination page after /ga/{link} hop — flash marker (TrackedLinkController, internal destinations only)'],
+        ],
+        'waitlist_join' => [
+            'name' => 'waitlist_join',
+            'dedup' => 'once per successful vote flash (web vote on /online/zhdun, or pending guest vote cast at login)',
+            'metrika_goal' => 'waitlist_join',
+            'surfaces' => ['/online/zhdun reload after POST vote — flash marker (PublicWaitlistController::vote, CastPendingWaitlistVote)'],
+        ],
     ],
 ];

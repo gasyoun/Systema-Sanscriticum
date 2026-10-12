@@ -52,5 +52,8 @@ class CastPendingWaitlistVote
         }
 
         $request->session()->flash(PublicWaitlistController::VOTED_FLASH_KEY, true);
+        // H6521: отложенный голос гостя, добитый при входе, — тот же
+        // waitlist_join flash-маркер на следующей загрузке /online/zhdun.
+        $request->session()->flash('metrika_goal', 'waitlist_join');
     }
 }
