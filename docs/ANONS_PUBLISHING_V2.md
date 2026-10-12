@@ -140,6 +140,8 @@ php artisan anons:ops journal-list --campaign=up26
 
 Офлайн-канарейка: `php artisan video-anons:replay --payload=<json с message>` ([`VideoAnonsReplayCommand`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/VideoAnonsReplayCommand.php)) — тот же путь, что live-вебхук (VideoAnonsService → очередь → DistributeVideoAnonsJob); дедуп лейна действует и на replay.
 
+Обновление 12-10-2026 (вечер, вердикт MG по живой пробе): авто-копии по чатам выключены (`copies_enabled=false`, `VIDEO_ANONS_COPIES_ENABLED`) — «главное не в чаты, а в сторисы разных платформ»; сторис вооружены (`stories_enabled=true`): черновик шлётся прямой отправкой бюджетом очередей и вешает pending-ключ с координатами видео, ответ MG заголовком на черновик ([VideoAnonsStoriesService](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Anons/VideoAnons/VideoAnonsStoriesService.php), хук в главном вебхуке) создаёт approved-строку `StoryPost` (lane=persona, kind=video) — публикация существующим планировщиком `stories:publish-story` (тик ежечасно, madeline-лок). `/ga/`-ключ — вечнозелёный `vanons-tg-v1` (извлекается издателем из подписи). Идемпотентность по `source_key=harvest:md5(путь)`; повторный reply возвращает номер строки. YouTube Shorts / VK — отдельный лейн (минчен следом), у video-anons этих поверхностей нет.
+
 ## Known limits
 
 - `senler` destinations are a documented manual lane (§ above) — the registry refuses them with a pointer there; the Senler API has no send method at all (H5944), so no adapter is possible until upstream ships one; `vk` (wall) destinations remain fail-closed future work.

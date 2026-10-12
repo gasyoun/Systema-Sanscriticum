@@ -10,6 +10,7 @@ use App\Models\ScheduleAttendanceNotice;
 use App\Models\User;
 use App\Models\VacationQuorumPoll;
 use App\Services\Access\TelegramAdminNotifier;
+use App\Services\Anons\VideoAnons\VideoAnonsStoriesService;
 use App\Services\AttendanceNoticeService;
 use App\Services\Bot\CabinetLoginBotCommand;
 use App\Services\Bot\CabinetProvisionBotCommand;
@@ -81,6 +82,17 @@ class TelegramWebhookController extends Controller
             $text = $data['message']['text'];
             // @username отправителя (необязателен в Telegram; может отсутствовать).
             $fromUsername = $data['message']['from']['username'] ?? null;
+
+            // H6547: ответ MG заголовком на черновик видео-анонса → сторис-очередь
+            // персоны. Сервис сам фильтрует (флаг / админ / reply на черновик);
+            // true = апдейт наш, студенческие ветки не трогаем.
+            try {
+                if (app(VideoAnonsStoriesService::class)->handleAdminReply($data['message'])) {
+                    return response()->json(['status' => 'ok']);
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('VideoAnons stories: handler failed', ['error' => $e->getMessage()]);
+            }
 
             // #ДЗ / /dz в чате группы (волна 2): до student-AI и «привяжите аккаунт».
             // Не-теговые сообщения группы тоже глушим здесь — иначе chat.id группы

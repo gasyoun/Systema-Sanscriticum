@@ -182,10 +182,31 @@ foreach ($zhdunCourses as $zhdunSlug) {
     ];
 }
 
+/*
+ * vanons — вечнозелёный ключ видео-анонса (H6547): сторис персоны с видео из
+ * учебных чатов (лейн H6546) ведут сюда. Один стоящий ключ, не кампания —
+ * пер-видео креативы только если MG попросит разбивку атрибуции.
+ */
+$links['vanons-tg-v1'] = [
+    'destination' => '/online',
+    'utm' => [
+        'utm_source' => 'telegram_story_rusamskrtam',
+        'utm_medium' => 'persona_story',
+        'utm_campaign' => 'video_anons_evergreen',
+        'utm_content' => 'vanons_v1',
+        'utm_term' => 'video',
+    ],
+];
+
 return [
     'session_key' => 'tracked_link_attribution',
     'links' => $links,
     'story_campaigns' => [
+        'vanons' => [
+            'destination' => '/online',
+            'utm_campaign' => 'video_anons_evergreen',
+            'utm_term' => 'video',
+        ],
         'm26' => [
             'destination' => '/online/kursy/grammatika-gasuns-2026',
             'utm_campaign' => $campaign,
