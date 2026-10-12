@@ -42,5 +42,27 @@
         if (!goalName || typeof ym === 'undefined') return;
         try { ym(window.SHOP_METRIKA_ID, 'reachGoal', goalName); } catch (e) { /* never break shop */ }
    };
+
+   // Маркеры серверных событий (H6521): [data-metrika-goal] → reachGoal один раз на загрузке.
+   function __shopMetrikaFireMarkers() {
+        Array.prototype.forEach.call(
+            document.querySelectorAll('[data-metrika-goal]'),
+            function (el) { window.shopReachGoal(el.getAttribute('data-metrika-goal')); }
+        );
+   }
+   ssConsent.onAnalytics(function () {
+       if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', __shopMetrikaFireMarkers);
+       } else {
+            __shopMetrikaFireMarkers();
+       }
+   });
 </script>
+@endif
+{{-- Flash-маркер (H6521: ga_interstitial_view после /ga/-хопа, waitlist_join
+     после голоса ждуна): контроллер делает session()->flash('metrika_goal', <цель>)
+     — цель стреляет ровно один раз, на следующей загрузке. Тот же канал,
+     что в cabinet-metrika.blade.php. --}}
+@if(session('metrika_goal'))
+<span data-metrika-goal="{{ session('metrika_goal') }}" hidden></span>
 @endif

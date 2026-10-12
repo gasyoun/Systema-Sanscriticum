@@ -268,6 +268,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `HEARTBEAT_CRON` | optional | `'*/5 * * * *'` | config/heartbeat.php:50 |
 | `HEARTBEAT_PING_URL` | optional | `''` | config/heartbeat.php:43 |
 | `HEARTBEAT_TIMEOUT` | optional | `10` | config/heartbeat.php:54 |
+| `HERMES_HUMAN_SEND` | optional | `false` | config/features.php:2004 |
 | `HERMES_SCHEDULE_KEEPER` | optional | `false` | config/features.php:1990 |
 | `HINDI_ATTACHMENT_DRILLS` | optional | `false` | config/features.php:1590 |
 | `HINDI_DICTIONARY_DRILLS` | optional | `false` | config/features.php:1616 |
@@ -1024,6 +1025,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `VK_CONFIRM_CODE` | required | `—` | config/services.php:542 |
 | `VK_GROUP_ID` | required | `—` | config/services.php:541 |
 | `VK_ORS_DATA_PATH` | optional | `storage_path('app/vk_ors')` | config/content.php:14 |
+| `VK_PIXEL_MINIKURS_ENABLED` | feature-flag | `false` | config/analytics.php:42 |
+| `VK_PIXEL_MINIKURS_ID` | optional | `'3800959'` | config/analytics.php:41 |
 | `VK_PIXEL_SHOP_ENABLED` | feature-flag | `true` | config/analytics.php:27 |
 | `VK_PIXEL_SHOP_ID` | required | `—` | config/analytics.php:26 |
 | `VK_REDIRECT_URI` | optional | `'/auth/vkontakte/callback'` | config/services.php:647 |

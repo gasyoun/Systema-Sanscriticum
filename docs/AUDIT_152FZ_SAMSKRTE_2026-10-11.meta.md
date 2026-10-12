@@ -1,6 +1,6 @@
 # Аудит 152-ФЗ samskrte.ru — H6481
 
-_Created: 11-10-2026 · Last updated: 11-10-2026_
+_Created: 11-10-2026 · Last updated: 12-10-2026_
 
 Документ: [docs/AUDIT_152FZ_SAMSKRTE_2026-10-11.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/AUDIT_152FZ_SAMSKRTE_2026-10-11.md)
 
@@ -9,5 +9,7 @@ _Created: 11-10-2026 · Last updated: 11-10-2026_
 - **Вердикт:** suveren A / 96/100; 10 PASS; находки F1 (гостевые согласия в localStorage, Medium), F2 (трансграничка GitHub/США — правовой чек-ап, High), F3 (§1.4 PDF пустой, Low), F4 (HTML-сводка политики, Low), F5 (Let's Encrypt, advisory), F6 (Top.Mail.ru инвентарь, info); оператор в реестре РКН № 77-26-533694 от 09.02.2026
 - **Верификация:** независимый субагент 7/7 PASS по первичным источникам + suveren как внешний машинный вердикт; DeepSeek-плечо недоступно на машине (честно зафиксировано)
 - **Обновлять:** при следующем плановом 152-ФЗ-аудите (чек-лист §«Повторный чек-лист» внутри отчёта); F2 — после консультации юриста
+- **Ревизия 11-10-2026:** F3+F4 закрыты — [PR #3189](https://github.com/gasyoun/Systema-Sanscriticum/pull/3189) (handoff H6503): §1.4 PDF заполнен, HTML-блок «Ключевые положения политики» с 4 литеральными фразами; пометки «✅ Закрыт 11-10-2026» в строках находок отчёта
+- **Ревизия 12-10-2026:** рескан suveren v1.0.0 (заказ MG, handoff H6507) — F4-чек «Содержание политики» PASS, все 8 ПДн-чеков + 2 блокировки ✓, A/96; машинный JSON-отчёт приложен ([docs/AUDIT_152FZ_SAMSKRTE_2026-10-11_suveren-rescan_20261011T2051Z.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/AUDIT_152FZ_SAMSKRTE_2026-10-11_suveren-rescan_20261011T2051Z.json)), вердикт в строке F4 отчёта
 
 _к.ф.н. М.Ю. Гасунс_

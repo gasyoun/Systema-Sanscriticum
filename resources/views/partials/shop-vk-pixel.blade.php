@@ -11,6 +11,7 @@
 --}}
 @php
     $shopVkPixelId = \App\Support\ShopVkPixel::id();
+    $campaignPixels = \App\Support\ShopVkPixel::campaignPixelsForPath(request()->path());
 @endphp
 @if($shopVkPixelId)
 {{-- 152-ФЗ: пиксель — только после «Принять аналитику» (partials/analytics-gate).
@@ -20,6 +21,10 @@
    ssConsent.onAnalytics(function () {
    var _tmr = window._tmr || (window._tmr = []);
    _tmr.push({id: "{{ $shopVkPixelId }}", type: "pageView", start: (new Date()).getTime()});
+@foreach($campaignPixels as $cp)
+   // Кампанийный пиксель {{ $cp['id'] }} — pageView только на его путях (ShopVkPixel::campaignPixelsForPath)
+   _tmr.push({id: "{{ $cp['id'] }}", type: "pageView", start: (new Date()).getTime()});
+@endforeach
    (function (d, w, id) {
        if (d.getElementById(id)) return;
        var ts = d.createElement("script"); ts.type = "text/javascript"; ts.async = true; ts.id = id;
@@ -40,5 +45,33 @@
            } catch (e) { /* never break shop */ }
        };
    })();
+@foreach($campaignPixels as $cp)
+   // Кампанийный пиксель {{ $cp['id'] }}: цели из forward_goals дублируются в него на его путях
+   (function () {
+       var campaignId = "{{ $cp['id'] }}";
+       var forwarded = @json($cp['forward_goals']);
+       var wrapped = window.shopReachGoal;
+       window.shopReachGoal = function (goalName) {
+           if (typeof wrapped === 'function') wrapped(goalName);
+           if (!goalName || forwarded.indexOf(goalName) === -1) return;
+           try {
+               (window._tmr || (window._tmr = [])).push({ type: 'reachGoal', id: campaignId, goal: goalName });
+           } catch (e) { /* never break shop */ }
+       };
+   })();
+@endforeach
+@foreach($campaignPixels as $cp)
+@foreach($cp['click_goals'] as $goal => $selector)
+   // Клик-цель {{ $goal }}: делегированный слушатель, селектор {{ $selector }}
+   (function () {
+       var goal = @json($goal);
+       document.addEventListener('click', function (e) {
+           var t = e.target;
+           var el = t && t.closest ? t.closest(@json($selector)) : null;
+           if (el && typeof window.shopReachGoal === 'function') window.shopReachGoal(goal);
+       });
+   })();
+@endforeach
+@endforeach
 </script>
 @endif
