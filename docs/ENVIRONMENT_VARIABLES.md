@@ -38,7 +38,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `AWS_SECRET_ACCESS_KEY` | secret | `—` | config/cache.php:86<br>config/filesystems.php:66<br>config/queue.php:57<br>config/services.php:32 |
 | `AWS_URL` | required | `—` | config/filesystems.php:69 |
 | `AWS_USE_PATH_STYLE_ENDPOINT` | optional | `false` | config/filesystems.php:71 |
-| `BACKUP_ARCHIVE_PASSWORD` | secret | `—` | config/backup.php:125 |
+| `BACKUP_ARCHIVE_PASSWORD` | secret (H6306: offsite upload + prod deploy refuse when empty) | `—` | config/backup.php:125 |
 | `BACKUP_CLEANUP_MB` | optional | `1000` | config/backup.php:202 |
 | `BACKUP_KEEP_PARTS_DAYS` | optional | `16` | config/backup.php:105 |
 | `BACKUP_MAX_AGE_DAYS` | optional | `8` | config/backup.php:184 |
