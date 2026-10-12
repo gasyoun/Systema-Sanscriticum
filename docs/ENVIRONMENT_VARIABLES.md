@@ -495,9 +495,10 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MG_DECIDE_POLL_RETRY_SECONDS` | optional | `10` | config/mg_decide.php:30 |
 | `MG_DECIDE_POLL_TIMEOUT_SECONDS` | optional | `50` | config/mg_decide.php:29 |
 | `MIC_SHADOW_CLASSIFY` | optional | `false` | config/features.php:1772 |
-| `MINI_COURSE_GRAMMAR_COURSE_ID` | optional | `450` | config/mini_courses.php:14 |
-| `MINI_COURSE_SLUG` | optional | `'podgotovitelnaya-gruppa-sanskrita'` | config/mini_courses.php:11 |
-| `MINI_COURSE_TRIAL_COURSE_ID` | optional | `451` | config/mini_courses.php:17 |
+| `MINI_COURSE_DRIP_DAYS` | optional | `3` | config/mini_courses.php:11 |
+| `MINI_COURSE_GRAMMAR_COURSE_ID` | optional | `450` | config/mini_courses.php:17 |
+| `MINI_COURSE_SLUG` | optional | `'podgotovitelnaya-gruppa-sanskrita'` | config/mini_courses.php:14 |
+| `MINI_COURSE_TRIAL_COURSE_ID` | optional | `451` | config/mini_courses.php:20 |
 | `MONEY_BANK_STATEMENT_CREDITS` | optional | `false` | config/features.php:1887 |
 | `MONEY_DAILY_RECONCILIATION` | optional | `false` | config/features.php:1860 |
 | `MONEY_LEDGER_CORE` | optional | `false` | config/features.php:1838 |

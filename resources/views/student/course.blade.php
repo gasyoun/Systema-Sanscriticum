@@ -170,6 +170,10 @@
                             <div class="w-12 h-12 rounded-2xl bg-green-50 text-green-500 flex items-center justify-center border border-green-100">
                                 <i class="fas fa-check text-xl"></i>
                             </div>
+                        @elseif(($dripLocked ?? collect())->has($lesson->id))
+                            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center border border-amber-100">
+                                <i class="fas fa-hourglass-half"></i>
+                            </div>
                         @else
                             <div class="w-12 h-12 rounded-2xl bg-orange-50 text-brand flex items-center justify-center border border-orange-100 group-hover:bg-brand group-hover:text-white transition-colors">
                                 <i class="fas fa-play ml-1"></i>
@@ -186,6 +190,11 @@
                             @if(!$isUnlocked)
                                 <span class="text-[10px] font-bold px-2 py-0.5 bg-gray-200 text-gray-500 rounded-md uppercase tracking-wider">
                                     Блок {{ $lesson->block_number }}
+                                </span>
+                            @elseif(($dripLocked ?? collect())->has($lesson->id))
+                                <span class="text-[10px] font-bold px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md uppercase tracking-wider"
+                                      title="Урок откроется {{ \Illuminate\Support\Carbon::parse(($dripLocked)->get($lesson->id))->timezone(config('app.timezone'))->translatedFormat('d F') }}">
+                                    ⏳ Откроется {{ \Illuminate\Support\Carbon::parse(($dripLocked)->get($lesson->id))->timezone(config('app.timezone'))->translatedFormat('d.m') }}
                                 </span>
                             @endif
                         </div>

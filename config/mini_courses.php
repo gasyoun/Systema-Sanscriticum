@@ -7,6 +7,9 @@
  * через env или прямо в конфиге. Значения по умолчанию = прод (10-10-2026).
  */
 return [
+    // Дрип: урок N открывается через (N-1) * drip_days дней после записи студента.
+    'drip_days' => (int) env('MINI_COURSE_DRIP_DAYS', 3),
+
     // Слаг мини-курса «Подготовительная группа» (страница прогресса в админке).
     'slug' => env('MINI_COURSE_SLUG', 'podgotovitelnaya-gruppa-sanskrita'),
 
