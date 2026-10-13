@@ -250,6 +250,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `GOOGLE_CLIENT_ID` | required | `—` | config/services.php:640 |
 | `GOOGLE_CLIENT_SECRET` | secret | `—` | config/services.php:641 |
 | `GOOGLE_REDIRECT_URI` | optional | `'/auth/google/callback'` | config/services.php:642 |
+| `GOOGLE_YT_CLIENT_ID` | required | `—` | config/video-anons.php:43 |
+| `GOOGLE_YT_CLIENT_SECRET` | secret | `—` | config/video-anons.php:44 |
+| `GOOGLE_YT_REFRESH_TOKEN` | secret | `—` | config/video-anons.php:45 |
 | `GRAMMAR_LAB` | optional | `false` | config/features.php:1541 |
 | `GRAMMAR_LAB_AUTO_PUBLISH` | optional | `true` | config/grammar_lab.php:67 |
 | `GRAMMAR_LAB_COURSE_SLUGS` | optional | `''` | config/grammar_lab.php:46 |
@@ -1014,6 +1017,10 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `VIDEO_ANONS_COPIES_ENABLED` | feature-flag | `false` | config/video-anons.php:23 |
 | `VIDEO_ANONS_ENABLED` | feature-flag | `true` | config/video-anons.php:18 |
 | `VIDEO_ANONS_STORIES_ENABLED` | feature-flag | `true` | config/video-anons.php:28 |
+| `VIDEO_ANONS_VK_WALL_ENABLED` | feature-flag | `false` | config/video-anons.php:53 |
+| `VIDEO_ANONS_YT_CATEGORY_ID` | optional | `'27'` | config/video-anons.php:47 |
+| `VIDEO_ANONS_YT_PRIVACY_STATUS` | optional | `'public'` | config/video-anons.php:46 |
+| `VIDEO_ANONS_YT_SHORTS_ENABLED` | feature-flag | `false` | config/video-anons.php:38 |
 | `VIDEO_RESUME` | optional | `false` | config/features.php:959 |
 | `VIEW_COMPILED_PATH` | optional | `realpath(storage_path('framework/views'))` | config/view.php:31 |
 | `VISUALDCS_COURSE_SLUGS` | optional | `''` | config/visualdcs.php:30 |
@@ -1033,7 +1040,10 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `VK_PIXEL_MINIKURS_ID` | optional | `'3800959'` | config/analytics.php:41 |
 | `VK_PIXEL_SHOP_ENABLED` | feature-flag | `true` | config/analytics.php:27 |
 | `VK_PIXEL_SHOP_ID` | required | `—` | config/analytics.php:26 |
+| `VK_PUBLISH_AUTHORIZED_GROUPS` | optional | `''` | config/video-anons.php:61 |
 | `VK_REDIRECT_URI` | optional | `'/auth/vkontakte/callback'` | config/services.php:647 |
+| `VK_WALL_ACCESS_TOKEN` | secret | `—` | config/video-anons.php:57 |
+| `VK_WALL_TARGET_GROUP_ID` | optional | `0` | config/video-anons.php:63 |
 | `WAITLIST_AUTO_PAYMENT` | optional | `true` | config/features.php:1141 |
 | `WAITLIST_VOTING` | optional | `false` | config/features.php:1131 |
 | `WEEKLY_FINISH_REPORT_ENABLED` | feature-flag | `false` | config/features.php:1759 |
