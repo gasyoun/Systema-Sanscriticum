@@ -821,10 +821,10 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_FAQ_RAG_TOP_K` | optional | `3` | config/support.php:159 |
 | `SUPPORT_FINANCE_LEAD_USER_ID` | required | `—` | config/support.php:111 |
 | `SUPPORT_FOLLOW_UP_TASKS` | optional | `false` | config/features.php:673 |
-| `SUPPORT_GEO_DRIVER` | optional | `'null'` | config/support_geo.php:32 |
-| `SUPPORT_GEO_IPAPI_ENDPOINT` | optional | `'http://ip-api.com/json/'` | config/support_geo.php:38 |
-| `SUPPORT_GEO_MAXMIND_PATH` | optional | `storage_path('app/geo/GeoLite2-City.mmdb')` | config/support_geo.php:42 |
-| `SUPPORT_GEO_TIMEOUT` | optional | `3` | config/support_geo.php:35 |
+| `SUPPORT_GEO_DRIVER` | optional | `'null'` | config/support_geo.php:36 |
+| `SUPPORT_GEO_IPAPI_ENDPOINT` | optional | `'http://ip-api.com/json/'` | config/support_geo.php:42 |
+| `SUPPORT_GEO_MAXMIND_PATH` | optional | `storage_path('app/geo/GeoLite2-City.mmdb')` | config/support_geo.php:47 |
+| `SUPPORT_GEO_TIMEOUT` | optional | `3` | config/support_geo.php:39 |
 | `SUPPORT_HINT_DAILY_DIGEST` | optional | `false` | config/features.php:454 |
 | `SUPPORT_HINT_DEDUP_ENABLED` | feature-flag | `true` | config/support.php:309 |
 | `SUPPORT_HINT_SEND_BUTTON_MAX_AGE_DAYS` | optional | `7` | config/support.php:24 |
