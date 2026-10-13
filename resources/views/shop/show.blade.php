@@ -493,9 +493,27 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
                 {{-- Левая колонка: текстовое описание --}}
                 <div class="prose prose-invert prose-lg prose-slate max-w-none lg:flex-1">
+                    {{-- H6580: видеоанонс из T1-поста (3 платформы) — строка над
+                         описанием, как в посте; рендерится только с живыми URL
+                         из контент-JSON (resources/data/course-page-content.json). --}}
+                    @if(($pageContent['video_links'] ?? []) !== [])
+                        <p class="text-sm text-slate-400 mb-2" data-testid="course-anons-video">
+                            Видеоанонс:
+                            @foreach($pageContent['video_links'] as $platform => $url)
+                                <a href="{{ $url }}" target="_blank" rel="noopener" class="text-indigo-400 hover:text-indigo-300 underline">{{ $platform }}</a>@if(! $loop->last) <span class="text-slate-500">·</span> @endif
+                            @endforeach
+                        </p>
+                    @endif
                     @if($course->description)
                         <div class="text-slate-300 leading-relaxed space-y-6 [&_a]:text-indigo-400 [&_a:hover]:text-indigo-300 [&_a]:underline">
                             {!! $course->description_html !!}
+                        </div>
+                    @elseif($pageContent['description_html'] ?? null)
+                        {{-- H6580: идейный хук T1-анонса → описание, пока у курса
+                             нет своего description в БД (БД — канон, пост —
+                             зеркало: пустое поле БД заполняется из поста). --}}
+                        <div class="text-slate-300 leading-relaxed space-y-6 [&_a]:text-indigo-400 [&_a:hover]:text-indigo-300 [&_a]:underline" data-testid="course-anons-description">
+                            {!! $pageContent['description_html'] !!}
                         </div>
                     @else
                         <p class="text-slate-500 italic">Подробное описание курса скоро появится.</p>
@@ -615,6 +633,30 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 @endforeach
             </div>
+            </div>
+        </section>
+        @elseif(($pageContent['program_bullets'] ?? []) !== [])
+            {{-- H6580: буллеты «Что вас ждет» из T1-анонса → программа курса,
+                 пока у курса нет своих блоков с содержимым (число занятий и
+                 расписание — канон страницы, буллеты поста их не заменяют). --}}
+        <section id="program" class="mb-16 lg:mb-20" x-data="{ open: false }" data-collapse-section>
+            @include('shop.partials.collapse-header', ['title' => 'Программа курса', 'bodyId' => 'program-body'])
+
+            <div id="program-body" x-show="open" x-cloak
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 -translate-y-3"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 translate-y-3">
+            <ul class="space-y-3 max-w-3xl" data-testid="course-anons-program">
+                @foreach($pageContent['program_bullets'] as $bullet)
+                    <li class="flex gap-3 text-slate-300 leading-relaxed">
+                        <i class="fas fa-check text-indigo-400 mt-1 text-sm shrink-0"></i>
+                        <span>{{ $bullet }}</span>
+                    </li>
+                @endforeach
+            </ul>
             </div>
         </section>
         @endif
