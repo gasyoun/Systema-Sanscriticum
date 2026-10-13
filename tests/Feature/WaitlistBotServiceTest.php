@@ -67,6 +67,38 @@ class WaitlistBotServiceTest extends TestCase
         });
     }
 
+    /** H6566: «Стать добровольцем» — URL-кнопка на /start и в футере списка, обе через трекед-прослойку /ga/volunteer. */
+    public function test_volunteer_url_button_on_welcome_and_list(): void
+    {
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+        $service = new WaitlistBotService;
+        $service->sendWelcome('4242');
+        $service->sendList('4242');
+
+        $welcomed = false;
+        $listed = false;
+        foreach (Http::recorded() as [$request]) {
+            if (! str_contains($request->url(), '/sendMessage')) {
+                continue;
+            }
+            $markup = json_decode((string) $request['reply_markup'], true) ?? [];
+            $hasButton = collect($markup['inline_keyboard'] ?? [])
+                ->flatten(1)
+                ->contains(fn ($button) => ($button['text'] ?? '') === '🤝 Стать добровольцем'
+                    && ($button['url'] ?? '') === 'https://samskrte.ru/ga/volunteer');
+            if (str_contains((string) $request['text'], 'Привет! Это бот')) {
+                $welcomed = $hasButton;
+            }
+            if (str_contains((string) $request['text'], 'будущие группы ОРС')) {
+                $listed = $hasButton;
+            }
+        }
+
+        $this->assertTrue($welcomed, 'На /start-приветствии нет кнопки «Стать добровольцем»');
+        $this->assertTrue($listed, 'В футере ждун-списка нет кнопки «Стать добровольцем»');
+    }
+
     public function test_vote_callback_casts_vote_and_offers_soft_slot_step(): void
     {
         Http::fake(['*' => Http::response(['ok' => true], 200)]);

@@ -103,6 +103,16 @@ trait SchedulesOpsAndMembership
             ->onFailure(fn () => ScheduleFailureSignal::report('payments:expire-stale-checkouts'))
             ->name('expire-stale-checkouts');
 
+        // --- ПИСЬМА ДРИПА МИНИ-КУРСА «ПОДГОТОВИТЕЛЬНАЯ ГРУППА» ---
+        // Уроки открываются студенту раз в 3 дня от даты записи; команда шлёт
+        // письмо по самому свежему открытому уроку (часового тика достаточно:
+        // каденс дрипа — дни). Идемпотентность — mini_course_drip_emails.
+        $schedule->command('mini-course:send-drip-emails')
+            ->hourly()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('mini-course-drip-emails');
+
     }
 
     /** heartbeat ping + CSRF mismatch digest (+ cabinet:probe note). */

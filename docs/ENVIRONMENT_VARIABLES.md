@@ -39,10 +39,10 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `AWS_URL` | required | `—` | config/filesystems.php:69 |
 | `AWS_USE_PATH_STYLE_ENDPOINT` | optional | `false` | config/filesystems.php:71 |
 | `BACKUP_ARCHIVE_PASSWORD` | secret | `—` | config/backup.php:125 |
-| `BACKUP_CLEANUP_MB` | optional | `1000` | config/backup.php:202 |
+| `BACKUP_CLEANUP_MB` | optional | `1000` | config/backup.php:207 |
 | `BACKUP_KEEP_PARTS_DAYS` | optional | `16` | config/backup.php:105 |
-| `BACKUP_MAX_AGE_DAYS` | optional | `8` | config/backup.php:184 |
-| `BACKUP_MAX_STORAGE_MB` | optional | `1200` | config/backup.php:185 |
+| `BACKUP_MAX_AGE_DAYS` | optional | `8` | config/backup.php:189 |
+| `BACKUP_MAX_STORAGE_MB` | optional | `15000` | config/backup.php:190 |
 | `BACKUP_RESUME_BUDGET_SECONDS` | optional | `900` | config/backup.php:121 |
 | `BACKUP_SPLIT_PART_MB` | optional | `20` | config/backup.php:103 |
 | `BACKUP_VERIFY_PARTS` | optional | `true` | config/backup.php:109 |
@@ -495,9 +495,10 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MG_DECIDE_POLL_RETRY_SECONDS` | optional | `10` | config/mg_decide.php:30 |
 | `MG_DECIDE_POLL_TIMEOUT_SECONDS` | optional | `50` | config/mg_decide.php:29 |
 | `MIC_SHADOW_CLASSIFY` | optional | `false` | config/features.php:1772 |
-| `MINI_COURSE_GRAMMAR_COURSE_ID` | optional | `450` | config/mini_courses.php:14 |
-| `MINI_COURSE_SLUG` | optional | `'podgotovitelnaya-gruppa-sanskrita'` | config/mini_courses.php:11 |
-| `MINI_COURSE_TRIAL_COURSE_ID` | optional | `451` | config/mini_courses.php:17 |
+| `MINI_COURSE_DRIP_DAYS` | optional | `3` | config/mini_courses.php:11 |
+| `MINI_COURSE_GRAMMAR_COURSE_ID` | optional | `450` | config/mini_courses.php:17 |
+| `MINI_COURSE_SLUG` | optional | `'podgotovitelnaya-gruppa-sanskrita'` | config/mini_courses.php:14 |
+| `MINI_COURSE_TRIAL_COURSE_ID` | optional | `451` | config/mini_courses.php:20 |
 | `MONEY_BANK_STATEMENT_CREDITS` | optional | `false` | config/features.php:1887 |
 | `MONEY_DAILY_RECONCILIATION` | optional | `false` | config/features.php:1860 |
 | `MONEY_LEDGER_CORE` | optional | `false` | config/features.php:1838 |
@@ -1010,6 +1011,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TRUST_GRADUATES_COUNT` | required | `—` | config/trust.php:19<br>config/trust.php:20 |
 | `TRUST_SINCE_YEAR` | optional | `2005` | config/trust.php:14 |
 | `UPGRADE_CREDIT_REFUND_LINK` | optional | `false` | config/features.php:1164 |
+| `VIDEO_ANONS_COPIES_ENABLED` | feature-flag | `false` | config/video-anons.php:23 |
+| `VIDEO_ANONS_ENABLED` | feature-flag | `true` | config/video-anons.php:18 |
+| `VIDEO_ANONS_STORIES_ENABLED` | feature-flag | `true` | config/video-anons.php:28 |
 | `VIDEO_RESUME` | optional | `false` | config/features.php:959 |
 | `VIEW_COMPILED_PATH` | optional | `realpath(storage_path('framework/views'))` | config/view.php:31 |
 | `VISUALDCS_COURSE_SLUGS` | optional | `''` | config/visualdcs.php:30 |
