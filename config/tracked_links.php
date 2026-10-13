@@ -215,6 +215,24 @@ $links['volunteer'] = [
     ],
 ];
 
+/*
+ * vol — набор научных добровольцев (H6567, MG 13-10-2026): анонс в
+ * «Оповещениях санскритян» ведёт в закрытую TG-группу «Корпус: подготовка
+ * текстов» через пер-площадочный ключ — канон атрибуции anons, каждая
+ * площадка свой источник (standing volunteer выше остаётся за ждун-ботом).
+ * -a = креатив-пост T1-стиля (обновка 👻-поста 367 от 29-01-2025).
+ */
+$links['vol-ors-a'] = [
+    'destination' => 'https://t.me/+zl3hUJ632t03OGY6',
+    'utm' => [
+        'utm_source' => 'telegram_samskrte',
+        'utm_medium' => 'owned_channel',
+        'utm_campaign' => 'sanskrit_volunteer_evergreen',
+        'utm_content' => 'volunteers_t1',
+        'utm_term' => 'volunteer',
+    ],
+];
+
 return [
     'session_key' => 'tracked_link_attribution',
     'links' => $links,
