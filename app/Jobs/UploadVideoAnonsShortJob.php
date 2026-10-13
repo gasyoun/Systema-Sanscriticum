@@ -91,6 +91,14 @@ class UploadVideoAnonsShortJob implements ShouldQueue
             return;
         }
 
+        if ((string) config('video-anons.yt.client_id') === ''
+            || (string) config('video-anons.yt.client_secret') === ''
+            || (string) config('video-anons.yt.refresh_token') === '') {
+            $this->refusePermanently($claimKey, 'креды YouTube не настроены (GOOGLE_YT_CLIENT_ID / _CLIENT_SECRET / _REFRESH_TOKEN пусты)');
+
+            return;
+        }
+
         $localPath = (string) $this->mediaPath;
         if ($localPath === '' || ! is_file($localPath) || ! is_readable($localPath)) {
             $this->refusePermanently($claimKey, "медиа-файл не найден в харвест-сторе ({$localPath})");

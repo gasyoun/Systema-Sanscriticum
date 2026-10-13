@@ -13,7 +13,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use RuntimeException;
 use Throwable;
 
 /**
@@ -221,7 +220,7 @@ class PublishVideoAnonsVkWallJob implements ShouldQueue
         }
 
         try {
-            $response = Http::connectTimeout(5)->timeout(30)
+            $response = Http::asForm()->connectTimeout(5)->timeout(30)
                 ->post(self::VK_API.'/wall.post', $params);
         } catch (Throwable $exception) {
             Log::warning('VideoAnons vk: transport failure, retry suppressed to avoid duplicate', [
