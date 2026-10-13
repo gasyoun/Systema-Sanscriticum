@@ -843,6 +843,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_PRESENCE_BEACON_SECONDS` | optional | `20` | config/support_presence.php:25 |
 | `SUPPORT_PRESENCE_ONLINE_SECONDS` | optional | `75` | config/support_presence.php:33 |
 | `SUPPORT_PRESENCE_PRUNE_MINUTES` | optional | `15` | config/support_presence.php:41 |
+| `SUPPORT_PROACTIVE_HOT_PATHS` | optional | `'/k/podgotovitelnaya-gruppa-sanskrita,/online,/shop,/checkout'` | config/support_presence.php:54 |
 | `SUPPORT_QUESTIONS_WEEKLY` | optional | `false` | config/features.php:464 |
 | `SUPPORT_REQUIRED_CLOSE_TOPIC` | optional | `false` | config/features.php:665 |
 | `SUPPORT_ROLLUP_UNRESOLVED_AFTER_HOURS` | optional | `24` | config/support.php:35 |
