@@ -68,14 +68,14 @@ class VideoAnonsStoriesTest extends TestCase
         ];
     }
 
-    private function pendingContext(?string $mediaPath = null): string
+    private function pendingContext(?string $mediaPath = null, array $extra = []): string
     {
-        return (string) json_encode([
+        return (string) json_encode(array_merge([
             'source_chat_id' => -100111,
             'source_message_id' => 1067,
             'course' => 'leitana',
             'media_path' => $mediaPath ?? $this->mediaPath,
-        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        ], $extra), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 
     public function test_admin_reply_with_headline_creates_approved_persona_story_post(): void
@@ -166,6 +166,49 @@ class VideoAnonsStoriesTest extends TestCase
         $this->assertTrue($consumed);
         $this->assertSame(0, StoryPost::query()->count());
         Http::assertSent(fn (Request $request): bool => str_contains((string) $request['text'], 'Пришлите заголовок'));
+    }
+
+    public function test_bare_headline_without_reply_resolves_pending_by_author(): void
+    {
+        // Живой случай 13-10: MG прислал заголовок обычным сообщением, без
+        // reply на черновик — pending резолвится сканом по автору.
+        Redis::shouldReceive('keys')->once()
+            ->with('video-anons:pending:'.self::MG_CHAT.':*')
+            ->andReturn(['laravel_database_video-anons:pending:'.self::MG_CHAT.':'.self::DRAFT_MSG]);
+        Redis::shouldReceive('get')->once()->andReturn($this->pendingContext(extra: [
+            'created_at' => now()->toIso8601String(),
+        ]));
+        Redis::shouldReceive('del')->once();
+
+        $message = $this->replyMessage();
+        unset($message['reply_to_message']);
+
+        $consumed = (new VideoAnonsStoriesService)->handleAdminReply($message);
+
+        $this->assertTrue($consumed);
+        $post = StoryPost::query()->sole();
+        $this->assertSame(StoryPost::STATUS_APPROVED, $post->status);
+        Http::assertSent(fn (Request $request): bool => str_contains((string) $request['text'], 'Сторис поставлена в очередь'));
+    }
+
+    public function test_stale_bare_pending_is_not_auto_claimed(): void
+    {
+        // Pending старше 2 ч: авто-съедание чужого текста админа опаснее
+        // удобства — заголовок без reply не принимается.
+        Redis::shouldReceive('keys')->once()->andReturn([
+            'laravel_database_video-anons:pending:'.self::MG_CHAT.':'.self::DRAFT_MSG,
+        ]);
+        Redis::shouldReceive('get')->once()->andReturn($this->pendingContext(extra: [
+            'created_at' => now()->subHours(3)->toIso8601String(),
+        ]));
+
+        $message = $this->replyMessage();
+        unset($message['reply_to_message']);
+
+        $consumed = (new VideoAnonsStoriesService)->handleAdminReply($message);
+
+        $this->assertFalse($consumed);
+        $this->assertSame(0, StoryPost::query()->count());
     }
 
     public function test_too_long_headline_gets_hint_without_story_post(): void
