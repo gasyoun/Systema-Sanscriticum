@@ -12,6 +12,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 
 /**
  * Вехи выдачи сертификатов/справок курса. Пять типов триггера (см.
@@ -52,6 +53,7 @@ class CertificateMilestonesRelationManager extends RelationManager
                 Forms\Components\TextInput::make('certificate_title')
                     ->label('Название в документе')
                     ->helperText('Символ | — перенос строки. Пусто — берётся название курса. У повторяющихся вех окно занятий допишется автоматически.')
+                    ->live()
                     ->columnSpanFull(),
 
                 Forms\Components\Select::make('trigger_type')
@@ -65,7 +67,8 @@ class CertificateMilestonesRelationManager extends RelationManager
                     ->label('Тип документа')
                     ->options(CertificateMilestone::DOCUMENT_TYPES)
                     ->default(CertificateMilestone::DOC_CERTIFICATE)
-                    ->required(),
+                    ->required()
+                    ->live(),
 
                 // --- block ---
                 Forms\Components\Select::make('start_block')
@@ -154,6 +157,24 @@ class CertificateMilestonesRelationManager extends RelationManager
                 Forms\Components\Toggle::make('is_active')
                     ->label('Веха активна')
                     ->default(true),
+
+                // Живой предпросмотр документа: фон шаблона, название с переносами
+                // |, подпись/часы/блок баллов. Перерисовывается по live-полям
+                // выше (certificate_title, document_type, template). Точную
+                // вёрстку всё равно печатает dompdf при выдаче.
+                Forms\Components\Placeholder::make('document_preview')
+                    ->label('Как будет выглядеть документ')
+                    ->columnSpanFull()
+                    ->content(function (Forms\Get $get) {
+                        return new HtmlString(
+                            view('filament.certificates.milestone-preview', [
+                                'templateKey' => $get('template'),
+                                'documentType' => $get('document_type'),
+                                'certificateTitle' => $get('certificate_title'),
+                                'course' => $this->getOwnerRecord(),
+                            ])->render()
+                        );
+                    }),
             ]);
     }
 
