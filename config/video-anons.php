@@ -28,6 +28,42 @@ return [
     'stories_enabled' => (bool) env('VIDEO_ANONS_STORIES_ENABLED', true),
 
     /*
+     * H6574: публичные поверхности поверх той же визы MG (заголовок-ответ).
+     * Каждый сёрфейс — свой флаг; без визы MG не уходит ничего, VK — вдобавок
+     * за механическим гейтом авторизованных групп (fail-closed, см. vk ниже).
+     */
+    // YouTube Shorts: видео из харвест-стора уходит в канал записей через
+    // YouTube Data API (resumable upload). Дефолт off: включается только
+    // после того, как в env появятся GOOGLE_YT_* креды.
+    'yt_shorts_enabled' => (bool) env('VIDEO_ANONS_YT_SHORTS_ENABLED', false),
+
+    // OAuth-креды канала записей (refresh token со scope youtube.upload).
+    // Пусто = джоб отказывает явно (лог + уведомление админам), ничего не постит.
+    'yt' => [
+        'client_id' => env('GOOGLE_YT_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_YT_CLIENT_SECRET'),
+        'refresh_token' => env('GOOGLE_YT_REFRESH_TOKEN'),
+        'privacy_status' => env('VIDEO_ANONS_YT_PRIVACY_STATUS', 'public'),
+        'category_id' => env('VIDEO_ANONS_YT_CATEGORY_ID', '27'), // Education
+    ],
+
+    // VK-стена: пост уходит ТОЛЬКО в группу из авторизованного списка
+    // (конвенция гейта VK_PUBLISH_AUTHORIZED эстейта: пустой список = публикация
+    // отказывается; dry/тестовые пробы — на отдельную тестовую группу).
+    'vk_wall_enabled' => (bool) env('VIDEO_ANONS_VK_WALL_ENABLED', false),
+
+    'vk' => [
+        // Токен сообщества с правом wall (не VK_BOT_TOKEN callback-бота!).
+        'access_token' => env('VK_WALL_ACCESS_TOKEN'),
+        'api_version' => '5.199',
+        // Авторизованные группы: comma-separated id БЕЗ минуса
+        // (88831040 = vk.com/samskrtamru). Пусто = пост запрещён.
+        'authorized_group_ids' => array_values(array_filter(array_map('intval', explode(',', (string) env('VK_PUBLISH_AUTHORIZED_GROUPS', ''))))),
+        // Куда постить видео-анонс. Должен быть в authorized_group_ids.
+        'target_group_id' => (int) env('VK_WALL_TARGET_GROUP_ID', 0),
+    ],
+
+    /*
      * Авторы, чьё видео триггерит рассылку (решение 3: MG, Иван, преподаватель
      * курса). ids каноничны, username — fallback (менять изредка можно).
      * 427307131 — MG (super_admin, gasyoun@ya.ru, = первый из ADMIN_TELEGRAM_ID);
