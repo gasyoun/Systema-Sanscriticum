@@ -199,6 +199,35 @@ $links['vanons-tg-v1'] = [
 ];
 
 /*
+ * H6574: видео-анонс на YouTube Shorts (канал записей) — раздельная
+ * атрибуция сёрфейса, тот же вечнозелёный паттерн, что vanons-tg-v1.
+ */
+$links['vanons-yt-v1'] = [
+    'destination' => '/online',
+    'utm' => [
+        'utm_source' => 'youtube_shorts',
+        'utm_medium' => 'shorts_description',
+        'utm_campaign' => 'video_anons_evergreen',
+        'utm_content' => 'vanons_yt_v1',
+        'utm_term' => 'video',
+    ],
+];
+
+/*
+ * H6574: видео-анонс на VK-стене — раздельная атрибуция сёрфейса.
+ */
+$links['vanons-vk-v1'] = [
+    'destination' => '/online',
+    'utm' => [
+        'utm_source' => 'vk_wall',
+        'utm_medium' => 'wall_post',
+        'utm_campaign' => 'video_anons_evergreen',
+        'utm_content' => 'vanons_vk_v1',
+        'utm_term' => 'video',
+    ],
+];
+
+/*
  * H6566 (MG 12-10-2026): «Стать добровольцем» — разметка санскритских
  * словарей Кёльна, вход через закрытую TG-группу. Кнопка ждун-бота ведёт
  * на прослойку /ga/volunteer, чтобы клик считался даже без входа в группу
