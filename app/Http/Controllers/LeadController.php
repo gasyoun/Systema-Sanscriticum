@@ -45,6 +45,11 @@ class LeadController extends Controller
             'utm_term' => 'nullable|string',
             'click_id' => 'nullable|string',
             'referrer' => 'nullable|string',
+            // H6531 HDYHAU: необязательный самоотчёт «откуда узнали» — только
+            // канонические ключи; свободный текст едёт отдельным полем ветки
+            // «Другое». Отсутствие поля валидно (старые формы его не шлют).
+            'reported_source' => 'nullable|string|in:'.implode(',', array_keys(Lead::hdyhauOptions())),
+            'reported_source_other' => 'nullable|string|max:255',
             'is_promo_agreed' => 'nullable',
             'pd_consent' => ConsentRules::pd(),
             'source_article_id' => 'nullable|integer',
@@ -57,6 +62,18 @@ class LeadController extends Controller
         $data['is_promo_agreed'] = $request->has('is_promo_agreed');
         $data['ip_address'] = $request->ip();
         $data['user_agent'] = $request->userAgent();
+
+        // H6531 HDYHAU: ключ канонического варианта остаётся как есть (стабилен
+        // для агрегатов); ветка «Другое» сохраняет слова заявителя дословно —
+        // зеркало reported_source журнала лида, UTM не выдумываем. Пустой выбор
+        // => null: заявка без ответа валидна.
+        $reportedSource = trim((string) ($validated['reported_source'] ?? ''));
+        if ($reportedSource === 'other') {
+            $other = trim((string) ($validated['reported_source_other'] ?? ''));
+            $reportedSource = $other !== '' ? mb_substr($other, 0, 255) : '';
+        }
+        $data['reported_source'] = $reportedSource !== '' ? $reportedSource : null;
+        unset($data['reported_source_other']);
 
         // Упрощённая форма шлёт один контакт. Если введён email — дублируем его в
         // поле email (для дедупа и писем); телефон/ник остаётся только в contact.
