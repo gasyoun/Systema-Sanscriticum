@@ -11,6 +11,7 @@ use App\Models\Group;
 use App\Services\CertificateIssuedNotifier;
 use App\Services\MilestoneCertificateIssuer;
 use App\Services\MilestoneIssueTarget;
+use App\Support\GreetingName;
 use Filament\Actions;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -115,14 +116,15 @@ class ListCertificates extends ListRecords
                     $count = 0;
                     foreach ($group->users as $user) {
                         // Снимок ФИО/названия/шаблона проставляется только при создании
-                        // нового сертификата; существующие не трогаем.
+                        // нового сертификата; существующие не трогаем. ФИО — «Фамилия
+                        // Имя» без отчества/города, как и в автовыдаче по вехам.
                         $cert = Certificate::firstOrCreate(
                             [
                                 'user_id' => $user->id,
                                 'course_id' => $courseId,
                             ],
                             [
-                                'student_name' => $user->name,
+                                'student_name' => GreetingName::shortOf($user->name),
                                 'course_title' => $courseTitle,
                                 'template' => $template,
                             ]
