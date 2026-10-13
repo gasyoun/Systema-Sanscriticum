@@ -255,10 +255,10 @@ class TrackedLinkTest extends TestCase
     /** @test */
     public function volunteer_anons_overlay_keeps_ors_attribution_separate(): void
     {
-        $this->get('/ga/vol-ors-a')
+        $this->get('/ga/dobrovolec')
             ->assertRedirect('https://t.me/+zl3hUJ632t03OGY6');
 
-        $click = AnonsLinkClick::query()->where('link', 'vol-ors-a')->first();
+        $click = AnonsLinkClick::query()->where('link', 'dobrovolec')->first();
         $this->assertNotNull($click, 'клик анонсной прослойки должен логироваться до перехода в группу');
         $this->assertSame('telegram_samskrte', $click->utm['utm_source'], 'площадка «Оповещений» несёт свой источник, не zhdun_share');
         $this->assertSame('sanskrit_volunteer_evergreen', $click->utm['utm_campaign']);
