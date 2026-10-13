@@ -36,10 +36,11 @@ trait SchedulesOvernightAndCrm
             ->onOneServer()
             ->name('sanctum-token-prune');
 
-        // H3445: еженедельное обновление GeoLite2-City для SUPPORT_GEO_DRIVER=maxmind.
-        // Команда сама выходит, если учётные данные MaxMind не заданы.
+        // H3445/H6602: ежемесячное обновление DB-IP City Lite (формат MaxMind DB)
+        // для SUPPORT_GEO_DRIVER=maxmind. Файл выходит ~1-го числа; в первые дни
+        // месяца команда сама откатывается на предыдущий месяц.
         $schedule->command('support:geo-update-maxmind')
-            ->weeklyOn(0, '4:40')
+            ->monthlyOn(2, '4:40')
             ->withoutOverlapping(30)
             ->onOneServer()
             ->name('support-geo-maxmind-update');

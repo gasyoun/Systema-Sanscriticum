@@ -452,8 +452,6 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MARATHON_WARM_TAIL_DAYS` | optional | `13` | config/marathon.php:58 |
 | `MARATHON_WARM_TAIL_WAVE2_FROM` | required | `—` | config/marathon.php:224 |
 | `MARKETING_SEGMENTS` | optional | `false` | config/features.php:1084 |
-| `MAXMIND_ACCOUNT_ID` | optional | `''` | config/support_geo.php:45 |
-| `MAXMIND_LICENSE_KEY` | optional | `''` | config/support_geo.php:46 |
 | `MEDIA_WEBP_DELETE_ORIGINAL` | optional | `true` | config/media.php:37 |
 | `MEDIA_WEBP_DISK` | optional | `'public'` | config/media.php:26 |
 | `MEDIA_WEBP_ENABLED` | feature-flag | `true` | config/media.php:24 |
