@@ -165,11 +165,15 @@ final class SupportHintSendButton
         }
 
         // Отвечаем через аккаунт, куда пришёл вопрос (см. queueAiReply).
+        // H6644: обход дневного гейта согласий — кнопку «Отправить» нажал
+        // человек; его явное решение молча гасить нельзя. TelegramSendGuard
+        // выше всё равно держит свой клейм по (чат, текст).
         $outgoing = $this->replies->queueAiReply(
             $student,
             $draft,
             (int) $incoming->telegram_message_id,
             (int) $incoming->telegram_support_account_id ?: null,
+            true,
         );
 
         if ($outgoing === null) {
