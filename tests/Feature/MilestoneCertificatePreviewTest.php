@@ -15,11 +15,19 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
 
+/**
+ * Живой предпросмотр документа вехи: отдельный роут рендерит настоящий
+ * certificates.default (тот же блейд, что dompdf), форма вехи показывает его
+ * в iframe. Изоляция iframe — защита от CSS админки, поэтому превью и PDF
+ * совпадают по вёрстке.
+ */
 class MilestoneCertificatePreviewTest extends TestCase
 {
     use RefreshDatabase;
 
     private Course $course;
+
+    private User $admin;
 
     protected function setUp(): void
     {
@@ -30,69 +38,80 @@ class MilestoneCertificatePreviewTest extends TestCase
             'lessons_count' => 16,
             'hours_count' => 32,
         ]);
+        $this->admin = User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]);
     }
 
-    private function render(?string $title, string $template = 'gasuns', string $documentType = 'certificate'): string
+    private function preview(array $params = [])
     {
-        return view('filament.certificates.milestone-preview', [
-            'templateKey' => $template,
-            'documentType' => $documentType,
-            'certificateTitle' => $title,
-            'course' => $this->course,
-        ])->render();
+        return $this->actingAs($this->admin)->get(route('certificates.milestone-preview', $params));
     }
 
     /** @test */
-    public function shows_manual_title_with_line_breaks_and_course_volume(): void
+    public function guests_are_sent_to_login(): void
     {
-        $html = $this->render('Летний интенсив|"Продленка санскрита"');
-
-        $this->assertStringContainsString('Летний интенсив<br>', $html);
-        $this->assertStringContainsString('&quot;Продленка санскрита&quot;', $html);
-        $this->assertStringContainsString('успешно освоил(а) онлайн-курс', $html);
-        $this->assertStringContainsString('в объеме 16 уроков (32 академических часов)', $html);
-        $this->assertStringContainsString('ganesha_gasuns.jpg', $html);
+        $this->get(route('certificates.milestone-preview', ['course_id' => $this->course->id]))
+            ->assertRedirect();
     }
 
     /** @test */
-    public function falls_back_to_course_title_when_manual_title_is_empty(): void
+    public function users_without_admin_or_teacher_role_are_forbidden(): void
     {
-        $this->assertStringContainsString('Летний интенсив', $this->render(null));
-        $this->assertStringContainsString('Летний интенсив', $this->render('   '));
+        $student = User::factory()->create();
+
+        $this->actingAs($student)
+            ->get(route('certificates.milestone-preview', ['course_id' => $this->course->id]))
+            ->assertForbidden();
+    }
+
+    /** @test */
+    public function renders_real_template_with_manual_title_and_course_volume(): void
+    {
+        $this->preview([
+            'course_id' => $this->course->id,
+            'title' => 'Летний интенсив|"Продленка санскрита"',
+        ])
+            ->assertOk()
+            ->assertSee('Фамилия Имя')
+            ->assertSee('Летний интенсив<br>', false)
+            ->assertSee('&quot;Продленка санскрита&quot;', false)
+            ->assertSee('успешно освоил(а) онлайн-курс', false)
+            ->assertSee('в объеме 16 уроков (32 академических часов)', false)
+            ->assertSee('ganesha_gasuns.jpg', false)
+            ->assertSee('ГГГГ-XXXXX', false);
+    }
+
+    /** @test */
+    public function falls_back_to_course_title_when_title_is_empty(): void
+    {
+        $this->preview(['course_id' => $this->course->id])
+            ->assertOk()
+            ->assertSee('Летний интенсив');
     }
 
     /** @test */
     public function spravka_switches_action_text_and_hides_course_volume(): void
     {
-        $html = $this->render(null, documentType: 'spravka');
-
-        $this->assertStringContainsString('проходит обучение и освоил(а) часть онлайн-курса', $html);
-        $this->assertStringNotContainsString('в объеме 16 уроков', $html);
+        $this->preview(['course_id' => $this->course->id, 'document_type' => 'spravka'])
+            ->assertOk()
+            ->assertSee('проходит обучение и освоил(а) часть онлайн-курса', false)
+            ->assertDontSee('в объеме 16 уроков', false);
     }
 
     /** @test */
-    public function sanka_template_shows_exam_block_with_pending_scores(): void
+    public function sanka_template_without_scores_hides_exam_block(): void
     {
-        $html = $this->render(null, template: 'sanka');
-
-        $this->assertStringContainsString('Выразительность', $html);
-        $this->assertStringContainsString('Итого: <b>— / 30</b>', $html);
-        $this->assertStringContainsString('exam_scores', $html);
+        $this->preview(['course_id' => $this->course->id, 'template' => 'sanka'])
+            ->assertOk()
+            ->assertSee('ganesha_sanka.jpg', false)
+            ->assertDontSee('Итого:', false);
     }
 
     /** @test */
-    public function certificate_document_hides_exam_block_for_non_sanka_templates(): void
-    {
-        $this->assertStringNotContainsString('Итого', $this->render(null, template: 'gasuns'));
-    }
-
-    /** @test */
-    public function milestone_create_modal_renders_preview(): void
+    public function milestone_create_modal_renders_preview_iframe(): void
     {
         Filament::setCurrentPanel(Filament::getPanel('admin'));
-        $admin = User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]);
 
-        Livewire::actingAs($admin)
+        Livewire::actingAs($this->admin)
             ->test(CertificateMilestonesRelationManager::class, [
                 'ownerRecord' => $this->course,
                 'pageClass' => EditCourse::class,
@@ -100,16 +119,15 @@ class MilestoneCertificatePreviewTest extends TestCase
             ->assertOk()
             ->mountTableAction('create')
             ->assertSee('Как будет выглядеть документ')
-            ->assertSeeHtml('ganesha_gasuns.jpg');
+            ->assertSee('certificates/milestone-preview', false);
     }
 
     /** @test */
     public function creating_milestone_through_action_still_saves(): void
     {
         Filament::setCurrentPanel(Filament::getPanel('admin'));
-        $admin = User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]);
 
-        Livewire::actingAs($admin)
+        Livewire::actingAs($this->admin)
             ->test(CertificateMilestonesRelationManager::class, [
                 'ownerRecord' => $this->course,
                 'pageClass' => EditCourse::class,

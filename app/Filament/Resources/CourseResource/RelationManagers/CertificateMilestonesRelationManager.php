@@ -53,7 +53,8 @@ class CertificateMilestonesRelationManager extends RelationManager
                 Forms\Components\TextInput::make('certificate_title')
                     ->label('Название в документе')
                     ->helperText('Символ | — перенос строки. Пусто — берётся название курса. У повторяющихся вех окно занятий допишется автоматически.')
-                    ->live()
+                    // lazy: превью обновится по уходу из поля, а не на каждую букву.
+                    ->lazy()
                     ->columnSpanFull(),
 
                 Forms\Components\Select::make('trigger_type')
@@ -158,21 +159,35 @@ class CertificateMilestonesRelationManager extends RelationManager
                     ->label('Веха активна')
                     ->default(true),
 
-                // Живой предпросмотр документа: фон шаблона, название с переносами
-                // |, подпись/часы/блок баллов. Перерисовывается по live-полям
-                // выше (certificate_title, document_type, template). Точную
-                // вёрстку всё равно печатает dompdf при выдаче.
+                // Живой предпросмотр документа: отдельный роут рендерит ТЕТ САМ
+                // certificates.default, которым dompdf печатает PDF, а iframe
+                // изолирует его от CSS админки. Перерисовывается по live-полям
+                // (template, document_type) и lazy-полю названия.
                 Forms\Components\Placeholder::make('document_preview')
                     ->label('Как будет выглядеть документ')
                     ->columnSpanFull()
                     ->content(function (Forms\Get $get) {
+                        $template = $get('template') ?: 'gasuns';
+
+                        $src = route('certificates.milestone-preview', [
+                            'course_id' => $this->getOwnerRecord()->getKey(),
+                            'template' => $template,
+                            'document_type' => $get('document_type') ?: CertificateMilestone::DOC_CERTIFICATE,
+                            'title' => $get('certificate_title'),
+                        ]);
+
+                        $caption = 'Предпросмотр тем же шаблоном, которым печатается PDF. При выдаче добавятся ФИО студента («Фамилия Имя»), реальный номер, дата и QR-код на страницу проверки.'
+                            .($template === 'sanka'
+                                ? ' Блок баллов печатается только тем, у кого они есть в exam_scores.'
+                                : '');
+
                         return new HtmlString(
-                            view('filament.certificates.milestone-preview', [
-                                'templateKey' => $get('template'),
-                                'documentType' => $get('document_type'),
-                                'certificateTitle' => $get('certificate_title'),
-                                'course' => $this->getOwnerRecord(),
-                            ])->render()
+                            // Холст PDF — A4 landscape @96dpi (1122×793), масштаб 0.5.
+                            // max-width:none — чтобы preflight админки не сжал iframe.
+                            '<div style="width:562px;max-width:100%;height:397px;overflow:hidden;border:1px solid #d8cfc0;border-radius:6px;background:#fff">'
+                            .'<iframe src="'.e($src).'" title="Предпросмотр документа" loading="lazy" width="1122" height="793" style="border:0;width:1122px;height:793px;max-width:none;transform:scale(0.5);transform-origin:top left"></iframe>'
+                            .'</div>'
+                            .'<p style="margin:6px 0 0;font-size:12px;line-height:1.5;color:#6b7280;max-width:560px">'.e($caption).'</p>'
                         );
                     }),
             ]);
