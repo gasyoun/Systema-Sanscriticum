@@ -6,6 +6,10 @@ namespace Tests\Feature;
 
 use App\Jobs\ProcessTelegramBusinessUpdate;
 use App\Models\StoryPost;
+use App\Services\TelegramBusiness\BusinessSupportReplyDrainer;
+use App\Services\TelegramBusiness\TelegramBusinessNormalizer;
+use App\Services\TelegramBusiness\TelegramBusinessStoryPublisher;
+use App\Services\TelegramSupport\TelegramSupportSyncService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
@@ -74,10 +78,10 @@ class ProcessTelegramBusinessUpdateVideoAnonsTest extends TestCase
                 'text' => 'Как звучит санскритская азбука',
             ],
         ]))->handle(
-            app(App\Services\TelegramBusiness\TelegramBusinessNormalizer::class),
-            app(App\Services\TelegramSupport\TelegramSupportSyncService::class),
-            app(App\Services\TelegramBusiness\BusinessSupportReplyDrainer::class),
-            app(App\Services\TelegramBusiness\TelegramBusinessStoryPublisher::class),
+            app(TelegramBusinessNormalizer::class),
+            app(TelegramSupportSyncService::class),
+            app(BusinessSupportReplyDrainer::class),
+            app(TelegramBusinessStoryPublisher::class),
         );
 
         $post = StoryPost::query()->sole();
@@ -100,10 +104,10 @@ class ProcessTelegramBusinessUpdateVideoAnonsTest extends TestCase
                 'text' => 'привет',
             ],
         ]))->handle(
-            app(App\Services\TelegramBusiness\TelegramBusinessNormalizer::class),
-            app(App\Services\TelegramSupport\TelegramSupportSyncService::class),
-            app(App\Services\TelegramBusiness\BusinessSupportReplyDrainer::class),
-            app(App\Services\TelegramBusiness\TelegramBusinessStoryPublisher::class),
+            app(TelegramBusinessNormalizer::class),
+            app(TelegramSupportSyncService::class),
+            app(BusinessSupportReplyDrainer::class),
+            app(TelegramBusinessStoryPublisher::class),
         );
 
         $this->assertSame(0, StoryPost::query()->count());
