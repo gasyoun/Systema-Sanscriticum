@@ -25,22 +25,30 @@ class OpenLessonBotService
         private readonly OpenLessonFunnel $funnel,
     ) {}
 
-    public function enabled(): bool
+    /**
+     * Флаг ON и чат допущен. Пока OPEN_LESSON_CARDS_TEST_CHAT_IDS не пуст,
+     * новый бот (приветствие, меню, «Участвовать», кнопки карточек) отвечает
+     * только этим чатам — остальные видят прежнее поведение (ждун).
+     */
+    public function enabledFor(string $chatId): bool
     {
-        return (bool) config('features.open_lesson_cards', false);
+        if (! config('features.open_lesson_cards', false)) {
+            return false;
+        }
+
+        $testChats = array_map('strval', (array) config('open_lesson_cards.test_chat_ids', []));
+
+        return $testChats === [] || in_array($chatId, $testChats, true);
     }
 
     /** true — апдейт наш и обработан. */
     public function handleUpdate(array $update): bool
     {
-        if (! $this->enabled()) {
-            return false;
-        }
-
         $callback = $update['callback_query'] ?? null;
         if (is_array($callback)) {
             $data = (string) ($callback['data'] ?? '');
-            if (! str_starts_with($data, 'ol:')) {
+            $callbackChat = (string) ($callback['message']['chat']['id'] ?? $callback['from']['id'] ?? '');
+            if (! str_starts_with($data, 'ol:') || ! $this->enabledFor($callbackChat)) {
                 return false;
             }
             $this->handleCallback($callback, $data);
@@ -54,6 +62,9 @@ class OpenLessonBotService
             return false;
         }
         $chatId = (string) $chatId;
+        if (! $this->enabledFor($chatId)) {
+            return false;
+        }
         $text = trim((string) ($message['text'] ?? ''));
 
         if (preg_match('~^/start\s+ol_(\d+)$~', $text, $m) === 1) {
@@ -107,7 +118,7 @@ class OpenLessonBotService
      */
     public function welcome(string $chatId): bool
     {
-        if (! $this->enabled()) {
+        if (! $this->enabledFor($chatId)) {
             return false;
         }
 
