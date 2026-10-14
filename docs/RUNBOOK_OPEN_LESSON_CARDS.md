@@ -85,6 +85,9 @@ _Created: 14-10-2026_
    `php artisan telegram:webhooks --set --only=magnet`.
 3. `.env`: `OPEN_LESSON_CARDS_ENABLED=true`,
    `OPEN_LESSON_CARDS_TEST_CHAT_IDS=<свой chat_id>` → `config:cache`.
+   **Тестовый режим:** пока список не пуст, новый бот целиком (приветствие,
+   меню, «Участвовать», кнопки, рассылки карточек) работает только для этих
+   чатов; остальные видят прежнее приветствие ждуна.
 4. Нажать `/start` в @samskrte_bot, поставить галочку на занятии, затем
    `php artisan open-lessons:cards --stage=announce --only-chat=<chat_id>`.
    Проверить фото, подпись, «✅ Я иду» (кнопка меняется на «✅ Вы записаны»),
