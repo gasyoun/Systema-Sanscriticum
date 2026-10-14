@@ -373,16 +373,19 @@ class FinanceCockpitReport
         $salary = app(TeacherSalaryService::class);
         $epoch = Carbon::parse('2000-01-01')->startOfDay();
 
-        // Авансы, выданные на дату: полный зачёт — по settled_at, частичный —
-        // по текущему settled_amount (датированного леджера зачётов нет).
+        // Авансы, выданные на дату: полный зачёт — по дате settled_at (она
+        // авторитетна: если зачёт завершится в будущем, на as-of до него
+        // зачтённого нет); без settled_at (зачёт всё ещё открыт) — по текущему
+        // прогрессу settled_amount, датированного леджера зачётов нет.
         $settledByTeacher = [];
         $advances = 0.0;
         foreach ($this->advancesIssuedThrough($asOf) as $advance) {
             $amount = (float) $advance->amount;
-            $fullySettled = $advance->settled_at !== null && $advance->settled_at->lte($asOf);
-            $settled = $fullySettled
-                ? $amount
-                : min((float) ($advance->settled_amount ?? 0), $amount);
+            $settled = match (true) {
+                $advance->settled_at !== null && $advance->settled_at->lte($asOf) => $amount,
+                $advance->settled_at !== null => 0.0,
+                default => min((float) ($advance->settled_amount ?? 0), $amount),
+            };
             $settledByTeacher[$advance->teacher_id] = ($settledByTeacher[$advance->teacher_id] ?? 0.0) + $settled;
             $advances += max(0.0, $amount - $settled);
         }
@@ -410,7 +413,7 @@ class FinanceCockpitReport
             'teacherPayable' => $teacherPayable,
             'advances' => $advances,
             'accrual_basis' => 'recognition months through the as-of month, cycle-end anchor',
-            'advance_settlement_basis' => 'settled_at when fully settled, current settled_amount progress otherwise',
+            'advance_settlement_basis' => 'settled_at date when present (a future date means nothing settled by then), current settled_amount progress while settlement is open',
         ];
     }
 
