@@ -161,7 +161,7 @@ final class PayrollObligationCalendarCommand extends Command
             ->unsettledAdvances()
             ->whereNotNull('paid_at')
             ->orderBy('paid_at')
-            ->get(['teacher_id', 'amount', 'settled_amount', 'paid_at']);
+            ->get(['id', 'teacher_id', 'amount', 'settled_amount', 'paid_at']);
         foreach ($advances as $advance) {
             $remaining = Money::round((float) $advance->amount - (float) ($advance->settled_amount ?? 0));
             if ($remaining <= 0) {
