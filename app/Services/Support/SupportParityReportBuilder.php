@@ -71,7 +71,7 @@ class SupportParityReportBuilder
 
         $flags = $this->flags();
         $channelMix = $this->channelMix($since);
-        $kpis = $this->kpis($since, $channelMix);
+        $kpis = $this->kpis($since, $channelMix, $until);
         $topics = $this->topics($since, $until);
         $outcomes = $this->outcomeSlices($since, $until, $topics);
         $infra = $this->infrastructure($since);
@@ -128,6 +128,7 @@ class SupportParityReportBuilder
             'support_answer_suggester' => 'SUPPORT_ANSWER_SUGGESTER=false and/or MarketingSetting.support_answer_suggester_enabled=false.',
             'support_visitor_geo' => 'SUPPORT_VISITOR_GEO=false (entry_url/referrer may still write; city resolve stops).',
             'support_visitor_presence' => 'SUPPORT_VISITOR_PRESENCE=false (beacon no-ops; VisitorsOnline hidden).',
+            'support_proactive_invites' => 'SUPPORT_PROACTIVE_HOT_PATHS= (empty → proactive button never active, H6601 gate fails closed).',
             'support_lead_capture' => 'SUPPORT_LEAD_CAPTURE=false (contact fields hidden).',
             'support_web_rollups' => 'SUPPORT_WEB_ROLLUPS=false (support:rollup-web becomes no-op; TG rollups continue).',
             'support_observability' => 'SUPPORT_OBSERVABILITY=false (dashboard hidden; metrics tables remain).',
@@ -215,7 +216,7 @@ class SupportParityReportBuilder
      * @param  array<string, array<string, int|float|null>>  $channelMix
      * @return array<string, int|float|null>
      */
-    private function kpis(CarbonImmutable $since, array $channelMix): array
+    private function kpis(CarbonImmutable $since, array $channelMix, CarbonImmutable $until): array
     {
         $totals = $this->emptyChannelRow();
         foreach ($channelMix as $row) {
@@ -252,6 +253,8 @@ class SupportParityReportBuilder
             ? SupportVisitorPresence::query()->count()
             : 0;
 
+        $proactive = $this->proactiveMetric($since, $until->endOfDay());
+
         return [
             'rollup_conversations' => $totals['conversations'],
             'rollup_incoming' => $totals['incoming'],
@@ -266,7 +269,51 @@ class SupportParityReportBuilder
             'threads_with_lead_capture' => $leads,
             'chat_messages_by_source' => $chatBySource,
             'visitor_presences_live' => $presences,
+            // H6601 — «проактив → входящее»: первые записи куратора с кнопки
+            // «Написать первым» за окно, треды, где посетитель ответил после
+            // первой проактивной записи, и их доля.
+            'proactive_first_writes' => $proactive['first_writes'],
+            'proactive_converted_threads' => $proactive['converted_threads'],
+            'proactive_conversion_rate' => $proactive['conversion_rate'],
             'open_follow_up_tasks_crm' => FollowUpTask::query()->open()->count(),
+        ];
+    }
+
+    /**
+     * H6601 — метрика «проактив → входящее сообщение» за окно.
+     *
+     * @return array{first_writes: int, converted_threads: int, conversion_rate: float|null}
+     */
+    private function proactiveMetric(CarbonImmutable $since, CarbonImmutable $until): array
+    {
+        // Production-safe: столбца может ещё не быть, если миграция H6601 не
+        // прогнана — тогда метрика честно нулевая, а не 500-я на отчёте.
+        if (! Schema::hasColumn('chat_messages', 'is_proactive')) {
+            return ['first_writes' => 0, 'converted_threads' => 0, 'conversion_rate' => null];
+        }
+
+        $proactiveThreads = ChatMessage::query()
+            ->where('is_proactive', true)
+            ->whereNotNull('support_conversation_id')
+            ->whereBetween('created_at', [$since, $until])
+            ->selectRaw('support_conversation_id, min(created_at) as first_proactive_at')
+            ->groupBy('support_conversation_id')
+            ->get();
+
+        $converted = $proactiveThreads
+            ->filter(fn ($t): bool => ChatMessage::query()
+                ->where('support_conversation_id', $t->support_conversation_id)
+                ->where('role', 'user')
+                ->where('created_at', '>', $t->first_proactive_at)
+                ->exists())
+            ->count();
+
+        $firstWrites = $proactiveThreads->count();
+
+        return [
+            'first_writes' => $firstWrites,
+            'converted_threads' => $converted,
+            'conversion_rate' => $firstWrites > 0 ? round($converted / $firstWrites, 3) : null,
         ];
     }
 

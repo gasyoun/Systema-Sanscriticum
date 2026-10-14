@@ -452,8 +452,6 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MARATHON_WARM_TAIL_DAYS` | optional | `13` | config/marathon.php:58 |
 | `MARATHON_WARM_TAIL_WAVE2_FROM` | required | `—` | config/marathon.php:224 |
 | `MARKETING_SEGMENTS` | optional | `false` | config/features.php:1084 |
-| `MAXMIND_ACCOUNT_ID` | optional | `''` | config/support_geo.php:45 |
-| `MAXMIND_LICENSE_KEY` | optional | `''` | config/support_geo.php:46 |
 | `MEDIA_WEBP_DELETE_ORIGINAL` | optional | `true` | config/media.php:37 |
 | `MEDIA_WEBP_DISK` | optional | `'public'` | config/media.php:26 |
 | `MEDIA_WEBP_ENABLED` | feature-flag | `true` | config/media.php:24 |
@@ -823,10 +821,10 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_FAQ_RAG_TOP_K` | optional | `3` | config/support.php:159 |
 | `SUPPORT_FINANCE_LEAD_USER_ID` | required | `—` | config/support.php:111 |
 | `SUPPORT_FOLLOW_UP_TASKS` | optional | `false` | config/features.php:673 |
-| `SUPPORT_GEO_DRIVER` | optional | `'null'` | config/support_geo.php:32 |
-| `SUPPORT_GEO_IPAPI_ENDPOINT` | optional | `'http://ip-api.com/json/'` | config/support_geo.php:38 |
-| `SUPPORT_GEO_MAXMIND_PATH` | optional | `storage_path('app/geo/GeoLite2-City.mmdb')` | config/support_geo.php:42 |
-| `SUPPORT_GEO_TIMEOUT` | optional | `3` | config/support_geo.php:35 |
+| `SUPPORT_GEO_DRIVER` | optional | `'null'` | config/support_geo.php:36 |
+| `SUPPORT_GEO_IPAPI_ENDPOINT` | optional | `'http://ip-api.com/json/'` | config/support_geo.php:42 |
+| `SUPPORT_GEO_MAXMIND_PATH` | optional | `storage_path('app/geo/GeoLite2-City.mmdb')` | config/support_geo.php:47 |
+| `SUPPORT_GEO_TIMEOUT` | optional | `3` | config/support_geo.php:39 |
 | `SUPPORT_HINT_DAILY_DIGEST` | optional | `false` | config/features.php:454 |
 | `SUPPORT_HINT_DEDUP_ENABLED` | feature-flag | `true` | config/support.php:309 |
 | `SUPPORT_HINT_SEND_BUTTON_MAX_AGE_DAYS` | optional | `7` | config/support.php:24 |
@@ -843,6 +841,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_PRESENCE_BEACON_SECONDS` | optional | `20` | config/support_presence.php:25 |
 | `SUPPORT_PRESENCE_ONLINE_SECONDS` | optional | `75` | config/support_presence.php:33 |
 | `SUPPORT_PRESENCE_PRUNE_MINUTES` | optional | `15` | config/support_presence.php:41 |
+| `SUPPORT_PROACTIVE_HOT_PATHS` | optional | `'/k/podgotovitelnaya-gruppa-sanskrita,/online,/shop,/checkout'` | config/support_presence.php:54 |
 | `SUPPORT_QUESTIONS_WEEKLY` | optional | `false` | config/features.php:464 |
 | `SUPPORT_REQUIRED_CLOSE_TOPIC` | optional | `false` | config/features.php:665 |
 | `SUPPORT_ROLLUP_UNRESOLVED_AFTER_HOURS` | optional | `24` | config/support.php:35 |

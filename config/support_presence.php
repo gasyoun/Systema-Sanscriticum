@@ -39,4 +39,19 @@ return [
      | персональные данные анонимного посетителя не залёживаются. Дефолт 15 мин.
      */
     'prune_after_minutes' => (int) env('SUPPORT_PRESENCE_PRUNE_MINUTES', 15),
+
+    /*
+     | Проактивные приглашения (H6601): кнопка «Написать первым» на странице
+     | «Посетители онлайн» активна ТОЛЬКО для посетителей горячих страниц и
+     | только в рабочие часы (config/support_hours.php + App\Support\
+     | SupportAvailability::isOnline()). Гейт — App\Support\SupportProactiveGate:
+     | пустой список путей означает «проактив выключен» (fail-closed). Пути
+     | сравниваются по префиксу пути URL без домена и query (см. гейт).
+     */
+    'proactive' => [
+        'hot_paths' => array_values(array_filter(array_map('trim', explode(
+            ',',
+            (string) env('SUPPORT_PROACTIVE_HOT_PATHS', '/k/podgotovitelnaya-gruppa-sanskrita,/online,/shop,/checkout'),
+        )))),
+    ],
 ];
