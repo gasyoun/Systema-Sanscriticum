@@ -293,6 +293,29 @@ class RepliesReviewCommandTest extends TestCase
         $this->assertStringContainsString('missing the verdict column', Artisan::output());
     }
 
+    public function test_marker_attribution_for_synced_human_replies(): void
+    {
+        // Живой профиль прода (14-10): человеческие исходящие синкаются как
+        // role=unknown/responder_type=unknown; персональный след — маркер.
+        $chat = $this->chat(41010);
+        $this->outgoing($chat, 'ответ Гаунса', 1001, '2026-10-07 12:00', '-', null, ['via' => null]);
+        TelegramSupportMessage::query()->where('telegram_message_id', 1001)
+            ->update(['responder_type' => 'unknown', 'role' => 'unknown', 'responder_marker' => 'gasuns']);
+        $this->outgoing($chat, 'ответ Ивана', 1002, '2026-10-07 12:01', '-', null, ['via' => null]);
+        TelegramSupportMessage::query()->where('telegram_message_id', 1002)
+            ->update(['responder_type' => 'unknown', 'role' => 'unknown', 'responder_marker' => '🐢']);
+        $this->outgoing($chat, 'без следа', 1003, '2026-10-07 12:02', '-', null, ['via' => null]);
+        TelegramSupportMessage::query()->where('telegram_message_id', 1003)
+            ->update(['responder_type' => 'unknown', 'role' => 'unknown', 'responder_marker' => null]);
+
+        Artisan::call('support:replies-review', ['--week' => '2026-10-05', '--sample' => 30, '--sheet' => $this->sheet]);
+
+        $kinds = array_map(static fn (string $l): string => explode("\t", $l)[2], array_slice(file($this->sheet, FILE_IGNORE_NEW_LINES), 1));
+        $this->assertContains('human|gasuns|-', $kinds, json_encode($kinds, JSON_UNESCAPED_UNICODE));
+        $this->assertContains('human|🐢|-', $kinds);
+        $this->assertContains('unattributed|-', $kinds);
+    }
+
     public function test_msk_week_boundaries(): void
     {
         // Понедельник 00:10 MSK — внутри недели; следующее воскресенье 23:50 — внутри;
