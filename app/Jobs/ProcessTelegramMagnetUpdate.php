@@ -122,9 +122,10 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
         if (! $token) {
             // /start без токена — юзер нашёл бота сам, не через форму.
             // Короткое приветствие с меню ждуна (MG 04-10-2026).
-            app(WaitlistBotService::class)->sendWelcome((string) $chatId);
-            if ($this->landingBotId === null) {
-                app(OpenLessonBotService::class)->afterWelcome((string) $chatId);
+            // Флаг карточек ON — приветствие-воронка (карточка занятия +
+            // подарки + меню), иначе короткое приветствие ждуна, как раньше.
+            if ($this->landingBotId !== null || ! app(OpenLessonBotService::class)->welcome((string) $chatId)) {
+                app(WaitlistBotService::class)->sendWelcome((string) $chatId);
             }
             Log::info('Telegram /start without token', ['chat_id' => $chatId]);
 

@@ -7,14 +7,13 @@ namespace App\Services\OpenLessonCards;
 use App\Models\BotSubscriber;
 use App\Models\OpenLessonRsvp;
 use App\Models\Schedule;
-use App\Services\Telegram\WaitlistBotService;
 
 /**
- * Входящие апдейты @samskrte_bot для карточек открытых занятий:
- * callback "ol:*" (✅ Я иду / Не смогу / открыть карточку), нажатия нижнего
- * меню и deep-link /start ol_<schedule_id>. Вызывается из
- * ProcessTelegramMagnetUpdate для глобального бота РАНЬШЕ ждуна: ждун
- * забирает себе любой callback_query.
+ * Входящие апдейты @samskrte_bot для карточек открытых занятий и «воронки»:
+ * callback "ol:*" (✅ Я иду / Не смогу / открыть карточку / Участвовать /
+ * анкета), нажатия нижнего меню, ответы анкеты текстом и deep-link
+ * /start ol_<schedule_id>. Вызывается из ProcessTelegramMagnetUpdate для
+ * глобального бота РАНЬШЕ ждуна: ждун забирает себе любой callback_query.
  */
 class OpenLessonBotService
 {
@@ -23,12 +22,18 @@ class OpenLessonBotService
         private readonly OpenLessonCardBuilder $builder,
         private readonly OpenLessonCardSender $sender,
         private readonly OpenLessonTelegram $telegram,
+        private readonly OpenLessonFunnel $funnel,
     ) {}
+
+    public function enabled(): bool
+    {
+        return (bool) config('features.open_lesson_cards', false);
+    }
 
     /** true — апдейт наш и обработан. */
     public function handleUpdate(array $update): bool
     {
-        if (! config('features.open_lesson_cards', false)) {
+        if (! $this->enabled()) {
             return false;
         }
 
@@ -64,14 +69,15 @@ class OpenLessonBotService
 
         $action = array_search($text, (array) config('open_lesson_cards.menu', []), true);
         if ($action === false) {
-            return false;
+            return $this->funnel->handleText($chatId, $text, (array) ($message['from'] ?? []));
         }
 
         match ($action) {
             'lessons' => $this->sendLessonList($chatId),
-            'zhdun' => $this->sendZhdun($chatId),
-            'site' => $this->sendLink($chatId, 'Сайт школы — курсы, расписание, кабинет:', '🌐 samskrte.ru', (string) config('open_lesson_cards.site_url')),
-            'enroll' => $this->sendLink($chatId, 'Расписание курсов и запись в группы:', '✍️ Выбрать курс', (string) config('open_lesson_cards.enroll_url')),
+            'program' => $this->funnel->program($chatId),
+            'gifts' => $this->funnel->gifts($chatId),
+            'site' => $this->funnel->site($chatId),
+            'join' => $this->funnel->join($chatId),
             default => null,
         };
 
@@ -89,16 +95,25 @@ class OpenLessonBotService
         $subscriber = BotSubscriber::query()->firstOrNew(['chat_id' => (string) $chatId]);
         $subscriber->source ??= BotSubscriber::SOURCE_START;
         $subscriber->first_name = mb_substr((string) ($message['from']['first_name'] ?? $subscriber->first_name ?? ''), 0, 128) ?: null;
+        $subscriber->username = isset($message['from']['username']) ? mb_substr((string) $message['from']['username'], 0, 64) : $subscriber->username;
         $subscriber->blocked_at = null;
         $subscriber->save();
     }
 
-    /** Меню после приветствия /start (флаг ON). */
-    public function afterWelcome(string $chatId): void
+    /**
+     * /start без токена при включённом флаге: приветствие-воронка (карточка
+     * занятия + подарки + меню) вместо короткого приветствия ждуна.
+     * false — флаг выключен, приветствует ждун, как раньше.
+     */
+    public function welcome(string $chatId): bool
     {
-        if (config('features.open_lesson_cards', false)) {
-            $this->sender->ensureMenu($chatId);
+        if (! $this->enabled()) {
+            return false;
         }
+
+        $this->funnel->welcome($chatId);
+
+        return true;
     }
 
     private function handleCallback(array $callback, string $data): void
@@ -106,6 +121,10 @@ class OpenLessonBotService
         $callbackId = (string) ($callback['id'] ?? '');
         $chatId = (string) ($callback['message']['chat']['id'] ?? $callback['from']['id'] ?? '');
         $messageId = $callback['message']['message_id'] ?? null;
+
+        if ($chatId !== '' && $this->funnel->handleCallback($chatId, $data, $callbackId, (array) ($callback['from'] ?? []))) {
+            return;
+        }
 
         if (! preg_match('~^ol:(go|no|card):(\d+)$~', $data, $m) || $chatId === '') {
             $this->answer($callbackId);
@@ -183,26 +202,6 @@ class OpenLessonBotService
             'chat_id' => $chatId,
             'text' => trim(($intro ?? '')."\n\nБлижайшие открытые занятия (время МСК). Нажмите, чтобы открыть карточку и записаться:"),
             'reply_markup' => json_encode(['inline_keyboard' => $rows], JSON_UNESCAPED_UNICODE),
-        ]);
-    }
-
-    private function sendZhdun(string $chatId): void
-    {
-        if (config('features.waitlist_voting', false)) {
-            app(WaitlistBotService::class)->sendList($chatId);
-
-            return;
-        }
-
-        $this->sendLink($chatId, 'Ждун — голосование за будущие группы:', '⏳ Открыть ждуна', rtrim((string) config('open_lesson_cards.site_url'), '/').'/online/zhdun');
-    }
-
-    private function sendLink(string $chatId, string $text, string $button, string $url): void
-    {
-        $this->telegram->call('sendMessage', [
-            'chat_id' => $chatId,
-            'text' => $text,
-            'reply_markup' => json_encode(['inline_keyboard' => [[['text' => $button, 'url' => $url]]]], JSON_UNESCAPED_UNICODE),
         ]);
     }
 

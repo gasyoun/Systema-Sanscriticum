@@ -96,16 +96,14 @@ class OpenLessonCardBuilder
         return $rows;
     }
 
-    /** Нижнее меню бота (постоянная reply-клавиатура). */
+    /** Нижнее меню бота (постоянная reply-клавиатура): первая кнопка во всю ширину, дальше по две. */
     public function replyMenu(): array
     {
-        $labels = array_values((array) config('open_lesson_cards.menu', []));
+        $buttons = array_map(fn (string $label): array => ['text' => $label], array_values((array) config('open_lesson_cards.menu', [])));
+        $first = array_shift($buttons);
 
         return [
-            'keyboard' => array_map(
-                fn (array $pair): array => array_map(fn (string $label): array => ['text' => $label], $pair),
-                array_chunk($labels, 2),
-            ),
+            'keyboard' => array_merge($first !== null ? [[$first]] : [], array_chunk($buttons, 2)),
             'resize_keyboard' => true,
             'is_persistent' => true,
             'input_field_placeholder' => 'Выберите кнопку или напишите вопрос',
