@@ -14,7 +14,7 @@ use Illuminate\Console\Command;
  *
  * Дополняет контур вопросов (H5709/H5768/H5773), но смотрит на исходящие:
  * детерминированная seeded-стратифицированная выборка ответов @rusamskrtam
- * (kind = responder_type|role + raw_payload.via), лист ревью в защищённый
+ * (kind = responder_type → role → маркер + raw_payload.via), лист ревью в защищённый
  * storage/app/support-replies, наружу — ТОЛЬКО агрегаты; импорт человеческих
  * меток (ok|minor|wrong|na) считает ok-share по решающим строкам, Wilson 95 %
  * CI и покрытие. Порога качества в v1 нет — это решение человека.
@@ -63,7 +63,7 @@ class RepliesReviewCommand extends Command
             ->where('sent_at', '<', $this->localStart($to))
             ->where('telegram_message_id', '>', 0)
             ->whereNotNull('text')
-            ->get(['id', 'telegram_support_chat_id', 'responder_type', 'role', 'raw_payload', 'text', 'sent_at'])
+            ->get(['id', 'telegram_support_chat_id', 'responder_type', 'role', 'responder_marker', 'raw_payload', 'text', 'sent_at'])
             ->filter(function (TelegramSupportMessage $m): bool {
                 if (trim((string) $m->text) === '') {
                     return false;
@@ -329,13 +329,25 @@ class RepliesReviewCommand extends Command
         return self::SUCCESS;
     }
 
+    /**
+     * Сырой композит страты: responder (responder_type → role → маркер) + via.
+     * Живой прод-замер 14-10: 183 исходящих недели = 90 «gasuns» + 90 «🐢» +
+     * 3 авто; у синканных из Telegram человеческих исходящих responder_type и
+     * role = unknown, персональный след живет ТОЛЬКО в responder_marker —
+     * поэтому маркер и есть честный фолбэк. Ничего не угадываем: нет ничего —
+     * страта «unattributed».
+     */
     private function kindOf(TelegramSupportMessage $m): string
     {
-        $responder = trim((string) ($m->responder_type !== null && $m->responder_type !== ''
-            ? $m->responder_type
-            : ($m->role ?? '')));
-        if ($responder === '') {
-            $responder = 'unattributed';
+        $responder = trim((string) ($m->responder_type ?? ''));
+        if ($responder === '' || $responder === 'unknown') {
+            $responder = trim((string) ($m->role ?? ''));
+        }
+        if ($responder === '' || $responder === 'unknown') {
+            $marker = trim((string) ($m->responder_marker ?? ''));
+            $responder = $marker !== ''
+                ? 'human|'.$this->sanitize($marker)
+                : 'unattributed';
         }
 
         $via = $m->raw_payload['via'] ?? null;
