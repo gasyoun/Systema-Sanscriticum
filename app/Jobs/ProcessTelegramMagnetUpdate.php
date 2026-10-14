@@ -56,15 +56,15 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
             }
         }
 
-        // Ждун в боте (MG 04-10-2026: функции ждуна — дублировать в бот, кому
-        // как удобнее). Только глобальный бот: per-bot лендинги живут в n8n.
-        // /zhdun и callback_query "wl:*" обслуживает WaitlistBotService.
         // Карточки открытых занятий: callback "ol:*", нижнее меню, /start ol_<id>.
         // РАНЬШЕ ждуна — тот забирает себе любой callback_query.
         if ($this->landingBotId === null && app(OpenLessonBotService::class)->handleUpdate($this->update)) {
             return;
         }
 
+        // Ждун в боте (MG 04-10-2026: функции ждуна — дублировать в бот, кому
+        // как удобнее). Только глобальный бот: per-bot лендинги живут в n8n.
+        // /zhdun и callback_query "wl:*" обслуживает WaitlistBotService.
         if ($this->landingBotId === null && app(WaitlistBotService::class)->handleUpdate($this->update)) {
             return;
         }
