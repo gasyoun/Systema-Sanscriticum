@@ -34,7 +34,7 @@ class BotFunnelPageTest extends TestCase
 
     private function subscriber(string $chatId, array $attrs = []): BotSubscriber
     {
-        return BotSubscriber::create(['chat_id' => $chatId, 'source' => BotSubscriber::SOURCE_START] + $attrs);
+        return BotSubscriber::create($attrs + ['chat_id' => $chatId, 'source' => BotSubscriber::SOURCE_START]);
     }
 
     private function seedFunnel(): void
@@ -111,10 +111,10 @@ class BotFunnelPageTest extends TestCase
         Livewire::test(OpenLessonSendsWidget::class)
             ->assertCanSeeTableRecords([$lesson])
             ->assertCanNotSeeTableRecords(Schedule::query()->where('bot_card_enabled', false)->get())
-            ->assertTableColumnStateSet('announce_count', 3, $lesson)
-            ->assertTableColumnStateSet('morning_count', 0, $lesson)
-            ->assertTableColumnStateSet('going_count', 1, $lesson)
-            ->assertTableColumnStateSet('declined_count', 1, $lesson);
+            ->assertTableColumnStateSet('announce_count', 3, $lesson->getKey())
+            ->assertTableColumnStateSet('morning_count', 0, $lesson->getKey())
+            ->assertTableColumnStateSet('going_count', 1, $lesson->getKey())
+            ->assertTableColumnStateSet('declined_count', 1, $lesson->getKey());
     }
 
     public function test_page_is_admin_only_and_read_only(): void
@@ -125,6 +125,7 @@ class BotFunnelPageTest extends TestCase
 
         $this->actingAs(User::factory()->create(['role' => Roles::ADMIN]));
         $this->assertTrue(BotSubscriberResource::canViewAny());
+        $this->get(BotSubscriberResource::getUrl('index'))->assertOk()->assertSee('Воронка @samskrte_bot');
         $this->assertFalse(BotSubscriberResource::canCreate());
         $this->assertFalse(BotSubscriberResource::canEdit($this->subscriber('9')));
     }
