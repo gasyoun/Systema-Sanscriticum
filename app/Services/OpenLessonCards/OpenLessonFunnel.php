@@ -45,6 +45,9 @@ class OpenLessonFunnel
     /** Ответ на /start без токена: три сообщения, как у ботов конференций. */
     public function welcome(string $chatId): void
     {
+        // Меню уйдёт третьим сообщением — карточка не должна слать своё раньше.
+        BotSubscriber::query()->updateOrCreate(['chat_id' => $chatId], ['menu_sent_at' => now()]);
+
         $next = $this->occasions->between(now(), now()->addDays((int) config('open_lesson_cards.list_horizon_days', 14))->endOfDay())->first();
         if ($next !== null) {
             $this->sender->sendCard($next, $chatId, OpenLessonCardBuilder::STAGE_MANUAL);
