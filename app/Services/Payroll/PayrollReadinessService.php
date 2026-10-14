@@ -95,15 +95,7 @@ final class PayrollReadinessService
     {
         $hasCourses = $teacher->allTaughtCourses()->isNotEmpty();
         $courses = $teacher->allTaughtCourses();
-        $bankTransfer = $this->transferEvidence->lastForTeacher($teacher, $cutoff);
-        $bankCutoff = $bankTransfer !== null && filled($bankTransfer['date'] ?? null)
-            ? Carbon::parse((string) $bankTransfer['date'])->startOfDay()
-            : null;
-        // Teachers never paid through the recorded channels (no payout, no
-        // transfer evidence) have no auto-cutoff. A human-set since-date in
-        // payroll_readiness.teacher_since_overrides brings them into the
-        // tables with an explicit full window instead of outside_calculator.
-        $bankCutoff ??= $this->configuredSinceOverride((int) $teacher->id, $cutoff);
+        $bankCutoff = $this->sinceForTeacher($teacher, $cutoff);
         $calculation = $hasCourses
             ? $this->payouts->runForTeacher($teacher, $cutoff, $bankCutoff)
             : [
@@ -215,6 +207,23 @@ final class PayrollReadinessService
         $row['fingerprint'] = hash('sha256', $this->canonicalJson($row));
 
         return $row;
+    }
+
+    /**
+     * Effective payout window start for a teacher: the last recorded transfer
+     * date, or — for teachers never paid through the recorded channels — the
+     * human-set since-date from payroll_readiness.teacher_since_overrides
+     * (e.g. the reset Gasuns baseline 01-08-2026, H5554). Public since H6706:
+     * the obligation calendar renders the same window per teacher row.
+     */
+    public function sinceForTeacher(Teacher $teacher, Carbon $cutoff): ?Carbon
+    {
+        $bankTransfer = $this->transferEvidence->lastForTeacher($teacher, $cutoff);
+        $bankCutoff = $bankTransfer !== null && filled($bankTransfer['date'] ?? null)
+            ? Carbon::parse((string) $bankTransfer['date'])->startOfDay()
+            : null;
+
+        return $bankCutoff ?? $this->configuredSinceOverride((int) $teacher->id, $cutoff);
     }
 
     /**
