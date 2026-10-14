@@ -11,6 +11,7 @@ use App\Services\Leads\LeadMagnetDispatcher;
 use App\Services\Leads\WaitlistWelcome;
 use App\Services\Marathon\MarathonDay1Sender;
 use App\Services\Messaging\DeliveryChannelManager;
+use App\Services\OpenLessonCards\OpenLessonBotService;
 use App\Services\Telegram\WaitlistBotService;
 use App\Support\CareChatReplyLog;
 use App\Support\TelegramChannelEcho;
@@ -58,6 +59,12 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
         // Ждун в боте (MG 04-10-2026: функции ждуна — дублировать в бот, кому
         // как удобнее). Только глобальный бот: per-bot лендинги живут в n8n.
         // /zhdun и callback_query "wl:*" обслуживает WaitlistBotService.
+        // Карточки открытых занятий: callback "ol:*", нижнее меню, /start ol_<id>.
+        // РАНЬШЕ ждуна — тот забирает себе любой callback_query.
+        if ($this->landingBotId === null && app(OpenLessonBotService::class)->handleUpdate($this->update)) {
+            return;
+        }
+
         if ($this->landingBotId === null && app(WaitlistBotService::class)->handleUpdate($this->update)) {
             return;
         }
@@ -95,6 +102,11 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
             return;
         }
 
+        // Любой /start глобального бота — в аудиторию карточек открытых занятий.
+        if ($this->landingBotId === null) {
+            app(OpenLessonBotService::class)->remember($message);
+        }
+
         $parts = explode(' ', $text, 2);
         $token = $parts[1] ?? null;
 
@@ -111,6 +123,9 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
             // /start без токена — юзер нашёл бота сам, не через форму.
             // Короткое приветствие с меню ждуна (MG 04-10-2026).
             app(WaitlistBotService::class)->sendWelcome((string) $chatId);
+            if ($this->landingBotId === null) {
+                app(OpenLessonBotService::class)->afterWelcome((string) $chatId);
+            }
             Log::info('Telegram /start without token', ['chat_id' => $chatId]);
 
             return;
