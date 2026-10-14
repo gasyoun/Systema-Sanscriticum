@@ -1,6 +1,6 @@
 # Полное руководство студента — личный кабинет
 
-_Created: 06-07-2026 · Last updated: 12-10-2026_
+_Created: 06-07-2026 · Last updated: 14-10-2026_
 
 **Ученику — страница [«Как пользоваться»](https://samskrte.ru/dvaram/help) (`/dvaram/help`) в кабинете.** Этот файл — командная карта для куратора и разработчика, не продукт для человека.
 
@@ -381,6 +381,7 @@ Week / Month / All Time, H2051):
 | — / **Оплата и доступ** | `student.access` | гибридный вид |
 | **Открытые уроки** | `student.open-lessons` | классический вид |
 | **Как пользоваться** | `student.help` | всегда |
+| **Вопросы и ответы** | `student.faq` | всегда (H6301: канонический faq.md) |
 | **Сообщения** / **Помощь** | `student.messages` | всегда |
 | **Мой хинди** | `student.programme.hindi` | флаг `hindi_programme_playlist` |
 | **Карточки** | `student.srs` | флаг `srs.enabled` |

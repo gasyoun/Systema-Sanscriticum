@@ -1,6 +1,6 @@
 # Telegram-боты и TG-аккаунты в Systema Sanscriticum
 
-_Created: 30-07-2026 · Last updated: 05-10-2026 (лестница поддержки ИИ-куратор → Иван → MG, H6133; usernames сверены live-пробой 17-09-2026)
+_Created: 30-07-2026 · Last updated: 14-10-2026 (@samskrte_bot: карточки открытых занятий + callback_query; лестница поддержки 05-10-2026; usernames сверены live-пробой 17-09-2026)
 
 Инвентарь **Bot API-ботов**, **landing-ботов** и **userbot-аккаунта** (MadelineProto),
 которые использует LMS на `samskrte.ru`.  
@@ -95,7 +95,12 @@ Grok в «Отделе заботы»      →  @grokusaurus_bot     (ПК Ма�
 | **Маршрут** | `POST /api/webhooks/telegram-magnet` (header `X-Telegram-Bot-Api-Secret-Token`) |
 
 **Назначение:** лид-магниты, deep-link `magnet_token`, drip марафона Day 1–3,
-публикация в канал `@samskrte` (если бот — админ канала с правом постинга).
+публикация в канал `@samskrte` (если бот — админ канала с правом постинга),
+ждун (`/zhdun`, callback `wl:*`), **карточки открытых занятий** с «✅ Я иду» и
+нижним меню (callback `ol:*`, deep-link `?start=ol_<schedule_id>`, флаг
+`OPEN_LESSON_CARDS_ENABLED`) — [RUNBOOK_OPEN_LESSON_CARDS.md](RUNBOOK_OPEN_LESSON_CARDS.md).
+Вебхук принимает `message` и `callback_query` (с 14-10-2026; до этого inline-кнопки
+бота не доходили).
 
 Не путать с **каналом** [@samskrte](https://t.me/samskrte).
 
