@@ -223,7 +223,9 @@ final class PayrollReadinessService
             ? Carbon::parse((string) $bankTransfer['date'])->startOfDay()
             : null;
 
-        return $bankCutoff ?? $this->configuredSinceOverride((int) $teacher->id, $cutoff);
+        return $bankCutoff
+            ?? $this->configuredSinceOverride((int) $teacher->id, $cutoff)
+            ?? $this->payouts->defaultSince($teacher);
     }
 
     /**
