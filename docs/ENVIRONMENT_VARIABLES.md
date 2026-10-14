@@ -577,7 +577,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `OPENROUTER_TIMEOUT` | optional | `10` | config/openrouter.php:11 |
 | `OPENROUTER_TOPUP_ROUND_TO` | optional | `10` | config/openrouter.php:26 |
 | `OPEN_LESSON_CARDS_ENABLED` | feature-flag | `false` | config/features.php:1139 |
-| `OPEN_LESSON_CARDS_TEST_CHAT_IDS` | optional | `''` | config/open_lesson_cards.php:15 |
+| `OPEN_LESSON_CARDS_TEST_CHAT_IDS` | optional | `''` | config/open_lesson_cards.php:17 |
 | `PAPERTRAIL_PORT` | required | `—` | config/logging.php:102<br>config/logging.php:103 |
 | `PAPERTRAIL_URL` | required | `—` | config/logging.php:101<br>config/logging.php:103 |
 | `PARTNER_BOT_SECRET` | secret | `''` | config/partner.php:33 |
