@@ -110,6 +110,12 @@ class Schedule extends Model
         return $this->hasMany(OpenLessonRsvp::class);
     }
 
+    /** Журнал отправок карточки открытого занятия (стадии announce/morning/zoom). */
+    public function openLessonCardSends(): HasMany
+    {
+        return $this->hasMany(OpenLessonCardSend::class);
+    }
+
     /** Клики по ссылке «Подключиться» (надёжная привязка студентов к занятию). */
     public function joinClicks(): HasMany
     {
