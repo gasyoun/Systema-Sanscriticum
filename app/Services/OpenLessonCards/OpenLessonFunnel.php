@@ -308,7 +308,7 @@ class OpenLessonFunnel
             'type' => LeadNote::TYPE_NOTE,
             'channel' => 'telegram',
             'subject' => 'Анкета в @samskrte_bot',
-            'body' => "Имя: ".($subscriber->join_name ?? '—')
+            'body' => 'Имя: '.($subscriber->join_name ?? '—')
                 ."\nИнтерес: {$interest}"
                 ."\nУдобное время: {$time}"
                 ."\nПодписка на ".config('open_lesson_cards.channel').': да'
