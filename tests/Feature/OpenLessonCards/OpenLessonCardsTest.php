@@ -12,6 +12,7 @@ use App\Models\OpenLessonCardSend;
 use App\Models\OpenLessonRsvp;
 use App\Models\Schedule;
 use App\Models\Teacher;
+use App\Services\OpenLessonCards\OpenLessonBotService;
 use App\Services\OpenLessonCards\OpenLessonCardBuilder;
 use App\Services\OpenLessonCards\OpenLessonCardSender;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -346,7 +347,7 @@ class OpenLessonCardsTest extends TestCase
         $this->assertStringStartsWith('ol:card:', $markup['inline_keyboard'][0][0]['callback_data']);
 
         // Чужой callback (ждун) наш сервис не трогает.
-        $this->assertFalse(app(\App\Services\OpenLessonCards\OpenLessonBotService::class)->handleUpdate([
+        $this->assertFalse(app(OpenLessonBotService::class)->handleUpdate([
             'callback_query' => ['id' => 'x', 'data' => 'wl:page:0'],
         ]));
     }
