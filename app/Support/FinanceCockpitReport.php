@@ -15,6 +15,7 @@ use App\Services\DebtorsReport;
 use App\Services\RevenueScheduleService;
 use App\Services\TeacherSalaryService;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -413,7 +414,7 @@ class FinanceCockpitReport
         ];
     }
 
-    /** @return \Illuminate\Support\Collection<int, TeacherPayout> */
+    /** @return Collection<int, TeacherPayout> */
     private function advancesIssuedThrough(Carbon $asOf)
     {
         return TeacherPayout::query()
