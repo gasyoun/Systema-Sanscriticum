@@ -131,6 +131,21 @@ class OpenLessonFunnelTest extends TestCase
         $this->assertStringContainsString('Общества ревнителей санскрита', $this->messages()[0]['text']);
     }
 
+    /** Обкатка на себе: пока заданы тестовые чаты, остальные видят прежний бот. */
+    public function test_test_chats_alone_see_the_new_bot(): void
+    {
+        config(['open_lesson_cards.test_chat_ids' => ['555']]);
+
+        $this->text('/start', 1001);
+        $this->text('🎁 Подарки', 1001);
+        $this->text('/start', 555);
+
+        $outsider = $this->messages('1001');
+        $this->assertCount(1, $outsider);
+        $this->assertStringContainsString('Общества ревнителей санскрита', $outsider[0]['text']);
+        $this->assertSame('Остальные разделы — в меню внизу 👇', $this->lastMessage('555')['text']);
+    }
+
     public function test_every_menu_section_ends_with_the_join_call(): void
     {
         $course = Course::factory()->create(['title' => 'Санскрит с нуля']);
