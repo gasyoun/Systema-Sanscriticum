@@ -71,6 +71,7 @@ class MilestoneCertificatePreviewController extends Controller
             'bg_base64' => $certificate->backgroundUrl(),
             'date' => 'дд.мм.гггг',
             'number' => 'ГГГГ-XXXXX',
+            'preview' => true,
         ]);
     }
 }
