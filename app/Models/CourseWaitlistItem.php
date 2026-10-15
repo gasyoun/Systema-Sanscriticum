@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -190,6 +191,17 @@ class CourseWaitlistItem extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    /**
+     * Позиции, которые сейчас стоят на витрине /online/zhdun: в списке и ещё
+     * не закрыты / не запланированы. Тот же отбор, что у витрины и у
+     * ждун-строки на странице курса.
+     */
+    public function scopeOnShowcase(Builder $query): Builder
+    {
+        return $query->where('is_listed', true)
+            ->whereNotIn('status', [self::STATUS_CLOSED, self::STATUS_SCHEDULED]);
     }
 
     public function votes(): HasMany
