@@ -11,6 +11,7 @@ use App\Http\Controllers\MarathonController;
 use App\Http\Controllers\MaterialsController;
 use App\Http\Controllers\MembershipCommerceController;
 use App\Http\Controllers\MembershipController;
+use App\Http\Controllers\MiniCourseQuickEnrollController;
 use App\Http\Controllers\PublicSchedulePageController;
 use App\Http\Controllers\PublicWidgetController;
 use App\Http\Controllers\ShopController;
