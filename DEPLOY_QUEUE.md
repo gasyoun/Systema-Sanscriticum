@@ -219,13 +219,14 @@ _Создано: 08-07-2026 · Обновлено: 12-10-2026 (№91 — кам�
 5. Живой smoke: письмо со студенческого адреса → «Принято» в `/admin/inbound-emails` + бейдж Email в Helpdesk; с незнакомого адреса → «В очереди» (привязать вручную там же).
 6. Стоп: `SUPPORT_INBOUND_EMAIL=false` + config:cache → снова 404; ящик/пересылку можно оставить.
 
-### H3445 — гео-город посетителя: драйвер MaxMind GeoLite2 (локальная база)
+### H3445 — гео-город посетителя: драйвер локальной .mmdb базы (H6602: источник DB-IP City Lite)
 
-Рулинг MG 24-08-2026: провайдер города = **MaxMind GeoLite2 локально** (Cloudflare отклонён как заграничный процессор; ip-api.com исключён лицензионно). Код драйвера `'maxmind'` в `VisitorGeoResolver` + команда `support:geo-update-maxmind` (еженедельно вс 04:40). Включение — ПОСЛЕ правки политики приватности (бриф H1234, C(i)):
+Рулинг MG 24-08-2026: провайдер города = **локальный справочник** (Cloudflare отклонён как заграничный процессор; ip-api.com исключён лицензионно). Код драйвера `'maxmind'` в `VisitorGeoResolver` + команда `support:geo-update-maxmind`. **Рулинг MG 13-10-2026 (H6577→H6602): источник — DB-IP City Lite** (тот же формат MaxMind DB, ридер прежний; ежемесячный файл БЕЗ регистрации; расписание 2-го числа 04:40; `MAXMIND_ACCOUNT_ID`/`MAXMIND_LICENSE_KEY` удалены). Root cause среза 12-10: прод стоял на `SUPPORT_GEO_DRIVER=cloudflare` при домене не за CF-прокси = 0 городов.
 
-1. В `.env`: `MAXMIND_ACCOUNT_ID=<id>`, `MAXMIND_LICENSE_KEY=<ключ с maxmind.com>` (бесплатная регистрация).
+1. ~~В `.env`: `MAXMIND_ACCOUNT_ID`, `MAXMIND_LICENSE_KEY`~~ — не требуется (H6602: DB-IP Lite без регистрации).
 2. `php artisan support:geo-update-maxmind --dry-run` → затем без флага. База ляжет в `storage/app/geo/GeoLite2-City.mmdb`.
-3. ✅ **Политика опубликована 25-08-2026 (OxAlpha, поручение MG «публикуй сам»):** rev. «24» августа 2026 — категория «Посетители сайта» (§4.1), гео-город с локальным резолвом GeoLite2 + данные активности с 15-мин автоудалением (§5.4), примечание к §7.3 «перечень третьих лиц не расширяется». Живой PDF: https://samskrte.ru/docs/privacy.pdf (md5 `86AEEF42B41E54F5B04FF0668547A226` = коммит 190614b2). Формулировки-исходник: [docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md). Q-law-1/Q-law-2 остаются юристу (форма согласия для presence).
+3. ✅ **Политика опубликована 25-08-2026 (OxAlpha, поручение MG «публикуй сам»):** rev. «24» августа 2026 — категория «Посетители сайта» (§4.1), гео-город с локальным резолвом + данные активности с 15-мин автоудалением (§5.4), примечание к §7.3 «перечень третьих лиц не расширяется». Живой PDF: https://samskrte.ru/docs/privacy.pdf (md5 `86AEEF42B41E54F5B04FF0668547A226` = коммит 190614b2). Формулировки-исходник: [docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md). Q-law-1/Q-law-2 остаются юристу (форма согласия для presence).
+3б. ✅ **Переиздано 13-10-2026 (H6602):** стр. 7 — «Изменение к разделам 5.4 и 7.3» с атрибуцией CC BY 4.0 (DB-IP City Lite, dbip.com). Переизданный PDF: md5 `626678931c265ea5e5be3adc58e8a9cb` = коммит H6602; формулировка: [docs/POLICY_PRIVACY_DBIP_ATTRIBUTION_PATCH_2026-10.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/POLICY_PRIVACY_DBIP_ATTRIBUTION_PATCH_2026-10.md).
 4. Только тогда: `SUPPORT_GEO_DRIVER=maxmind`, `SUPPORT_VISITOR_GEO=true` (+ presence `SUPPORT_VISITOR_PRESENCE=true` отдельно, после юриста).
 5. Стоп: `SUPPORT_GEO_DRIVER=null`, флаги `false`. База остаётся на диске безвредно.
 

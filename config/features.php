@@ -1131,6 +1131,14 @@ return [
     'waitlist_voting' => (bool) env('WAITLIST_VOTING', false),
 
     /*
+     | Карточки открытых занятий в @samskrte_bot: фото + «✅ Я иду» + нижнее
+     | меню, анонс / утро / ссылка Zoom (open-lessons:cards). В бот идут только
+     | занятия с галочкой schedules.bot_card_enabled. OFF по умолчанию;
+     | обкатка — OPEN_LESSON_CARDS_TEST_CHAT_IDS (config/open_lesson_cards.php).
+     */
+    'open_lesson_cards' => (bool) env('OPEN_LESSON_CARDS_ENABLED', false),
+
+    /*
      | Ждун: автооткрытие оплаты при кворуме (votes >= min_payers) для
      | строки, привязанной к курсу: статус payment_open + включение тарифов
      | курса + сигнал куратору (OpenWaitlistPayment). Срабатывает сразу на

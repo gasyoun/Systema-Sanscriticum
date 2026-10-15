@@ -185,6 +185,20 @@ trait SchedulesSupportAndPayments
             ->onOneServer()
             ->name('support-business-drain');
 
+        // H5709: суточное доказательство живости вебхук-полосы Telegram
+        // Business — coverage v2 недельного отчёта требует строку охвата на
+        // каждый день окна для каждого включённого источника, а эта полоса по
+        // MTProto-скану не ходит. Проб getWebhookInfo в 00:05 MSK: к
+        // понедельничьему 09:00 отчёту все дни прошедшей недели уже закрыты.
+        // Полоса выключена → слот молчит (гейт флага и внутри команды).
+        $schedule->command('telegram-business:daily-evidence')
+            ->dailyAt('00:05')
+            ->timezone('Europe/Moscow')
+            ->when(fn () => (bool) config('features.telegram_business_bot'))
+            ->withoutOverlapping(5)
+            ->onOneServer()
+            ->name('telegram-business-daily-evidence');
+
     }
 
     /** MarketingSetting-timed payment/debt/certificate reminders. */
