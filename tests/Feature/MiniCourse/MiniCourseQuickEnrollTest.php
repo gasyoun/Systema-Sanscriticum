@@ -257,6 +257,7 @@ class MiniCourseQuickEnrollTest extends TestCase
 
         $this->get(route('shop.course.show', self::SLUG))
             ->assertOk()
-            ->assertDontSee(route('mini-course.quick'), false);
+            ->assertDontSee(route('mini-course.quick'), false)
+            ->assertSee('nsp-root', false);
     }
 }
