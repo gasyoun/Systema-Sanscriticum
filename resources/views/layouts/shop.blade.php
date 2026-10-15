@@ -266,6 +266,9 @@
     @livewireScripts
 
     @include('partials.cookie-consent')
-    @include('partials.newsletter-subscribe-popup')
+    {{-- На пути записи в мини-курс попап рассылки не конкурирует с записью. --}}
+    @unless(config('features.mini_course_quick_enroll') && (request()->routeIs('mini-course.*') || request()->is('k/'.config('mini_courses.slug'))))
+        @include('partials.newsletter-subscribe-popup')
+    @endunless
 </body>
 </html>
