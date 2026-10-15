@@ -77,7 +77,9 @@ class MilestoneCertificatePreviewTest extends TestCase
             ->assertSee('успешно освоил(а) онлайн-курс', false)
             ->assertSee('в объеме 16 уроков (32 академических часов)', false)
             ->assertSee('ganesha_gasuns.jpg', false)
-            ->assertSee('ГГГГ-XXXXX', false);
+            ->assertSee('ГГГГ-XXXXX', false)
+            // Без явного холста браузер схлопывает .cert-container (height:100%) в 0 px.
+            ->assertSee('html, body { width: 1122px; height: 793px;', false);
     }
 
     /** @test */
