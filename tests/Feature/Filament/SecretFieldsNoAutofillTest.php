@@ -91,7 +91,7 @@ class SecretFieldsNoAutofillTest extends TestCase
 
     public function test_student_password_field_is_not_autofilled(): void
     {
-        $student = User::factory()->create(['role' => Roles::STUDENT]);
+        $student = User::factory()->create();
 
         $this->get(UserResource::getUrl('edit', ['record' => $student]))
             ->assertOk()
