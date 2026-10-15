@@ -7,6 +7,7 @@ namespace App\Filament\Pages;
 use App\Filament\Pages\CourseDesignAssets\CourseDesignStatsWidget;
 use App\Models\Course;
 use App\Models\CourseDesignAsset;
+use App\Models\CourseWaitlistItem;
 use App\Services\Design\CourseDesignAssetService;
 use App\Services\Design\CoverImportOutcome;
 use App\Services\Design\CoverToBannerImporter;
@@ -21,6 +22,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
@@ -98,6 +100,22 @@ class CourseDesignAssets extends Page implements HasTable
         return 'warning';
     }
 
+    /**
+     * Позиции ждуна на витрине БЕЗ привязанного курса. В матрицу они попасть
+     * не могут: баннеры живут на курсе. Показываем списком над таблицей, чтобы
+     * их не теряли — сначала привязать курс в «Списке ожидания».
+     *
+     * @return \Illuminate\Support\Collection<int, CourseWaitlistItem>
+     */
+    public function getUnlinkedWaitlistItemsProperty(): Collection
+    {
+        return CourseWaitlistItem::query()
+            ->onShowcase()
+            ->whereNull('course_id')
+            ->orderBy('course_title')
+            ->get(['id', 'course_title', 'teacher_name']);
+    }
+
     protected function getHeaderWidgets(): array
     {
         return [CourseDesignStatsWidget::class];
@@ -111,10 +129,12 @@ class CourseDesignAssets extends Page implements HasTable
                 // Суммы считает БД, а не PHP по загруженной связи: так колонка
                 // «Объём» ещё и сортируется, и это не ломается на большом списке.
                 ->withSum('designAssets as design_image_bytes', 'size')
-                ->withSum('designAssets as design_psd_bytes', 'psd_size'))
+                ->withSum('designAssets as design_psd_bytes', 'psd_size')
+                ->withExists(['waitlistItems as in_zhdun' => fn (Builder $w) => $w->onShowcase()]))
             ->defaultSort('title')
             ->columns([
-                TextColumn::make('title')->label('Курс')->searchable()->wrap()->limit(70),
+                TextColumn::make('title')->label('Курс')->searchable()->wrap()->limit(70)
+                    ->description(fn (Course $record): ?string => $record->in_zhdun ? '⏳ Ждун — курс ещё не запущен' : null),
 
                 ...$this->formatColumns(),
 
@@ -153,9 +173,25 @@ class CourseDesignAssets extends Page implements HasTable
                     ->placeholder('—'),
             ])
             ->filters([
-                TernaryFilter::make('is_active')->label('Активность курса')
-                    ->placeholder('Все')->trueLabel('Активные')->falseLabel('Неактивные')
-                    ->default(true),
+                // По умолчанию — курсы в работе: активные + стоящие в ждуне
+                // (Course::scopeInDesignScope). Курс из ждуна ещё неактивен,
+                // но его обложка уже на /online/zhdun.
+                SelectFilter::make('scope')->label('Курсы')
+                    ->options([
+                        'design' => 'Активные и из ждуна',
+                        'zhdun' => 'Только из ждуна',
+                        'active' => 'Только активные',
+                        'inactive' => 'Неактивные',
+                    ])
+                    ->placeholder('Все')
+                    ->default('design')
+                    ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
+                        'design' => $query->inDesignScope(),
+                        'zhdun' => $query->whereHas('waitlistItems', fn (Builder $w) => $w->onShowcase()),
+                        'active' => $query->where('is_active', true),
+                        'inactive' => $query->where('is_active', false),
+                        default => $query,
+                    }),
                 TernaryFilter::make('incomplete')
                     ->label('Комплектность')
                     ->placeholder('Все')
