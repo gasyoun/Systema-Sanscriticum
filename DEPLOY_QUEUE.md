@@ -101,6 +101,17 @@ _Создано: 08-07-2026 · Обновлено: 12-10-2026 (№91 — кам�
 
 **Статус (24-08-2026):** `CRM_TRIAL_BOOKING=true` + `CRM_TRIAL_WIDGET_PUBLIC=true` в прод `.env`, config:cache пересобран. Смок OxAlpha PASS: tinker-заявка через `TrialBookingService::bookFree` на реальном ближайшем пробнике создала Lead+Deal (`kind=trial`, `booked`), повтор идемпотентен, User/гранты/группы не создавались (Rank 4), тестовые строки удалены — ноль остатков. Публичная кнопка «Записаться» на `/widgets/schedule` жива по отдельному рулингу MG 24-08 («оставить ON»). Откат: оба ключа `false` + `config:cache`.
 
+### №92 — быстрая запись на бесплатный мини-курс из VK-бота — флаг `MINI_COURSE_QUICK_ENROLL` (default OFF)
+
+**Зачем:** реклама → VK-бот → витрина `/k/podgotovitelnaya-gruppa-sanskrita`. На витрине до записи два шага и чекаут с 4 обязательными полями, а рядом попап рассылки, где нужен только email. Люди подписываются на новости и не записываются на курс. Новая страница `/k/podgotovitelnaya-gruppa-sanskrita/start` спрашивает имя + email + согласие ПДн, создаёт кабинет, оформляет мини-курс (платёж 0 ₽ штатным путём: группа, `course_user` = старт дрипа, письма), входит в кабинет и ведёт сразу в курс. Если email уже есть в базе, человек не входит автоматически: ему уходит одноразовая ссылка на 24 ч. Платный тариф этим путём не выдаётся никогда.
+
+1. После деплоя: `MINI_COURSE_QUICK_ENROLL=true` в прод `.env` → `php artisan config:cache`.
+2. Смоук: открыть в приватном окне `https://samskrte.ru/k/podgotovitelnaya-gruppa-sanskrita/start` → форма из 2 полей. Ввести новый тестовый email → попадаешь в `/c/podgotovitelnaya-gruppa-sanskrita`, урок 1 открыт. Ввести существующий email → экран «Проверьте почту», письмо со ссылкой пришло.
+3. Лендинг `/k/podgotovitelnaya-gruppa-sanskrita`: кнопка «Записаться на курс» ведёт на `/start`, попапа «Новости санскрита» нет.
+4. **Ссылка для VK-бота (Senler, шаг с витриной):** `https://samskrte.ru/k/podgotovitelnaya-gruppa-sanskrita/start?utm_source=vk&utm_medium=bot&utm_campaign=minikurs` (UTM доходят до `users.utm_*`; короткую `/ga/` не использовать — её UTM до пользователя не доезжают).
+5. Цель VK: на `/start` стреляет пиксель 3800959, форвардится цель `quick_enroll_submit`. Завести событие в кабинете VK Ads (MG/рекламный отдел).
+6. Откат: `MINI_COURSE_QUICK_ENROLL=false` + `config:cache` → `/start` 404, кнопка снова на `/checkout/5135`, попап вернётся. Ссылку в боте вернуть на лендинг.
+
 ### №91 — кампанийный пиксель VK «мини-курс санскрита» 3800959 — ✅ ВКЛЮЧЕН 12-10-2026
 
 **Статус (12-10-2026, исполнено рекламным отделом по поручению MG):** PR #3198 смержен 11:37 МСК, деплой 81fac435 доехал до прода 11:42 МСК (ручной прогон `systema-auto-deploy-run.sh`, smoke 200, health чист). `VK_PIXEL_MINIKURS_ENABLED=true` вписан в прод `.env` (строка 571, блок подписан №91), бэкап `/root/.env.bak-vk-minikurs-pixel-20261012-0845`, `config:clear` + `config:cache` (в кэше id 3800959, tinker: enabled=true, подбор путей — лендинг/чекаут дают пиксель, чужой курс пуст). Живой рендер: на `/k/podgotovitelnaya-gruppa-sanskrita` pageView обоих пикселей + форвард + клик-слушатель `enroll_click`; на `/online` пикселя нет. События в кабинете VK (JS-событие `enroll_click`, два «Посещения страницы») создаёт MG — без них оптимизации/аудиторий по событиям не будет, но пиксель уже копит посетителей. Откат: `VK_PIXEL_MINIKURS_ENABLED=false` + `config:cache`. Примечание деплоя: guards:verify жалуется на backup-fresh (off-site копии) и tmpfs-cap waiver — оба пункта старые, к пикселю отношения не имеют (№83/P5).

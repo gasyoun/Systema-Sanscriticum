@@ -2010,4 +2010,16 @@ return [
      | deploy-шаг человека.
      */
     'hermes_human_send' => (bool) env('HERMES_HUMAN_SEND', false),
+
+    /*
+     | Быстрая запись на бесплатный мини-курс «Подготовительная группа» для
+     | рекламного трафика из VK-бота: /k/{mini_courses.slug}/start — имя + email
+     | + согласие ПДн → кабинет, платёж 0 ₽ по штатному пути Payment (доступ,
+     | course_user = старт дрипа), автовход и сразу в курс. Существующий email
+     | не логинится — ему уходит одноразовая ссылка. Под флагом попап рассылки
+     | на лендинге мини-курса скрыт, а кнопка бесплатного тарифа ведёт на /start.
+     | ВЫКЛ по умолчанию (money-контур): MINI_COURSE_QUICK_ENROLL=true +
+     | config:cache — deploy-шаг человека.
+     */
+    'mini_course_quick_enroll' => (bool) env('MINI_COURSE_QUICK_ENROLL', false),
 ];

@@ -1052,7 +1052,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i class="fas fa-arrow-right mr-2"></i> Перейти к обучению
                                 </a>
                             @else
-                                <a href="{{ route('checkout.show', $tariff->id) }}"
+                                {{-- Бесплатный тариф мини-курса под флагом ведёт на короткую запись (имя + email). --}}
+                                <a href="{{ config('features.mini_course_quick_enroll') && (float) $tariff->price === 0.0 && $course->slug === config('mini_courses.slug') ? route('mini-course.quick') : route('checkout.show', $tariff->id) }}"
                                    class="w-full flex justify-center items-center py-4 px-4 bg-brand text-white text-base font-bold rounded-xl hover:bg-brand-hover hover:shadow-[0_0_20px_rgba(232,92,36,0.4)] transition-all">
                                     {{ $sellsRecordings ? 'Купить запись курса' : 'Записаться на курс' }}
                                 </a>
