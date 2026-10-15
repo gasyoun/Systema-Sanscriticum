@@ -49,10 +49,7 @@ class MiniCourseQuickEnrollController extends Controller
             return redirect()->route('student.course', $course->slug);
         }
 
-        return view('mini-course.quick-enroll', [
-            'course' => $course,
-            'lessonsCount' => $course->lessons()->count(),
-        ]);
+        return view('mini-course.quick-enroll', ['course' => $course]);
     }
 
     public function store(Request $request): View|RedirectResponse
