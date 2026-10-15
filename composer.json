@@ -20,6 +20,7 @@
         "awcodes/filament-tiptap-editor": "^3.5",
         "barryvdh/laravel-dompdf": "^3.1",
         "danog/madelineproto": "^8.7",
+        "enshrined/svg-sanitize": "1.0.0 as 0.22.0",
         "filament/filament": "^3.0",
         "firebase/php-jwt": "^7.0",
         "guzzlehttp/guzzle": "^7.2",

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Lead;
+use App\Services\Consent\ConsentRecorder;
+use App\Support\Consent\ConsentRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -33,11 +35,13 @@ final class InstituteController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'contact' => ['required', 'string', 'max:255'],
             'experience' => ['nullable', 'string', 'max:2000'],
-            'is_promo_agreed' => ['accepted'],
+            // 152-ФЗ: согласие на ПДн здесь было обязательным и раньше (под именем
+            // is_promo_agreed) — оставляем обязательным без флага; рассылка отдельно.
+            'pd_consent' => ['accepted'],
+            'is_promo_agreed' => ['nullable'],
             // honeypot: скрытое поле должно остаться пустым
             'website' => ['prohibited'],
-        ], [
-            'is_promo_agreed.accepted' => 'Нужно согласие на обработку персональных данных.',
+        ], ConsentRules::messages() + [
             'website.prohibited' => 'Заявка не принята.',
         ]);
 
@@ -50,7 +54,7 @@ final class InstituteController extends Controller
             'name' => $validated['name'],
             'contact' => $contact,
             'email' => filter_var($validated['contact'], FILTER_VALIDATE_EMAIL) ? $validated['contact'] : null,
-            'is_promo_agreed' => true,
+            'is_promo_agreed' => $request->boolean('is_promo_agreed'),
             'utm_source' => (string) $request->input('utm_source', 'institut'),
             'utm_medium' => (string) $request->input('utm_medium', 'organic'),
             'utm_campaign' => (string) $request->input('utm_campaign', 'a1_pk72_pilot'),
@@ -60,6 +64,8 @@ final class InstituteController extends Controller
             'user_agent' => (string) $request->userAgent(),
             'referrer' => (string) $request->headers->get('referer'),
         ]);
+
+        app(ConsentRecorder::class)->fromForm($request, 'institute:apply', null, $lead->email, $lead->id, 'is_promo_agreed');
 
         Log::info('institute: заявка ПК-72', ['lead_id' => $lead->id]);
 

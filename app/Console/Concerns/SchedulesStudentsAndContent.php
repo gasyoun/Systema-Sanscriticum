@@ -18,6 +18,25 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('remind-upcoming-classes');
 
+        // Карточки открытых занятий в @samskrte_bot (галочка bot_card_enabled):
+        // анонс за 2–3 дня, утро в день занятия (ранние — накануне в 19:00),
+        // ссылка Zoom нажавшим «Я иду». Флаг и дедуп — внутри команды.
+        $schedule->command('open-lessons:cards --stage=announce')
+            ->dailyAt('12:00')
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('open-lesson-cards-announce');
+        $schedule->command('open-lessons:cards --stage=morning')
+            ->twiceDaily(9, 19)
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('open-lesson-cards-morning');
+        $schedule->command('open-lessons:cards --stage=zoom')
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('open-lesson-cards-zoom');
+
         // H4434 — DST-будильник нон-МСК ученикам (T−7д, T−1д вечером, T−1ч).
         // Ежедневный скан: юзеров с явной зоной ~десятки, дедуп в tz_alerts_sent.
         $schedule->command('tz:remind-dst-shifts')
@@ -100,6 +119,15 @@ trait SchedulesStudentsAndContent
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('trial-check-freshness');
+
+        // Пробное само переходит на следующее занятие группы, когда текущее
+        // началось (features.trial_auto_advance, по умолчанию OFF).
+        $schedule->command('trial:auto-advance')
+            ->everyFifteenMinutes()
+            ->when(fn () => (bool) config('features.trial_auto_advance'))
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('trial-auto-advance');
 
     }
 

@@ -132,6 +132,15 @@
                     >
                 </div>
             @endif
+            @guest
+                {{-- 152-ФЗ: гость даёт согласие на обработку ПДн перед первым сообщением
+                     (имя/почта/телефон/текст обращения). Запоминается в localStorage. --}}
+                <label class="scw-consent" id="scw-consent-row">
+                    <input type="checkbox" id="scw-consent" value="1">
+                    <span>Даю <a href="{{ route('docs.show', 'soglasie-pd') }}" target="_blank">согласие на обработку персональных данных</a>
+                        и ознакомлен(а) с <a href="{{ route('docs.show', 'privacy') }}" target="_blank">политикой конфиденциальности</a>.</span>
+                </label>
+            @endguest
             <div class="scw-input-row">
                 <textarea
                     class="scw-text"
@@ -203,6 +212,10 @@
         flex: 1; min-width: 0; padding: 8px 12px; border-radius: 10px; border: 1px solid #1f2937;
         background: #111827; color: #e5e7eb; font-size: 13px;
     }
+    .scw-consent { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; font-size: 11px; line-height: 1.4; color: #9ca3af; cursor: pointer; }
+    .scw-consent input { margin-top: 2px; flex-shrink: 0; }
+    .scw-consent a { color: #E85C24; }
+    .scw-consent.scw-consent-missing { color: #fca5a5; }
     .scw-input-row { display: flex; align-items: flex-end; gap: 8px; }
     .scw-text {
         flex: 1; resize: none; max-height: 120px; padding: 10px 12px; border-radius: 10px;
@@ -256,6 +269,12 @@
     var emailEl = document.getElementById('scw-email');
     var phoneEl = document.getElementById('scw-phone');
     var contactRow = document.getElementById('scw-contact-row');
+    // 152-ФЗ: согласие гостя на ПДн — один раз, дальше помним в localStorage.
+    var consentRow = document.getElementById('scw-consent-row');
+    var consentEl = document.getElementById('scw-consent');
+    var CONSENT_KEY = 'scw_pd_consent_v1';
+    try { if (consentRow && localStorage.getItem(CONSENT_KEY) === '1') { consentRow.hidden = true; } } catch (e) {}
+    if (consentEl) consentEl.addEventListener('change', function () { consentRow.classList.remove('scw-consent-missing'); });
     var sendBtn = document.getElementById('scw-send');
     var badge = document.getElementById('scw-badge');
 
@@ -469,7 +488,14 @@
     function submit() {
         var text = (textEl.value || '').trim();
         if (text === '') return;
+        var askConsent = consentRow && !consentRow.hidden;
+        if (askConsent && consentEl && !consentEl.checked) {
+            consentRow.classList.add('scw-consent-missing');
+            consentEl.focus();
+            return;
+        }
         var payload = { text: text };
+        if (askConsent) payload.pd_consent = true;
         if (nameEl && !nameEl.hidden && nameEl.value.trim() !== '') payload.name = nameEl.value.trim();
         // Необязательные телефон/почта — захват лида (H1199, S4). Не блокируем
         // отправку, если пусто.
@@ -507,6 +533,10 @@
             appendMessage(res.body.message);
             if (nameEl) { nameEl.hidden = true; } // имя спрашиваем только до первого сообщения
             if (contactRow) { contactRow.hidden = true; } // телефон/почта — тоже только до первого (H1199)
+            if (askConsent) {
+                consentRow.hidden = true;
+                try { localStorage.setItem(CONSENT_KEY, '1'); } catch (e) {}
+            }
             if (conversationId && conversationId !== had) subscribeLive();
         })
         .catch(function () { sendBtn.disabled = false; alert('Сеть недоступна. Попробуйте еще раз.'); });

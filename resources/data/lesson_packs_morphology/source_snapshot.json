@@ -1,0 +1,1037 @@
+{
+  "kosha_commit": "3ccfd4050c3b68595cb333861183aae6befa6654",
+  "morphology_curriculum_sha256": "bb36467d28495e404af301129e969d50ad06a156316f41affc7be72417d4065f",
+  "drills_sha256": "916dff3f9cec8583761a860e0ff39e5f52fbcf476d3e610b8ac1ec9a3f176942",
+  "selection_rule": "curriculum lesson==1 rows (all n_attested_cells>=1); drills joined on lemma_iast; per type (fill,match) sorted by (rank,id) take first 10 items with unseen (lemma_iast,cell_label) AND unseen lemma in that type",
+  "license": "kosha morphology-curriculum / morphology-drills, CC BY-SA 4.0 (credit Dr. Marcis Gasuns; upstream DCS by Oliver Hellwig / DCS)",
+  "rows": [
+    {
+      "drill_row_verbatim": {
+        "id": "MD-00273-F",
+        "aspect": "morphology",
+        "type": "fill",
+        "prompt": "अर्थ (artha) — Accusative singular → ?",
+        "answer": "अर्थम्",
+        "choices": [
+          "अर्थाभ्याम्",
+          "अर्थौ",
+          "अर्थैः",
+          "अर्थम्"
+        ],
+        "distractors": [
+          "अर्थैः",
+          "अर्थाभ्याम्",
+          "अर्थौ"
+        ],
+        "rank": 11,
+        "evidence": "dcs:102289_1",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "artha",
+        "form_iast": "artham",
+        "cell_label": "Accusative singular",
+        "corpus_count": 740
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "1",
+          "lemma_slp1": "arTa",
+          "lemma_iast": "artha",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "11",
+          "n_attested_cells": "17",
+          "corpus_count": "1528",
+          "pct": "0.206",
+          "cumulative_pct": "0.21",
+          "lesson": "1"
+        },
+        {
+          "rank": "2",
+          "lemma_slp1": "arTa",
+          "lemma_iast": "artha",
+          "model": "n_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "11",
+          "n_attested_cells": "8",
+          "corpus_count": "2003",
+          "pct": "0.27",
+          "cumulative_pct": "0.48",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-00323-F",
+        "aspect": "morphology",
+        "type": "fill",
+        "prompt": "धर्म (dharma) — Nominative singular → ?",
+        "answer": "धर्मः",
+        "choices": [
+          "धर्मः",
+          "धर्मेण",
+          "धर्मम्",
+          "धर्माः"
+        ],
+        "distractors": [
+          "धर्मेण",
+          "धर्माः",
+          "धर्मम्"
+        ],
+        "rank": 12,
+        "evidence": "dcs:230894",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "dharma",
+        "form_iast": "dharmaḥ",
+        "cell_label": "Nominative singular",
+        "corpus_count": 140
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "3",
+          "lemma_slp1": "Darma",
+          "lemma_iast": "dharma",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "12",
+          "n_attested_cells": "18",
+          "corpus_count": "907",
+          "pct": "0.1223",
+          "cumulative_pct": "0.6",
+          "lesson": "1"
+        },
+        {
+          "rank": "4",
+          "lemma_slp1": "Darma",
+          "lemma_iast": "dharma",
+          "model": "n_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "12",
+          "n_attested_cells": "4",
+          "corpus_count": "191",
+          "pct": "0.0257",
+          "cumulative_pct": "0.62",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-00403-F",
+        "aspect": "morphology",
+        "type": "fill",
+        "prompt": "पुत्र (putra) — Nominative singular → ?",
+        "answer": "पुत्रः",
+        "choices": [
+          "पुत्रान्",
+          "पुत्राणि",
+          "पुत्रः",
+          "पुत्रस्य"
+        ],
+        "distractors": [
+          "पुत्रस्य",
+          "पुत्राणि",
+          "पुत्रान्"
+        ],
+        "rank": 14,
+        "evidence": "dcs:104124_1",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "putra",
+        "form_iast": "putraḥ",
+        "cell_label": "Nominative singular",
+        "corpus_count": 606
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "5",
+          "lemma_slp1": "putra",
+          "lemma_iast": "putra",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "14",
+          "n_attested_cells": "22",
+          "corpus_count": "2452",
+          "pct": "0.3306",
+          "cumulative_pct": "0.95",
+          "lesson": "1"
+        },
+        {
+          "rank": "6",
+          "lemma_slp1": "putra",
+          "lemma_iast": "putra",
+          "model": "n_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "14",
+          "n_attested_cells": "4",
+          "corpus_count": "482",
+          "pct": "0.065",
+          "cumulative_pct": "1.02",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-00455-F",
+        "aspect": "morphology",
+        "type": "fill",
+        "prompt": "लोक (loka) — Accusative singular → ?",
+        "answer": "लोकम्",
+        "choices": [
+          "लोकात्",
+          "लोकैः",
+          "लोकस्य",
+          "लोकम्"
+        ],
+        "distractors": [
+          "लोकैः",
+          "लोकात्",
+          "लोकस्य"
+        ],
+        "rank": 16,
+        "evidence": "dcs:105463",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "loka",
+        "form_iast": "lokam",
+        "cell_label": "Accusative singular",
+        "corpus_count": 934
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "7",
+          "lemma_slp1": "loka",
+          "lemma_iast": "loka",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "16",
+          "n_attested_cells": "20",
+          "corpus_count": "3759",
+          "pct": "0.5068",
+          "cumulative_pct": "1.53",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-00593-F",
+        "aspect": "morphology",
+        "type": "fill",
+        "prompt": "रस (rasa) — Nominative singular → ?",
+        "answer": "रसः",
+        "choices": [
+          "रसैः",
+          "रसः",
+          "रसेन",
+          "रसानाम्"
+        ],
+        "distractors": [
+          "रसेन",
+          "रसानाम्",
+          "रसैः"
+        ],
+        "rank": 20,
+        "evidence": "dcs:27224",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "rasa",
+        "form_iast": "rasaḥ",
+        "cell_label": "Nominative singular",
+        "corpus_count": 168
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "8",
+          "lemma_slp1": "rasa",
+          "lemma_iast": "rasa",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "20",
+          "n_attested_cells": "15",
+          "corpus_count": "597",
+          "pct": "0.0805",
+          "cumulative_pct": "1.61",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-00685-F",
+        "aspect": "morphology",
+        "type": "fill",
+        "prompt": "इन्द्र (indra) — Vocative singular → ?",
+        "answer": "इन्द्र",
+        "choices": [
+          "इन्द्रात्",
+          "इन्द्रस्य",
+          "इन्द्रे",
+          "इन्द्र"
+        ],
+        "distractors": [
+          "इन्द्रस्य",
+          "इन्द्रे",
+          "इन्द्रात्"
+        ],
+        "rank": 22,
+        "evidence": "dcs:436039",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "indra",
+        "form_iast": "indra",
+        "cell_label": "Vocative singular",
+        "corpus_count": 1834
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "9",
+          "lemma_slp1": "indra",
+          "lemma_iast": "indra",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "22",
+          "n_attested_cells": "16",
+          "corpus_count": "5421",
+          "pct": "0.7308",
+          "cumulative_pct": "2.34",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-00917-F",
+        "aspect": "morphology",
+        "type": "fill",
+        "prompt": "रूप (rūpa) — Accusative singular → ?",
+        "answer": "रूपम्",
+        "choices": [
+          "रूपाभ्याम्",
+          "रूपम्",
+          "रूपैः",
+          "रूपाणाम्"
+        ],
+        "distractors": [
+          "रूपाणाम्",
+          "रूपाभ्याम्",
+          "रूपैः"
+        ],
+        "rank": 29,
+        "evidence": "dcs:102732",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "rūpa",
+        "form_iast": "rūpam",
+        "cell_label": "Accusative singular",
+        "corpus_count": 980
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "10",
+          "lemma_slp1": "rUpa",
+          "lemma_iast": "rūpa",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "29",
+          "n_attested_cells": "14",
+          "corpus_count": "1760",
+          "pct": "0.2373",
+          "cumulative_pct": "2.57",
+          "lesson": "1"
+        },
+        {
+          "rank": "11",
+          "lemma_slp1": "rUpa",
+          "lemma_iast": "rūpa",
+          "model": "n_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "29",
+          "n_attested_cells": "19",
+          "corpus_count": "3023",
+          "pct": "0.4075",
+          "cumulative_pct": "2.98",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-00983-F",
+        "aspect": "morphology",
+        "type": "fill",
+        "prompt": "बल (bala) — Accusative singular → ?",
+        "answer": "बलम्",
+        "choices": [
+          "बलम्",
+          "बले",
+          "बलः",
+          "बलाः"
+        ],
+        "distractors": [
+          "बले",
+          "बलाः",
+          "बलः"
+        ],
+        "rank": 30,
+        "evidence": "dcs:136946",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "bala",
+        "form_iast": "balam",
+        "cell_label": "Accusative singular",
+        "corpus_count": 224
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "12",
+          "lemma_slp1": "bala",
+          "lemma_iast": "bala",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "30",
+          "n_attested_cells": "12",
+          "corpus_count": "575",
+          "pct": "0.0775",
+          "cumulative_pct": "3.06",
+          "lesson": "1"
+        },
+        {
+          "rank": "13",
+          "lemma_slp1": "bala",
+          "lemma_iast": "bala",
+          "model": "n_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "30",
+          "n_attested_cells": "13",
+          "corpus_count": "709",
+          "pct": "0.0956",
+          "cumulative_pct": "3.16",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-01033-F",
+        "aspect": "morphology",
+        "type": "fill",
+        "prompt": "रथ (ratha) — Accusative singular → ?",
+        "answer": "रथम्",
+        "choices": [
+          "रथस्य",
+          "रथैः",
+          "रथाय",
+          "रथम्"
+        ],
+        "distractors": [
+          "रथस्य",
+          "रथैः",
+          "रथाय"
+        ],
+        "rank": 32,
+        "evidence": "dcs:103690",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "ratha",
+        "form_iast": "ratham",
+        "cell_label": "Accusative singular",
+        "corpus_count": 312
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "14",
+          "lemma_slp1": "raTa",
+          "lemma_iast": "ratha",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "32",
+          "n_attested_cells": "14",
+          "corpus_count": "881",
+          "pct": "0.1188",
+          "cumulative_pct": "3.27",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-01107-F",
+        "aspect": "morphology",
+        "type": "fill",
+        "prompt": "फल (phala) — Accusative singular → ?",
+        "answer": "फलम्",
+        "choices": [
+          "फलाः",
+          "फलात्",
+          "फलम्",
+          "फलानि"
+        ],
+        "distractors": [
+          "फलात्",
+          "फलानि",
+          "फलाः"
+        ],
+        "rank": 36,
+        "evidence": "dcs:359734",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "phala",
+        "form_iast": "phalam",
+        "cell_label": "Accusative singular",
+        "corpus_count": 220
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "15",
+          "lemma_slp1": "Pala",
+          "lemma_iast": "phala",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "36",
+          "n_attested_cells": "6",
+          "corpus_count": "339",
+          "pct": "0.0457",
+          "cumulative_pct": "3.32",
+          "lesson": "1"
+        },
+        {
+          "rank": "16",
+          "lemma_slp1": "Pala",
+          "lemma_iast": "phala",
+          "model": "n_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "36",
+          "n_attested_cells": "16",
+          "corpus_count": "789",
+          "pct": "0.1064",
+          "cumulative_pct": "3.43",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-00274-M",
+        "aspect": "morphology",
+        "type": "match",
+        "prompt": "अर्थम् (artham) — which paradigm cell?",
+        "answer": "Accusative singular",
+        "choices": [
+          "Genitive plural",
+          "Instrumental singular",
+          "Accusative singular",
+          "Nominative dual"
+        ],
+        "distractors": [
+          "Nominative dual",
+          "Genitive plural",
+          "Instrumental singular"
+        ],
+        "rank": 11,
+        "evidence": "dcs:102289_1",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "artha",
+        "form_iast": "artham",
+        "cell_label": "Accusative singular",
+        "corpus_count": 740
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "1",
+          "lemma_slp1": "arTa",
+          "lemma_iast": "artha",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "11",
+          "n_attested_cells": "17",
+          "corpus_count": "1528",
+          "pct": "0.206",
+          "cumulative_pct": "0.21",
+          "lesson": "1"
+        },
+        {
+          "rank": "2",
+          "lemma_slp1": "arTa",
+          "lemma_iast": "artha",
+          "model": "n_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "11",
+          "n_attested_cells": "8",
+          "corpus_count": "2003",
+          "pct": "0.27",
+          "cumulative_pct": "0.48",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-00324-M",
+        "aspect": "morphology",
+        "type": "match",
+        "prompt": "धर्मः (dharmaḥ) — which paradigm cell?",
+        "answer": "Nominative singular",
+        "choices": [
+          "Locative singular",
+          "Nominative singular",
+          "Accusative singular",
+          "Dative plural"
+        ],
+        "distractors": [
+          "Accusative singular",
+          "Locative singular",
+          "Dative plural"
+        ],
+        "rank": 12,
+        "evidence": "dcs:230894",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "dharma",
+        "form_iast": "dharmaḥ",
+        "cell_label": "Nominative singular",
+        "corpus_count": 140
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "3",
+          "lemma_slp1": "Darma",
+          "lemma_iast": "dharma",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "12",
+          "n_attested_cells": "18",
+          "corpus_count": "907",
+          "pct": "0.1223",
+          "cumulative_pct": "0.6",
+          "lesson": "1"
+        },
+        {
+          "rank": "4",
+          "lemma_slp1": "Darma",
+          "lemma_iast": "dharma",
+          "model": "n_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "12",
+          "n_attested_cells": "4",
+          "corpus_count": "191",
+          "pct": "0.0257",
+          "cumulative_pct": "0.62",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-00404-M",
+        "aspect": "morphology",
+        "type": "match",
+        "prompt": "पुत्रः (putraḥ) — which paradigm cell?",
+        "answer": "Nominative singular",
+        "choices": [
+          "Nominative singular",
+          "Instrumental singular",
+          "Accusative dual",
+          "Vocative plural"
+        ],
+        "distractors": [
+          "Vocative plural",
+          "Accusative dual",
+          "Instrumental singular"
+        ],
+        "rank": 14,
+        "evidence": "dcs:104124_1",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "putra",
+        "form_iast": "putraḥ",
+        "cell_label": "Nominative singular",
+        "corpus_count": 606
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "5",
+          "lemma_slp1": "putra",
+          "lemma_iast": "putra",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "14",
+          "n_attested_cells": "22",
+          "corpus_count": "2452",
+          "pct": "0.3306",
+          "cumulative_pct": "0.95",
+          "lesson": "1"
+        },
+        {
+          "rank": "6",
+          "lemma_slp1": "putra",
+          "lemma_iast": "putra",
+          "model": "n_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "14",
+          "n_attested_cells": "4",
+          "corpus_count": "482",
+          "pct": "0.065",
+          "cumulative_pct": "1.02",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-00456-M",
+        "aspect": "morphology",
+        "type": "match",
+        "prompt": "लोकम् (lokam) — which paradigm cell?",
+        "answer": "Accusative singular",
+        "choices": [
+          "Locative dual",
+          "Ablative plural",
+          "Instrumental singular",
+          "Accusative singular"
+        ],
+        "distractors": [
+          "Ablative plural",
+          "Instrumental singular",
+          "Locative dual"
+        ],
+        "rank": 16,
+        "evidence": "dcs:105463",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "loka",
+        "form_iast": "lokam",
+        "cell_label": "Accusative singular",
+        "corpus_count": 934
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "7",
+          "lemma_slp1": "loka",
+          "lemma_iast": "loka",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "16",
+          "n_attested_cells": "20",
+          "corpus_count": "3759",
+          "pct": "0.5068",
+          "cumulative_pct": "1.53",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-00594-M",
+        "aspect": "morphology",
+        "type": "match",
+        "prompt": "रसः (rasaḥ) — which paradigm cell?",
+        "answer": "Nominative singular",
+        "choices": [
+          "Accusative plural",
+          "Ablative singular",
+          "Dative singular",
+          "Nominative singular"
+        ],
+        "distractors": [
+          "Ablative singular",
+          "Accusative plural",
+          "Dative singular"
+        ],
+        "rank": 20,
+        "evidence": "dcs:27224",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "rasa",
+        "form_iast": "rasaḥ",
+        "cell_label": "Nominative singular",
+        "corpus_count": 168
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "8",
+          "lemma_slp1": "rasa",
+          "lemma_iast": "rasa",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "20",
+          "n_attested_cells": "15",
+          "corpus_count": "597",
+          "pct": "0.0805",
+          "cumulative_pct": "1.61",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-00686-M",
+        "aspect": "morphology",
+        "type": "match",
+        "prompt": "इन्द्र (indra) — which paradigm cell?",
+        "answer": "Vocative singular",
+        "choices": [
+          "Nominative singular",
+          "Dative singular",
+          "Vocative singular",
+          "Vocative plural"
+        ],
+        "distractors": [
+          "Vocative plural",
+          "Dative singular",
+          "Nominative singular"
+        ],
+        "rank": 22,
+        "evidence": "dcs:436039",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "indra",
+        "form_iast": "indra",
+        "cell_label": "Vocative singular",
+        "corpus_count": 1834
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "9",
+          "lemma_slp1": "indra",
+          "lemma_iast": "indra",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "22",
+          "n_attested_cells": "16",
+          "corpus_count": "5421",
+          "pct": "0.7308",
+          "cumulative_pct": "2.34",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-00918-M",
+        "aspect": "morphology",
+        "type": "match",
+        "prompt": "रूपम् (rūpam) — which paradigm cell?",
+        "answer": "Accusative singular",
+        "choices": [
+          "Nominative plural",
+          "Nominative singular",
+          "Accusative singular",
+          "Genitive plural"
+        ],
+        "distractors": [
+          "Genitive plural",
+          "Nominative singular",
+          "Nominative plural"
+        ],
+        "rank": 29,
+        "evidence": "dcs:102732",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "rūpa",
+        "form_iast": "rūpam",
+        "cell_label": "Accusative singular",
+        "corpus_count": 980
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "10",
+          "lemma_slp1": "rUpa",
+          "lemma_iast": "rūpa",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "29",
+          "n_attested_cells": "14",
+          "corpus_count": "1760",
+          "pct": "0.2373",
+          "cumulative_pct": "2.57",
+          "lesson": "1"
+        },
+        {
+          "rank": "11",
+          "lemma_slp1": "rUpa",
+          "lemma_iast": "rūpa",
+          "model": "n_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "29",
+          "n_attested_cells": "19",
+          "corpus_count": "3023",
+          "pct": "0.4075",
+          "cumulative_pct": "2.98",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-00984-M",
+        "aspect": "morphology",
+        "type": "match",
+        "prompt": "बलम् (balam) — which paradigm cell?",
+        "answer": "Accusative singular",
+        "choices": [
+          "Accusative singular",
+          "Vocative singular",
+          "Instrumental singular",
+          "Instrumental plural"
+        ],
+        "distractors": [
+          "Instrumental singular",
+          "Vocative singular",
+          "Instrumental plural"
+        ],
+        "rank": 30,
+        "evidence": "dcs:136946",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "bala",
+        "form_iast": "balam",
+        "cell_label": "Accusative singular",
+        "corpus_count": 224
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "12",
+          "lemma_slp1": "bala",
+          "lemma_iast": "bala",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "30",
+          "n_attested_cells": "12",
+          "corpus_count": "575",
+          "pct": "0.0775",
+          "cumulative_pct": "3.06",
+          "lesson": "1"
+        },
+        {
+          "rank": "13",
+          "lemma_slp1": "bala",
+          "lemma_iast": "bala",
+          "model": "n_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "30",
+          "n_attested_cells": "13",
+          "corpus_count": "709",
+          "pct": "0.0956",
+          "cumulative_pct": "3.16",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-01034-M",
+        "aspect": "morphology",
+        "type": "match",
+        "prompt": "रथम् (ratham) — which paradigm cell?",
+        "answer": "Accusative singular",
+        "choices": [
+          "Accusative singular",
+          "Locative singular",
+          "Nominative singular",
+          "Instrumental singular"
+        ],
+        "distractors": [
+          "Instrumental singular",
+          "Nominative singular",
+          "Locative singular"
+        ],
+        "rank": 32,
+        "evidence": "dcs:103690",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "ratha",
+        "form_iast": "ratham",
+        "cell_label": "Accusative singular",
+        "corpus_count": 312
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "14",
+          "lemma_slp1": "raTa",
+          "lemma_iast": "ratha",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "32",
+          "n_attested_cells": "14",
+          "corpus_count": "881",
+          "pct": "0.1188",
+          "cumulative_pct": "3.27",
+          "lesson": "1"
+        }
+      ]
+    },
+    {
+      "drill_row_verbatim": {
+        "id": "MD-01108-M",
+        "aspect": "morphology",
+        "type": "match",
+        "prompt": "फलम् (phalam) — which paradigm cell?",
+        "answer": "Accusative singular",
+        "choices": [
+          "Accusative singular",
+          "Accusative plural",
+          "Instrumental plural",
+          "Ablative singular"
+        ],
+        "distractors": [
+          "Accusative plural",
+          "Instrumental plural",
+          "Ablative singular"
+        ],
+        "rank": 36,
+        "evidence": "dcs:359734",
+        "source_dataset": "morphology-drills",
+        "lemma_iast": "phala",
+        "form_iast": "phalam",
+        "cell_label": "Accusative singular",
+        "corpus_count": 220
+      },
+      "curriculum_rows_lesson1": [
+        {
+          "rank": "15",
+          "lemma_slp1": "Pala",
+          "lemma_iast": "phala",
+          "model": "m_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "36",
+          "n_attested_cells": "6",
+          "corpus_count": "339",
+          "pct": "0.0457",
+          "cumulative_pct": "3.32",
+          "lesson": "1"
+        },
+        {
+          "rank": "16",
+          "lemma_slp1": "Pala",
+          "lemma_iast": "phala",
+          "model": "n_a",
+          "kind": "nominal",
+          "bucket": "a-stems",
+          "core_rank": "36",
+          "n_attested_cells": "16",
+          "corpus_count": "789",
+          "pct": "0.1064",
+          "cumulative_pct": "3.43",
+          "lesson": "1"
+        }
+      ]
+    }
+  ]
+}

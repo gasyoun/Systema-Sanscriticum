@@ -10,10 +10,12 @@ use App\Models\StudentDiscount;
 use App\Models\Tariff;
 use App\Services\Activity\FunnelTelemetry;
 use App\Services\Activity\StorefrontAnalytics;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\CuratorNotifier;
 use App\Services\Membership\MembershipFunnelAnalytics;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
+use App\Support\Consent\ConsentRules;
 use App\Support\FlagshipExperiments;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -73,7 +75,7 @@ class CheckoutController extends Controller
             $promo = PromoCode::where('code', $this->normalizeCode($request->query('promo')))->first();
             if ($promo
                 && $promo->isValid()
-                && $promo->appliesToCourse($tariff->course_id)
+                && $promo->appliesToCourse($tariff->course_id, $tariff->block_number)
                 && ! $this->alreadyUsedByCurrentUser($promo)
             ) {
                 session()->put('promo_code', $promo->code);
@@ -114,7 +116,7 @@ class CheckoutController extends Controller
         }
 
         // Код валиден, но привязан к другому курсу — на этом чекауте не применяем.
-        if (! $promo->appliesToCourse($tariff->course_id)) {
+        if (! $promo->appliesToCourse($tariff->course_id, $tariff->block_number)) {
             $message = 'Этот промокод действует только для другого курса.';
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json(['ok' => false, 'message' => $message], 422);
@@ -160,7 +162,8 @@ class CheckoutController extends Controller
             'contact' => [$request->user() ? 'nullable' : 'required', 'string', 'max:255'],
             'name' => ['nullable', 'string', 'max:100'],
             'comment' => ['nullable', 'string', 'max:1000'],
-        ], [
+            'pd_consent' => ConsentRules::pd(),
+        ], ConsentRules::messages() + [
             'contact.required' => 'Оставьте контакт — Telegram, телефон или email, иначе куратору некуда написать.',
             'contact.max' => 'Слишком длинный контакт — достаточно одного способа связи.',
             'comment.max' => 'Слишком длинный комментарий — сократите до 1000 символов.',
@@ -168,6 +171,9 @@ class CheckoutController extends Controller
 
         // Та же цена, что студент видит на этой странице (лояльность + промокод).
         $state = $this->computeState($tariff, $prana);
+
+        $contact = (string) ($validated['contact'] ?? '');
+        app(ConsentRecorder::class)->fromForm($request, 'checkout:installments', $request->user(), filter_var($contact, FILTER_VALIDATE_EMAIL) ? $contact : null);
 
         $notifier->installmentAskReceived(
             $tariff->load('course'),
@@ -249,7 +255,7 @@ class CheckoutController extends Controller
                 // Код валиден. Применяем, только если он подходит этому курсу
                 // И юзер его ещё не гасил (один человек — один раз). При несовпадении
                 // курса из сессии НЕ убираем — он может подойти на чекауте своего курса.
-                if ($promo->appliesToCourse($tariff->course_id) && ! $this->alreadyUsedByCurrentUser($promo)) {
+                if ($promo->appliesToCourse($tariff->course_id, $tariff->block_number) && ! $this->alreadyUsedByCurrentUser($promo)) {
                     $appliedPromo = $promo;
                     $priceWithPromo = $promo->calculateDiscountedPrice($finalPrice);
                     $discountAmount = $finalPrice - $priceWithPromo;
@@ -258,6 +264,17 @@ class CheckoutController extends Controller
             } else {
                 session()->forget('promo_code');
             }
+        }
+
+        // «У вас уже есть доступ» — только при РЕАЛЬНОМ оплаченном доступе к этому
+        // тарифу. Раньше блок показывался каждому залогиненному на нулевом тарифе:
+        // вместо формы рендерилась ссылка «Перейти в кабинет», платёж не создавался,
+        // grantAccess не запускался — бесплатная запись не выдавала доступ
+        // (мини-курс «Подготовительная группа», 10-10-2026).
+        $alreadyOwned = false;
+        if ($user && $finalPrice == 0.0) {
+            $unlocked = StudentController::getUserUnlockedTariffs($user->id, $tariff->course->slug);
+            $alreadyOwned = in_array($tariff->accessKey(), $unlocked, true);
         }
 
         return [
@@ -269,6 +286,7 @@ class CheckoutController extends Controller
             'isLoyal' => $isLoyal,
             'loyaltyPercent' => $loyaltyPercent,
             'isPersonal' => $isPersonal,
+            'alreadyOwned' => $alreadyOwned,
             'pranaBalance' => $user ? $prana->balance($user) : 0,
             'pranaMaxSpend' => $user ? $prana->maxSpendableForPrice($user, $finalPrice) : 0,
             'pranaRate' => PranaSettings::rate(),

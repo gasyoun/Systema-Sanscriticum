@@ -9,18 +9,21 @@ use App\Filament\Pages\MarathonMantraReviews;
 use App\Filament\Resources\CourseInterestRequestResource;
 use App\Filament\Resources\CourseMaterialSubmissionResource;
 use App\Filament\Resources\CourseResource;
+use App\Filament\Resources\CourseWaitlistItemResource;
 use App\Filament\Resources\GroupResource;
 use App\Filament\Resources\UserResource;
 use App\Jobs\SendTelegramChatMessageJob;
 use App\Models\Course;
 use App\Models\CourseInterestRequest;
 use App\Models\CourseMaterialSubmission;
+use App\Models\CourseWaitlistItem;
 use App\Models\Group;
 use App\Models\MarathonEnrollment;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\Tariff;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
@@ -90,9 +93,75 @@ class CuratorNotifier
         if (! empty($payment->proof_path)) {
             $lines[] = '📎 Приложен файл подтверждения';
         }
+        // H6534: мульти-блочный клейм — один перевод, N строк учёта; карточка
+        // показывает разбивку по блокам, чтобы куратор подтверждал строки с
+        // полной картиной.
+        if ($payment->claimMeta('multi_block')) {
+            $lines[] = '';
+            $lines = array_merge($lines, $this->multiBlockBreakdownLines($payment));
+        }
         $lines[] = $this->adminLink($payment->user);
 
         $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Разбивка мульти-блочного клейма (H6534). Список блоков — общий для всех
+     * строк заявки, живёт в claim_meta.block_tariffs; итог — переведённая
+     * сумма одним переводом (claim_meta.foreign_total) и вердикт сверки.
+     * H6554: в кросс-курсовой заявке (claim_meta.cross_course) каждая строка
+     * помечена курсом блока — куратор подтверждает с разбивкой по курсам.
+     *
+     * @return array<int, string>
+     */
+    private function multiBlockBreakdownLines(Payment $payment): array
+    {
+        $currency = (string) ($payment->foreign_currency ?: 'EUR');
+        $isCrossCourse = (bool) $payment->claimMeta('cross_course');
+        $blocks = array_values(array_filter(
+            (array) $payment->claimMeta('block_tariffs', []),
+            fn ($block): bool => is_array($block),
+        ));
+
+        $lines = [$isCrossCourse
+            ? '<b>Один перевод на блоки разных курсов:</b>'
+            : '<b>Один перевод на несколько блоков:</b>'];
+        foreach ($blocks as $block) {
+            $line = '· ';
+            if ($isCrossCourse && ! empty($block['course_title'])) {
+                $line .= e((string) $block['course_title']).' · ';
+            }
+            $line .= e((string) ($block['label'] ?? 'блок')).' — '.$this->money((float) ($block['amount'] ?? 0));
+            if (! empty($block['foreign_amount'])) {
+                $line .= ' ('.$this->foreignMoney((float) $block['foreign_amount'], $currency).')';
+            }
+            $lines[] = $line;
+        }
+
+        $totalRub = array_sum(array_map(fn (array $block): float => (float) ($block['amount'] ?? 0), $blocks));
+        $totalForeign = (float) ($payment->claimMeta('foreign_total') ?: array_sum(array_map(
+            fn (array $block): float => (float) ($block['foreign_amount'] ?? 0),
+            $blocks,
+        )));
+
+        $lines[] = 'Итого по учёту: <b>'.$this->money($totalRub).'</b> · заявлено одним переводом: <b>'
+            .$this->foreignMoney($totalForeign, $currency).'</b>';
+        $verdict = $payment->claimMeta('amount_check')['verdict'] ?? null;
+        if ($verdict !== null) {
+            $lines[] = 'Сверка по общей сумме: <b>'.e((string) $verdict).'</b>';
+        }
+
+        return $lines;
+    }
+
+    private function foreignMoney(float $amount, string $currency): string
+    {
+        $symbol = match ($currency) {
+            'USD' => '$',
+            default => '€',
+        };
+
+        return number_format($amount, 2, '.', ' ').' '.$symbol;
     }
 
     /**
@@ -138,6 +207,33 @@ class CuratorNotifier
      * сверяет по выписке преподавателя, затем «Подтвердить перевод
      * преподавателю» в Filament: номинал вычтется из гонорара сам (H4597).
      */
+    /**
+     * H6198 — заявка «перевёл рублями Гасунсу»: pending до ручной сверки,
+     * деньги школы (гонорар преподавателя не урезается).
+     */
+    public function gasunsPayReceived(Payment $payment): void
+    {
+        $lines = [
+            '💰 <b>Заявка: перевод рублями Гасунсу</b> — нужна сверка',
+            '',
+            $this->studentLine($payment->user),
+            $this->courseLine($payment->course),
+            $this->tariffLine($payment),
+            'Номинал: <b>'.$this->money((float) $payment->amount).'</b>',
+        ];
+        if ($sender = $payment->claimMeta('sender_name')) {
+            $lines[] = 'Отправитель: <code>'.e((string) $sender).'</code>';
+        }
+        if ($paidOn = $payment->claimMeta('paid_on')) {
+            $lines[] = 'Дата оплаты: <b>'.e((string) $paidOn).'</b>';
+        }
+        if ($ref = $payment->claimMeta('reference')) {
+            $lines[] = 'Референция: <code>'.e((string) $ref).'</code>';
+        }
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
     public function teacherPayReceived(Payment $payment): void
     {
         $lines = [
@@ -537,6 +633,25 @@ class CuratorNotifier
     }
 
     /**
+     * 152-ФЗ ст. 21: студент запросил из кабинета удаление персональных данных.
+     * Срок ответа оператора — 30 дней; удаление выполняет куратор вручную
+     * (с учётом данных, которые обязаны храниться по налоговому учёту).
+     */
+    public function personalDataDeletionRequested(User $user, CarbonInterface $deadline): void
+    {
+        $lines = [
+            '🗑 <b>Запрос на удаление персональных данных</b> (152-ФЗ)',
+            '',
+            $this->studentLine($user),
+            'Срок по закону: до <b>'.$deadline->format('d.m.Y').'</b> (30 дней).',
+            'Задача заведена в поддержке. Платёжные документы храним по сроку налогового учёта — остальное удаляем или обезличиваем.',
+            $this->adminLink($user),
+        ];
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
      * Новый аккаунт на чекауте похож email-ом на уже существующий (опечатка в
      * домене — .con/.com, gmial/gmail и т.п.), но НЕ совпадает точь-в-точь
      * (иначе сработал бы обычный dedup и чекаут отказал бы сразу).
@@ -811,6 +926,63 @@ class CuratorNotifier
         $lines[] = $this->interestAdminLink();
 
         $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Ждун: кворум голосов набран, оплата по привязанному курсу открыта
+     * автоматически (OpenWaitlistPayment: статус payment_open + включение
+     * тарифов). Сигнал куратору на выборочную проверку — состав и цены
+     * тарифов включила машина.
+     */
+    public function waitlistPaymentOpened(CourseWaitlistItem $item, int $activatedTariffs): void
+    {
+        $lines = [
+            '🟢 <b>Ждун: кворум набран — оплата открыта</b>',
+            '',
+            'Строка: <b>'.e(filled($item->course_title) ? (string) $item->course_title : $item->slug).'</b>',
+        ];
+
+        if ($item->course !== null) {
+            $lines[] = 'Курс: <b>'.e((string) $item->course->title).'</b> (#'.$item->course_id.')';
+        }
+        $lines[] = 'Голоса: <b>'.$item->votesCount().' из '.$item->min_payers.'</b>';
+        $lines[] = 'Включено тарифов: <b>'.$activatedTariffs.'</b>';
+        $lines[] = '';
+        $lines[] = '👉 <a href="'.$this->waitlistAdminLink().'">Список ожидания в админке</a>';
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Ждун: кворум набран, но оплату открыть нельзя — у курса нет тарифов
+     * или курс скрыт с витрины. Дедуп «раз в сутки» делает OpenWaitlistPayment.
+     */
+    public function waitlistQuorumBlocked(CourseWaitlistItem $item, string $reason): void
+    {
+        $why = $reason === 'tariffs'
+            ? 'Причина: у курса нет тарифов — создайте и включите их в админке.'
+            : 'Причина: курс скрыт с витрины — включите «Показывать на сайте».';
+
+        $lines = [
+            '🟡 <b>Ждун: кворум набран — оплату открыть нельзя</b>',
+            '',
+            'Строка: <b>'.e(filled($item->course_title) ? (string) $item->course_title : $item->slug).'</b>',
+            'Голоса: <b>'.$item->votesCount().' из '.$item->min_payers.'</b>',
+            $why,
+            '',
+            '👉 <a href="'.$this->waitlistAdminLink().'">Список ожидания в админке</a>',
+        ];
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    private function waitlistAdminLink(): string
+    {
+        try {
+            return CourseWaitlistItemResource::getUrl('index');
+        } catch (\Throwable) {
+            return url('/admin');
+        }
     }
 
     /**

@@ -6,6 +6,8 @@ use App\Jobs\TrackLessonViewJob;
 use App\Models\ActivityEvent;
 use App\Models\Course;
 use App\Models\CourseMaterial;
+use App\Models\CourseQuiz;
+use App\Models\CourseQuizAttempt;
 use App\Models\Lesson;
 use App\Models\LessonAccessGrant;
 use App\Models\LessonView;
@@ -23,6 +25,7 @@ use App\Services\Membership\ClubEntitlement;
 use App\Services\Membership\RecordingAccessPolicy;
 use App\Services\Prana\PranaService;
 use App\Support\KinescopePilot;
+use App\Support\MiniCourseDrip;
 use App\Support\TranscriptParser;
 use Illuminate\Http\Request;
 
@@ -68,6 +71,25 @@ trait StudentCourseContentConcerns
         // H2333: “where is lesson 1?” when this shell continues another course.
         $continuationBanner = app(CourseContinuationBanner::class)->for($course, $user);
 
+        // Дрип мини-курса: карта «lesson_id => дата открытия» закрытых уроков.
+        $dripLocked = MiniCourseDrip::lockedMapFor($user, $course);
+
+        // Квизы этапов (мини-курсы): активные квизы курса + лучшая попытка студента
+        // по каждому — попытки достаются одним запросом, без N+1.
+        $courseQuizzes = $course->quizzes()->where('is_active', true)->get();
+        if ($courseQuizzes->isNotEmpty()) {
+            $bestByQuizId = CourseQuizAttempt::where('user_id', $user->id)
+                ->whereIn('course_quiz_id', $courseQuizzes->pluck('id'))
+                ->get()
+                ->groupBy('course_quiz_id')
+                ->map(fn ($rows) => $rows->sort(
+                    fn ($a, $b) => [$b->passed, $b->score, $b->id] <=> [$a->passed, $a->score, $a->id]
+                )->first());
+            $courseQuizzes->each(
+                fn (CourseQuiz $quiz) => $quiz->setRelation('bestAttempt', $bestByQuizId->get($quiz->id))
+            );
+        }
+
         // H2386: per-locked-lesson access findings (flag OFF → empty map, views no-op).
         $accessSelfService = (bool) config('features.access_self_service', false);
         $accessFindingsByLessonId = [];
@@ -107,6 +129,8 @@ trait StudentCourseContentConcerns
                 'continuationBanner' => $continuationBanner,
                 'accessSelfService' => $accessSelfService,
                 'accessFindingsByLessonId' => $accessFindingsByLessonId,
+                'courseQuizzes' => $courseQuizzes,
+                'dripLocked' => $dripLocked,
             ]);
         }
 
@@ -118,6 +142,8 @@ trait StudentCourseContentConcerns
             'continuationBanner',
             'accessSelfService',
             'accessFindingsByLessonId',
+            'courseQuizzes',
+            'dripLocked',
         ));
     }
 
@@ -130,6 +156,19 @@ trait StudentCourseContentConcerns
         $course = Course::resolveBySlugOrFail($courseSlug);
         $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
         $courseSlug = $course->slug;
+
+        // Дрип мини-курса: урок ещё не открыт для этого студента — показываем
+        // карточку с датой открытия вместо контента.
+        $dripLockedAt = MiniCourseDrip::lockedAtFor($user, $course, $lesson);
+
+        if ($dripLockedAt !== null) {
+            return view('student.lesson-locked', [
+                'course' => $course,
+                'lesson' => $lesson,
+                'openAt' => $dripLockedAt->timezone(config('app.timezone')),
+                'dripLockedAt' => $dripLockedAt,
+            ]);
+        }
 
         $access = $this->resolveLessonAccessGate($user, $course, $lesson, $courseSlug);
         if ($access['redirect'] !== null) {
@@ -170,12 +209,36 @@ trait StudentCourseContentConcerns
     }
 
     /**
-     * Отметить урок как пройденный
+     * Отметить урок как пройденный.
+     *
+     * `next` (мини-курсы): id следующего урока этого же курса или 'quiz' —
+     * тогда редирект ведёт не назад, а сразу дальше («Завершить и перейти
+     * к следующему»). Чужой/несуществующий урок в next молча игнорируется —
+     * доступ к цели всё равно проверит showLesson.
      */
     public function completeLesson($courseSlug, $lessonId, PranaService $prana)
     {
         $user = auth()->user();
         $this->ensureLessonAccessible($user, $courseSlug, $lessonId);
+
+        $redirectTarget = null;
+        $requestedNext = request()->input('next');
+        $course = Course::resolveBySlugOrFail($courseSlug);
+
+        if (is_numeric($requestedNext)) {
+            $nextLesson = Lesson::where('course_id', $course->id)->find((int) $requestedNext);
+            if ($nextLesson !== null && (int) $nextLesson->id !== (int) $lessonId) {
+                $redirectTarget = route('student.lesson', [$course->slug, $nextLesson->id]);
+            }
+        } elseif ($requestedNext === 'quiz') {
+            $quiz = $course->quizzes()
+                ->where('block_number', optional(Lesson::where('course_id', $course->id)->find($lessonId))->block_number)
+                ->where('is_active', true)
+                ->first();
+            if ($quiz !== null) {
+                $redirectTarget = route('student.course.quiz', [$course->slug, $quiz->block_number]);
+            }
+        }
 
         // Уже пройден? Проверяем по реально завершённой строке pivot,
         // а не по любой записи (которую могла создать saveNote с is_completed=false).
@@ -238,6 +301,10 @@ trait StudentCourseContentConcerns
             }
         }
 
+        if ($redirectTarget !== null) {
+            return redirect()->to($redirectTarget)->with('success', 'Урок пройден!');
+        }
+
         return redirect()->back()->with('success', 'Урок пройден!');
     }
 
@@ -262,6 +329,13 @@ trait StudentCourseContentConcerns
                 'is_completed' => false,
                 'notes' => $request->input('notes'),
             ]);
+        }
+
+        // H6302: автосейв заметок (public/js/lesson-note-autosave.js) шлёт
+        // Accept: application/json — отвечаем JSON без редиректа. Обычная
+        // форма (ручной fallback) по-прежнему получает redirect()->back().
+        if ($request->expectsJson()) {
+            return response()->json(['saved' => true]);
         }
 
         return redirect()->back()->with('success', 'Заметка сохранена');

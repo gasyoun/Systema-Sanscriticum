@@ -22,45 +22,88 @@
      heartbeat (см. onVideoTick() выше). --}}
 @push('scripts')
     <script src="{{ asset('js/video-resume.js') }}?v={{ filemtime(public_path('js/video-resume.js')) }}" defer></script>
+    {{-- H6302 (L2, UX-аудит 2026): автосейв заметок с dirty-навигационным
+          guard-ом. Тот же эндпоинт student.lesson.note; без JS форма
+          деградирует к прежнему ручному POST-сабмиту. --}}
+    <script src="{{ asset('js/lesson-note-autosave.js') }}?v={{ filemtime(public_path('js/lesson-note-autosave.js')) }}" defer></script>
+    <script defer>
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                var textarea = document.getElementById('lesson-notes-textarea');
+                var form = document.getElementById('lesson-note-form');
+                if (!textarea || !form || !window.LessonNoteAutosave) {
+                    return; // деградация к нативному POST-сабмиту формы
+                }
+                var csrfEl = document.querySelector('meta[name="csrf-token"]');
+                var csrfInput = form.querySelector('input[name="_token"]');
+                window.LessonNoteAutosave.attach({
+                    textarea: textarea,
+                    form: form,
+                    statusEl: form.querySelector('[data-note-status]'),
+                    retryEl: form.querySelector('[data-note-retry]'),
+                    url: form.getAttribute('action'),
+                    csrf: csrfEl ? csrfEl.getAttribute('content') : (csrfInput ? csrfInput.value : ''),
+                });
+            } catch (e) {
+                // Любой сбой обвязки не должен ломать ручной сабмит формы.
+            }
+        });
+    </script>
 @endpush
 
 <style>
     /* ============================================ */
     /* GRID-ЛЕЙАУТ УРОКА                            */
+    /* H6303 (L1, UX-аудит 2026): на узких экранах  */
+    /* боковая колонка (транскрипт/материалы/       */
+    /* заметки) стоит в DOM и на экране ПЕРЕД       */
+    /* домашним заданием — ДЗ вынесено в отдельную  */
+    /* колонку-контейнер .lesson-homework-col.      */
+    /* На десктопе (≥768px) grid-areas повторяют    */
+    /* прежнюю геометрию: main слева, sticky side   */
+    /* 420px справа, ДЗ слева под main.             */
     /* ============================================ */
     .lesson-layout {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
         width: 100%;
         position: relative;
     }
     .lesson-main-col {
         width: 100%;
+        min-width: 0;
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
     }
     .lesson-side-col {
         width: 100%;
-        margin-top: 1.5rem;
         display: flex;
         flex-direction: column;
         position: relative;
         z-index: 20;
     }
+    .lesson-homework-col {
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+    }
     @media (min-width: 768px) {
         .lesson-layout {
             display: grid !important;
             grid-template-columns: minmax(0, 1fr) 420px !important;
+            grid-template-areas:
+                "main side"
+                "homework side";
             gap: 1.5rem !important;
             align-items: start !important;
         }
-        .lesson-main-col {
-            min-width: 0 !important;
-            width: auto !important;
-        }
+        .lesson-main-col { grid-area: main; width: auto !important; }
         .lesson-side-col {
+            grid-area: side;
             width: 420px !important;
-            margin-top: 0 !important;
             position: sticky !important;
             top: 1.5rem !important;
             align-self: start !important;
@@ -70,6 +113,7 @@
             max-height: calc(100vh - 3rem);
             max-height: calc(100dvh - 3rem);
         }
+        .lesson-homework-col { grid-area: homework; width: auto !important; }
     }
 </style>
 
@@ -84,9 +128,13 @@
         && \App\Http\Controllers\StudentController::parseVideoId($lesson->youtube_url, 'youtube') !== null;
     $hasRutube = $recordingAllowed
         && \App\Http\Controllers\StudentController::parseVideoId($lesson->rutube_url, 'rutube') !== null;
+    // VK-видео лежит в video_url человекочитаемой ссылкой (vk.com/video…, vkvideo.ru/video…)
+    $hasVk = $recordingAllowed
+        && \App\Http\Controllers\StudentController::parseVideoId($lesson->video_url, 'vk') !== null;
     $gateUrl = fn (string $player): string => route('student.recording.gate', [$course->slug, $lesson->id, $player]);
     $gateYoutube = $hasYoutube ? $gateUrl('youtube') : null;
     $gateRutube = $hasRutube ? $gateUrl('rutube') : null;
+    $gateVk = $hasVk ? $gateUrl('vk') : null;
     $kinescopeEmbedUrl = $recordingAllowed ? ($kinescopeEmbedUrl ?? null) : null;
     $kinescopePilotActive = !empty($kinescopeEmbedUrl);
     $gateKinescope = $kinescopePilotActive ? $gateUrl('kinescope') : null;
@@ -100,7 +148,19 @@
             if (!$text) return '';
             $pattern = '/\b(\d{1,2}:\d{2}(?::\d{2})?)\b/';
             $replacement = '<button @click.prevent="seekTo(\'$1\')" class="inline-flex items-center gap-1.5 px-2 py-0.5 mx-1 rounded-md bg-brand/10 text-brand border border-brand/30 hover:bg-brand hover:text-white font-mono text-sm font-bold transition-all shadow-sm group"><i class="fas fa-play text-[10px] opacity-60 group-hover:opacity-100 group-hover:text-white transition-colors"></i>$1</button>';
-            return preg_replace($pattern, $replacement, $text);
+            $text = preg_replace($pattern, $replacement, $text);
+            // Голые URL в тексте урока (мини-курсы ссылаются на внешние статьи
+            // и видео) → кликабельные ссылки. Текст приходит экранированным (e()),
+            // таймкод-кнопки URL не содержат, так что подмена безопасна.
+            return preg_replace_callback('~https?://[^\s<]+~u', function ($m) {
+                $url = $m[0];
+                $trail = '';
+                while ($url !== '' && str_contains('.,;…', mb_substr($url, -1))) {
+                    $trail = mb_substr($url, -1).$trail;
+                    $url = mb_substr($url, 0, -1);
+                }
+                return '<a href="'.$url.'" target="_blank" rel="noopener" class="text-brand font-bold underline decoration-brand/30 hover:decoration-brand break-all">'.$url.'</a>'.$trail;
+            }, $text);
         }
     }
     
@@ -117,7 +177,7 @@
 {{-- ========================================== --}}
 <div class="lesson-layout relative"
      x-data="{
-         player: '{{ $kinescopePilotActive ? 'kinescope' : ($hasRutube ? 'rutube' : ($hasYoutube ? 'youtube' : 'none')) }}',
+         player: '{{ $kinescopePilotActive ? 'kinescope' : ($hasRutube ? 'rutube' : ($hasYoutube ? 'youtube' : ($hasVk ? 'vk' : 'none'))) }}',
          currentTime: 0,
          videoDuration: {{ $resumeDuration ?? 'null' }},
          videoResumeEnabled: {{ $videoResumeEnabled ? 'true' : 'false' }},
@@ -231,7 +291,10 @@
     {{-- ЛЕВАЯ КОЛОНКА (Главная: Видео и Текст)     --}}
 <div class="lesson-main-col">
         
-        {{-- ВИДЕОПЛЕЕР --}}
+        {{-- ВИДЕОПЛЕЕР — у уроков без записи и без ближайшего занятия блок не показываем:
+             пустой чёрный прямоугольник «Видео недоступно» в мини-курсах не нужен.
+             Плейсхолдер внутри остаётся для записи-членаства и Zoom-панели пробного. --}}
+        @if($lesson->hasVideo() || ! empty($upcomingSession) || ! $recordingAllowed)
         <div class="w-full bg-[#19191C] rounded-[24px] overflow-hidden shadow-2xl border border-gray-200/50 relative z-40">
             <div class="relative aspect-video w-full bg-black">
                 @if($hasYoutube)
@@ -251,6 +314,16 @@
                             class="w-full h-full absolute inset-0"
                             allowfullscreen
                             allow="autoplay; encrypted-media">
+                    </iframe>
+                @endif
+
+                @if($hasVk)
+                    <iframe x-show="player === 'vk'"
+                            id="vk-player"
+                            src="{{ $gateVk }}"
+                            class="w-full h-full absolute inset-0"
+                            allowfullscreen
+                            allow="autoplay; encrypted-media; fullscreen">
                     </iframe>
                 @endif
 
@@ -342,7 +415,12 @@
                             <img src="https://rutube.ru/favicon.ico" :class="player === 'rutube' ? '' : 'opacity-50 grayscale'" class="w-3.5 h-3.5 mr-2 transition-all"> RuTube
                         </button>
                     @endif
-                    @if($hasYoutube && ($hasRutube || $kinescopePilotActive))
+                    @if($hasVk && ($hasYoutube || $hasRutube || $kinescopePilotActive))
+                        <button type="button" @click="player = 'vk'" :class="player === 'vk' ? 'bg-[#0077FF] text-white shadow-[0_0_15px_rgba(0,119,255,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
+                            <img src="https://vk.com/images/icons/favicons/fav_logo_2x.ico" :class="player === 'vk' ? '' : 'opacity-50 grayscale'" class="w-3.5 h-3.5 mr-2 transition-all" alt=""> VK Видео
+                        </button>
+                    @endif
+                    @if($hasYoutube && ($hasRutube || $kinescopePilotActive || $hasVk))
                         <button type="button" @click="player = 'youtube'" :class="player === 'youtube' ? 'bg-[#ff0000] text-white shadow-[0_0_15px_rgba(255,0,0,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
                             <i class="fab fa-youtube mr-2 text-sm" :class="player === 'youtube' ? 'text-white' : 'text-gray-500'"></i> YouTube
                         </button>
@@ -350,6 +428,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         @if($recordingAccess->notice())
             <div class="mt-3 rounded-2xl border border-amber-300/40 bg-amber-50 px-5 py-4 text-sm text-amber-950" data-membership-recording-notice>
@@ -375,10 +454,12 @@
     @endphp
 
     {{-- Верхний ряд: метки и кнопки --}}
-    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-        
-        {{-- Левая часть: заголовок --}}
-        <div class="flex-1 min-w-0">
+    {{-- Метки и заголовок — сверху, действия — строкой ниже (как в мобильной версии,
+         чтобы длинные кнопки не наезжали на плашку «Урок N из M»). --}}
+    <div class="flex flex-col gap-4">
+
+        {{-- Заголовок с метками --}}
+        <div class="min-w-0">
             <div class="flex items-center gap-3 mb-2 flex-wrap">
                 <span class="bg-brand/10 text-brand px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider">
                     Урок {{ $lessonIndex }} из {{ $totalLessons }}
@@ -394,8 +475,8 @@
             </h1>
         </div>
 
-        {{-- Правая часть: действия --}}
-        <div class="flex items-center gap-2 md:gap-3 shrink-0 flex-wrap">
+        {{-- Действия — отдельной строкой под заголовком --}}
+        <div class="flex items-center gap-2 md:gap-3 flex-wrap">
 
             {{-- === КНОПКА: Чат курса (если URL задан в админке) === --}}
             <x-course-chat-button :url="$course->chat_url" />
@@ -410,11 +491,53 @@
                 <span class="hidden md:inline">Куратору</span>
             </a>
 
-            {{-- === КНОПКА: Завершить / Пройден === --}}
-            @if(auth()->user()->completedLessons->contains($lesson->id))
+            {{-- === КНОПКА: Завершить / Пройден (мини-курсы: с переходом дальше) === --}}
+            @php
+                $isLessonCompleted = auth()->user()->completedLessons->contains($lesson->id);
+                // Следующий урок по списку курса — среди открытых текущему студенту
+                // (то же правило доступа, что у карточек на странице курса:
+                // бесплатный/превью — открыт всем, остальное по оплаченным ключам).
+                $currentIdx = $lessons->search(fn ($l) => $l->id === $lesson->id);
+                $nextLesson = null;
+                if ($currentIdx !== false) {
+                    $nextLesson = $lessons->slice($currentIdx + 1)
+                        ->first(fn ($l) => $l->is_free || $l->is_preview || $l->isUnlockedBy($unlockedTariffs) || in_array($l->id, $grantedLessonIds ?? [], true));
+                }
+                // Квиз этого этапа — цель финального урока («Завершить и пройти итоговый квиз»).
+                $quizForBlock = $course->quizzes
+                    ->first(fn ($q) => (int) $q->block_number === (int) $lesson->block_number && $q->is_active);
+            @endphp
+            @if($isLessonCompleted)
                 <div class="inline-flex justify-center items-center gap-2 px-4 py-2.5 md:py-3 rounded-xl bg-green-50 text-green-600 text-xs md:text-sm font-extrabold leading-none border border-green-200 cursor-default">
                     <i class="fas fa-check-circle mr-2 text-base"></i> Пройден
                 </div>
+                @if($nextLesson)
+                    <a href="{{ route('student.lesson', [$course->slug, $nextLesson->id]) }}"
+                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 rounded-xl bg-gray-50 hover:bg-brand hover:text-white text-gray-700 text-xs md:text-sm font-extrabold leading-none border border-gray-200 hover:border-brand transition-all uppercase tracking-wide">
+                        Следующий урок <i class="fas fa-arrow-right text-xs"></i>
+                    </a>
+                @elseif($quizForBlock)
+                    <a href="{{ route('student.course.quiz', [$course->slug, $quizForBlock->block_number]) }}"
+                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 rounded-xl bg-gray-50 hover:bg-brand hover:text-white text-gray-700 text-xs md:text-sm font-extrabold leading-none border border-gray-200 hover:border-brand transition-all uppercase tracking-wide">
+                        Итоговый квиз <i class="fas fa-arrow-right text-xs"></i>
+                    </a>
+                @endif
+            @elseif($nextLesson)
+                <form action="{{ route('student.lesson.complete', [$course->slug, $lesson->id]) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="next" value="{{ $nextLesson->id }}">
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 bg-brand hover:bg-brand-hover text-white rounded-xl font-extrabold text-xs md:text-sm leading-tight transition-all shadow-[0_5px_15px_rgba(232,92,36,0.3)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide max-w-full whitespace-normal text-left">
+                        Завершить и продолжить <i class="fas fa-arrow-right text-xs"></i>
+                    </button>
+                </form>
+            @elseif($quizForBlock)
+                <form action="{{ route('student.lesson.complete', [$course->slug, $lesson->id]) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="next" value="quiz">
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 bg-brand hover:bg-brand-hover text-white rounded-xl font-extrabold text-xs md:text-sm leading-tight transition-all shadow-[0_5px_15px_rgba(232,92,36,0.3)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide max-w-full whitespace-normal text-left">
+                        Завершить и пройти квиз <i class="fas fa-arrow-right text-xs"></i>
+                    </button>
+                </form>
             @else
                 <form action="{{ route('student.lesson.complete', [$course->slug, $lesson->id]) }}" method="POST">
                     @csrf
@@ -511,7 +634,13 @@
 </div>
 
         {{-- КОНТЕНТ УРОКА (Описание) --}}
-        @if($lesson->content || $lesson->topic)
+        @if(filled($lesson->content_html))
+        {{-- Богатое тело (мини-курсы): HTML уже санитизирован при записи
+             (Lesson::setContentHtmlAttribute) — инлайновые стили этапа. --}}
+        <div class="relative z-10">
+            {!! $lesson->content_html !!}
+        </div>
+        @elseif($lesson->content || $lesson->topic)
         <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 relative z-10">
             <div class="prose prose-lg max-w-none text-gray-800 leading-relaxed font-nunito font-medium marker:bg-brand/20 marker:text-[#1A1A1A]">
                 {!! formatTimecodes(nl2br(e($lesson->content ?? $lesson->topic))) !!}
@@ -552,18 +681,8 @@
         </section>
         @endif
 
-        {{-- ДОМАШНЕЕ ЗАДАНИЕ — внутри центральной колонки (ширина как плеер/описание) --}}
-        @if($homeworkOpen ?? $lesson->homework_enabled)
-            @include('student.partials.homework')
-        @else
-            {{-- Явное состояние «ДЗ нет», чтобы студент не гадал, задано оно или еще нет. --}}
-            <section class="font-nunito">
-                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 md:p-6 flex items-center gap-3 text-gray-500">
-                    <i class="fas fa-mug-hot text-gray-300 text-lg shrink-0"></i>
-                    <p class="text-sm">Домашнего задания для этого урока нет.</p>
-                </div>
-            </section>
-        @endif
+        {{-- ДОМАШНЕЕ ЗАДАНИЕ вынесено в .lesson-homework-col (H6303) — снаружи,
+             после боковой колонки, чтобы на узких экранах материалы шли перед ДЗ. --}}
     </div>
 
     {{-- ========================================== --}}
@@ -664,14 +783,27 @@
         <i class="far fa-edit mr-2 text-yellow-600"></i> Мои заметки
     </h3>
     
-    <form action="{{ route('student.lesson.note', [$course->slug, $lesson->id]) }}" method="POST" class="flex flex-col flex-1">
+    <form id="lesson-note-form"
+          action="{{ route('student.lesson.note', [$course->slug, $lesson->id]) }}"
+          method="POST"
+          class="flex flex-col flex-1"
+          data-testid="lesson-note-form">
         @csrf
-        <textarea name="notes" 
-                  rows="{{ $showTabs ? 8 : 14 }}" 
-                  class="w-full bg-white/50 border-transparent rounded-2xl p-4 focus:ring-2 focus:ring-yellow-400 focus:bg-white text-gray-800 transition resize-y font-medium text-sm placeholder-yellow-700/50 custom-scrollbar {{ $showTabs ? 'flex-1' : '' }}" 
+        <textarea name="notes" id="lesson-notes-textarea" data-testid="lesson-notes-textarea"
+                  rows="{{ $showTabs ? 8 : 14 }}"
+                  class="w-full bg-white/50 border-transparent rounded-2xl p-4 focus:ring-2 focus:ring-yellow-400 focus:bg-white text-gray-800 transition resize-y font-medium text-sm placeholder-yellow-700/50 custom-scrollbar {{ $showTabs ? 'flex-1' : '' }}"
                   placeholder="Важные мысли из урока, инсайты, вопросы к преподавателю...">{{ $currentNote ?? '' }}</textarea>
-        
-        <button type="submit" class="mt-4 w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 py-3.5 rounded-2xl font-extrabold text-sm transition-colors shadow-sm shrink-0">
+
+        {{-- H6302: строка статуса автосейва. Пустая без JS; живой скрипт
+              показывает «Сохранение…/Сохранено ✓/Не удалось сохранить». --}}
+        <div class="mt-2 flex items-center justify-between gap-3 min-h-[18px]" data-note-statusbar>
+            <p class="text-[11px] font-semibold truncate" data-note-status aria-live="polite"></p>
+            <button type="button"
+                    class="hidden text-[11px] font-bold text-yellow-800 underline underline-offset-2 hover:text-yellow-900 shrink-0"
+                    data-note-retry>Повторить</button>
+        </div>
+
+        <button type="submit" class="mt-3 w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 py-3.5 rounded-2xl font-extrabold text-sm transition-colors shadow-sm shrink-0">
             Сохранить изменения
         </button>
     </form>
@@ -779,6 +911,24 @@
         </div>
         @endif
 
+    </div>
+
+    {{-- ========================================== --}}
+    {{-- ДОМАШНЕЕ ЗАДАНИЕ (H6303): отдельная колонка-контейнер ПОСЛЕ боковой
+         колонки — на узких экранах транскрипт/материалы/заметки стоят перед ДЗ,
+         на десктопе grid-area "homework" возвращает блок в левую колонку. --}}
+    <div class="lesson-homework-col">
+        @if($homeworkOpen ?? $lesson->homework_enabled)
+            @include('student.partials.homework')
+        @else
+            {{-- Явное состояние «ДЗ нет», чтобы студент не гадал, задано оно или еще нет. --}}
+            <section class="font-nunito">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 md:p-6 flex items-center gap-3 text-gray-500">
+                    <i class="fas fa-mug-hot text-gray-300 text-lg shrink-0"></i>
+                    <p class="text-sm">Домашнего задания для этого урока нет.</p>
+                </div>
+            </section>
+        @endif
     </div>
 
 </div>

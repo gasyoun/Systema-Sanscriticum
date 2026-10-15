@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Mail\Concerns\Unsubscribable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -19,6 +20,7 @@ use Illuminate\Queue\SerializesModels;
 class CampaignMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+    use Unsubscribable;
 
     public function __construct(
         public string $subjectLine,
@@ -34,6 +36,9 @@ class CampaignMail extends Mailable implements ShouldQueue
 
     public function content(): Content
     {
-        return new Content(htmlString: $this->renderedBodyHtml);
+        // 152-ФЗ / 38-ФЗ: готовый HTML кампании без шаблона — подвал отписки дописываем здесь.
+        return new Content(htmlString: $this->renderedBodyHtml.view('emails.partials.unsubscribe-footer', [
+            'unsubscribeUrl' => $this->unsubscribeUrl(),
+        ])->render());
     }
 }

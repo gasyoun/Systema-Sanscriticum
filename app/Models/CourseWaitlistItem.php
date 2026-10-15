@@ -238,7 +238,7 @@ class CourseWaitlistItem extends Model
         return CourseFavorite::query()->where('waitlist_slug', $this->slug)->count();
     }
 
-    /** Порог достигнут — можно открывать оплату (после проверки куратором/прогноза). */
+    /** Порог достигнут: привязанный курс открывает оплату автоматически (OpenWaitlistPayment), непривязанный — через прогноз в waitlist:process. */
     public function hasThreshold(): bool
     {
         return $this->votesCount() >= $this->min_payers;

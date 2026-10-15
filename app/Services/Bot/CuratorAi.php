@@ -102,7 +102,10 @@ class CuratorAi
         $model = (string) config('knowledge.generation_model', 'qwen3:14b');
         $empty = ['content' => null, 'usage' => null, 'model' => $model];
 
-        $endpoint = rtrim((string) config('knowledge.base_url', 'http://127.0.0.1:11434'), '/').'/v1/chat/completions';
+        // H5703: генерация может жить на другом узле, чем эмбеддинги
+        // (generation_base_url); не задан → общий base_url, прод не меняется.
+        $base = (string) (config('knowledge.generation_base_url') ?: config('knowledge.base_url', 'http://127.0.0.1:11434'));
+        $endpoint = rtrim($base, '/').'/v1/chat/completions';
 
         try {
             $response = Http::timeout((int) config('knowledge.generation_timeout', 120))

@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\MagicLinkToken;
+use App\Rules\HouseEmail;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\NewsletterSubscriptionService;
+use App\Support\Consent\ConsentRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,10 +38,11 @@ class NewsletterSubscribeController extends Controller
         RateLimiter::hit($rlKey, 5);
 
         $validated = $request->validate([
-            'email' => ['required', 'email', 'max:255'],
+            'email' => ['required', 'string', 'max:255', new HouseEmail],
             // Явное согласие на рассылку — как чекбокс промо на лендинге.
             'is_promo_agreed' => ['accepted'],
-        ]);
+            'pd_consent' => ConsentRules::pd(),
+        ], ConsentRules::messages());
 
         // Анти-бот: honeypot + time-trap + одноразовые домены. При срабатывании
         // возвращаем ТОТ ЖЕ «успешный» ответ, что и в норме (анти-enumeration),
@@ -60,6 +64,7 @@ class NewsletterSubscribeController extends Controller
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);
+        app(ConsentRecorder::class)->fromForm($request, 'newsletter:'.($request->input('utm_source') ?: 'form'), null, $validated['email'], null, 'is_promo_agreed');
 
         // Единый ответ независимо от того, новый это аккаунт или нет (анти-enumeration).
         return back()->with('newsletter_subscribed', true);

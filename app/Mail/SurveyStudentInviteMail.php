@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Mail\Concerns\Unsubscribable;
 use App\Models\User;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -19,6 +20,8 @@ use Illuminate\Mail\Mailables\Envelope;
  */
 class SurveyStudentInviteMail extends Mailable
 {
+    use Unsubscribable;
+
     public function __construct(
         public User $user,
         public string $url,

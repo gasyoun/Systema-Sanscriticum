@@ -7,6 +7,8 @@ use App\Filament\Resources\ScheduleResource\Pages;
 use App\Models\Course;
 use App\Models\Schedule;
 use App\Services\ClassAttendanceService;
+use App\Services\OpenLessonCards\OpenLessonCardBuilder;
+use App\Services\OpenLessonCards\OpenLessonCardSender;
 use App\Services\Schedule\ScheduleMover;
 use App\Support\RoleGate;
 use App\Support\Roles;
@@ -176,6 +178,37 @@ class ScheduleResource extends Resource
                         ->label('Цвет метки')
                         ->default('#3788d8'),
                 ])->columns(2),
+
+            // Карточка открытого занятия в @samskrte_bot: фото + «✅ Я иду»,
+            // анонс / утро / ссылка Zoom. Только админ: карточка обещает
+            // «участие бесплатное» и раздаёт ссылку всем подписчикам бота.
+            Forms\Components\Section::make('Анонс в боте @samskrte_bot')
+                ->description('Открытое бесплатное занятие: карточка с кнопкой «✅ Я иду» уйдёт подписчикам бота за 2–3 дня и в день занятия, ссылка Zoom — нажавшим «Я иду» за 30 минут до начала.')
+                ->visible(fn (): bool => RoleGate::any(Roles::ADMIN))
+                ->collapsible()
+                ->schema([
+                    Forms\Components\Toggle::make('bot_card_enabled')
+                        ->label('Открытое занятие: анонс в боте')
+                        ->helperText('Включайте только для бесплатных занятий — платный Zoom не раздавать.')
+                        ->live()
+                        ->columnSpanFull(),
+
+                    Forms\Components\FileUpload::make('card_image_path')
+                        ->label('Баннер карточки (необязательно)')
+                        ->helperText('Пусто — баннер курса 16:9 / 4:3 или обложка витрины.')
+                        ->image()
+                        ->disk('public')
+                        ->directory('open-lesson-cards')
+                        ->maxSize(5120)
+                        ->visible(fn (Forms\Get $get): bool => (bool) $get('bot_card_enabled')),
+
+                    Forms\Components\Textarea::make('card_note')
+                        ->label('Приписка к карточке (необязательно)')
+                        ->placeholder('Захватите свои вопросы — в конце разберём их вживую.')
+                        ->maxLength(300)
+                        ->rows(2)
+                        ->visible(fn (Forms\Get $get): bool => (bool) $get('bot_card_enabled')),
+                ]),
         ];
     }
 
@@ -235,6 +268,20 @@ class ScheduleResource extends Resource
                     ->color(fn (?string $state): string => $state ? 'primary' : 'gray')
                     ->formatStateUsing(fn (?string $state): string => $state ?? 'Для всех')
                     ->icon(fn (?string $state): string => $state ? 'heroicon-m-user-group' : 'heroicon-m-globe-alt'),
+
+                // Карточка в @samskrte_bot: число «✅ Я иду»; лампочка — обзорное
+                // без анонса (кандидат, решает админ — бесплатно ли оно).
+                Tables\Columns\TextColumn::make('open_lesson_rsvps_count')
+                    ->label('В боте')
+                    ->counts(['openLessonRsvps' => fn (Builder $q) => $q->whereNotNull('going_at')])
+                    ->formatStateUsing(fn (Schedule $r, $state): string => $r->bot_card_enabled ? "🎙 Я иду: {$state}" : '💡 кандидат')
+                    ->tooltip(fn (Schedule $r): ?string => ! $r->bot_card_enabled && $r->is_overview ? 'Обзорное занятие без анонса в боте' : null)
+                    ->visible(fn (): bool => RoleGate::any(Roles::ADMIN))
+                    ->getStateUsing(fn (Schedule $r) => ($r->bot_card_enabled || $r->is_overview) ? (int) ($r->open_lesson_rsvps_count ?? 0) : null)
+                    ->badge()
+                    ->color(fn (Schedule $r): string => $r->bot_card_enabled ? 'success' : 'warning')
+                    ->toggleable()
+                    ->placeholder('—'),
 
                 // Посещаемость вебинара (Zoom participant-вебхуки, Фаза 3).
                 Tables\Columns\TextColumn::make('attendances_count')
@@ -310,6 +357,27 @@ class ScheduleResource extends Resource
 
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\EditAction::make(),
+
+                    // Предпросмотр карточки @samskrte_bot себе в личку.
+                    Tables\Actions\Action::make('preview_bot_card')
+                        ->label('Карточка в бот: предпросмотр')
+                        ->icon('heroicon-o-paper-airplane')
+                        ->visible(fn (Schedule $r): bool => $r->bot_card_enabled && RoleGate::any(Roles::ADMIN))
+                        ->action(function (Schedule $record): void {
+                            $chatId = (string) (auth()->user()?->telegram_id
+                                ?: explode(',', (string) config('services.telegram.admin_id'))[0]);
+                            $outcome = $chatId === ''
+                                ? OpenLessonCardSender::FAILED
+                                : app(OpenLessonCardSender::class)->sendCard($record, trim($chatId), OpenLessonCardBuilder::STAGE_MANUAL);
+
+                            $outcome === OpenLessonCardSender::SENT
+                                ? Notification::make()->title('Карточка отправлена вам в @samskrte_bot')->success()->send()
+                                : Notification::make()
+                                    ->title('Не отправилась')
+                                    ->body('Нажмите /start в @samskrte_bot с аккаунта, привязанного к кабинету, и повторите.')
+                                    ->danger()
+                                    ->send();
+                        }),
 
                     // Перенос: только это занятие, остальные не трогаем.
                     Tables\Actions\Action::make('reschedule')

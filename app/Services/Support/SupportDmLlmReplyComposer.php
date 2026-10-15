@@ -6,6 +6,7 @@ namespace App\Services\Support;
 
 use App\Services\Bot\CuratorAi;
 use App\Services\Support\Faq\KnowledgeContext;
+use Illuminate\Support\Facades\Log;
 
 /**
  * H4404 (рулинг MG 08-09-2026 «LLM-черновики»): формулировка ответа студенту
@@ -32,6 +33,12 @@ use App\Services\Support\Faq\KnowledgeContext;
  * написан весь R3. Прямая выгода второго изменения — заголовочный путь
  * («Политика и поддержка → Сертификат») остаётся в контексте, а сниппет его
  * срезал.
+ *
+ * H6144 (гейт Q5 estate-wide, фикс 2 по вердикту H6140): вопрос студента
+ * идёт в промпт ТОЛЬКО через {@see SupportStudentPiiMasker} — тот же шов, что
+ * в SupportLlmDraftComposer. Fail-closed: identity-сет недоступен → текст
+ * исключён → compose() = null → ack. Флаг features.support_dm_llm_drafts
+ * остаётся false; активация — отдельным решением.
  */
 class SupportDmLlmReplyComposer
 {
@@ -43,6 +50,7 @@ class SupportDmLlmReplyComposer
 
     public function __construct(
         private readonly CuratorAi $ai,
+        private readonly SupportStudentPiiMasker $masker,
     ) {}
 
     public function isEnabled(): bool
@@ -67,9 +75,16 @@ class SupportDmLlmReplyComposer
             return null;
         }
 
+        [$promptText] = $this->maskedPromptText($questionText);
+        if (trim($promptText) === '') {
+            // Fail-closed: чистоту текста доказать нельзя (или текст пуст) —
+            // без вопроса студента формулировать нечего, вызова LLM нет.
+            return null;
+        }
+
         $result = $this->formulate([
             ['role' => 'system', 'content' => $this->systemPrompt()],
-            ['role' => 'user', 'content' => $this->userPrompt($questionText, $contextBlock)],
+            ['role' => 'user', 'content' => $this->userPrompt($promptText, $contextBlock)],
         ]);
 
         $draft = $result['content'];
@@ -145,14 +160,41 @@ class SupportDmLlmReplyComposer
     }
 
     /**
+     * Текст вопроса ДЛЯ ПРОМПТА: всегда через pii-маскировщик (гейт Q5 ростера
+     * v2; H6144 — второй шов по вердикту H6140 на PR #3027). Fail-closed: если
+     * identity-сет недоступен, текст исключается из промпта целиком — без
+     * вопроса студента compose() возвращает null, полоса уходит в ack/шаблон.
+     * Чистоту нельзя доказать → вызова LLM нет.
+     *
+     * @return array{0: string, 1: int} текст для промпта и число маскировок
+     */
+    private function maskedPromptText(string $questionText): array
+    {
+        if (trim($questionText) === '') {
+            return ['', 0];
+        }
+
+        try {
+            return $this->masker->maskOrFail($questionText);
+        } catch (\Throwable $e) {
+            Log::warning('SupportDmLlmReplyComposer: pii-guard fail-closed, текст исключён из промпта', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['', 0];
+        }
+    }
+
+    /**
      * Промпт строится из ПОЛНЫХ разделов справки (см. contextBlock). Заголовок
      * «Разделы справки», а не «Фрагменты»: это разделы целиком, и модель не
-     * должна достраивать обрезанный текст.
+     * должна достраивать обрезанный текст. Вопрос студента идёт ТОЛЬКО в
+     * замаскированном виде (maskedPromptText, гейт Q5).
      */
-    private function userPrompt(string $questionText, string $contextBlock): string
+    private function userPrompt(string $promptText, string $contextBlock): string
     {
         return "Разделы справки:\n".$contextBlock
-            ."\n\nВопрос студента:\n".$questionText
+            ."\n\nВопрос студента:\n".$promptText
             ."\n\nСоставь ответ.";
     }
 }

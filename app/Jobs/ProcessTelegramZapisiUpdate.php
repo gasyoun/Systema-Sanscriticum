@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\MarketingSetting;
+use App\Services\Anons\VideoAnons\VideoAnonsService;
 use App\Services\HomeworkTelegramTagService;
 use App\Services\Telegram\AnnounceCancelCallbackService;
 use App\Services\Telegram\AnnounceCancelService;
@@ -142,6 +143,15 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
             app(AnnounceCancelService::class)->handle($message);
         } catch (Throwable $e) {
             Log::warning('AnnounceCancel: handler failed', ['error' => $e->getMessage()]);
+        }
+
+        // H6546: видео-анонс — копия video от белого списка во все остальные
+        // чаты курса (карта config/video-anons.php) + черновик админам.
+        // Сам фильтрует (флаг / карта / автор / video); отказ — только в лог.
+        try {
+            app(VideoAnonsService::class)->handle($message);
+        } catch (Throwable $e) {
+            Log::warning('VideoAnons: handler failed', ['error' => $e->getMessage()]);
         }
 
         $chat = $message['chat'];

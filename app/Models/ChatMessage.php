@@ -20,10 +20,12 @@ class ChatMessage extends Model
         'is_read',
         'ai_state',
         'source',
+        'is_proactive',
     ];
 
     protected $casts = [
         'is_read' => 'boolean',
+        'is_proactive' => 'boolean',
     ];
 
     /**

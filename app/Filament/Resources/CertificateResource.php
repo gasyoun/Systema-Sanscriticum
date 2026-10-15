@@ -8,6 +8,7 @@ use App\Models\CertificateMilestone;
 use App\Models\Course;
 use App\Models\User;
 use App\Services\CertificateService;
+use App\Support\GreetingName;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
@@ -99,9 +100,10 @@ class CertificateResource extends Resource
                     ->preload()
                     ->required() // <--- ВАЖНО: Не даст сохранить без выбора
                     ->live()
-                    // Подставляем ФИО из профиля в редактируемое поле сертификата.
+                    // Подставляем ФИО из профиля в редактируемое поле сертификата:
+                    // «Фамилия Имя» — отчество, город и пометки убираются сразу.
                     ->afterStateUpdated(function ($state, Forms\Set $set) {
-                        $set('student_name', User::find($state)?->name);
+                        $set('student_name', GreetingName::shortOf(User::find($state)?->name));
                     }),
 
                 // 2. Выбор Курса (обязательно)
@@ -156,7 +158,7 @@ class CertificateResource extends Resource
                 // 3. ФИО, как оно будет напечатано в сертификате (по умолчанию из профиля).
                 Forms\Components\TextInput::make('student_name')
                     ->label('ФИО в сертификате')
-                    ->helperText('Подставлено из профиля студента. Уберите лишнее — город, пометки.'),
+                    ->helperText('Подставлено из профиля студента: фамилия и имя — отчество, город и пометки убираются автоматически.'),
 
                 // 4. Название курса, как оно будет напечатано в сертификате.
                 Forms\Components\TextInput::make('course_title')

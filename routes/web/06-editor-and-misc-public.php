@@ -9,6 +9,7 @@ use App\Http\Controllers\Editor\LectureDraftController;
 use App\Http\Controllers\GiftCertificateController;
 use App\Http\Controllers\JoinClassController;
 use App\Http\Controllers\LlmsTxtController;
+use App\Http\Controllers\MilestoneCertificatePreviewController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PublicChatController;
 use App\Http\Controllers\PublicPresenceController;
@@ -42,6 +43,13 @@ Route::get('/llms.txt', [LlmsTxtController::class, 'index'])->name('llms.txt');
 // ВАЖНО: до catch-all /{slug}, публичный без auth.
 Route::get('/verify/{number}', [CertificateVerificationController::class, 'show'])
     ->name('certificate.verify');
+
+// --- ЖИВОЙ ПРЕДПРОСМОТР ДОКУМЕНТА ВЕХИ (iframe в форме вех в курсе) ---
+// Рендерит certificates.default — тот же блейд, что dompdf печатает в PDF.
+// auth + гейт ADMIN/TEACHER внутри контроллера.
+Route::get('/certificates/milestone-preview', [MilestoneCertificatePreviewController::class, 'show'])
+    ->middleware('auth')
+    ->name('certificates.milestone-preview');
 
 // --- ПУБЛИЧНЫЙ РЕЕСТР ВЫДАННЫХ СЕРТИФИКАТОВ/СПРАВОК ---
 // ВАЖНО: до catch-all /{slug}, публичный без auth. Полные ФИО — решение MG.
@@ -107,6 +115,18 @@ Route::get('/u/{user}', function (User $user) {
 // (Google сам опрашивает ссылку) — см. docs/GOOGLE_CALENDAR_INTEGRATION_ROADMAP.md.
 Route::get('/calendar/feed/{user}/{token}.ics', [CalendarFeedController::class, 'show'])
     ->whereNumber('user')->name('student.calendar.feed');
+
+// --- H6347: ВЫДАЧА FEED-ТОКЕНА ПРЕПОДАВАТЕЛЮ/АДМИНУ (будильник T−10) ---
+// До сих пор токен выдавался только в студкабинете (student.calendar); здесь —
+// та же фид-ссылка, но страница доступна teacher/admin-юзеру. ВАЖНО: до
+// catch-all /{slug}. regenerate() переиспользован — он делает back() без
+// привязки к имени маршрута.
+Route::middleware('auth')->group(function () {
+    Route::get('/teacher-calendar', [CalendarFeedController::class, 'teacherPage'])
+        ->name('teacher.calendar');
+    Route::post('/teacher-calendar/feed/regenerate', [CalendarFeedController::class, 'regenerate'])
+        ->name('teacher.calendar.feed.regenerate');
+});
 
 // --- ТРЕКИНГ-РЕДИРЕКТ «ПОДКЛЮЧИТЬСЯ К ЗАНЯТИЮ» (учёт посещаемости) ---
 // ВАЖНО: до catch-all /{slug}. Публичный: кабинетная ссылка ловит юзера из сессии,

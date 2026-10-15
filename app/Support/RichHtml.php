@@ -26,6 +26,29 @@ final class RichHtml
         return self::sanitizer()->sanitize($html);
     }
 
+    /**
+     * Тело урока: тот же безопасный профиль, но с инлайновыми style —
+     * авторская вёрстка этапов (шапки, карточки практики, акшары) живёт
+     * на inline-стилях, т.к. классы из БД не попадают в Tailwind-бандл.
+     */
+    public static function sanitizeBody(?string $html): string
+    {
+        $html = trim((string) $html);
+        if ($html === '') {
+            return '';
+        }
+
+        $config = (new HtmlSanitizerConfig)
+            ->allowSafeElements()
+            ->allowAttribute('style', '*')
+            ->allowLinkSchemes(['https', 'http', 'mailto'])
+            ->allowMediaSchemes(['https', 'http'])
+            ->allowRelativeLinks()
+            ->allowRelativeMedias();
+
+        return (new HtmlSanitizer($config))->sanitize($html);
+    }
+
     private static function sanitizer(): HtmlSanitizer
     {
         $config = (new HtmlSanitizerConfig)

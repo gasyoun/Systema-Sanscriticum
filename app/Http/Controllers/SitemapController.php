@@ -204,13 +204,9 @@ class SitemapController extends Controller
             // index_enabled (Wave 1+). Wave 0 (default): держим их вне карты сайта
             // («built but unsubmitted», решение D2). Одна каноническая запись на slug.
             if (config('dictionary_seo.index_enabled', false)) {
-                $urls[] = [
-                    'loc' => route('slovar.index'),
-                    'lastmod' => optional(DictionaryWord::max('updated_at'))?->format(DATE_ATOM),
-                    'changefreq' => 'monthly',
-                    'priority' => '0.5',
-                ];
-
+                // Хаб /slovar — постоянно noindex (поисковый интерфейс, layouts/slovar
+                // default), в карту сайта не отдаём ни в одной волне (H6160 Medium-1):
+                // sitemap несёт только индексируемые URL слов.
                 DictionaryWord::query()
                     ->whereNotNull('slug')
                     ->whereHas('dictionary', fn ($q) => $q->where('is_active', true))

@@ -400,6 +400,7 @@ deliveries are journaled too), `bank_status`, `reported_amount`, `decision`:
 | `unmatched` | valid signature but no local payment matched |
 | `hold_not_captured` | Tochka two-stage-card hold (`authorized`), not a capture — **unconditionally never** grants access (§5.1); status stays `pending`. Independent of `tochka_webhook_guard`. |
 | `rejected_charge` | **PayPal Subscriptions only** ([`PaypalSubscriptionsWebhookController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/Webhooks/PaypalSubscriptionsWebhookController.php), H2304 spec 3) — a charge event fails a structural check (no/ambiguous commitment, missing `subscription_id`, or amount vs. `meta.expected_charge_amount`/`_currency` beyond `checkout.paypal_webhook_amount_tolerance`, default 1.00). Journaled **outside** the rolled-back transaction under a per-attempt hash so a PayPal retry reprocesses after repair; HTTP 422. The whole subscriptions surface stays behind `features.paypal_subscriptions` (default OFF, §7b) — this decision exists in the ledger vocabulary but is dark in prod. |
+| `breaker_refused` | valid signature and a grant that *would* apply, but the `sentinel_breaker` money-mutation circuit breaker (H4930, `features.money_mutation_breaker`, default OFF) is frozen — the N-th money mutation inside its window was refused; the delivery is journaled and the payment left `pending` (retry lands once the breaker cools). Dark in prod while the flag is OFF. |
 
 ### 5.3 The three refusal guards — flag `tochka_webhook_guard` (**default ON** since 01-08-2026)
 
@@ -425,8 +426,8 @@ All webhook processing for a matched payment runs under `lockForUpdate()` in one
 transaction — parallel deliveries for one order serialize, so the paid path (groups +
 welcome email) cannot fire twice. The whole surface is covered by
 [TochkaWebhookTest.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Webhooks/TochkaWebhookTest.php)
-— **30 tests, 112 assertions, green in this worktree (18-08-2026 re-verification;
-grew from 13/47 at authoring as H2337/H2304 added the hold/settled-matrix and
+— **31 tests, 116 assertions, green in this worktree (04-10-2026 re-verification;
+30/112 at the 18-08-2026 pass, 13/47 at authoring — H2337/H2304 added the hold/settled-matrix and
 missing-groups-fail-closed coverage)** — **the template every new money test should
 follow** (flag-OFF parity proof + flag-ON behavior).
 

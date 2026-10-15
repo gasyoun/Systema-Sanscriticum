@@ -11,18 +11,21 @@
 @section('content')
 <div class="min-h-screen bg-[#0A0D14] text-white py-16 lg:py-24 relative overflow-hidden font-sans">
 
+    {{--  — «Спасибо, ваш голос учтён!» после голосования на карточке каталога. --}}
+    @include('shop.partials.waitlist-voted-toast')
+
     <div class="absolute top-0 left-1/4 w-96 h-96 bg-brand/10 rounded-full blur-[120px] pointer-events-none"></div>
     <div class="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[150px] pointer-events-none"></div>
 
     <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
         <div class="text-center mb-10">
             <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-6">
-                Общество ревнителей санскрита
+                Курсы санскрита и хинди онлайн
             </h1>
             {{-- Подзаголовок — ориентация, не лозунг (H1868): что здесь есть и
                  куда идти новичку, вместо «выберите курс» перед стеной карточек. --}}
             <p class="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed mb-6">
-                Курсы санскрита и хинди — от первых букв с нуля до чтения текстов в оригинале.
+                От первых букв с нуля до чтения текстов в оригинале.
                 Если вы здесь впервые, ниже — короткие ответы на вопросы, с которых обычно начинают.
             </p>
 

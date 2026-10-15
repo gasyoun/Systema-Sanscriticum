@@ -23,6 +23,14 @@
         Запись на курс — на странице курса.
     </p>
 
+    @if($filterDirection !== null || $filterTeacher !== null)
+        {{-- H6313: активный фильтр направление/преподаватель; сброс — ссылка без параметров. --}}
+        <p class="sch-filter">
+            Фильтр:@if($filterDirection !== null) направление «{{ $filterDirectionName }}»@endif@if($filterDirection !== null && $filterTeacher !== null) ·@endif@if($filterTeacher !== null) преподаватель «{{ $filterTeacher }}»@endif
+            — <a href="/raspisanie">показать всё</a>.
+        </p>
+    @endif
+
     <section class="mb-8 rounded-2xl border border-[#E85C24] bg-[#111622] p-6" aria-labelledby="grammar-intake">
         <p class="text-[#E85C24] font-bold mb-2">Набор открыт</p>
         <h2 id="grammar-intake" class="text-2xl font-bold text-white mb-2">Новые онлайн-группы грамматики санскрита</h2>
@@ -98,6 +106,18 @@
             .sch-meta { color: #64748b; font-size: .875rem; align-self: center; margin-left: auto; }
             .sch-chev { color: #64748b; font-size: .8rem; align-self: center; transition: transform .2s ease; }
             .sch-acc[open] .sch-chev { transform: rotate(180deg); }
+            /* H6313: бейдж вида занятия (разовое / обычное) — в оглавлении и заголовке. */
+            .sch-kind {
+                flex: 0 0 auto; align-self: center;
+                padding: 2px 9px; border-radius: 999px;
+                font-size: .75rem; font-weight: 700; line-height: 1.4;
+                color: #cbd5e1; background: #1F2636; border: 1px solid #2b3550;
+                white-space: nowrap;
+            }
+            .sch-kind-open { color: #E85C24; border-color: #E85C24; }
+            .sch-kind-toc { padding: 0 7px; margin-left: .4rem; font-size: .7rem; }
+            .sch-filter { color: #E85C24; margin: -1.5rem 0 2.5rem; }
+            .sch-filter a { color: #cbd5e1; text-decoration: underline; text-underline-offset: 3px; }
             .sch-body { color: #cbd5e1; border-top: 1px solid #1F2636; margin: 0 1.5rem; padding: 1.25rem 0 1.5rem; }
             .sch-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1.25rem; }
         </style>
@@ -112,7 +132,7 @@
             <ol class="sch-toc">
                 @foreach($courses as $row)
                     <li>
-                        <a href="#sch-{{ $row['no'] }}" class="sch-toc-link">{{ $row['no'] }}. {{ $row['displayTitle'] }}</a>@if($row['nextLabel']) — {{ $row['nextLabel'] }}@endif@if($row['course']->teacher) — <a href="/online/prepodavatel/{{ \App\Support\ShopCatalogUrl::encodeWords($row['course']->teacher->name) }}" class="sch-toc-teacher">{{ $row['teacherDisplay'] }}</a>@endif
+                        <a href="#sch-{{ $row['no'] }}" class="sch-toc-link">{{ $row['no'] }}. {{ $row['displayTitle'] }}</a><span class="sch-kind sch-kind-toc{{ $row['kind'] === 'разовое' ? ' sch-kind-open' : '' }}">{{ $row['kind'] === 'разовое' ? 'Разовое' : 'Обычное' }}</span>@if($row['nextLabel']) — {{ $row['nextLabel'] }}@endif@if($row['course']->teacher) — <a href="/online/prepodavatel/{{ \App\Support\ShopCatalogUrl::encodeWords($row['course']->teacher->name) }}" class="sch-toc-teacher">{{ $row['teacherDisplay'] }}</a>@endif
                     </li>
                 @endforeach
             </ol>
@@ -128,6 +148,7 @@
                             <span class="sch-title">{{ $row['displayTitle'] }}</span>
                             @if($course->teacher)<a href="/online/prepodavatel/{{ \App\Support\ShopCatalogUrl::encodeWords($course->teacher->name) }}" class="sch-teacher">{{ $row['teacherDisplay'] }}</a>@endif
                         </span>
+                        <span class="sch-kind{{ $row['kind'] === 'разовое' ? ' sch-kind-open' : '' }}">{{ $row['kind'] === 'разовое' ? 'Разовое' : 'Обычное' }}</span>
                         <span class="sch-meta">@if($row['nextLabel']){{ $row['nextLabel'] }} · @endifзанятий: {{ $row['lessonsCount'] }}@if($row['progress']) · {{ $row['progress'] }}@endif</span>
                         <i class="fas fa-chevron-down sch-chev" aria-hidden="true"></i>
                     </summary>

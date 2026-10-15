@@ -79,3 +79,4 @@ review/
 
 # H5135 V4: MG-pasted ops-bot token, never commit
 .env.ops_bot
+.env.testing
