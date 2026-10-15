@@ -13,6 +13,7 @@ use App\Models\Payment;
 use App\Models\Tariff;
 use App\Models\User;
 use App\Support\MiniCourseDrip;
+use App\Support\ShopVkPixel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -259,5 +260,18 @@ class MiniCourseQuickEnrollTest extends TestCase
             ->assertOk()
             ->assertDontSee(route('mini-course.quick'), false)
             ->assertSee('nsp-root', false);
+    }
+
+    /** @test */
+    public function minikurs_campaign_pixel_counts_the_quick_enroll_page(): void
+    {
+        config(['analytics.vk_pixel.campaign_pixels.minikurs.enabled' => true]);
+
+        $pixels = ShopVkPixel::campaignPixelsForPath('k/'.self::SLUG.'/start');
+
+        $this->assertCount(1, $pixels);
+        $this->assertContains('quick_enroll_submit', $pixels[0]['forward_goals']);
+        // Клик «Записаться» считается только на лендинге, не на самой форме.
+        $this->assertSame([], $pixels[0]['click_goals']);
     }
 }
