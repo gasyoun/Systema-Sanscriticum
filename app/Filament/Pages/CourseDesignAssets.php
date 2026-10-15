@@ -105,7 +105,7 @@ class CourseDesignAssets extends Page implements HasTable
      * не могут: баннеры живут на курсе. Показываем списком над таблицей, чтобы
      * их не теряли — сначала привязать курс в «Списке ожидания».
      *
-     * @return \Illuminate\Support\Collection<int, CourseWaitlistItem>
+     * @return Collection<int, CourseWaitlistItem>
      */
     public function getUnlinkedWaitlistItemsProperty(): Collection
     {
