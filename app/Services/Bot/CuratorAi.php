@@ -7,6 +7,7 @@ namespace App\Services\Bot;
 use App\Jobs\OllamaShadowReplyJob;
 use App\Models\ChatMessage;
 use App\Models\User;
+use App\Services\Support\SupportStudentPiiMasker;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -15,13 +16,22 @@ use Illuminate\Support\Facades\Log;
  * любой OpenAI-совместимый chat-completions API (OpenRouter, прямой DeepSeek…),
  * base_url задаётся в services.openrouter. Контроллеры лишь сохраняют входящее
  * сообщение и шлют ответ в свой канал, а думает — этот класс.
+ *
+ * H6352-r3 (рулинг 5 грилла 10-10): перед ЛЮБЫМ внешним вызовом промпт проходит
+ * через {@see SupportStudentPiiMasker} — личности студентов (имя, почта,
+ * телефон, TG-хэндл, VK id) уходят провайдеру только псевдонимами <PII:…:N>, а
+ * ответ восстанавливается обратно. Маскировщик недоступен → внешнего вызова
+ * нет (fail-closed), бот отвечает детерминированно.
  */
 class CuratorAi
 {
     /** Сколько последних сообщений диалога класть в контекст. */
     private const HISTORY_LIMIT = 15;
 
-    public function __construct(private BotKnowledgeBase $knowledgeBase) {}
+    public function __construct(
+        private BotKnowledgeBase $knowledgeBase,
+        private SupportStudentPiiMasker $piiMasker,
+    ) {}
 
     /**
      * Сгенерировать ответ студенту. Подразумевается, что входящее сообщение
@@ -179,6 +189,26 @@ class CuratorAi
 
         $endpoint = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/').'/chat/completions';
 
+        // H6352-r3: во внешний провайдер уходит только замаскированный промпт.
+        // Одна область псевдонимов на вызов — один человек = один тег во всех
+        // сообщениях, ответ восстанавливается тем же словарём (unmask).
+        try {
+            $this->piiMasker->begin();
+            $maskedMessages = [];
+            foreach ($messages as $message) {
+                [$maskedContent] = $this->piiMasker->mask((string) ($message['content'] ?? ''));
+                $maskedMessages[] = [
+                    'role' => (string) ($message['role'] ?? 'user'),
+                    'content' => $maskedContent,
+                ];
+            }
+        } catch (\Throwable) {
+            // Fail-closed: чистоту промпта доказать нельзя — внешнего вызова нет.
+            Log::error('CuratorAi: PII-маскировщик недоступен — вызов OpenRouter отменён');
+
+            return $empty;
+        }
+
         try {
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer '.$apiKey,
@@ -189,7 +219,7 @@ class CuratorAi
                 'X-Title' => 'Academy of Sanskrit (ORS) bot',
             ])->timeout(45)->post($endpoint, [
                 'model' => $model,
-                'messages' => $messages,
+                'messages' => $maskedMessages,
                 'temperature' => 0.3,
                 'max_tokens' => 2000,
             ]);
@@ -204,7 +234,9 @@ class CuratorAi
             }
 
             $answer = $response->json('choices.0.message.content');
-            $content = is_string($answer) && trim($answer) !== '' ? trim($answer) : null;
+            $content = is_string($answer) && trim($answer) !== ''
+                ? $this->piiMasker->unmask(trim($answer))
+                : null;
 
             $promptTokens = $response->json('usage.prompt_tokens');
             $completionTokens = $response->json('usage.completion_tokens');

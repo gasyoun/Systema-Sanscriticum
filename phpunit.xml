@@ -38,6 +38,9 @@
         <env name="TELEGRAM_SUPPORT_ENABLED" value="false"/>
         <!-- H1914 server guards: CI is Linux but not prod — never audit host systemd/cron. -->
         <env name="SERVER_GUARDS_VERIFY" value="false"/>
+        <!-- H6352-r5: гейт 2FA в тестах выключен по умолчанию (сотни тестов ходят
+             админами по страницам); TwoFactorGateTest включает его у себя. -->
+        <env name="TWO_FACTOR_ENFORCED" value="false"/>
         <env name="CABINET_PROBE_CHECK_GUARDS" value="false"/>
         <!-- Outbound payment-TLS probe: tests must never hit the real acquiring API
              (each test enables it explicitly with Http::fake). -->
