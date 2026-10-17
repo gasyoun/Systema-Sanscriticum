@@ -112,7 +112,7 @@ rerank-ноги на всех 100 вопросах. Живое включени�
 | **4 — проза и факты** | карта покрытия `SupportAnswerFactResolver` по всем 100Q; черновики новых разделов wiki для accept MG; проза приезжает экспортом под гейтом дрейфа | агент (карта, черновики), MG (accept) | таблица «факт отвечает / проза отвечает / никто» по 100Q |
 | **5 — инфраструктура** | SLI свежести + пин модели; один retrieval-сервис с четырьмя политиками | агент | проба ловит искусственно состаренный индекс; отказ на чужой `model|dims`; четыре политики на одном сервисе, тесты границ |
 
-**Исполнение волны 1 минтилось по этим решениям 17-10-2026:** [H6917](https://github.com/gasyoun/Uprava/blob/main/handoffs/H6917-Sonnet_Systema-Sanscriticum_rag-corpus-integrity-drift-gate_17.10.26.md) — целостность корпуса (гейт дрейфа, пере-разметка 100Q, coverage/prune, `CORPUS.md`), executor Sonnet; [H6918](https://github.com/gasyoun/Uprava/blob/main/handoffs/H6918-Opus_Systema-Sanscriticum_support-history-gate-sample-verdict_17.10.26.md) — вердикт H5562 вместо `TBD`, executor Opus, class data с отдельным верификатором.
+**Исполнение волны 1 минтилось по этим решениям 17-10-2026:** [H6917](https://github.com/gasyoun/Uprava/blob/main/handoffs/H6917-DeepSeek_Systema-Sanscriticum_rag-corpus-integrity-drift-gate_17.10.26.md) — целостность корпуса (гейт дрейфа, пере-разметка 100Q, coverage/prune, `CORPUS.md`), executor DeepSeek (ре-тир 17-10; Sonnet → DeepSeek, механический класс); [H6918](https://github.com/gasyoun/Uprava/blob/main/handoffs/H6918-Opus_Systema-Sanscriticum_support-history-gate-sample-verdict_17.10.26.md) — вердикт H5562 вместо `TBD`, executor Opus, class data с отдельным верификатором.
 
 ## 5. GTD-строки, рождённые решением
 
