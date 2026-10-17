@@ -61,8 +61,15 @@ def slug_part(part: str) -> str:
     slug = re.sub(r"[\W_]+", "-", slug)
     slug = slug.strip("-")
     if slug == "":
-        # PHP hashes the ORIGINAL (unstripped, original-case) part.
-        slug = "section-" + hashlib.md5(part.encode("utf-8")).hexdigest()[:8]
+        # PHP hashes the ORIGINAL (unstripped, original-case) part. MD5 is NOT
+        # used for security here: the id must be byte-identical to what
+        # FaqCorpusParser::chunkIdFromPath() produces (substr(md5($part), 0, 8)),
+        # or the gate would report phantom drift on emoji/punctuation-only
+        # headings. Swapping the algorithm would silently break that parity.
+        # nosemgrep: python.lang.security.insecure-hash-algorithms-md5
+        slug = "section-" + hashlib.md5(  # noqa: S324 - PHP-parity slug, not a signature
+            part.encode("utf-8"), usedforsecurity=False
+        ).hexdigest()[:8]
     return slug
 
 
