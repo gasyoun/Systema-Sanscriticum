@@ -1017,6 +1017,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TRUST_CROWDFUNDING_RAISED_RUB` | required | `—` | config/trust.php:35<br>config/trust.php:36 |
 | `TRUST_GRADUATES_COUNT` | required | `—` | config/trust.php:19<br>config/trust.php:20 |
 | `TRUST_SINCE_YEAR` | optional | `2005` | config/trust.php:14 |
+| `TWO_FACTOR_ENFORCED` | optional | `true` | config/security.php:41 |
 | `UPGRADE_CREDIT_REFUND_LINK` | optional | `false` | config/features.php:1172 |
 | `VIDEO_ANONS_COPIES_ENABLED` | feature-flag | `false` | config/video-anons.php:23 |
 | `VIDEO_ANONS_ENABLED` | feature-flag | `true` | config/video-anons.php:18 |

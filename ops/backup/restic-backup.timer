@@ -1,9 +1,13 @@
 [Unit]
-Description=Run restic-backup.service hourly
+Description=Run restic-backup.service daily (#3038: hourly→daily, ingest ~2.7 GB/day on .91)
 
 [Timer]
-OnCalendar=hourly
-RandomizedDelaySec=300
+# H6352-r9 / #3038: ежечасная пара пушей (systema ~9.4 GiB + samudra ~5.4 GiB)
+# добавляла ~0.2 ГБ новых паков в час (~2.7 ГБ/сутки) в нерасширяемый диск .91.
+# Рулинг MG (грилл 10-10, карта 12): резать частоту у источника — часовые
+# пуши → суточные. RPO-трейд-офф: 24 ч (отклонён вариант «4–6 пушей/сутки»).
+OnCalendar=*-*-* 03:30:00
+RandomizedDelaySec=600
 Persistent=true
 
 [Install]
