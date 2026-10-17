@@ -32,6 +32,8 @@
 10 строк с устаревшим хэшем пере-эмбедены; `knowledge:coverage --require-embedded`
 теперь выходит 0 (`rows=82, embedded=82, stale=0, missing=0`).
 
+Синк уронил и `main` (`StudentFaqPageTest` пинил пять заголовков старой эпохи) — пины обновлены под новые заголовки, контракт записан в CORPUS.md.
+
 Добавлен `resources/knowledge/CORPUS.md` — контракт четырёх полос (faq live ·
 faq_from_lectures killed · lesson OFF · support-history fenced): источник, лицензия,
 забор, команда индексации, eval-набор, владелец — плюс ритуал синка и запись

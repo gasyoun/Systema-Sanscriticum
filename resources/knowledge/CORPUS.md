@@ -142,6 +142,11 @@ transcript on the H6917 PR.
   `faq`.
 - New fence (prices, PII, paid content) → name it in the Fence column and in the
   code comment that enforces it.
+- A heading rename is a breaking change for **four** surfaces: the eval
+  fixtures' `expected_chunk_ids`, every stored `faq_chunk_id` (prune or re-key),
+  `StudentFaqPageTest::PINNED_SECTIONS` (pinned heading text), and any pinned
+  corpus id in other tests. The drift gate covers the first two; the suite
+  covers the last two.
 - Changing the chunk-id derivation is a breaking change for every stored id:
   announce it, re-export, re-index, re-key the fixture, and keep the drift gate
   red until all three are done.
