@@ -777,7 +777,8 @@ class ServerGuardsAuditorTest extends TestCase
         $sys = $this->healthy();
         $sys->backupDestinations = [
             ['disk' => 'local', 'reachable' => true, 'newestAt' => $old, 'newestBytes' => $plausible],
-            ['disk' => 'yandex_disk', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => $plausible],
+            // H6905: живой off-site — restic_sftp; yandex_disk best-effort.
+            ['disk' => 'restic_sftp', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => null],
         ];
         $lines = $this->lines($this->auditor($sys)->audit());
         $this->assertStringContainsString('[warning] backup-fresh: новейший архив на локальный диске local старше', $lines);
@@ -785,31 +786,38 @@ class ServerGuardsAuditorTest extends TestCase
         $sys = $this->healthy();
         $sys->backupDestinations = [
             ['disk' => 'local', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => $plausible],
-            ['disk' => 'yandex_disk', 'reachable' => true, 'newestAt' => $old, 'newestBytes' => $plausible],
+            ['disk' => 'restic_sftp', 'reachable' => true, 'newestAt' => $old, 'newestBytes' => null],
         ];
         $lines = $this->lines($this->auditor($sys)->audit());
-        $this->assertStringContainsString('[critical] backup-fresh: новейший архив на off-site диске yandex_disk старше', $lines);
+        $this->assertStringContainsString('[critical] backup-fresh: новейший архив на off-site диске restic_sftp старше', $lines);
     }
 
     /**
      * Ровно замер 19-08-2026: два обрезка по 11.7 МиБ со свежей датой, и
      * backup:monitor называет назначение здоровым. Без порога размера эта
      * проверка была бы такой же зелёной лампочкой над пустым сейфом.
+     *
+     * H6905: обрезок теперь возможен только на best-effort линии (yandex_disk) —
+     * restic-снапшот атомарен. Поэтому находка остаётся ВИДНОЙ, но идёт INFO и
+     * не блокирует probe: иначе каждые 15 минут краснело бы из-за линии,
+     * структурно неспособной доставить 4-ГБ архив (H3371).
      */
-    public function test_a_fresh_but_truncated_offsite_archive_is_critical(): void
+    public function test_a_fresh_but_truncated_best_effort_archive_is_reported_but_not_blocking(): void
     {
         $sys = $this->healthy();
         $sys->backupDestinations = [
             ['disk' => 'local', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => 1425272697],
             ['disk' => 'yandex_disk', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => 11757968],
+            ['disk' => 'restic_sftp', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => null],
         ];
 
         $findings = $this->auditor($sys)->audit();
         $lines = $this->lines($findings);
 
-        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+        $this->assertFalse(ServerGuardsAuditor::hasBlocking($findings), 'best-effort линия не имеет права блокировать probe');
+        $this->assertStringContainsString('[info] backup-fresh: новейший архив на off-site (best-effort) диске yandex_disk', $lines);
         $this->assertStringContainsString('ОБРЕЗОК оборвавшейся загрузки', $lines);
-        $this->assertStringContainsString('нет ни одного живого off-site назначения', $lines);
+        $this->assertStringNotContainsString('нет ни одного живого off-site назначения', $lines);
     }
 
     public function test_an_unreachable_offsite_destination_is_critical(): void
@@ -817,13 +825,60 @@ class ServerGuardsAuditorTest extends TestCase
         $sys = $this->healthy();
         $sys->backupDestinations = [
             ['disk' => 'local', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => 1425272697],
-            ['disk' => 'yandex_disk', 'reachable' => false, 'newestAt' => null, 'newestBytes' => null],
+            ['disk' => 'restic_sftp', 'reachable' => false, 'newestAt' => null, 'newestBytes' => null],
         ];
 
         $this->assertStringContainsString(
-            '[critical] backup-fresh: off-site диск yandex_disk недостижим',
+            '[critical] backup-fresh: off-site диск restic_sftp недостижим',
             $this->lines($this->auditor($sys)->audit()),
         );
+    }
+
+    /**
+     * H6905, главный ассерт: пока рестик везёт дамп БД на другой хост, старая
+     * (best-effort) линия не имеет права объявлять «нет ни одного живого
+     * off-site назначения» — именно этот ложный critical 12 суток подряд
+     * висел на проде, хотя живая off-site копия была.
+     */
+    public function test_a_live_restic_sftp_leg_clears_the_no_offsite_finding_while_yandex_is_stale(): void
+    {
+        $old = time() - (((int) $this->spec->get('BACKUP_MAX_AGE_DAYS') + 4) * 86400);
+        $plausible = ((int) $this->spec->get('BACKUP_MIN_ARCHIVE_MB') + 1) * 1024 ** 2;
+
+        $sys = $this->healthy();
+        $sys->backupDestinations = [
+            ['disk' => 'local', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => $plausible],
+            ['disk' => 'yandex_disk', 'reachable' => true, 'newestAt' => $old, 'newestBytes' => $plausible],
+            ['disk' => 'restic_sftp', 'reachable' => true, 'newestAt' => time() - 3600, 'newestBytes' => null],
+        ];
+
+        $findings = $this->auditor($sys)->audit();
+        $lines = $this->lines($findings);
+
+        $this->assertStringNotContainsString('нет ни одного живого off-site назначения', $lines);
+        $this->assertStringContainsString('[info] backup-fresh: новейший архив на off-site (best-effort) диске yandex_disk старше', $lines);
+        $this->assertFalse(ServerGuardsAuditor::hasBlocking($findings));
+    }
+
+    /**
+     * Обратная сторона: best-effort линия НИКОГДА не закрывает вопрос о живой
+     * off-site копии. Свежий yandex_disk без restic — по-прежнему critical.
+     */
+    public function test_a_fresh_best_effort_lane_never_clears_the_offsite_question(): void
+    {
+        $plausible = ((int) $this->spec->get('BACKUP_MIN_ARCHIVE_MB') + 1) * 1024 ** 2;
+
+        $sys = $this->healthy();
+        $sys->backupDestinations = [
+            ['disk' => 'local', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => $plausible],
+            ['disk' => 'yandex_disk', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => $plausible],
+        ];
+
+        $findings = $this->auditor($sys)->audit();
+        $lines = $this->lines($findings);
+
+        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+        $this->assertStringContainsString('нет ни одного живого off-site назначения', $lines);
     }
 
     public function test_backup_destinations_that_cannot_be_read_are_not_a_finding(): void

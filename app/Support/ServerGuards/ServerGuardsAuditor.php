@@ -916,6 +916,16 @@ final class ServerGuardsAuditor
             ? (int) $this->spec->get('BACKUP_MIN_ARCHIVE_MB') * 1024 ** 2
             : 0;
         $offsite = $this->spec->has('BACKUP_OFFSITE_DISKS') ? $this->spec->csv('BACKUP_OFFSITE_DISKS') : [];
+        // H6905: диски, которые мы ДЕРЖИМ как бонус, а не как обязательство.
+        // Замер 17-10-2026: spatie-ветка yandex_disk структурно не доставляет
+        // 4-ГБ архив (аплинк ~130 КБ/с, H3371) — за двое суток 47 частей из 198.
+        // Пока это так, находки по ней идут INFO: видны в выводе probe, но не
+        // красят каждые 15 минут красным и не подменяют вопрос «есть ли живая
+        // off-site копия» (его закрывает restic_sftp). Как только линия
+        // оживёт — убрать диск из этого списка, и строгость вернётся.
+        $bestEffort = $this->spec->has('BACKUP_BEST_EFFORT_DISKS')
+            ? $this->spec->csv('BACKUP_BEST_EFFORT_DISKS')
+            : [];
         $requireOffsite = $this->spec->has('BACKUP_REQUIRE_OFFSITE')
             && $this->spec->get('BACKUP_REQUIRE_OFFSITE') === '1';
 
@@ -925,8 +935,11 @@ final class ServerGuardsAuditor
         foreach ($destinations as $row) {
             $disk = $row['disk'];
             $isOffsite = in_array($disk, $offsite, true);
-            $severity = $isOffsite ? GuardFinding::CRITICAL : GuardFinding::WARNING;
-            $where = $isOffsite ? 'off-site' : 'локальный';
+            $isBestEffort = in_array($disk, $bestEffort, true);
+            $severity = $isBestEffort
+                ? GuardFinding::INFO
+                : ($isOffsite ? GuardFinding::CRITICAL : GuardFinding::WARNING);
+            $where = $isBestEffort ? 'off-site (best-effort)' : ($isOffsite ? 'off-site' : 'локальный');
 
             if (! $row['reachable']) {
                 $findings[] = new GuardFinding($severity, 'backup-fresh', "{$where} диск {$disk} недостижим — бэкап туда не доедет");
@@ -961,7 +974,10 @@ final class ServerGuardsAuditor
                 );
             }
 
-            if ($isOffsite && $fresh && ($minBytes === 0 || $bytes === null || $bytes >= $minBytes)) {
+            // Best-effort диск НЕ закрывает вопрос «есть ли живая off-site
+            // копия» (H6905): иначе бонусная линия делала бы зелёной проверку,
+            // написанную ровно против «зелёной лампочки над пустым сейфом».
+            if ($isOffsite && ! $isBestEffort && $fresh && ($minBytes === 0 || $bytes === null || $bytes >= $minBytes)) {
                 $liveOffsite++;
             }
         }
