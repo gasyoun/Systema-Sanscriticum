@@ -470,4 +470,8 @@ jobs:
         with:
           python-version: "3.11"
       - name: Citation-key drift check
-        run: python scripts/check_faq_corpus_drift.py --check
+        # Both fixtures cite chunk_ids: the 100-question ratchet set and the
+        # 20-question fresh set (H4001 live runs). Both must resolve.
+        run: |
+          python scripts/check_faq_corpus_drift.py --check
+          python scripts/check_faq_corpus_drift.py --check --fixture tests/fixtures/faq_rag_eval_fresh.json
