@@ -47,6 +47,9 @@ edits**. Every stored `faq_chunk_id` and every `expected_chunk_ids` entry in the
 eval fixture is a citation of a heading path, so renaming a heading is a
 breaking change even when the answer text is untouched.
 
+Threshold calibration (K5): `docs/K5_SCORE_FLOOR_CALIBRATION_2026-10-18.md` —
+F floor 15.7, precision 100 %, coverage 41 %; refusal cards 30/30.
+
 ## Gates
 
 ### 1. Corpus drift gate (CI)
