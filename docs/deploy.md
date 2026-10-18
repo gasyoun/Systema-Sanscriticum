@@ -91,7 +91,9 @@ _Created: 02-07-2026 · Last updated: 24-09-2026_
    `cabinet:probe --fail-on-critical` выходит 1: `fail` — это `exit 1`, и chown
    после `|| fail` не выполнится (H3194; 19-08-2026 21:01Z оставил 8 root-овых
    вьюх именно так). Финальный гард `assert_no_root_views` роняет деплой, если
-   хоть один файл под `storage/framework/views` остался не нашим.
+   хоть один файл под `storage/framework/views` остался не нашим. С H7060
+   root-овые шаги включают и apply предохранителей (шаг 9b), поэтому chown
+   остаётся после него.
 7. **`systemctl reload php{ver}-fpm`** — сброс OPcache (версия PHP определяется
    автоматически, переживет апгрейд 8.1 → 8.3).
 8. `supervisorctl restart horizon` — `horizon:terminate` на этом проде воркеры
@@ -113,6 +115,17 @@ _Created: 02-07-2026 · Last updated: 24-09-2026_
    (возврат на вебхук: `php artisan telegram:webhooks --set` +
    `supervisorctl stop telegram-student-poll`) поднимать нельзя. Не `fail`.
 9. Смоук: `curl` главной страницы, ожидается 200; иначе скрипт падает.
+9b. **Предохранители ОС (H7060): `guards:verify` → dry-run diff → apply → `guards:verify`.**
+   Раньше здесь была только проверка, и законный коммит, правивший managed-файл,
+   становился вечным дрейфом: код зелёный, файл на машине старый, auto-deploy
+   fuse горит, 26 алертов за 36 часов ничего не меняют (инцидент 18-10-2026,
+   row 9). Теперь `scripts/deploy_guards_sync.sh` печатает dry-run diff, применяет
+   `scripts/server_guards_apply.sh` и перепроверяет. Каждая строка `changed`
+   уходит в `deploys.log` — деплой объявляет каждое системное изменение.
+   Режим `--rollback` остаётся **verify-only**: аварийный откат не переписывает
+   системный конфиг. Если apply не закрыл дрейф, деплой по-прежнему выходит 0
+   (issue #1143: здоровый код не откатывается из-за managed-файла) и громко
+   зовёт `scripts/server_guards_apply.sh` вручную.
 10. Строка в `storage/logs/deploys.log`: дата, диапазон коммитов, версия PHP, кто.
 
 ## Правка `deploy.sh` вступает в силу только со СЛЕДУЮЩЕГО прогона

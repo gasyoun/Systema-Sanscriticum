@@ -366,7 +366,7 @@ GitHub, реальная частота которого измерена и с�
 |---|---|---|
 | Значения (числа памяти, пороги, таймауты) | [scripts/server_guards.conf](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards.conf) | **одно** место, откуда их берут и applier, и проверка |
 | Сами предохранители | [scripts/server_guards/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/scripts/server_guards) + [manifest.psv](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/manifest.psv) | шаблоны с `@@ПОДСТАНОВКАМИ@@` и список «файл → куда → права» |
-| Применить | `sudo bash `[scripts/server_guards_apply.sh](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards_apply.sh) | идемпотентно; второй прогон ничего не меняет; бэкап в `/root/preflight-backup-<stamp>/` |
+| Применить | `sudo bash `[scripts/server_guards_apply.sh](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards_apply.sh) | идемпотентно; второй прогон ничего не меняет; бэкап в `/root/preflight-backup-<stamp>/`. С H7060 apply на drift зовёт сам `deploy.sh` (шаг 9b) |
 | Проверить | `php artisan guards:verify` ([VerifyServerGuards.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/VerifyServerGuards.php)) | non-zero + имя пропавшего; висит на `cabinet:probe` и на [deploy.sh](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh) |
 
 Документ ниже объясняет **почему** каждый предохранитель такой; менять значения
@@ -676,19 +676,25 @@ cat /var/www/html/storage/framework/auto-deploy-retries              # скол�
 обёртки: против до-H2149 копии он падает 5 из 14 — тест, зелёный на сломанном и
 на починенном коде, не доказывает ничего.
 
-> **Правка managed-файла: код выкладывается, apply — отдельный шаг (issue #1143).**
-> `deploy.sh` в конце зовёт `guards:verify` и **никогда** не зовёт
-> `server_guards_apply.sh` (выкладка кода не должна молча менять системный
-> конфиг). После merge копии РАЗНЫЕ (в git — новая, на машине — старая) — это
-> честный drift. С 06-08-2026 `deploy.sh` в этом случае выходит с кодом **0** (код жив; раньше был exit 1 → rollback)
-> (код уже жив), а `systema-auto-deploy-run.sh` **не откатывает** HEAD. До фикса
-> exit 1 вызывал цикл «накат → rollback → soft fuse» (05-08-2026, #1143).
+> **Правка managed-файла: деплой сам применяет guard-конфиг (H7060).**
+> До H7060 `deploy.sh` в конце звал только `guards:verify` и **никогда** не звал
+> `server_guards_apply.sh`. Законный коммит, правивший managed-файл, давал
+> вечный drift: код зелёный, копия на машине старая, auto-deploy fuse горел, а
+> 26 алертов за 36 часов не меняли ни одного файла (инцидент 18-10-2026, row 9).
+> Теперь `scripts/deploy_guards_sync.sh` в том же деплое делает
+> `guards:verify` → **dry-run diff** → `server_guards_apply.sh` → `guards:verify`
+> и копирует каждую строку `changed` в `deploys.log` — системное изменение не
+> бывает молчаливым. Contract #1143 сохранён: если apply не закрыл дрейф,
+> `deploy.sh` всё равно выходит **0** (код жив; раньше был exit 1 → rollback), а
+> `systema-auto-deploy-run.sh` **не откатывает** HEAD и не трогает fuse.
+> Режим `--rollback` остаётся **verify-only** — аварийный откат не переписывает
+> системный конфиг.
 >
-> Apply по-прежнему нужен руками (или осознанным ops-шагом):
+> Ручной apply остаётся для случая, когда деплой не смог закрыть дрейф:
 >
 > ```sh
-> cd /var/www/html && bash deploy.sh           # код доехал; exit 0 при drift — ОЖИДАЕМО
-> bash scripts/server_guards_apply.sh          # ставит новый managed-файл
+> cd /var/www/html && bash deploy.sh           # код доехал; apply — внутри деплоя
+> sudo bash scripts/server_guards_apply.sh     # только если деплой сказал, что drift остался
 > sudo -u www-data env HOME=/tmp php artisan guards:verify   # «все проверки пройдены»
 > ```
 >
@@ -1088,9 +1094,9 @@ Telegram и не дают деплою exit 75.
 ### 12.3 Что осталось человеку
 
 Прямого доступа не требует — юниты ставит `server_guards_apply.sh` (root на
-`.92`, `bash scripts/server_guards_apply.sh` после деплоя кода). Applied
-managed-файл, как и `systema-madeline-daemon` (§9): код выкладывается,
-`apply` — отдельный шаг.
+`.92`; с H7060 деплой сам зовёт apply, если `guards:verify` видит drift).
+Applied managed-файл, как и `systema-madeline-daemon` (§9): код выкладывается
+деплоем, а guard-конфиг применяется в том же прогоне (шаг 9b `deploy.sh`).
 
 ### 12.4 Второй класс отказа: медленный канал × большой backlog (07-09-2026,
 ### H4306)

@@ -404,11 +404,15 @@ probe_rc=$?
 chown_compiled_views
 [ "$probe_rc" = 0 ] || fail "cabinet:probe: critical после деплоя — кабинет нездоров"
 
-# ── 7b. Ресурсные предохранители ОС (H1914) ─────────────────────────────────
-# Только ПРОВЕРКА, никогда не apply: выкладка кода не должна молча менять
-# системный конфиг. Предохранители 29-07-2026 живут вне репозитория, и пересборка
-# LXC/восстановление из бэкапа сносят их беззвучно — деплой самый частый момент,
-# когда об этом можно узнать вовремя.
+# ── 7b. Ресурсные предохранители ОС (H1914, H7060) ──────────────────────────
+# Проверка + apply. До H7060 здесь была только ПРОВЕРКА: законный коммит,
+# правивший managed-файл, становился вечным дрейфом, auto-deploy fuse горел, а
+# 26 алертов за 36 часов не меняли ни одного файла (инцидент 18-10-2026, row 9).
+# Теперь порядок такой: guards:verify → dry-run diff в лог → apply → повторный
+# verify. Правило «деплой объявляет каждое системное изменение» соблюдено:
+# diff печатается, а каждая строка `changed` уходит в deploys.log.
+# Режим --rollback остаётся verify-only: аварийный откат не переписывает
+# системный конфиг. Fuse и rollback-путь авто-деплой-обёртки не тронуты.
 #
 # Зеркало root-crontab (644): cabinet:probe крутится от www-data и не читает
 # /var/spool/cron/crontabs/root; без снимка guards:verify под www-data врёт
@@ -423,21 +427,31 @@ if [ "$(id -u)" = 0 ]; then
   fi
 fi
 
-say "Предохранители ОС: php artisan guards:verify"
+say "Предохранители ОС: guards:verify → dry-run diff → apply → guards:verify"
 GUARDS_DRIFT=0
-php artisan guards:verify || GUARDS_DRIFT=1
+GUARD_SYNC_ARGS=()
+if [ -n "$ROLLBACK_TO" ]; then
+  GUARD_SYNC_ARGS+=(--verify-only)
+fi
+if ! APP_DIR="$APP_DIR" \
+     APP_USER="${APP_USER:-www-data}" \
+     PHP_BIN="${PHP_BIN:-php}" \
+     DEPLOY_LOG="$DEPLOY_LOG" \
+     bash "$APP_DIR/scripts/deploy_guards_sync.sh" "${GUARD_SYNC_ARGS[@]}"; then
+  GUARDS_DRIFT=1
+fi
 # Последний root-овый artisan в этом скрипте: 17-08 07:38Z оставил 8 root-овых
-# вьюх после probe+guards даже с пост-probe chown.
+# вьюх после probe+guards даже с пост-probe chown. Apply тоже пишет от root.
 chown_compiled_views
 # H4848: гард, которого требовала миссия. Деплой, оставивший root-овый
 # скомпилированный view, — ПРОВАЛЬНЫЙ деплой, а не предупреждение в логе,
 # которое никто не читает. Стоит ПОСЛЕ последнего chown (H3194: `fail` = exit 1).
 assert_no_root_views
 if [ "$GUARDS_DRIFT" = 1 ]; then
-  printf '\n\033[1;31m%s\033[0m\n' "✖ ПРЕДОХРАНИТЕЛИ ПРОДА РАСХОДЯТСЯ С РЕПОЗИТОРИЕМ (см. список выше)"
-  printf '\033[1;31m%s\033[0m\n' "  Вернуть: sudo bash scripts/server_guards_apply.sh"
+  printf '\n\033[1;31m%s\033[0m\n' "✖ ПРЕДОХРАНИТЕЛИ ПРОДА РАСХОДЯТСЯ С РЕПОЗИТОРИЕМ (apply в этом деплое не закрыл дрейф)"
+  printf '\033[1;31m%s\033[0m\n' "  Разобрать вывод apply выше. Повторить вручную: sudo bash scripts/server_guards_apply.sh"
   printf '\033[1;31m%s\033[0m\n' "  Почему это важно: docs/server-resource-guards.md"
-  echo "$(date '+%Y-%m-%d %H:%M:%S') GUARDS DRIFT после ${NEW_COMMIT}" >> "$DEPLOY_LOG"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') GUARDS DRIFT после ${NEW_COMMIT}: apply не закрыл дрейф" >> "$DEPLOY_LOG"
 fi
 
 # ── 8. Журнал деплоев ────────────────────────────────────────────────────────
