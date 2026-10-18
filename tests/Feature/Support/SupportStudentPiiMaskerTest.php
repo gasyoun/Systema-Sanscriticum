@@ -165,6 +165,87 @@ class SupportStudentPiiMaskerTest extends TestCase
         $this->assertFalse($masker->containsIdentity($masked), $masked);
     }
 
+    /**
+     * H6918/гейт H5562 (вердикт FAIL 18-10-2026, 15 пропусков класса 1 из 24):
+     * имя нелинкованного студента в свободном тексте — самая частая форма
+     * пропуска. В users такого человека НЕТ: ловить обязан name-aware слой,
+     * а не identity-сет.
+     */
+    public function test_free_text_name_of_unlinked_student_is_masked(): void
+    {
+        User::factory()->create(['name' => 'gasyoun']);
+        $masker = new SupportStudentPiiMasker;
+
+        [$masked, $n] = $masker->maskOrFail('Мария Ковалёва просит перенести занятие: в среду не может.');
+
+        $this->assertStringNotContainsString('Мария', $masked, $masked);
+        $this->assertStringNotContainsString('Ковалёва', $masked, $masked);
+        $this->assertSame(1, $n, 'имя + фамилия — ОДИН тег: '.$masked);
+        $this->assertStringContainsString('<PII:person:1>', $masked);
+        $this->assertFalse($masker->containsIdentity($masked), $masked);
+    }
+
+    /** H6918: диминутив и само-представление — тоже класс 1 (ник не в users, имени нет в identity-сете). */
+    public function test_diminutive_nickname_and_self_intro_are_masked(): void
+    {
+        User::factory()->create(['name' => 'gasyoun']);
+        $masker = new SupportStudentPiiMasker;
+
+        [$masked, $n] = $masker->maskOrFail('Меня зовут Кузьма, пишу по домашки. Маша сказала, что догонит.');
+
+        $this->assertStringNotContainsString('Кузьма', $masked, $masked);
+        $this->assertStringNotContainsString('Маша', $masked, $masked);
+        $this->assertSame(2, $n, $masked);
+        $this->assertStringContainsString('Меня зовут <PII:person:', $masked);
+        $this->assertFalse($masker->containsIdentity($masked), $masked);
+    }
+
+    /** H6918: @-хэндл-shaped фигура маскируется без строки в users; allow-лист владельца контура — нет. */
+    public function test_handle_shaped_mention_is_masked_without_user_row(): void
+    {
+        User::factory()->create(['name' => 'gasyoun']);
+        $masker = new SupportStudentPiiMasker;
+
+        [$masked, $n] = $masker->maskOrFail('Пишет @masha_v в личку, а @gasyoun в курсе.');
+
+        $this->assertStringNotContainsString('@masha_v', $masked, $masked);
+        $this->assertStringContainsString('@gasyoun', $masked);
+        $this->assertSame(1, $n, $masked);
+        $this->assertStringContainsString('<PII:handle:1>', $masked);
+        $this->assertFalse($masker->containsIdentity($masked), $masked);
+    }
+
+    /** H6918: standalone отчество — точная фигура; обычные заглавные слова домена не задеваются. */
+    public function test_patronymic_is_masked_but_domain_capitalised_words_survive(): void
+    {
+        User::factory()->create(['name' => 'gasyoun']);
+        $masker = new SupportStudentPiiMasker;
+
+        [$masked, $n] = $masker->maskOrFail('Петровна просила перенести. Санскрит, Курс, Заголовок, Подписчики и Урок — без изменений.');
+
+        $this->assertStringNotContainsString('Петровна', $masked, $masked);
+        foreach (['Санскрит', 'Курс', 'Заголовок', 'Подписчики', 'Урок'] as $word) {
+            $this->assertStringContainsString($word, $masked, $word);
+        }
+        $this->assertSame(1, $n, $masked);
+        $this->assertFalse($masker->containsIdentity($masked), $masked);
+    }
+
+    /** H6918: unmask возвращает исходное написание (ключ тега — регистронезависим, написание сохраняется). */
+    public function test_person_tag_round_trips_to_original_capitalisation(): void
+    {
+        User::factory()->create(['name' => 'gasyoun']);
+        $masker = new SupportStudentPiiMasker;
+
+        [$masked] = $masker->maskOrFail('Мария Ковалёва и снова Мария.');
+
+        // «Мария Ковалёва» и «Мария» — разные ключи псевдонима (полное ФИО ≠ короткое имя),
+        // но оба восстанавливаются в исходном написании.
+        $this->assertStringContainsString('<PII:person:1>', $masked);
+        $this->assertStringContainsString('<PII:person:2>', $masked);
+        $this->assertSame('Мария Ковалёва и снова Мария.', $masker->unmask($masked));
+    }
+
     /** H6144, фикс 2 (P2 из вердикта H6140): второй шов — вопрос в промпте DM-композера только замаскированным. */
     public function test_dm_composer_masks_question_text_before_llm_call(): void
     {
