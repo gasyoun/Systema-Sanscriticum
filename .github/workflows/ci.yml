@@ -82,14 +82,38 @@ jobs:
           touch public/build/assets/app.css public/build/assets/app.js public/build/assets/fonts.css public/build/assets/alpine-standalone.js
 
       - name: Laravel Pint format check
+        # Scope = the commits THIS change adds, not everything that differs from
+        # the base tip. `pull_request.base.sha` is the base branch as it stood when
+        # the PR was opened and never advances, while the checkout this runs on is
+        # the synthetic test-merge of PR head into the CURRENT base: on #3157 the
+        # frozen base was 15 commits behind, so --diff also handed Pint main's
+        # pre-existing debt (tests/Feature/Support/SupportRollupGroupBotFilterTest.php,
+        # fully_qualified_strict_types) and a PR that touched neither went red.
+        # merge-base(HEAD, origin/<base_ref>) is the base commit the merge ref was
+        # built on, so the diff is exactly the PR's own changes.
         env:
-          PINT_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          BASE_REF: ${{ github.base_ref }}
+          EVENT_BEFORE: ${{ github.event.before }}
         run: |
           # Check every PHP file changed by this PR/push. Existing formatting
           # debt in unrelated files must not block the current change.
+          if [ -n "$BASE_REF" ]; then
+            # fetch-depth: 0 above already carries this history; the explicit
+            # fetch keeps the step correct if the checkout ever goes shallow.
+            git fetch --no-tags --quiet origin "+refs/heads/$BASE_REF:refs/remotes/origin/$BASE_REF" || true
+            PINT_BASE_SHA=$(git merge-base HEAD "origin/$BASE_REF" 2>/dev/null || true)
+          else
+            # push: the previous tip of the pushed branch is the exact scope.
+            PINT_BASE_SHA="$EVENT_BEFORE"
+          fi
           if [ -z "$PINT_BASE_SHA" ] || ! git cat-file -e "$PINT_BASE_SHA^{commit}"; then
             PINT_BASE_SHA=HEAD^
           fi
+          # Announce the scope: a gate that suddenly checks hundreds of files is
+          # the signal that the base resolution broke, and it must be visible in
+          # the log, not inferred from a wall of style errors.
+          echo "Pint scope base: $PINT_BASE_SHA"
+          echo "Files in scope: $(git diff --name-only "$PINT_BASE_SHA" | wc -l)"
           ./vendor/bin/pint --test --diff="$PINT_BASE_SHA"
 
       - name: PHPUnit tests
