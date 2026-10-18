@@ -249,14 +249,22 @@ class CuratorAi
         // H6352-r3: во внешний провайдер уходит только замаскированный промпт.
         // Одна область псевдонимов на вызов — один человек = один тег во всех
         // сообщениях, ответ восстанавливается тем же словарём (unmask).
+        //
+        // H6918-2: сообщения — это ОДНА беседа, поэтому маскируем их одним
+        // проходом. maskAll() сначала собирает per-conversation словарь имён и
+        // ников по всем сообщениям, затем маскирует: «Мария Ковалёва» в
+        // системном/первом сообщении закрывает bare «Ковалёва» в следующем.
         try {
-            $this->piiMasker->begin();
+            $this->piiMasker->newConversation();
+            $maskedContents = $this->piiMasker->maskAll(array_map(
+                static fn (array $message): string => (string) ($message['content'] ?? ''),
+                $messages,
+            ));
             $maskedMessages = [];
-            foreach ($messages as $message) {
-                [$maskedContent] = $this->piiMasker->mask((string) ($message['content'] ?? ''));
+            foreach ($messages as $index => $message) {
                 $maskedMessages[] = [
                     'role' => (string) ($message['role'] ?? 'user'),
-                    'content' => $maskedContent,
+                    'content' => $maskedContents[$index] ?? '',
                 ];
             }
         } catch (\Throwable) {

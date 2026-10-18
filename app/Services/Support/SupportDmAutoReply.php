@@ -1275,7 +1275,20 @@ final class SupportDmAutoReply
             return null;
         }
 
-        $composed = $this->llm->compose($text, $context);
+        // H6918-2: per-conversation словарь — кто собеседник по профилю, а не
+        // только по тексту. У нелинкованного студента users-строки нет, но
+        // contact хранит display name/username: они закрывают bare-фамилию и
+        // ник без @, которые текстовый проход может не увидеть.
+        $participantNames = array_values(array_filter([
+            (string) ($incoming->contact?->name ?? ''),
+            (string) ($user->name ?? ''),
+        ], static fn (string $value): bool => trim($value) !== ''));
+        $participantNicks = array_values(array_filter([
+            (string) ($incoming->contact?->username ?? ''),
+            (string) ($user->telegram_username ?? ''),
+        ], static fn (string $value): bool => trim($value) !== ''));
+
+        $composed = $this->llm->compose($text, $context, $participantNames, $participantNicks);
 
         if ($composed === null) {
             // Неудача формулировки (ключ/провайдер/пустой ответ) — НЕ отказ
