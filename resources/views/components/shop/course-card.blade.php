@@ -92,7 +92,7 @@
             @elseif($course->isEnrolling())
                 <span class="inline-flex items-center gap-1.5 bg-amber-500 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md shadow-[0_4px_12px_rgba(245,158,11,0.5)] tracking-wider">
                     <i class="fas fa-bullhorn text-[9px]"></i>
-                    Идет набор
+                    {{ $course->recruitmentLabel($cadence) }}
                 </span>
             @else
                 <span class="inline-flex items-center gap-1.5 bg-indigo-500/90 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md tracking-wider">
