@@ -12,6 +12,7 @@ use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -50,7 +51,10 @@ class SupportReplyService
     /** Пауза между ручными досылами одного сообщения, секунды. */
     private const RESEND_THROTTLE_SECONDS = 30;
 
-    public function __construct(private readonly SupportConversationManager $conversations) {}
+    public function __construct(
+        private readonly SupportConversationManager $conversations,
+        private readonly SupportConsentDailyDedup $consentDedup,
+    ) {}
 
     /** Канал, где сейчас живёт разговор — по последнему сообщению любого стора. */
     public function activeChannel(User|int $user): string
@@ -133,9 +137,19 @@ class SupportReplyService
      * telegram-business (27-09-2026) это в общих чатах всегда она — и ответ на
      * вопрос из обычного аккаунта застревал с «нет business_connection_id у
      * чата» (прод, 30-09-2026).
+     *
+     * H6644: $bypassConsentDailyDedup=true — для явного подтверждения человека
+     * в полосе подсказок (SupportHintSendButton): кнопку нажал куратор, гейт
+     * согласий его молча гасить не должен. Автоответчику и приглашению
+     * (queueUnlinkedDmMessage) обход не выдаётся.
      */
-    public function queueAiReply(User $user, string $text, ?int $replyToMsgId = null, ?int $viaAccountId = null): ?TelegramSupportMessage
-    {
+    public function queueAiReply(
+        User $user,
+        string $text,
+        ?int $replyToMsgId = null,
+        ?int $viaAccountId = null,
+        bool $bypassConsentDailyDedup = false,
+    ): ?TelegramSupportMessage {
         $thread = $this->conversations->currentFor($user);
         $chat = $this->resolveTargetChat($user, $thread);
 
@@ -159,6 +173,7 @@ class SupportReplyService
             $replyToMsgId,
             SupportDmAutoReply::VIA,
             'ai',
+            $bypassConsentDailyDedup,
         );
 
         $this->conversations->recordMessage($user, $message, $message->sent_at);
@@ -344,6 +359,13 @@ class SupportReplyService
      * Реального telegram_message_id ещё нет; берём (min по чату) − 1 — строго
      * убывающий отрицательный id, не сталкивающийся с реальными (положительными).
      * На гонку (уникальный индекс account+chat+message_id) — ограниченный ретрай.
+     *
+     * H6644: для ботовых исходящих ($isAi, без обхода) с consent-like текстом —
+     * идемпотентность per-chat per-day: если согласие-подобное исходящее в чат
+     * сегодня уже ставилось (включая ещё не доставленный pending), новая строка
+     * НЕ создаётся — возвращается существующая. Проверка и вставка — под
+     * блокировкой строки чата (паттерн SupportDmLinkInvite), чтобы гонка двух
+     * постановок не проскочила между проверкой и вставкой.
      */
     private function createPendingOutgoing(
         int $accountId,
@@ -353,9 +375,42 @@ class SupportReplyService
         ?int $replyToMsgId = null,
         string $via = 'helpdesk_unified_reply',
         string $responderType = 'human',
+        bool $bypassConsentDailyDedup = false,
     ): TelegramSupportMessage {
         $isAi = $responderType === 'ai';
 
+        if ($isAi && ! $bypassConsentDailyDedup && $this->consentDedup->isConsentLike($text)) {
+            return DB::transaction(function () use ($accountId, $chat, $text, $replyToMsgId, $via): TelegramSupportMessage {
+                TelegramSupportChat::query()->whereKey($chat->id)->lockForUpdate()->firstOrFail();
+
+                $existing = $this->consentDedup->findTodaysOutgoing($chat);
+
+                if ($existing !== null) {
+                    Log::info('SupportConsentDailyDedup: consent-like исходящее сегодня уже ставилось — дубль подавлен', [
+                        'chat_id' => (int) $chat->telegram_chat_id,
+                        'existing_message_id' => $existing->id,
+                        'via' => $via,
+                    ]);
+
+                    return $existing;
+                }
+
+                return $this->insertPendingOutgoing($accountId, $chat, $text, null, $replyToMsgId, $via, true);
+            });
+        }
+
+        return $this->insertPendingOutgoing($accountId, $chat, $text, $curator, $replyToMsgId, $via, $isAi);
+    }
+
+    private function insertPendingOutgoing(
+        int $accountId,
+        TelegramSupportChat $chat,
+        string $text,
+        ?User $curator,
+        ?int $replyToMsgId,
+        string $via,
+        bool $isAi,
+    ): TelegramSupportMessage {
         for ($attempt = 0; ; $attempt++) {
             try {
                 return TelegramSupportMessage::create([

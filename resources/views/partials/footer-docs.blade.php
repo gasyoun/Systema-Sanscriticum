@@ -19,6 +19,9 @@
     $linkClass = $linkClass ?? 'text-gray-500 hover:text-brand transition-colors';
 @endphp
 
+{{-- H6373: веб-страница политики — живой URL /privacy нужен Google-верификации
+     (consent screen, sensitive scope calendar); PDF остаётся ниже по списку. --}}
+<a href="{{ route('privacy') }}" class="{{ $linkClass }}">Политика конфиденциальности</a>
 @foreach ($files as $slug)
     <a href="{{ route('docs.show', $slug) }}" class="{{ $linkClass }}">
         {{ $labels[$slug] ?? \Illuminate\Support\Str::headline($slug) }}

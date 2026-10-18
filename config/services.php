@@ -171,6 +171,13 @@ return [
         // Чат кураторов: общий group chat, куда добавлен основной бот.
         // Пусто → curator-уведомления отключены (см. App\Services\CuratorNotifier).
         'curators_chat_id' => env('TELEGRAM_CURATORS_CHAT_ID'),
+        // Дополнительные чаты, где /zhdun-stats показывает раскладку ждуна
+        // (в дополнение к curators_chat_id), через запятую. Пусто → только
+        // curators_chat_id (см. App\Services\Telegram\WaitlistBotService).
+        'zhdun_stats_chat_ids' => array_values(array_filter(array_map(
+            fn (string $id): string => trim($id),
+            explode(',', (string) env('TELEGRAM_ZHDUN_STATS_CHAT_IDS', ''))
+        ))),
         // Чат маркетологов: group chat для уведомлений о новых лидах.
         // Пусто → уведомления о лидах отключены (см. App\Services\LeadNotifier).
         'marketers_chat_id' => env('TELEGRAM_MARKETERS_CHAT_ID'),
@@ -514,6 +521,13 @@ return [
         // Попыток досыла, после которых сообщение помечается «не доставлено» и
         // ждёт человека (тот же контракт, что у MadelineProto-дренажа).
         'pending_delivery_max_attempts' => (int) env('TELEGRAM_BUSINESS_PENDING_MAX_ATTEMPTS', 3),
+        // Куда передавать ответы, которые бизнес-полоса не доставит из-за окна
+        // (BUSINESS_PEER_USAGE_MISSING — «студент давно не писал»): имя
+        // TelegramSupportAccount с ТЕМ ЖЕ файлом сессии, то есть той же персоной
+        // Telegram и тем же диалогом студента. Передача в такой аккаунт — досыл
+        // по MTProto от того же имени, без окна. Пусто или чужая сессия —
+        // фолбэк выключен, ответ помечается «ответьте вручную».
+        'window_fallback_account' => env('TELEGRAM_BUSINESS_WINDOW_FALLBACK_ACCOUNT', 'support'),
         'timeout_seconds' => (int) env('TELEGRAM_BUSINESS_TIMEOUT_SECONDS', 15),
         // Автопубликация Story: новые видео из обоих редакционных каналов.
         // Имена @username допустимы до тех пор, пока Bot API присылает их в

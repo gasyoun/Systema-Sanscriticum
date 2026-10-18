@@ -11,6 +11,7 @@ use App\Http\Controllers\MarathonController;
 use App\Http\Controllers\MaterialsController;
 use App\Http\Controllers\MembershipCommerceController;
 use App\Http\Controllers\MembershipController;
+use App\Http\Controllers\MiniCourseQuickEnrollController;
 use App\Http\Controllers\PublicSchedulePageController;
 use App\Http\Controllers\PublicWidgetController;
 use App\Http\Controllers\ShopController;
@@ -235,6 +236,17 @@ Route::get('/online/konsultaciya/level-quiz/{token}/result', [MarathonController
 Route::get('/online/Janvar-27', [MarathonController::class, 'showJanuary'])->name('marathon.january.show');
 Route::post('/online/Janvar-27', [MarathonController::class, 'registerJanuary'])->name('marathon.january.register');
 Route::post('/online/Janvar-27/pay', [MarathonController::class, 'payJanuary'])->name('marathon.january.pay');
+
+// Быстрая запись на бесплатный мини-курс (ссылка VK-бота). Флаг
+// features.mini_course_quick_enroll; OFF → 404 из контроллера.
+Route::get('/k/podgotovitelnaya-gruppa-sanskrita/start', [MiniCourseQuickEnrollController::class, 'show'])
+    ->name('mini-course.quick');
+Route::post('/k/podgotovitelnaya-gruppa-sanskrita/start', [MiniCourseQuickEnrollController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('mini-course.quick.store');
+Route::get('/k/podgotovitelnaya-gruppa-sanskrita/vhod/{token}', [MiniCourseQuickEnrollController::class, 'magic'])
+    ->middleware('throttle:10,1')
+    ->name('mini-course.quick.magic');
 
 // Страница одного курса (короткий path /k/{slug}; legacy /online/kursy/* → 301 ниже)
 Route::get('/k/{course:slug}', [ShopController::class, 'show'])

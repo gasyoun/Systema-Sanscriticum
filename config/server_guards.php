@@ -48,4 +48,13 @@ return [
      */
     'backup_probe_budget_seconds' => (int) env('SERVER_GUARDS_BACKUP_PROBE_BUDGET_SECONDS', 45),
 
+    /**
+     * H6905: журнал прогонов restic — источник свежести второй off-site ноги.
+     * Читаем последнюю строку `run_complete ... systema=OK ... sftp=OK`: она
+     * означает, что дамп БД реально лёг на ДРУГОЙ хост (sftp .91), а не только
+     * на диск контейнера. Строки нет — строки назначения нет (не заявляем
+     * зелёное без данных).
+     */
+    'restic_backup_log' => env('SERVER_GUARDS_RESTIC_LOG', '/var/log/restic-backup.log'),
+
 ];

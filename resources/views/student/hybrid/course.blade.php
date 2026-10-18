@@ -126,6 +126,15 @@
                                class="font-bold text-[#101010] hover:text-brand">
                                 {{ $lesson->title }}
                             </a>
+                            @php
+                                $dripAt = ($dripLocked ?? collect())->get($lesson->id);
+                            @endphp
+                            @if ($dripAt)
+                                <span class="ml-2 text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 whitespace-nowrap"
+                                      title="Урок откроется {{ \Illuminate\Support\Carbon::parse($dripAt)->timezone(config('app.timezone'))->translatedFormat('d F') }}">
+                                    ⏳ Откроется {{ \Illuminate\Support\Carbon::parse($dripAt)->timezone(config('app.timezone'))->translatedFormat('d.m') }}
+                                </span>
+                            @endif
                         @else
                             <span class="font-bold text-gray-500">{{ $lesson->title }}</span>
                             @include('student.partials.access-why-locked', [

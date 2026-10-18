@@ -54,13 +54,47 @@ class SupportStudentPiiMasker
     private array $tags = [];
 
     /**
+     * H6352-r3: номер тега => исходное значение в ТЕКУЩЕЙ области (begin()/mask()).
+     * Нужен, чтобы вернуть псевдонимы в ответе внешней модели (<PII:name:1> →
+     * «Анна Петрова») и не показать студенту служебный тег.
+     *
+     * @var array<int, string>
+     */
+    private array $values = [];
+
+    /**
+     * Начать новую область псевдонимов — один внешний вызов (все сообщения
+     * промпта + ответ). Внутри области один и тот же человек получает один
+     * тег, поэтому ответ модели можно восстановить через unmask().
+     */
+    public function begin(): void
+    {
+        $this->tags = [];
+        $this->values = [];
+    }
+
+    /**
      * @return array{0: string, 1: int} замаскированный текст и число подстановок
      *
      * @throws \Throwable когда identity-сет недоступен (fail-closed, см. docblock)
      */
     public function maskOrFail(string $text): array
     {
-        $this->tags = [];
+        $this->begin();
+
+        return $this->mask($text);
+    }
+
+    /**
+     * H6352-r3: маскирование без сброса области — несколько сообщений одного
+     * промпта нумеруются сквозняком. Перед первым сообщением вызывается begin().
+     *
+     * @return array{0: string, 1: int} замаскированный текст и число подстановок
+     *
+     * @throws \Throwable когда identity-сет недоступен (fail-closed, см. docblock)
+     */
+    public function mask(string $text): array
+    {
         $this->ensureIdentities();
         $substitutions = 0;
 
@@ -84,6 +118,21 @@ class SupportStudentPiiMasker
         }
 
         return [$text, $substitutions];
+    }
+
+    /**
+     * H6352-r3: вернуть псевдонимы ТЕКУЩЕЙ области в исходные значения — ответ
+     * внешней модели идёт студенту, и служебные теги <PII:…:N> в нём недопустимы.
+     * Чужие теги (созданные другим инстансом/областью) остаются как есть: это
+     * граница доверия, а не глобальный словарь.
+     */
+    public function unmask(string $text): string
+    {
+        return (string) preg_replace_callback(
+            '/<PII:([a-z\-]+):(\d+)>/u',
+            fn (array $m): string => $this->values[(int) $m[2]] ?? $m[0],
+            $text,
+        );
     }
 
     /** Осталась ли в тексте standalone-личность или структурная фигура (round-trip гейт). */
@@ -179,7 +228,9 @@ class SupportStudentPiiMasker
     {
         $key = $kind.'|'.$value;
         $this->tags[$key] ??= count($this->tags) + 1;
+        $number = $this->tags[$key];
+        $this->values[$number] = $value;
 
-        return sprintf('<PII:%s:%d>', $kind, $this->tags[$key]);
+        return sprintf('<PII:%s:%d>', $kind, $number);
     }
 }

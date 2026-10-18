@@ -8,6 +8,7 @@ use App\Models\AnonsDestinationRun;
 use App\Models\AnonsPublication;
 use App\Services\Anons\Adapters\AdapterRegistry;
 use App\Services\Stories\StoryPublisher;
+use App\Support\MediaAreaMath;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Throwable;
@@ -323,9 +324,11 @@ final class AnonsPublishingService
         }
 
         $utm = $this->buildUtm($manifest, $dest, $frameIndex);
+        // H6678: фолбэк без отрисованной плашки — легаси-прямоугольник #2643
+        // в center-семантике (y-центр = 62, не верхняя кромка 55).
         $mediaArea = $this->compositor->bounds->canvasW !== null
             ? $this->compositor->bounds->asMediaAreaCoordinates()
-            : CtaPlaqueCompositor::RECT;
+            : MediaAreaMath::legacyCenterArea();
 
         return [
             'frame' => $frameIndex,

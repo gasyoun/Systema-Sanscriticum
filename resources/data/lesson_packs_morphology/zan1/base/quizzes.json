@@ -1,0 +1,880 @@
+{
+  "schema": "lyw-quiz-v1",
+  "items": [
+    {
+      "id": "MD-00273-F",
+      "type": "mcq",
+      "concept": [
+        "artha",
+        "Accusative singular"
+      ],
+      "prompt": "अर्थ (artha) — Accusative singular → ?",
+      "options": [
+        "अर्थाभ्याम्",
+        "अर्थौ",
+        "अर्थैः",
+        "अर्थम्"
+      ],
+      "answer_index": 3
+    },
+    {
+      "id": "MD-00323-F",
+      "type": "mcq",
+      "concept": [
+        "dharma",
+        "Nominative singular"
+      ],
+      "prompt": "धर्म (dharma) — Nominative singular → ?",
+      "options": [
+        "धर्मः",
+        "धर्मेण",
+        "धर्मम्",
+        "धर्माः"
+      ],
+      "answer_index": 0
+    },
+    {
+      "id": "MD-00403-F",
+      "type": "mcq",
+      "concept": [
+        "putra",
+        "Nominative singular"
+      ],
+      "prompt": "पुत्र (putra) — Nominative singular → ?",
+      "options": [
+        "पुत्रान्",
+        "पुत्राणि",
+        "पुत्रः",
+        "पुत्रस्य"
+      ],
+      "answer_index": 2
+    },
+    {
+      "id": "MD-00455-F",
+      "type": "mcq",
+      "concept": [
+        "loka",
+        "Accusative singular"
+      ],
+      "prompt": "लोक (loka) — Accusative singular → ?",
+      "options": [
+        "लोकात्",
+        "लोकैः",
+        "लोकस्य",
+        "लोकम्"
+      ],
+      "answer_index": 3
+    },
+    {
+      "id": "MD-00593-F",
+      "type": "mcq",
+      "concept": [
+        "rasa",
+        "Nominative singular"
+      ],
+      "prompt": "रस (rasa) — Nominative singular → ?",
+      "options": [
+        "रसैः",
+        "रसः",
+        "रसेन",
+        "रसानाम्"
+      ],
+      "answer_index": 1
+    },
+    {
+      "id": "MD-00685-F",
+      "type": "mcq",
+      "concept": [
+        "indra",
+        "Vocative singular"
+      ],
+      "prompt": "इन्द्र (indra) — Vocative singular → ?",
+      "options": [
+        "इन्द्रात्",
+        "इन्द्रस्य",
+        "इन्द्रे",
+        "इन्द्र"
+      ],
+      "answer_index": 3
+    },
+    {
+      "id": "MD-00917-F",
+      "type": "mcq",
+      "concept": [
+        "rūpa",
+        "Accusative singular"
+      ],
+      "prompt": "रूप (rūpa) — Accusative singular → ?",
+      "options": [
+        "रूपाभ्याम्",
+        "रूपम्",
+        "रूपैः",
+        "रूपाणाम्"
+      ],
+      "answer_index": 1
+    },
+    {
+      "id": "MD-00983-F",
+      "type": "mcq",
+      "concept": [
+        "bala",
+        "Accusative singular"
+      ],
+      "prompt": "बल (bala) — Accusative singular → ?",
+      "options": [
+        "बलम्",
+        "बले",
+        "बलः",
+        "बलाः"
+      ],
+      "answer_index": 0
+    },
+    {
+      "id": "MD-01033-F",
+      "type": "mcq",
+      "concept": [
+        "ratha",
+        "Accusative singular"
+      ],
+      "prompt": "रथ (ratha) — Accusative singular → ?",
+      "options": [
+        "रथस्य",
+        "रथैः",
+        "रथाय",
+        "रथम्"
+      ],
+      "answer_index": 3
+    },
+    {
+      "id": "MD-01107-F",
+      "type": "mcq",
+      "concept": [
+        "phala",
+        "Accusative singular"
+      ],
+      "prompt": "फल (phala) — Accusative singular → ?",
+      "options": [
+        "फलाः",
+        "फलात्",
+        "फलम्",
+        "फलानि"
+      ],
+      "answer_index": 2
+    },
+    {
+      "id": "MD-00274-M",
+      "type": "mcq",
+      "concept": [
+        "artha",
+        "Accusative singular"
+      ],
+      "prompt": "अर्थम् (artham) — which paradigm cell?",
+      "options": [
+        "Genitive plural",
+        "Instrumental singular",
+        "Accusative singular",
+        "Nominative dual"
+      ],
+      "answer_index": 2
+    },
+    {
+      "id": "MD-00324-M",
+      "type": "mcq",
+      "concept": [
+        "dharma",
+        "Nominative singular"
+      ],
+      "prompt": "धर्मः (dharmaḥ) — which paradigm cell?",
+      "options": [
+        "Locative singular",
+        "Nominative singular",
+        "Accusative singular",
+        "Dative plural"
+      ],
+      "answer_index": 1
+    },
+    {
+      "id": "MD-00404-M",
+      "type": "mcq",
+      "concept": [
+        "putra",
+        "Nominative singular"
+      ],
+      "prompt": "पुत्रः (putraḥ) — which paradigm cell?",
+      "options": [
+        "Nominative singular",
+        "Instrumental singular",
+        "Accusative dual",
+        "Vocative plural"
+      ],
+      "answer_index": 0
+    },
+    {
+      "id": "MD-00456-M",
+      "type": "mcq",
+      "concept": [
+        "loka",
+        "Accusative singular"
+      ],
+      "prompt": "लोकम् (lokam) — which paradigm cell?",
+      "options": [
+        "Locative dual",
+        "Ablative plural",
+        "Instrumental singular",
+        "Accusative singular"
+      ],
+      "answer_index": 3
+    },
+    {
+      "id": "MD-00594-M",
+      "type": "mcq",
+      "concept": [
+        "rasa",
+        "Nominative singular"
+      ],
+      "prompt": "रसः (rasaḥ) — which paradigm cell?",
+      "options": [
+        "Accusative plural",
+        "Ablative singular",
+        "Dative singular",
+        "Nominative singular"
+      ],
+      "answer_index": 3
+    },
+    {
+      "id": "MD-00686-M",
+      "type": "mcq",
+      "concept": [
+        "indra",
+        "Vocative singular"
+      ],
+      "prompt": "इन्द्र (indra) — which paradigm cell?",
+      "options": [
+        "Nominative singular",
+        "Dative singular",
+        "Vocative singular",
+        "Vocative plural"
+      ],
+      "answer_index": 2
+    },
+    {
+      "id": "MD-00918-M",
+      "type": "mcq",
+      "concept": [
+        "rūpa",
+        "Accusative singular"
+      ],
+      "prompt": "रूपम् (rūpam) — which paradigm cell?",
+      "options": [
+        "Nominative plural",
+        "Nominative singular",
+        "Accusative singular",
+        "Genitive plural"
+      ],
+      "answer_index": 2
+    },
+    {
+      "id": "MD-00984-M",
+      "type": "mcq",
+      "concept": [
+        "bala",
+        "Accusative singular"
+      ],
+      "prompt": "बलम् (balam) — which paradigm cell?",
+      "options": [
+        "Accusative singular",
+        "Vocative singular",
+        "Instrumental singular",
+        "Instrumental plural"
+      ],
+      "answer_index": 0
+    },
+    {
+      "id": "MD-01034-M",
+      "type": "mcq",
+      "concept": [
+        "ratha",
+        "Accusative singular"
+      ],
+      "prompt": "रथम् (ratham) — which paradigm cell?",
+      "options": [
+        "Accusative singular",
+        "Locative singular",
+        "Nominative singular",
+        "Instrumental singular"
+      ],
+      "answer_index": 0
+    },
+    {
+      "id": "MD-01108-M",
+      "type": "mcq",
+      "concept": [
+        "phala",
+        "Accusative singular"
+      ],
+      "prompt": "फलम् (phalam) — which paradigm cell?",
+      "options": [
+        "Accusative singular",
+        "Accusative plural",
+        "Instrumental plural",
+        "Ablative singular"
+      ],
+      "answer_index": 0
+    }
+  ],
+  "source_trace": {
+    "MD-00273-F": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-00273-F",
+      "attested": true,
+      "evidence": "dcs:102289_1",
+      "answer_equals_source": "अर्थम्",
+      "corpus_count": 740,
+      "curriculum_rows": [
+        {
+          "rank": "1",
+          "lemma_slp1": "arTa",
+          "lemma_iast": "artha",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 11,
+          "n_attested_cells": 17,
+          "corpus_count": "1528",
+          "lesson": 1
+        },
+        {
+          "rank": "2",
+          "lemma_slp1": "arTa",
+          "lemma_iast": "artha",
+          "model": "n_a",
+          "bucket": "a-stems",
+          "core_rank": 11,
+          "n_attested_cells": 8,
+          "corpus_count": "2003",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-00323-F": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-00323-F",
+      "attested": true,
+      "evidence": "dcs:230894",
+      "answer_equals_source": "धर्मः",
+      "corpus_count": 140,
+      "curriculum_rows": [
+        {
+          "rank": "3",
+          "lemma_slp1": "Darma",
+          "lemma_iast": "dharma",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 12,
+          "n_attested_cells": 18,
+          "corpus_count": "907",
+          "lesson": 1
+        },
+        {
+          "rank": "4",
+          "lemma_slp1": "Darma",
+          "lemma_iast": "dharma",
+          "model": "n_a",
+          "bucket": "a-stems",
+          "core_rank": 12,
+          "n_attested_cells": 4,
+          "corpus_count": "191",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-00403-F": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-00403-F",
+      "attested": true,
+      "evidence": "dcs:104124_1",
+      "answer_equals_source": "पुत्रः",
+      "corpus_count": 606,
+      "curriculum_rows": [
+        {
+          "rank": "5",
+          "lemma_slp1": "putra",
+          "lemma_iast": "putra",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 14,
+          "n_attested_cells": 22,
+          "corpus_count": "2452",
+          "lesson": 1
+        },
+        {
+          "rank": "6",
+          "lemma_slp1": "putra",
+          "lemma_iast": "putra",
+          "model": "n_a",
+          "bucket": "a-stems",
+          "core_rank": 14,
+          "n_attested_cells": 4,
+          "corpus_count": "482",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-00455-F": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-00455-F",
+      "attested": true,
+      "evidence": "dcs:105463",
+      "answer_equals_source": "लोकम्",
+      "corpus_count": 934,
+      "curriculum_rows": [
+        {
+          "rank": "7",
+          "lemma_slp1": "loka",
+          "lemma_iast": "loka",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 16,
+          "n_attested_cells": 20,
+          "corpus_count": "3759",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-00593-F": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-00593-F",
+      "attested": true,
+      "evidence": "dcs:27224",
+      "answer_equals_source": "रसः",
+      "corpus_count": 168,
+      "curriculum_rows": [
+        {
+          "rank": "8",
+          "lemma_slp1": "rasa",
+          "lemma_iast": "rasa",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 20,
+          "n_attested_cells": 15,
+          "corpus_count": "597",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-00685-F": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-00685-F",
+      "attested": true,
+      "evidence": "dcs:436039",
+      "answer_equals_source": "इन्द्र",
+      "corpus_count": 1834,
+      "curriculum_rows": [
+        {
+          "rank": "9",
+          "lemma_slp1": "indra",
+          "lemma_iast": "indra",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 22,
+          "n_attested_cells": 16,
+          "corpus_count": "5421",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-00917-F": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-00917-F",
+      "attested": true,
+      "evidence": "dcs:102732",
+      "answer_equals_source": "रूपम्",
+      "corpus_count": 980,
+      "curriculum_rows": [
+        {
+          "rank": "10",
+          "lemma_slp1": "rUpa",
+          "lemma_iast": "rūpa",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 29,
+          "n_attested_cells": 14,
+          "corpus_count": "1760",
+          "lesson": 1
+        },
+        {
+          "rank": "11",
+          "lemma_slp1": "rUpa",
+          "lemma_iast": "rūpa",
+          "model": "n_a",
+          "bucket": "a-stems",
+          "core_rank": 29,
+          "n_attested_cells": 19,
+          "corpus_count": "3023",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-00983-F": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-00983-F",
+      "attested": true,
+      "evidence": "dcs:136946",
+      "answer_equals_source": "बलम्",
+      "corpus_count": 224,
+      "curriculum_rows": [
+        {
+          "rank": "12",
+          "lemma_slp1": "bala",
+          "lemma_iast": "bala",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 30,
+          "n_attested_cells": 12,
+          "corpus_count": "575",
+          "lesson": 1
+        },
+        {
+          "rank": "13",
+          "lemma_slp1": "bala",
+          "lemma_iast": "bala",
+          "model": "n_a",
+          "bucket": "a-stems",
+          "core_rank": 30,
+          "n_attested_cells": 13,
+          "corpus_count": "709",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-01033-F": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-01033-F",
+      "attested": true,
+      "evidence": "dcs:103690",
+      "answer_equals_source": "रथम्",
+      "corpus_count": 312,
+      "curriculum_rows": [
+        {
+          "rank": "14",
+          "lemma_slp1": "raTa",
+          "lemma_iast": "ratha",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 32,
+          "n_attested_cells": 14,
+          "corpus_count": "881",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-01107-F": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-01107-F",
+      "attested": true,
+      "evidence": "dcs:359734",
+      "answer_equals_source": "फलम्",
+      "corpus_count": 220,
+      "curriculum_rows": [
+        {
+          "rank": "15",
+          "lemma_slp1": "Pala",
+          "lemma_iast": "phala",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 36,
+          "n_attested_cells": 6,
+          "corpus_count": "339",
+          "lesson": 1
+        },
+        {
+          "rank": "16",
+          "lemma_slp1": "Pala",
+          "lemma_iast": "phala",
+          "model": "n_a",
+          "bucket": "a-stems",
+          "core_rank": 36,
+          "n_attested_cells": 16,
+          "corpus_count": "789",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-00274-M": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-00274-M",
+      "attested": true,
+      "evidence": "dcs:102289_1",
+      "answer_equals_source": "Accusative singular",
+      "corpus_count": 740,
+      "curriculum_rows": [
+        {
+          "rank": "1",
+          "lemma_slp1": "arTa",
+          "lemma_iast": "artha",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 11,
+          "n_attested_cells": 17,
+          "corpus_count": "1528",
+          "lesson": 1
+        },
+        {
+          "rank": "2",
+          "lemma_slp1": "arTa",
+          "lemma_iast": "artha",
+          "model": "n_a",
+          "bucket": "a-stems",
+          "core_rank": 11,
+          "n_attested_cells": 8,
+          "corpus_count": "2003",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-00324-M": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-00324-M",
+      "attested": true,
+      "evidence": "dcs:230894",
+      "answer_equals_source": "Nominative singular",
+      "corpus_count": 140,
+      "curriculum_rows": [
+        {
+          "rank": "3",
+          "lemma_slp1": "Darma",
+          "lemma_iast": "dharma",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 12,
+          "n_attested_cells": 18,
+          "corpus_count": "907",
+          "lesson": 1
+        },
+        {
+          "rank": "4",
+          "lemma_slp1": "Darma",
+          "lemma_iast": "dharma",
+          "model": "n_a",
+          "bucket": "a-stems",
+          "core_rank": 12,
+          "n_attested_cells": 4,
+          "corpus_count": "191",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-00404-M": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-00404-M",
+      "attested": true,
+      "evidence": "dcs:104124_1",
+      "answer_equals_source": "Nominative singular",
+      "corpus_count": 606,
+      "curriculum_rows": [
+        {
+          "rank": "5",
+          "lemma_slp1": "putra",
+          "lemma_iast": "putra",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 14,
+          "n_attested_cells": 22,
+          "corpus_count": "2452",
+          "lesson": 1
+        },
+        {
+          "rank": "6",
+          "lemma_slp1": "putra",
+          "lemma_iast": "putra",
+          "model": "n_a",
+          "bucket": "a-stems",
+          "core_rank": 14,
+          "n_attested_cells": 4,
+          "corpus_count": "482",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-00456-M": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-00456-M",
+      "attested": true,
+      "evidence": "dcs:105463",
+      "answer_equals_source": "Accusative singular",
+      "corpus_count": 934,
+      "curriculum_rows": [
+        {
+          "rank": "7",
+          "lemma_slp1": "loka",
+          "lemma_iast": "loka",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 16,
+          "n_attested_cells": 20,
+          "corpus_count": "3759",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-00594-M": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-00594-M",
+      "attested": true,
+      "evidence": "dcs:27224",
+      "answer_equals_source": "Nominative singular",
+      "corpus_count": 168,
+      "curriculum_rows": [
+        {
+          "rank": "8",
+          "lemma_slp1": "rasa",
+          "lemma_iast": "rasa",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 20,
+          "n_attested_cells": 15,
+          "corpus_count": "597",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-00686-M": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-00686-M",
+      "attested": true,
+      "evidence": "dcs:436039",
+      "answer_equals_source": "Vocative singular",
+      "corpus_count": 1834,
+      "curriculum_rows": [
+        {
+          "rank": "9",
+          "lemma_slp1": "indra",
+          "lemma_iast": "indra",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 22,
+          "n_attested_cells": 16,
+          "corpus_count": "5421",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-00918-M": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-00918-M",
+      "attested": true,
+      "evidence": "dcs:102732",
+      "answer_equals_source": "Accusative singular",
+      "corpus_count": 980,
+      "curriculum_rows": [
+        {
+          "rank": "10",
+          "lemma_slp1": "rUpa",
+          "lemma_iast": "rūpa",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 29,
+          "n_attested_cells": 14,
+          "corpus_count": "1760",
+          "lesson": 1
+        },
+        {
+          "rank": "11",
+          "lemma_slp1": "rUpa",
+          "lemma_iast": "rūpa",
+          "model": "n_a",
+          "bucket": "a-stems",
+          "core_rank": 29,
+          "n_attested_cells": 19,
+          "corpus_count": "3023",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-00984-M": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-00984-M",
+      "attested": true,
+      "evidence": "dcs:136946",
+      "answer_equals_source": "Accusative singular",
+      "corpus_count": 224,
+      "curriculum_rows": [
+        {
+          "rank": "12",
+          "lemma_slp1": "bala",
+          "lemma_iast": "bala",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 30,
+          "n_attested_cells": 12,
+          "corpus_count": "575",
+          "lesson": 1
+        },
+        {
+          "rank": "13",
+          "lemma_slp1": "bala",
+          "lemma_iast": "bala",
+          "model": "n_a",
+          "bucket": "a-stems",
+          "core_rank": 30,
+          "n_attested_cells": 13,
+          "corpus_count": "709",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-01034-M": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-01034-M",
+      "attested": true,
+      "evidence": "dcs:103690",
+      "answer_equals_source": "Accusative singular",
+      "corpus_count": 312,
+      "curriculum_rows": [
+        {
+          "rank": "14",
+          "lemma_slp1": "raTa",
+          "lemma_iast": "ratha",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 32,
+          "n_attested_cells": 14,
+          "corpus_count": "881",
+          "lesson": 1
+        }
+      ]
+    },
+    "MD-01108-M": {
+      "source_dataset": "morphology-drills",
+      "source_row_id": "MD-01108-M",
+      "attested": true,
+      "evidence": "dcs:359734",
+      "answer_equals_source": "Accusative singular",
+      "corpus_count": 220,
+      "curriculum_rows": [
+        {
+          "rank": "15",
+          "lemma_slp1": "Pala",
+          "lemma_iast": "phala",
+          "model": "m_a",
+          "bucket": "a-stems",
+          "core_rank": 36,
+          "n_attested_cells": 6,
+          "corpus_count": "339",
+          "lesson": 1
+        },
+        {
+          "rank": "16",
+          "lemma_slp1": "Pala",
+          "lemma_iast": "phala",
+          "model": "n_a",
+          "bucket": "a-stems",
+          "core_rank": 36,
+          "n_attested_cells": 16,
+          "corpus_count": "789",
+          "lesson": 1
+        }
+      ]
+    }
+  },
+  "license": "kosha morphology-curriculum / morphology-drills, CC BY-SA 4.0 (credit Dr. Marcis Gasuns; upstream DCS by Oliver Hellwig / DCS)"
+}

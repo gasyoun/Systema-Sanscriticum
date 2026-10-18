@@ -75,7 +75,7 @@ class CheckoutController extends Controller
             $promo = PromoCode::where('code', $this->normalizeCode($request->query('promo')))->first();
             if ($promo
                 && $promo->isValid()
-                && $promo->appliesToCourse($tariff->course_id)
+                && $promo->appliesToCourse($tariff->course_id, $tariff->block_number)
                 && ! $this->alreadyUsedByCurrentUser($promo)
             ) {
                 session()->put('promo_code', $promo->code);
@@ -116,7 +116,7 @@ class CheckoutController extends Controller
         }
 
         // Код валиден, но привязан к другому курсу — на этом чекауте не применяем.
-        if (! $promo->appliesToCourse($tariff->course_id)) {
+        if (! $promo->appliesToCourse($tariff->course_id, $tariff->block_number)) {
             $message = 'Этот промокод действует только для другого курса.';
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json(['ok' => false, 'message' => $message], 422);
@@ -255,7 +255,7 @@ class CheckoutController extends Controller
                 // Код валиден. Применяем, только если он подходит этому курсу
                 // И юзер его ещё не гасил (один человек — один раз). При несовпадении
                 // курса из сессии НЕ убираем — он может подойти на чекауте своего курса.
-                if ($promo->appliesToCourse($tariff->course_id) && ! $this->alreadyUsedByCurrentUser($promo)) {
+                if ($promo->appliesToCourse($tariff->course_id, $tariff->block_number) && ! $this->alreadyUsedByCurrentUser($promo)) {
                     $appliedPromo = $promo;
                     $priceWithPromo = $promo->calculateDiscountedPrice($finalPrice);
                     $discountAmount = $finalPrice - $priceWithPromo;

@@ -134,7 +134,9 @@
             @endif
             @guest
                 {{-- 152-ФЗ: гость даёт согласие на обработку ПДн перед первым сообщением
-                     (имя/почта/телефон/текст обращения). Запоминается в localStorage. --}}
+                     (имя/почта/телефон/текст обращения). Согласие уходит в журнал
+                     consents на сервере (ст. 9 ч. 3); в браузере помним только
+                     подтверждённую запись. --}}
                 <label class="scw-consent" id="scw-consent-row">
                     <input type="checkbox" id="scw-consent" value="1">
                     <span>Даю <a href="{{ route('docs.show', 'soglasie-pd') }}" target="_blank">согласие на обработку персональных данных</a>
@@ -269,10 +271,15 @@
     var emailEl = document.getElementById('scw-email');
     var phoneEl = document.getElementById('scw-phone');
     var contactRow = document.getElementById('scw-contact-row');
-    // 152-ФЗ: согласие гостя на ПДн — один раз, дальше помним в localStorage.
+    // 152-ФЗ ст. 9 ч. 3: согласие гостя уходит в серверный журнал consents
+    // (PublicChatController → ConsentRecorder). В localStorage помним ТОЛЬКО
+    // подтверждённую запись — память браузера не должна опережать журнал.
     var consentRow = document.getElementById('scw-consent-row');
     var consentEl = document.getElementById('scw-consent');
-    var CONSENT_KEY = 'scw_pd_consent_v1';
+    // v2: ключ v1 ставился, когда журнала ещё не было (согласие жило в браузере
+    // и очистка хранилища стирала доказательство) — такому браузеру согласие
+    // придётся подтвердить ещё раз, иначе строки в журнале не появится.
+    var CONSENT_KEY = 'scw_pd_consent_v2';
     try { if (consentRow && localStorage.getItem(CONSENT_KEY) === '1') { consentRow.hidden = true; } } catch (e) {}
     if (consentEl) consentEl.addEventListener('change', function () { consentRow.classList.remove('scw-consent-missing'); });
     var sendBtn = document.getElementById('scw-send');
@@ -533,7 +540,10 @@
             appendMessage(res.body.message);
             if (nameEl) { nameEl.hidden = true; } // имя спрашиваем только до первого сообщения
             if (contactRow) { contactRow.hidden = true; } // телефон/почта — тоже только до первого (H1199)
-            if (askConsent) {
+            // Галочку прячем и запоминаем только когда сервер подтвердил
+            // запись в журнал. Сбой журнала (consent_recorded=false) оставляет
+            // её на месте — следующее сообщение пришлёт согласие снова.
+            if (askConsent && res.body.consent_recorded === true) {
                 consentRow.hidden = true;
                 try { localStorage.setItem(CONSENT_KEY, '1'); } catch (e) {}
             }

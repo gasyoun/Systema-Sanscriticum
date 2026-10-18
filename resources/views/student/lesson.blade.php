@@ -22,45 +22,88 @@
      heartbeat (см. onVideoTick() выше). --}}
 @push('scripts')
     <script src="{{ asset('js/video-resume.js') }}?v={{ filemtime(public_path('js/video-resume.js')) }}" defer></script>
+    {{-- H6302 (L2, UX-аудит 2026): автосейв заметок с dirty-навигационным
+          guard-ом. Тот же эндпоинт student.lesson.note; без JS форма
+          деградирует к прежнему ручному POST-сабмиту. --}}
+    <script src="{{ asset('js/lesson-note-autosave.js') }}?v={{ filemtime(public_path('js/lesson-note-autosave.js')) }}" defer></script>
+    <script defer>
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                var textarea = document.getElementById('lesson-notes-textarea');
+                var form = document.getElementById('lesson-note-form');
+                if (!textarea || !form || !window.LessonNoteAutosave) {
+                    return; // деградация к нативному POST-сабмиту формы
+                }
+                var csrfEl = document.querySelector('meta[name="csrf-token"]');
+                var csrfInput = form.querySelector('input[name="_token"]');
+                window.LessonNoteAutosave.attach({
+                    textarea: textarea,
+                    form: form,
+                    statusEl: form.querySelector('[data-note-status]'),
+                    retryEl: form.querySelector('[data-note-retry]'),
+                    url: form.getAttribute('action'),
+                    csrf: csrfEl ? csrfEl.getAttribute('content') : (csrfInput ? csrfInput.value : ''),
+                });
+            } catch (e) {
+                // Любой сбой обвязки не должен ломать ручной сабмит формы.
+            }
+        });
+    </script>
 @endpush
 
 <style>
     /* ============================================ */
     /* GRID-ЛЕЙАУТ УРОКА                            */
+    /* H6303 (L1, UX-аудит 2026): на узких экранах  */
+    /* боковая колонка (транскрипт/материалы/       */
+    /* заметки) стоит в DOM и на экране ПЕРЕД       */
+    /* домашним заданием — ДЗ вынесено в отдельную  */
+    /* колонку-контейнер .lesson-homework-col.      */
+    /* На десктопе (≥768px) grid-areas повторяют    */
+    /* прежнюю геометрию: main слева, sticky side   */
+    /* 420px справа, ДЗ слева под main.             */
     /* ============================================ */
     .lesson-layout {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
         width: 100%;
         position: relative;
     }
     .lesson-main-col {
         width: 100%;
+        min-width: 0;
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
     }
     .lesson-side-col {
         width: 100%;
-        margin-top: 1.5rem;
         display: flex;
         flex-direction: column;
         position: relative;
         z-index: 20;
     }
+    .lesson-homework-col {
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+    }
     @media (min-width: 768px) {
         .lesson-layout {
             display: grid !important;
             grid-template-columns: minmax(0, 1fr) 420px !important;
+            grid-template-areas:
+                "main side"
+                "homework side";
             gap: 1.5rem !important;
             align-items: start !important;
         }
-        .lesson-main-col {
-            min-width: 0 !important;
-            width: auto !important;
-        }
+        .lesson-main-col { grid-area: main; width: auto !important; }
         .lesson-side-col {
+            grid-area: side;
             width: 420px !important;
-            margin-top: 0 !important;
             position: sticky !important;
             top: 1.5rem !important;
             align-self: start !important;
@@ -70,6 +113,7 @@
             max-height: calc(100vh - 3rem);
             max-height: calc(100dvh - 3rem);
         }
+        .lesson-homework-col { grid-area: homework; width: auto !important; }
     }
 </style>
 
@@ -637,18 +681,8 @@
         </section>
         @endif
 
-        {{-- ДОМАШНЕЕ ЗАДАНИЕ — внутри центральной колонки (ширина как плеер/описание) --}}
-        @if($homeworkOpen ?? $lesson->homework_enabled)
-            @include('student.partials.homework')
-        @else
-            {{-- Явное состояние «ДЗ нет», чтобы студент не гадал, задано оно или еще нет. --}}
-            <section class="font-nunito">
-                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 md:p-6 flex items-center gap-3 text-gray-500">
-                    <i class="fas fa-mug-hot text-gray-300 text-lg shrink-0"></i>
-                    <p class="text-sm">Домашнего задания для этого урока нет.</p>
-                </div>
-            </section>
-        @endif
+        {{-- ДОМАШНЕЕ ЗАДАНИЕ вынесено в .lesson-homework-col (H6303) — снаружи,
+             после боковой колонки, чтобы на узких экранах материалы шли перед ДЗ. --}}
     </div>
 
     {{-- ========================================== --}}
@@ -749,14 +783,27 @@
         <i class="far fa-edit mr-2 text-yellow-600"></i> Мои заметки
     </h3>
     
-    <form action="{{ route('student.lesson.note', [$course->slug, $lesson->id]) }}" method="POST" class="flex flex-col flex-1">
+    <form id="lesson-note-form"
+          action="{{ route('student.lesson.note', [$course->slug, $lesson->id]) }}"
+          method="POST"
+          class="flex flex-col flex-1"
+          data-testid="lesson-note-form">
         @csrf
-        <textarea name="notes" 
-                  rows="{{ $showTabs ? 8 : 14 }}" 
-                  class="w-full bg-white/50 border-transparent rounded-2xl p-4 focus:ring-2 focus:ring-yellow-400 focus:bg-white text-gray-800 transition resize-y font-medium text-sm placeholder-yellow-700/50 custom-scrollbar {{ $showTabs ? 'flex-1' : '' }}" 
+        <textarea name="notes" id="lesson-notes-textarea" data-testid="lesson-notes-textarea"
+                  rows="{{ $showTabs ? 8 : 14 }}"
+                  class="w-full bg-white/50 border-transparent rounded-2xl p-4 focus:ring-2 focus:ring-yellow-400 focus:bg-white text-gray-800 transition resize-y font-medium text-sm placeholder-yellow-700/50 custom-scrollbar {{ $showTabs ? 'flex-1' : '' }}"
                   placeholder="Важные мысли из урока, инсайты, вопросы к преподавателю...">{{ $currentNote ?? '' }}</textarea>
-        
-        <button type="submit" class="mt-4 w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 py-3.5 rounded-2xl font-extrabold text-sm transition-colors shadow-sm shrink-0">
+
+        {{-- H6302: строка статуса автосейва. Пустая без JS; живой скрипт
+              показывает «Сохранение…/Сохранено ✓/Не удалось сохранить». --}}
+        <div class="mt-2 flex items-center justify-between gap-3 min-h-[18px]" data-note-statusbar>
+            <p class="text-[11px] font-semibold truncate" data-note-status aria-live="polite"></p>
+            <button type="button"
+                    class="hidden text-[11px] font-bold text-yellow-800 underline underline-offset-2 hover:text-yellow-900 shrink-0"
+                    data-note-retry>Повторить</button>
+        </div>
+
+        <button type="submit" class="mt-3 w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 py-3.5 rounded-2xl font-extrabold text-sm transition-colors shadow-sm shrink-0">
             Сохранить изменения
         </button>
     </form>
@@ -864,6 +911,24 @@
         </div>
         @endif
 
+    </div>
+
+    {{-- ========================================== --}}
+    {{-- ДОМАШНЕЕ ЗАДАНИЕ (H6303): отдельная колонка-контейнер ПОСЛЕ боковой
+         колонки — на узких экранах транскрипт/материалы/заметки стоят перед ДЗ,
+         на десктопе grid-area "homework" возвращает блок в левую колонку. --}}
+    <div class="lesson-homework-col">
+        @if($homeworkOpen ?? $lesson->homework_enabled)
+            @include('student.partials.homework')
+        @else
+            {{-- Явное состояние «ДЗ нет», чтобы студент не гадал, задано оно или еще нет. --}}
+            <section class="font-nunito">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 md:p-6 flex items-center gap-3 text-gray-500">
+                    <i class="fas fa-mug-hot text-gray-300 text-lg shrink-0"></i>
+                    <p class="text-sm">Домашнего задания для этого урока нет.</p>
+                </div>
+            </section>
+        @endif
     </div>
 
 </div>

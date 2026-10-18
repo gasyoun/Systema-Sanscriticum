@@ -9,15 +9,27 @@ texts. This script bakes the head of that ranking — every rule up to the
 resources/data/corpus_sandhi/corpus_sandhi_top.json, which
 App\\Http\\Controllers\\CorpusSandhiController renders.
 
-Reads the TSV straight out of kosha's `origin/main` (not its working tree, which
-can be stale) and records the blob SHA + commit it came from, so the frozen layer
-is traceable to one pin. Never hand-edit the output; re-run this script.
+H6304 adds the teaching order: the same baked rules joined, by rule string, to
+kosha's sibling `sandhi-curriculum` (data/sandhi/sandhi_curriculum.tsv, graded
+syllabus, priority = frequency × class × environment-generality per the MG ruling
+of 14-07-2026). The frequency ranking, its stats and its denominator are carried
+into the output UNCHANGED; the curriculum contributes a separate
+`curriculum.teaching_order` block only. An unjoined rule or a count disagreement
+between the two datasets fails the build loudly (they share one vintage, so a
+silent mismatch would mean a stale pin).
+
+Reads both TSVs straight out of kosha's `origin/main` (not its working tree,
+which can be stale) and records the blob SHA + commit each came from, so the
+frozen layer is traceable to one pin. Never hand-edit the output; re-run this
+script.
 
     python scripts/vendor_corpus_sandhi.py [--coverage 90] [--check]
 
 `--check` rebuilds in memory and exits 1 if the vendored file differs.
 """
 import argparse
+import csv
+import io
 import json
 import os
 import re
@@ -27,9 +39,14 @@ import sys
 sys.stdout.reconfigure(encoding='utf-8')
 sys.stderr.reconfigure(encoding='utf-8')
 
-KOSHA = r'C:\Users\user\Documents\GitHub\kosha'
+KOSHA = next(p for p in [
+    os.environ.get('KOSHA_DIR'),
+    r'C:\Users\user\Documents\GitHub\kosha',
+    os.path.expanduser('~/Documents/GitHub/kosha'),
+] if p and os.path.isdir(p))
 KOSHA_REF = 'origin/main'
 TSV_IN_KOSHA = 'data/sandhi/corpus_sandhi.tsv'
+CURRICULUM_IN_KOSHA = 'data/sandhi/sandhi_curriculum.tsv'
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(HERE, 'resources', 'data', 'corpus_sandhi', 'corpus_sandhi_top.json')
@@ -110,7 +127,7 @@ def build(coverage):
         categories[r['category']] = categories.get(r['category'], 0) + r['count']
 
     return {
-        'schema': 'corpus_sandhi_top_v1',
+        'schema': 'corpus_sandhi_top_v2',
         'source': {
             'dataset': 'corpus-sandhi',
             'repo': 'https://github.com/gasyoun/kosha',
@@ -135,6 +152,57 @@ def build(coverage):
             for c, n in sorted(categories.items(), key=lambda kv: -kv[1])
         ],
         'rules': rules,
+        'curriculum': build_curriculum(commit, rules),
+    }
+
+
+def build_curriculum(commit, rules):
+    """Join the baked frequency rules to kosha's graded sandhi-curriculum.
+
+    Returns the `curriculum` block: pinned source, method note, and
+    teaching_order — the baked rules re-ordered by curriculum rank, each entry
+    carrying its frequency rank and lesson. Fails loudly when a rule does not
+    join or when the two datasets disagree on a rule's count (they are cut from
+    the same corpus-sandhi vintage, so any disagreement means a stale pin).
+    """
+    blob = git('rev-parse', f'{KOSHA_REF}:{CURRICULUM_IN_KOSHA}').decode().strip()
+    raw = git('show', f'{KOSHA_REF}:{CURRICULUM_IN_KOSHA}').decode('utf-8')
+    rows = list(csv.DictReader(io.StringIO(raw), delimiter='\t'))
+    by_rule = {r['rule']: r for r in rows}
+
+    unjoined = [r['rule'] for r in rules if r['rule'] not in by_rule]
+    if unjoined:
+        sys.exit(f'JOIN FAIL: {len(unjoined)} baked rule(s) missing from '
+                 f'{CURRICULUM_IN_KOSHA} @ {commit[:9]}: {unjoined[:5]}')
+    mismatched = [r['rule'] for r in rules if int(by_rule[r['rule']]['count']) != r['count']]
+    if mismatched:
+        sys.exit(f'JOIN FAIL: count disagreement vs curriculum @ {commit[:9]} '
+                 f'(stale pin?): {mismatched[:5]}')
+
+    teaching_order = sorted(
+        ({
+            'rank': r['rank'],                       # frequency rank in this layer
+            'rule': r['rule'],
+            'curriculum_rank': int(by_rule[r['rule']]['rank']),
+            'lesson': int(by_rule[r['rule']]['lesson']),
+        } for r in rules),
+        key=lambda e: e['curriculum_rank'],
+    )
+
+    return {
+        'source': {
+            'dataset': 'sandhi-curriculum',
+            'repo': 'https://github.com/gasyoun/kosha',
+            'path': CURRICULUM_IN_KOSHA,
+            'commit': commit,
+            'blob': blob,
+            'license': 'CC BY-SA 4.0',
+            'credit': 'kosha graded sandhi curriculum (H902 Phase 4) — Dr. Mārcis Gasūns; over DCS (Oliver Hellwig)',
+            'weights': 'data/sandhi/difficulty_weights.json (tunable)',
+        },
+        'method': 'priority = frequency × class × environment-generality (MG ruling 14-07-2026); '
+                  'coverage shown on the page stays corpus-frequency coverage',
+        'teaching_order': teaching_order,
     }
 
 

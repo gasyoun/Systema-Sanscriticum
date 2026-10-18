@@ -215,4 +215,62 @@ class CourseCardWaitlistTest extends TestCase
             ->assertSee('В данный момент запись на этот курс не ведется')
             ->assertDontSee('data-testid="course-waitlist-box"', false);
     }
+
+    // ================= хиро первого экрана =================
+
+    public function test_course_hero_shows_intent_button_above_the_fold(): void
+    {
+        $item = $this->linkedItem();
+        $this->voteFor($item, 3);
+
+        $resp = $this->get(route('shop.course.show', $item->course->slug));
+        $resp->assertOk();
+
+        // Хиро вместо пары «Выбрать тариф / каталог» — кнопка намерения.
+        $html = (string) $resp->getContent();
+        $heroPos = mb_strpos($html, 'data-testid="course-hero-waitlist"');
+        $boxPos = mb_strpos($html, 'data-testid="course-waitlist-box"');
+        $this->assertNotFalse($heroPos);
+        $this->assertNotFalse($boxPos);
+        // Первый экран: хиро-форма выше блока «Сбор голосов» без прокрутки.
+        $this->assertLessThan($boxPos, $heroPos, 'Кнопка намерения должна стоять в хиро, выше блока «Сбор голосов»');
+        $resp->assertSee('data-testid="waitlist-vote-form"', false)
+            ->assertSee('Намерен участвовать')
+            ->assertSee('Когда удобно?');
+    }
+
+    public function test_course_hero_shows_voted_state(): void
+    {
+        $item = $this->linkedItem();
+        $user = User::factory()->create();
+        $item->votes()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user)
+            ->get(route('shop.course.show', $item->course->slug))
+            ->assertOk()
+            ->assertSee('data-testid="course-hero-waitlist"', false)
+            ->assertSee('data-testid="waitlist-unvote"', false)
+            ->assertSee('Голос учтен');
+    }
+
+    public function test_course_hero_payment_open_links_to_tariffs(): void
+    {
+        $item = $this->linkedItem(status: CourseWaitlistItem::STATUS_PAYMENT_OPEN);
+
+        $this->get(route('shop.course.show', $item->course->slug))
+            ->assertOk()
+            ->assertSee('data-testid="course-hero-waitlist"', false)
+            ->assertSee('data-testid="waitlist-payment-open"', false)
+            ->assertSee('Открыта оплата — к курсу');
+    }
+
+    public function test_course_hero_keeps_tariff_pair_without_waitlist(): void
+    {
+        $course = Course::factory()->create();
+
+        $this->get(route('shop.course.show', $course->slug))
+            ->assertOk()
+            ->assertSee('Выбрать тариф')
+            ->assertDontSee('data-testid="course-hero-waitlist"', false);
+    }
 }
