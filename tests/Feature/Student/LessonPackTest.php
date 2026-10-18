@@ -95,13 +95,33 @@ class LessonPackTest extends TestCase
             ->assertSee('data-lyw-profile="base/base"', false);
     }
 
-    public function test_vote_rejected_groups_stay_404_when_master_flag_is_on(): void
+    public function test_vote_approved_nol_groups_serve_their_own_packs(): void
     {
-        // Голосование 14-10-2026 отклонило 4 «продолжающих» группы (перегруз
-        // терминологией для занятия 1). При включённом мастере они обязаны
-        // остаться 404 — и не откатываться молча в базовый пак.
+        // Одобренные 14-10-2026 группы «ноль» обслуживаются собственными паками,
+        // а не подменяются базовым.
         config(['lyw.enabled' => true]);
         $this->installFixturePacks();
+        [$user, $course, $lesson] = $this->seedSanskritLesson();
+
+        foreach (['yoga' => 'Ваш интерес — йога.', 'ayurveda' => 'Ваш интерес — аюрведа.'] as $interest => $marker) {
+            $this->actingAs($user)
+                ->get(route('student.lesson.lessonpack', [$course->slug, $lesson->id,
+                    'level' => 'nol', 'interest' => $interest]))
+                ->assertOk()
+                ->assertSee('data-lyw-profile="nol/'.$interest.'"', false)
+                ->assertSee($marker, false);
+        }
+    }
+
+    public function test_vote_rejected_groups_stay_404_even_with_a_pack_on_disk(): void
+    {
+        // Голосование 14-10-2026 отклонило 4 «продолжающих» группы (перегруз
+        // терминологией для занятия 1). Пак prodolzhayushchiy/kino лежит в
+        // фикстурах намеренно: 404 обязан давать групповой гейт, а не
+        // отсутствие файла, и отката в базовый пак быть не должно.
+        config(['lyw.enabled' => true]);
+        $this->installFixturePacks();
+        $this->assertFileExists($this->packsRoot().'/zan1/prodolzhayushchiy/kino/manifest.json');
         [$user, $course, $lesson] = $this->seedSanskritLesson();
 
         foreach (['ayurveda', 'kino', 'palomnichestvo', 'yoga'] as $interest) {
@@ -110,13 +130,6 @@ class LessonPackTest extends TestCase
                     'level' => 'prodolzhayushchiy', 'interest' => $interest]))
                 ->assertNotFound();
         }
-
-        // Одобренная группа того же листа обслуживается как обычно.
-        $this->actingAs($user)
-            ->get(route('student.lesson.lessonpack', [$course->slug, $lesson->id,
-                'level' => 'nol', 'interest' => 'yoga']))
-            ->assertOk()
-            ->assertSee('data-lyw-profile="nol/yoga"', false);
     }
 
     public function test_group_without_flag_is_off_even_when_pack_exists(): void
@@ -240,7 +253,10 @@ class LessonPackTest extends TestCase
     {
         $src = base_path('tests/fixtures/lesson_packs');
         $root = sys_get_temp_dir().'/lyw-packs-'.uniqid('', true);
-        foreach (['zan1/base', 'zan1/nol/yoga'] as $rel) {
+        // zan1/nol/ayurveda и zan1/prodolzhayushchiy/kino — фикстуры группового
+        // гейта H6888: первая группа одобрена, вторая отклонена голосованием,
+        // обе лежат на диске, чтобы 200/404 решал флаг, а не наличие файла.
+        foreach (['zan1/base', 'zan1/nol/yoga', 'zan1/nol/ayurveda', 'zan1/prodolzhayushchiy/kino'] as $rel) {
             $dest = $root.'/'.$rel;
             if (! is_dir($dest)) {
                 mkdir($dest, 0777, true);
