@@ -6,7 +6,10 @@ namespace App\Services\Bot;
 
 use App\Jobs\OllamaShadowReplyJob;
 use App\Models\ChatMessage;
+use App\Models\SupportAnswerSuggestion;
 use App\Models\User;
+use App\Services\Support\Faq\HybridRetriever;
+use App\Services\Support\SupportQuestionCategorizer;
 use App\Services\Support\SupportStudentPiiMasker;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -31,6 +34,7 @@ class CuratorAi
     public function __construct(
         private BotKnowledgeBase $knowledgeBase,
         private SupportStudentPiiMasker $piiMasker,
+        private HybridRetriever $faq,
     ) {}
 
     /**
@@ -51,6 +55,14 @@ class CuratorAi
      */
     public function reply(User $user, string $incomingText): ?string
     {
+        // 0YW (RAG grill card 9): F-only citation for the cabinet bot. Deterministic,
+        // local, no provider call — same floor domain and hard {F} allowlist as the
+        // TG/webchat lanes. OFF by default; the flip is a human decision (R9/R10).
+        $citation = $this->faqCitation($incomingText);
+        if ($citation !== null) {
+            return $citation;
+        }
+
         if (config('features.bot_local_generation', false)) {
             return $this->localReply($user, $incomingText);
         }
@@ -82,6 +94,51 @@ class CuratorAi
     public function localReply(User $user, string $incomingText): ?string
     {
         return $this->localChatWithUsage($this->messagesFor($user, $incomingText))['content'];
+    }
+
+    /**
+     * F-only FAQ citation for the cabinet bot (0YW).
+     *
+     * The category is re-derived from the text (never taken from the caller) and
+     * must be exactly F; D/E are excluded by the allowlist, not by config. The
+     * score floor is the same support.faq_rag.shadow_min_score_by_category.F that
+     * the TG and webchat lanes read, so a calibration change moves all three.
+     */
+    private function faqCitation(string $text): ?string
+    {
+        if (! (bool) config('features.bot_faq_live_f', false)) {
+            return null;
+        }
+
+        $text = trim($text);
+        if ($text === '') {
+            return null;
+        }
+
+        if (SupportQuestionCategorizer::categorize($text) !== SupportAnswerSuggestion::CATEGORY_MATERIALS) {
+            return null;
+        }
+
+        $hits = $this->faq->retrieve($text, 3);
+        if ($hits === []) {
+            return null;
+        }
+
+        $score = HybridRetriever::bm25Score($hits[0]);
+        $floor = (float) config('support.faq_rag.shadow_min_score_by_category.'.SupportAnswerSuggestion::CATEGORY_MATERIALS, 15.7);
+        if ($score < $floor) {
+            return null;
+        }
+
+        $snippet = trim((string) ($hits[0]['snippet'] ?? ''));
+        if ($snippet === '') {
+            return null;
+        }
+
+        $title = trim((string) ($hits[0]['title'] ?? ''));
+        $citation = $title === '' ? 'наш FAQ' : "наш FAQ, раздел «{$title}»";
+
+        return "Намасте!\n\n{$snippet}\n\nИсточник — {$citation}. Если вопрос остался, напишите — ответит куратор.";
     }
 
     /**

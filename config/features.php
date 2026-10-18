@@ -375,6 +375,15 @@ return [
     'support_webchat_live_faq' => (bool) env('SUPPORT_WEBCHAT_LIVE_FAQ', false),
 
     /*
+     | 0YW (RAG grill card 9): F-only citation in the cabinet bot (@samskrtamru_bot,
+     | CuratorAi). Category F above the shared F floor answers with the FAQ
+     | section verbatim instead of calling the LLM; D/E are banned in code.
+     | OFF by default — the live flip stays a human decision (R9/R10).
+     | Rollback: false + config:cache.
+     */
+    'bot_faq_live_f' => (bool) env('BOT_FAQ_LIVE_F', false),
+
+    /*
      | H3765 A3 (рулинг R9 плана PLAN_SYSTEMA_TELEGRAM_RAG_SUPPORT_2026H2):
      | ТЕНЕВОЙ режим расширенного автоответа. Пока флаг ВКЛ, на каждой
      | подсказке куратору, которую бот МОГ БЫ отправить студенту сам
