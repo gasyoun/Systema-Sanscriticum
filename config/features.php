@@ -1131,6 +1131,14 @@ return [
     'waitlist_voting' => (bool) env('WAITLIST_VOTING', false),
 
     /*
+     | Карточки открытых занятий в @samskrte_bot: фото + «✅ Я иду» + нижнее
+     | меню, анонс / утро / ссылка Zoom (open-lessons:cards). В бот идут только
+     | занятия с галочкой schedules.bot_card_enabled. OFF по умолчанию;
+     | обкатка — OPEN_LESSON_CARDS_TEST_CHAT_IDS (config/open_lesson_cards.php).
+     */
+    'open_lesson_cards' => (bool) env('OPEN_LESSON_CARDS_ENABLED', false),
+
+    /*
      | Ждун: автооткрытие оплаты при кворуме (votes >= min_payers) для
      | строки, привязанной к курсу: статус payment_open + включение тарифов
      | курса + сигнал куратору (OpenWaitlistPayment). Срабатывает сразу на
@@ -2002,4 +2010,16 @@ return [
      | deploy-шаг человека.
      */
     'hermes_human_send' => (bool) env('HERMES_HUMAN_SEND', false),
+
+    /*
+     | Быстрая запись на бесплатный мини-курс «Подготовительная группа» для
+     | рекламного трафика из VK-бота: /k/{mini_courses.slug}/start — имя + email
+     | + согласие ПДн → кабинет, платёж 0 ₽ по штатному пути Payment (доступ,
+     | course_user = старт дрипа), автовход и сразу в курс. Существующий email
+     | не логинится — ему уходит одноразовая ссылка. Под флагом попап рассылки
+     | на лендинге мини-курса скрыт, а кнопка бесплатного тарифа ведёт на /start.
+     | ВЫКЛ по умолчанию (money-контур): MINI_COURSE_QUICK_ENROLL=true +
+     | config:cache — deploy-шаг человека.
+     */
+    'mini_course_quick_enroll' => (bool) env('MINI_COURSE_QUICK_ENROLL', false),
 ];

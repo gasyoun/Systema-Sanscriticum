@@ -843,6 +843,25 @@ class Course extends Model
         return $this->hasMany(CourseDesignAsset::class);
     }
 
+    /** Позиции «Списка ожидания» (ждуна), привязанные к курсу. */
+    public function waitlistItems(): HasMany
+    {
+        return $this->hasMany(CourseWaitlistItem::class);
+    }
+
+    /**
+     * Охват «Дизайна курсов»: активные курсы И курсы с открытой позицией
+     * ждуна. Курс из ждуна ещё не запущен (обычно is_active=false), но его
+     * карточка на /online/zhdun уже показывает обложку курса — дизайнеру он
+     * нужен в матрице раньше старта, а не после.
+     */
+    public function scopeInDesignScope(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->where('is_active', true)
+            ->orWhereHas('waitlistItems', fn (Builder $w) => $w->onShowcase()));
+    }
+
     /**
      * Заявки препода на материалы («Мои материалы», H4325) — черновики,
      * не витрина. Публикует куратор через CourseMaterialSubmissionService.

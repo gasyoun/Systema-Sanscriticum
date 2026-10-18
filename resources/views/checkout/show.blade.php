@@ -28,7 +28,13 @@ document.addEventListener('alpine:init', () => {
             return Math.floor((this.prana || 0) / this.rate);
         },
         get total() {
-            return Math.max(1, this.basePrice - this.pranaRubles);
+            // Бесплатный тариф (цена 0) честно показывает 0 ₽; платный —
+            // минимум 1 ₽ в отображении (историческое поведение для полного
+            // покрытия праной). Сервер при 0 всё равно проводит оплату как
+            // бесплатную (zero-price ветка PaymentController).
+            const floor = this.listPrice > 0 ? 1 : 0;
+
+            return Math.max(floor, this.basePrice - this.pranaRubles);
         },
         get totalSavings() {
             return this.loyaltyDiscount + this.promoDiscount + this.pranaRubles;

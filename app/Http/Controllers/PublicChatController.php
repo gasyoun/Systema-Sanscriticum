@@ -114,8 +114,17 @@ class PublicChatController extends Controller
         // 152-ФЗ: гость ставит галочку ПДн перед первым сообщением (виджет шлёт
         // pd_consent только с ним) — пишем в журнал. Обязательность не проверяем:
         // последующие сообщения той же беседы галочку уже не несут.
+        // H6487: подтверждение записи возвращаем клиенту — виджет запоминает
+        // «согласие дано» в localStorage только когда строка журнала реально
+        // легла (ст. 9 ч. 3: доказательство не должно жить лишь в браузере).
+        $consentRecorded = false;
         if ($user === null) {
-            app(ConsentRecorder::class)->fromForm($request, 'support-chat', null, $validated['email'] ?? null);
+            $consentRecorded = app(ConsentRecorder::class)->fromForm(
+                $request,
+                'support-chat',
+                null,
+                $validated['email'] ?? null,
+            ) !== null;
         }
 
         $message = ChatMessage::create([
@@ -176,6 +185,12 @@ class PublicChatController extends Controller
             'conversation_id' => $thread->id,
             'message' => $this->present($message),
         ];
+
+        // H6487: ключ только у гостя, приславшего галочку, — ответы остальных
+        // клиентов остаются прежними построчно (инвариант тестом).
+        if ($user === null && $request->boolean('pd_consent')) {
+            $payload['consent_recorded'] = $consentRecorded;
+        }
 
         // Ключ добавляется только при отправленном bot-сообщении: OFF-ответ
         // остаётся прежним построчно (инвариант тестом).

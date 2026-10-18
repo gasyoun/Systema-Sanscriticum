@@ -47,6 +47,9 @@ class Schedule extends Model
         'group_id',
         'course_id',
         'is_overview',
+        'bot_card_enabled',
+        'card_image_path',
+        'card_note',
         'reminded_at',
         'group_link_posted_at',
         'zapisi_reminded_at',
@@ -60,6 +63,7 @@ class Schedule extends Model
     ];
 
     protected $casts = [
+        'bot_card_enabled' => 'boolean',
         'start' => 'datetime',
         'end' => 'datetime',
         'reminded_at' => 'datetime',
@@ -98,6 +102,18 @@ class Schedule extends Model
     public function attendances(): HasMany
     {
         return $this->hasMany(WebinarAttendance::class);
+    }
+
+    /** Ответы «✅ Я иду» / «Не смогу» на карточку открытого занятия в @samskrte_bot. */
+    public function openLessonRsvps(): HasMany
+    {
+        return $this->hasMany(OpenLessonRsvp::class);
+    }
+
+    /** Журнал отправок карточки открытого занятия (стадии announce/morning/zoom). */
+    public function openLessonCardSends(): HasMany
+    {
+        return $this->hasMany(OpenLessonCardSend::class);
     }
 
     /** Клики по ссылке «Подключиться» (надёжная привязка студентов к занятию). */

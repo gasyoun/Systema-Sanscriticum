@@ -6,6 +6,7 @@ namespace App\Notifications;
 
 use Illuminate\Support\Facades\Log;
 use Spatie\Backup\Notifications\Notifiable;
+use Throwable;
 
 /**
  * H3312: fail-closed получатель backup-уведомлений.
@@ -35,5 +36,28 @@ class BackupNotifiable extends Notifiable
         }
 
         return [$adminEmail];
+    }
+
+    /**
+     * H6540: спати запускает уведомления СИНХРОННО внутри backup-джобы
+     * (EventHandler::subscribe -> notify; у BackupWasSuccessful это происходит
+     * прямо в try-блоке copyToBackupDestinations). Исключение канала — прод
+     * 12-10-2026 02:10: SMTP «Network is unreachable» в ночном окне — вылетает
+     * из event(), ловится чужим catch как «Copying zip failed» и красит весь
+     * backup:run в exit 1, хотя зип и local-копия уже отгружены. Тем же болеет
+     * и backup:clean (02:30:51, «Cleanup failed because: SMTP»). Поэтому
+     * сбой КАНАЛА уведомлений проглатывается в лог: backup важнее письма о
+     * нём; когда SMTP жив, письмо админу уходит как раньше (H3312 не тронут).
+     */
+    public function notify($instance)
+    {
+        try {
+            parent::notify($instance);
+        } catch (Throwable $exception) {
+            Log::error('backup.notifications: канал уведомлений упал — проглочено, чтобы не ронять backup:run/clean', [
+                'notification' => $instance::class,
+                'exception' => $exception->getMessage(),
+            ]);
+        }
     }
 }

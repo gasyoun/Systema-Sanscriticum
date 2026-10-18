@@ -8,6 +8,7 @@ use App\Events\ChatMessageSent;
 use App\Models\ChatMessage;
 use App\Models\SupportVisitorPresence;
 use App\Services\Support\SupportConversationManager;
+use App\Support\SupportProactiveGate;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
@@ -19,6 +20,11 @@ use Illuminate\Support\Collection;
  * ничего не написал, — и может НАПИСАТЬ ПЕРВЫМ (инициатива человека, не авто-бот).
  * Проактивное сообщение создаёт/переоткрывает тред посетителя (реюз H536) и
  * бродкастится в его виджет, который раскрывается.
+ *
+ * H6601: проактив ограничен гейтом {@see SupportProactiveGate} — только горячие
+ * страницы (лендинг мини-курса, витрина, оплата) и только в рабочие часы; каждое
+ * проактивное сообщение помечается chat_messages.is_proactive, чтобы метрика
+ * «проактив → входящее» считалась в rollup'ах и parity-срезе.
  *
  * Приватность: за флагом features.support_visitor_presence (OFF по умолчанию),
  * страница скрыта и роут закрыт при выключенном флаге. IP не показываем — только
@@ -74,6 +80,10 @@ class VisitorsOnline extends Page
                 'current_url' => $p->current_url,
                 'time_on_site' => $p->timeOnSiteLabel(),
                 'is_student' => $p->user_id !== null,
+                // H6601: «Написать первым» активно только на горячих страницах
+                // в рабочие часы (гейт дублируется fail-closed в sendProactive).
+                'proactive_allowed' => SupportProactiveGate::allows($p),
+                'proactive_blocked_reason' => SupportProactiveGate::refusalReason($p),
             ]);
     }
 
@@ -122,6 +132,16 @@ class VisitorsOnline extends Page
             return;
         }
 
+        // H6601: fail-closed гейт — только горячие страницы и только в рабочие
+        // часы. UI прячет кнопку, но решение принимает сервер.
+        $reason = SupportProactiveGate::refusalReason($presence);
+        if ($reason !== null) {
+            Notification::make()->title('Проактив сейчас недоступен')->body($reason)->warning()->send();
+            $this->cancelCompose();
+
+            return;
+        }
+
         $curator = auth()->user();
         $conversations = app(SupportConversationManager::class);
 
@@ -136,6 +156,7 @@ class VisitorsOnline extends Page
             'answered_by' => $curator?->id,
             'text' => $this->proactiveMessage,
             'is_read' => true,
+            'is_proactive' => true,
         ]);
 
         $thread->forceFill(['last_message_at' => $message->created_at])->save();

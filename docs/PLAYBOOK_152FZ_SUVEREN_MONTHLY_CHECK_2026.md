@@ -84,5 +84,6 @@ python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('grade'
 | Дата (МСК) | Домен | Грейд | «Содержание политики» | Замечания | Рука | PR |
 |---|---|---|---|---|---|---|
 | 11-10-2026 23:51 | samskrte.ru | A/96 | PASS | только F5 (Let's Encrypt США, advisory) | H6507 | [#3192](https://github.com/gasyoun/Systema-Sanscriticum/pull/3192) |
+| 12-10-2026 15:19 | samskrtam.ru | A/96 | WARN* | первый бейзлайн; политика найдена: `/privacy-policy/` + страница согласия (обе 200); вручную 4/4 блоков — «ПРАВА СУБЪЕКТОВ…» капсом (гоча H6503, grep дал 8≠4); сканер WARN: ReadTimeout политики на холодном кэше (cold 14–17 с, warm 0.4 с); ИНН на сайте нет → реестр операторов РКН не проверялся; форм с ПД на проверенных страницах нет; единственная foreign-зависимость Let's Encrypt (США) — advisory, как F5 samskrte; [JSON](AUDIT_152FZ_SAMSKRTAM_2026-10-12_suveren-baseline_20261012T1219Z.json) | H6513 | [#3204](https://github.com/gasyoun/Systema-Sanscriticum/pull/3204) |
 
 _к.ф.н. М.Ю. Гасунс_

@@ -1227,9 +1227,13 @@ class TelegramSupportSyncService
      * апсертит строку аккаунт × день (Europe/Moscow). Только live-путь —
      * payload-импорт сетью не ходит и охват источников не доказывает.
      * День без строки — неизвестный охват, а не «полный».
+     *
+     * @param  int|null  $peersPolled  переопределение для внешних источников
+     *                                 (вебхук-полоса пиров не опрашивает)
      */
-    private function recordScanDay(string $accountName): void
+    private function recordScanDay(string $accountName, ?int $peersPolled = null): void
     {
+        $peers = $peersPolled ?? $this->lastPeerPollCount;
         $day = now()->timezone('Europe/Moscow')->toDateString();
 
         /** @var TelegramSupportScanDay|null $existing */
@@ -1243,7 +1247,7 @@ class TelegramSupportSyncService
                 'account_name' => $accountName,
                 'day' => $day,
                 'successful_runs' => 1,
-                'peers_polled_max' => $this->lastPeerPollCount,
+                'peers_polled_max' => $peers,
                 'first_success_at' => now(),
                 'last_success_at' => now(),
             ]);
@@ -1253,8 +1257,50 @@ class TelegramSupportSyncService
 
         $existing->forceFill([
             'successful_runs' => $existing->successful_runs + 1,
-            'peers_polled_max' => max($existing->peers_polled_max, $this->lastPeerPollCount),
+            'peers_polled_max' => max($existing->peers_polled_max, $peers),
             'last_success_at' => now(),
+        ])->save();
+    }
+
+    /**
+     * Дневное доказательство живости ВНЕШНЕГО (не-MTProto) источника — H5709:
+     * вебхук-полоса telegram-business. Сеть проверяет вызывающий (суточный
+     * проб getWebhookInfo); здесь только честная запись за СЕГОДНЯ
+     * (Europe/Moscow) — задним числом дни не заполняются, день без успешного
+     * проба остаётся неизвестным охватом (H5768). Строку аккаунта не создаём,
+     * поля сессии/auto_reply не трогаем.
+     */
+    public function recordExternalSourceSuccess(string $accountName): void
+    {
+        $account = TelegramSupportAccount::query()->where('name', $accountName)->first();
+        if ($account === null) {
+            return;
+        }
+
+        $account->forceFill([
+            'last_synced_at' => now(),
+            'last_successful_sync_at' => now(),
+            'last_sync_error' => null,
+        ])->save();
+
+        $this->recordScanDay($accountName, 0);
+    }
+
+    /**
+     * Провал суточного проба внешнего источника: ошибка на строке аккаунта —
+     * единственный сигнал «полоса включена, но охват не доказан», который
+     * coverage v2 честно показывает как sync_error. Дня не записываем.
+     */
+    public function recordExternalSourceFailure(string $accountName, string $error): void
+    {
+        $account = TelegramSupportAccount::query()->where('name', $accountName)->first();
+        if ($account === null) {
+            return;
+        }
+
+        $account->forceFill([
+            'last_synced_at' => now(),
+            'last_sync_error' => $error,
         ])->save();
     }
 

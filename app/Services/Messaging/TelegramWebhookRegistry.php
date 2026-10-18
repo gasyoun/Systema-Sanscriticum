@@ -73,7 +73,9 @@ class TelegramWebhookRegistry
             token: $token,
             secret: $secret,
             url: TelegramWebhooks::url('/api/webhooks/telegram-magnet'),
-            allowedUpdates: ['message'],
+            // callback_query — inline-кнопки ждуна и карточек открытых занятий:
+            // без него Telegram их нажатия боту просто не доставляет.
+            allowedUpdates: ['message', 'callback_query'],
             problem: $this->problemFor($token, $secret, 'MarketingSetting.tg_bot_token', 'MarketingSetting.tg_webhook_secret'),
         );
     }

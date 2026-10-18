@@ -25,6 +25,8 @@ use App\Services\Membership\ClubEntitlement;
 use App\Services\Membership\RecordingAccessPolicy;
 use App\Services\Prana\PranaService;
 use App\Support\KinescopePilot;
+use App\Support\LywProfiles;
+use App\Support\MiniCourseDrip;
 use App\Support\TranscriptParser;
 use Illuminate\Http\Request;
 
@@ -69,6 +71,9 @@ trait StudentCourseContentConcerns
 
         // H2333: “where is lesson 1?” when this shell continues another course.
         $continuationBanner = app(CourseContinuationBanner::class)->for($course, $user);
+
+        // Дрип мини-курса: карта «lesson_id => дата открытия» закрытых уроков.
+        $dripLocked = MiniCourseDrip::lockedMapFor($user, $course);
 
         // Квизы этапов (мини-курсы): активные квизы курса + лучшая попытка студента
         // по каждому — попытки достаются одним запросом, без N+1.
@@ -126,6 +131,7 @@ trait StudentCourseContentConcerns
                 'accessSelfService' => $accessSelfService,
                 'accessFindingsByLessonId' => $accessFindingsByLessonId,
                 'courseQuizzes' => $courseQuizzes,
+                'dripLocked' => $dripLocked,
             ]);
         }
 
@@ -138,6 +144,7 @@ trait StudentCourseContentConcerns
             'accessSelfService',
             'accessFindingsByLessonId',
             'courseQuizzes',
+            'dripLocked',
         ));
     }
 
@@ -150,6 +157,19 @@ trait StudentCourseContentConcerns
         $course = Course::resolveBySlugOrFail($courseSlug);
         $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
         $courseSlug = $course->slug;
+
+        // Дрип мини-курса: урок ещё не открыт для этого студента — показываем
+        // карточку с датой открытия вместо контента.
+        $dripLockedAt = MiniCourseDrip::lockedAtFor($user, $course, $lesson);
+
+        if ($dripLockedAt !== null) {
+            return view('student.lesson-locked', [
+                'course' => $course,
+                'lesson' => $lesson,
+                'openAt' => $dripLockedAt->timezone(config('app.timezone')),
+                'dripLockedAt' => $dripLockedAt,
+            ]);
+        }
 
         $access = $this->resolveLessonAccessGate($user, $course, $lesson, $courseSlug);
         if ($access['redirect'] !== null) {
@@ -312,6 +332,13 @@ trait StudentCourseContentConcerns
             ]);
         }
 
+        // H6302: автосейв заметок (public/js/lesson-note-autosave.js) шлёт
+        // Accept: application/json — отвечаем JSON без редиректа. Обычная
+        // форма (ручной fallback) по-прежнему получает redirect()->back().
+        if ($request->expectsJson()) {
+            return response()->json(['saved' => true]);
+        }
+
         return redirect()->back()->with('success', 'Заметка сохранена');
     }
 
@@ -447,8 +474,11 @@ trait StudentCourseContentConcerns
 
         // H3521: вкладка «Learn Your Way» — только при включённом LYW_ENABLED
         // (default OFF: переменная остаётся null, разметки в шаблоне нет).
+        // H6888: и только если одобрена группа того профиля, который вкладка
+        // открывает. Своих параметров у вкладки нет, поэтому это дефолтная
+        // пара (волна 1: base/base, группа `base`).
         $lywUrl = null;
-        if (config('lyw.enabled')) {
+        if (LywProfiles::defaultEnabled()) {
             $lywUrl = route('student.lesson.lessonpack', [$course->slug, $lesson->id]);
         }
 
