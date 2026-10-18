@@ -31,10 +31,13 @@ use Illuminate\Support\Facades\DB;
 $__candidates = [__DIR__.'/../vendor/autoload.php', __DIR__.'/vendor/autoload.php', 'vendor/autoload.php'];
 $__autoload = null;
 foreach ($__candidates as $__f) {
-    if (file_exists($__f)) { $__autoload = $__f; break; }
+    if (file_exists($__f)) {
+        $__autoload = $__f;
+        break;
+    }
 }
 if ($__autoload === null) {
-    fwrite(STDERR, "vendor/autoload.php не найден (искали: ".implode(', ', $__candidates).")\n");
+    fwrite(STDERR, 'vendor/autoload.php не найден (искали: '.implode(', ', $__candidates).")\n");
     exit(1);
 }
 require $__autoload;
@@ -130,7 +133,7 @@ $gameEvents = DB::table('game_events')
         'event' => $e->event,
         'authenticated' => (bool) $e->authenticated,
         'created_at' => (string) $e->created_at,
-])->toArray();
+    ])->toArray();
 
 // --- twins-пробы: появятся с режимом близнецов H6393 ------------------------
 // Формат строки: {"pair_id": "pr-ly", "probe": "प्र", "correct": true, "u": "u01", "created_at": "..."}
