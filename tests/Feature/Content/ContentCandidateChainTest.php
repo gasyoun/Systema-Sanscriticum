@@ -70,9 +70,10 @@ class ContentCandidateChainTest extends TestCase
         Bus::assertDispatched(SendContentOneShotMailJob::class, fn ($job) => $job->contentCandidateId === $digest->id);
     }
 
-    public function test_accepting_faq_draft_writes_knowledge_without_support_topic(): void
+    public function test_accepting_faq_draft_is_editorial_noop_after_band_retirement(): void
     {
         $path = storage_path('framework/testing/faq_chain_'.uniqid('', true).'.md');
+        // The retired config key must not resurrect the band if an old env sets it.
         config(['content.lecture_faq_path' => $path]);
 
         try {
@@ -85,12 +86,12 @@ class ContentCandidateChainTest extends TestCase
             ]);
 
             $draft->update(['status' => ContentCandidate::STATUS_ACCEPTED]);
-
             $draft->refresh();
-            $this->assertSame(ContentCandidate::STATUS_PUBLISHED, $draft->status);
-            $this->assertFileExists($path);
-            $this->assertStringContainsString('висарга', (string) file_get_contents($path));
-            // C3: no SupportTopic seed required for the Accept → knowledge path.
+
+            // RAG grill card 6 (17-10-2026): the lecture FAQ band is retired —
+            // Accept is editorial only and writes no knowledge file.
+            $this->assertSame(ContentCandidate::STATUS_ACCEPTED, $draft->status);
+            $this->assertFileDoesNotExist($path);
             $this->assertDatabaseCount('content_candidates', 1);
         } finally {
             if (is_file($path)) {

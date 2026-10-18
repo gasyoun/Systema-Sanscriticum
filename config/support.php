@@ -189,7 +189,7 @@ return [
          | идёт по границе раздела (KnowledgeContext::promptBlockCapped).
          | 0 = без потолка. 12000 символов ≈ 4 тыс. токенов: при шести
          | разделах faq.md потолок не достигается, он сторожит распухший
-         | корпус и растущий faq_from_lectures.md.
+         | корпус.
          */
         'answer_max_chars' => (int) env('SUPPORT_FAQ_RAG_ANSWER_MAX_CHARS', 12000),
         // Okapi BM25 floor for money/policy refuse gate (category D).
@@ -221,6 +221,10 @@ return [
         // отправлять на этом уровне нельзя ни в одной категории.
         //
         // D (деньги) и E (доступы) сюда не входят вовсе: они исключены R3.
+        // 18-10-2026 (K5, GTD 0YT): пере-замер на живом faq.md + 30 отказных
+        // карточках подтвердил F = 15.7 (100 % точности, 41 % покрытия);
+        // A/B/C по-прежнему недостижимы на 95 %, D/E исключены кодом.
+        // Отчёт: docs/K5_SCORE_FLOOR_CALIBRATION_2026-10-18.md.
         'shadow_min_score_by_category' => [
             'A' => (float) env('SUPPORT_FAQ_RAG_SHADOW_MIN_SCORE_A', 18.1),
             'B' => (float) env('SUPPORT_FAQ_RAG_SHADOW_MIN_SCORE_B', 14.8),
