@@ -35,6 +35,22 @@ return [
     // payout funding pool is the operating account (…863757) only.
     // MG 29-09-2026 (H5554 gap [2]).
     'funding_excluded_account_tails' => ['877617'],
+
+    // H6706 — H5554 gap [4], MG ruling 01-10-2026 (chat vote): the owner
+    // remainder on the 29-09-2026 cut (864 385 ₽) splits 70% burn / 30%
+    // dividends. Burn closes open obligations oldest-first (incl. the reset
+    // Gasuns baseline from 01-08-2026), cadence = payout cycle, no fixed
+    // monthly date. The ruling does NOT fix a per-cycle capacity formula;
+    // the calendar defaults to share × cycle DDS net (free cash), floored
+    // at 0 — the pools cap the totals at the ruled amounts.
+    'owner_remainder_cut' => [
+        'amount' => 864385.00,
+        'as_of' => '2026-09-29',
+        'burn_share' => 0.7,
+        'dividend_share' => 0.3,
+        'burn_capacity_basis' => 'dds_net',
+    ],
+
     // Private, gitignored manifest prepared by accounting. It contains hashes
     // and dates, not credentials. See docs/TEACHER_PAYROLL_READINESS_2026.md.
     'evidence_manifest_path' => env(

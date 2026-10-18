@@ -6,6 +6,7 @@ namespace Tests\Feature\Anons;
 
 use App\Models\AnonsLinkClick;
 use App\Models\AnonsPlacement;
+use App\Models\Lead;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -118,6 +119,32 @@ final class AnonsOpsJournalTest extends TestCase
             ->assertExitCode(1);
     }
 
+    public function test_journal_add_records_campaign_kind(): void
+    {
+        // H6329: вид кампании пишется в журнал и переживает повторный
+        // journal-add без --kind (не стирается идемпотентностью).
+        $this->artisan('anons:ops', ['op' => 'journal-add', '--link' => 'up26-ors-c', '--kind' => 'разовое'])
+            ->assertExitCode(0);
+        $this->artisan('anons:ops', ['op' => 'journal-add', '--link' => 'up26-ors-c'])
+            ->assertExitCode(0);
+
+        $row = AnonsPlacement::query()->where('link', 'up26-ors-c')->firstOrFail();
+        $this->assertSame('разовое', $row->kind);
+
+        // journal-list показывает вид.
+        $this->artisan('anons:ops', ['op' => 'journal-list'])
+            ->expectsOutputToContain('[разовое]')
+            ->assertExitCode(0);
+    }
+
+    public function test_journal_add_refuses_unknown_kind(): void
+    {
+        // Fail-closed: неизвестный вид — отказ ДО записи, а не молчаливое «пусто/всё».
+        $this->artisan('anons:ops', ['op' => 'journal-add', '--link' => 'up26-ors-p', '--kind' => 'вебинар'])
+            ->assertExitCode(1);
+        $this->assertSame(0, AnonsPlacement::query()->count());
+    }
+
     /** Canary на наших данных: живые ключи up26 лежат в продовом конфиге. */
     public function test_up26_keys_present_in_tracked_links_config(): void
     {
@@ -125,5 +152,28 @@ final class AnonsOpsJournalTest extends TestCase
 
         $this->assertIsArray($real['links']['up26-ors-c'] ?? null);
         $this->assertIsArray($real['links']['up26-ors-p'] ?? null);
+    }
+
+    /**
+     * H6531: anons:ops hdyhau — агрегат самоотчётов «откуда узнали» по
+     * leads.reported_source (четвёртая нога атрибуции). Канонический ключ
+     * выводится подписью, «Другое» — словами человека; null-ответы не
+     * считаются; окно --days отрезает старые заявки.
+     */
+    public function test_hdyhau_aggregates_reported_source_counts(): void
+    {
+        Lead::create(['contact' => '+79990000001', 'reported_source' => 'friends']);
+        Lead::create(['contact' => '+79990000002', 'reported_source' => 'friends']);
+        Lead::create(['contact' => '+79990000003', 'reported_source' => 'Увидел плакат в библиотеке']);
+        Lead::create(['contact' => '+79990000004']); // без ответа — не считается
+        // вне окна (40 дней назад) — создан сейчас, created_at отодвинут напрямую
+        $stale = Lead::create(['contact' => '+79990000005', 'reported_source' => 'tg_school']);
+        $stale->forceFill(['created_at' => Carbon::now()->subDays(40)])->saveQuietly();
+
+        $this->artisan('anons:ops', ['op' => 'hdyhau'])
+            ->expectsOutputToContain('HDYHAU reported_source last 30d: 3 answer(s)')
+            ->expectsOutputToContain('2  Посоветовали друзья или знакомые')
+            ->expectsOutputToContain('1  Увидел плакат в библиотеке')
+            ->assertSuccessful();
     }
 }

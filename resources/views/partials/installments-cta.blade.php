@@ -90,6 +90,8 @@
                         @endif
                     </div>
 
+                    <x-consent.pd />
+
                     <button type="submit"
                             class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 transition">
                         Отправить запрос куратору

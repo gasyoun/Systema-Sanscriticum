@@ -13,14 +13,9 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/icon-180.png') }}">
     <link rel="manifest" href="{{ asset('manifest-site.webmanifest') }}">
 
-    {{-- Tailwind + FontAwesome (в тон shop/index.blade.php) --}}
-    {{-- preconnect к сторонним origin: экономит по одному DNS+TLS-рукопожатию каждому --}}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    {{-- Tailwind + шрифты/FontAwesome со своего сервера (152-ФЗ: без Google Fonts и cdnjs) --}}
     @include('partials.tailwind-cdn')
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    @vite('resources/css/fonts.css')
 
 <style>
         [x-cloak] { display: none !important; }
@@ -271,6 +266,9 @@
     @livewireScripts
 
     @include('partials.cookie-consent')
-    @include('partials.newsletter-subscribe-popup')
+    {{-- На пути записи в мини-курс попап рассылки не конкурирует с записью. --}}
+    @unless(config('features.mini_course_quick_enroll') && (request()->routeIs('mini-course.*') || request()->is('k/'.config('mini_courses.slug'))))
+        @include('partials.newsletter-subscribe-popup')
+    @endunless
 </body>
 </html>

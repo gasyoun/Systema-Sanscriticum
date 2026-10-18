@@ -1131,6 +1131,14 @@ return [
     'waitlist_voting' => (bool) env('WAITLIST_VOTING', false),
 
     /*
+     | Карточки открытых занятий в @samskrte_bot: фото + «✅ Я иду» + нижнее
+     | меню, анонс / утро / ссылка Zoom (open-lessons:cards). В бот идут только
+     | занятия с галочкой schedules.bot_card_enabled. OFF по умолчанию;
+     | обкатка — OPEN_LESSON_CARDS_TEST_CHAT_IDS (config/open_lesson_cards.php).
+     */
+    'open_lesson_cards' => (bool) env('OPEN_LESSON_CARDS_ENABLED', false),
+
+    /*
      | Ждун: автооткрытие оплаты при кворуме (votes >= min_payers) для
      | строки, привязанной к курсу: статус payment_open + включение тарифов
      | курса + сигнал куратору (OpenWaitlistPayment). Срабатывает сразу на
@@ -1521,6 +1529,15 @@ return [
      | this PR must not flip prod .env on .92.
      */
     'guest_registration' => (bool) env('GUEST_REGISTRATION_ENABLED', false),
+
+    /*
+     | H5823: последовательность напоминаний о продлении членства
+     | (membership:renewal-reminders). Default OFF: слот планировщика всегда
+     | зарегистрирован (audit spec 7), но команда с флагом OFF печатает отчёт
+     | и НИЧЕГО не шлёт — даже с --send. Включение: MEMBERSHIP_RENEWAL_REMINDERS=true
+     | + config:cache на .92 — отдельный ops-шаг, не этот PR.
+     */
+    'membership_renewal_reminders' => (bool) env('MEMBERSHIP_RENEWAL_REMINDERS', false),
 
     /*
      | Grammar Lab explorer (H2493 / G2). Import and tables are additive;
@@ -1943,4 +1960,66 @@ return [
      | финансового руководителя.
      */
     'salary_returns_student_refunds_only' => (bool) env('SALARY_RETURNS_STUDENT_REFUNDS_ONLY', false),
+
+    /*
+     | 152-ФЗ: сервер отклоняет публичную форму без галочки согласия на
+     | обработку ПДн (pd_consent). Галочка обязательна в браузере и пишется в
+     | журнал consents при любом значении флага. Дефолт OFF: включать после
+     | повторного скана sitemap — пропущенная форма иначе молча теряет заявки.
+     | Страница оплаты сюда не входит — у неё свой флаг ниже (money-контур).
+     */
+    'pd_consent_enforce' => (bool) env('PD_CONSENT_ENFORCE', false),
+
+    /*
+     | 152-ФЗ, money-контур: то же для гостевой оплаты (/payment/create).
+     | Дефолт OFF — отказ здесь стоит денег; включать отдельно и после проверки.
+     */
+    'checkout_pd_consent_enforce' => (bool) env('CHECKOUT_PD_CONSENT_ENFORCE', false),
+
+    /*
+     | 152-ФЗ ст. 5 ч. 7: ежедневная команда privacy:prune --scheduled обнуляет
+     | IP-адреса старше config('privacy.ip_retention_days') (дефолт 180) в
+     | журналах активности. Дефолт OFF — включать после утверждения срока
+     | хранения и вписывания его в политику. Сухой прогон работает всегда:
+     | php artisan privacy:prune [--report]
+     */
+    'privacy_prune' => (bool) env('PRIVACY_PRUNE', false),
+
+    /*
+     | Hermes W1 роль 23 `schedule-keeper` (H6187, пакет hermes-24-01a10bca):
+     | детерминированный ответ о расписании из канонической таблицы schedules —
+     | время наблюдения, переносы/отмены за 14 дней, двойное время для не-МСК
+     | студентов, а пустое/подозрительно дальнее расписание помечается
+     | requires_human_verification вместо уверенного ответа. Только чтение,
+     | без LLM и без записи в расписание. ВЫКЛ по умолчанию (роль OFF —
+     | запуск волны W1 остаётся за гейтами E026): включение
+     | HERMES_SCHEDULE_KEEPER=true + config:cache — deploy-шаг человека.
+     */
+    'hermes_schedule_keeper' => (bool) env('HERMES_SCHEDULE_KEEPER', false),
+
+    /*
+     | Hermes human-send в TG и web (H6183, пакет hermes-24-01a10bca):
+     | отправка черновика одним нажатием аутентифицированного куратора через
+     | SupportHumanSendService — актёр обязан быть человеком (агентский вызов
+     | отказ без единой записи), идемпотент по повтору approval и повтору
+     | webhook (статус pending + клейм (конвертация, текст)), доставка пишет
+     | только в стор (pending TelegramSupportMessage / ChatMessage +
+     | broadcast) без сетевых вызовов. Под флагом очередь черновиков
+     | дополнительно принимает web-черновики (chat_message). ВЫКЛ по
+     | умолчанию: включение HERMES_HUMAN_SEND=true + config:cache —
+     | deploy-шаг человека.
+     */
+    'hermes_human_send' => (bool) env('HERMES_HUMAN_SEND', false),
+
+    /*
+     | Быстрая запись на бесплатный мини-курс «Подготовительная группа» для
+     | рекламного трафика из VK-бота: /k/{mini_courses.slug}/start — имя + email
+     | + согласие ПДн → кабинет, платёж 0 ₽ по штатному пути Payment (доступ,
+     | course_user = старт дрипа), автовход и сразу в курс. Существующий email
+     | не логинится — ему уходит одноразовая ссылка. Под флагом попап рассылки
+     | на лендинге мини-курса скрыт, а кнопка бесплатного тарифа ведёт на /start.
+     | ВЫКЛ по умолчанию (money-контур): MINI_COURSE_QUICK_ENROLL=true +
+     | config:cache — deploy-шаг человека.
+     */
+    'mini_course_quick_enroll' => (bool) env('MINI_COURSE_QUICK_ENROLL', false),
 ];

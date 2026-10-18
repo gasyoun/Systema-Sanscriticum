@@ -1,4 +1,4 @@
-_Created: 07-05-2026 · Last updated: 05-09-2026_
+_Created: 07-05-2026 · Last updated: 10-10-2026_
 
 # app/Models
 
@@ -21,7 +21,7 @@ Eloquent-модели. Каждая модель = одна таблица БД 
 
 | Файл | Таблица | Роль |
 |---|---|---|
-| `Payment.php` | `payments` | Платеж. Статусы: `pending` → `paid` → `success`. Метод `grantAccess()` добавляет студента в нужные группы. Метод `processSuccessfulPayment()` вызывается из `PaymentObserver`. |
+| `Payment.php` | `payments` | Платеж. Статусы: `pending` → `paid` → `success`. Метод `grantAccess()` добавляет студента в нужные группы. Метод `processSuccessfulPayment()` вызывается из `fireOnPaid()` внутри `static::updated` самой модели. |
 | `PromoCode.php` | `promo_codes` | Промокод. Типы: `percent` или `fixed`. Метод `calculateDiscountedPrice()`. Поля: `max_uses`, `used_count`, `expires_at`. |
 
 ## Домен: Контент

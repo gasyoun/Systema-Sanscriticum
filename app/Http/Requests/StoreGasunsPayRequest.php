@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Support\Consent\ConsentRules;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class StoreGasunsPayRequest extends FormRequest
@@ -28,6 +29,8 @@ final class StoreGasunsPayRequest extends FormRequest
         if (! auth()->check()) {
             $rules['name'] = ['required', 'string', 'max:255'];
             $rules['email'] = ['required', 'email', 'max:255'];
+            // 152-ФЗ: путь оплаты — обязательность по флагу money-контура.
+            $rules['pd_consent'] = ConsentRules::pd(checkout: true);
         }
 
         return $rules;

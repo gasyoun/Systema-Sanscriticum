@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Mail\Concerns\Unsubscribable;
 use App\Models\SubscriberMagnet;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -20,6 +21,7 @@ use Illuminate\Support\Collection;
 class NewsletterMagnetsMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+    use Unsubscribable;
 
     /**
      * @param  Collection<int, SubscriberMagnet>  $magnets

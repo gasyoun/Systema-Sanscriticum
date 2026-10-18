@@ -114,9 +114,14 @@ final class FakeSystemInspector implements SystemInspector
             .intdiv($spec->bytes('TMP_TMPFS_SIZE'), 1024)."k,nr_inodes=1048576,mode=1777 0 0\n";
 
         $plausible = ((int) $spec->get('BACKUP_MIN_ARCHIVE_MB') + 1) * 1024 ** 2;
+        // H6905: живой off-site на проде 17-10-2026 — restic_sftp (дамп БД на
+        // другой хост каждый час), а yandex_disk объявлен best-effort. Здоровый
+        // хост обязан содержать обе строки, иначе baseline красил бы каждую
+        // проверку находкой «нет ни одного живого off-site назначения».
         $fake->backupDestinations = [
             ['disk' => 'local', 'reachable' => true, 'newestAt' => time() - 3600, 'newestBytes' => $plausible],
             ['disk' => 'yandex_disk', 'reachable' => true, 'newestAt' => time() - 3600, 'newestBytes' => $plausible],
+            ['disk' => 'restic_sftp', 'reachable' => true, 'newestAt' => time() - 3600, 'newestBytes' => null],
         ];
 
         return $fake;

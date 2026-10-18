@@ -23,6 +23,7 @@ use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\Tariff;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
@@ -92,9 +93,75 @@ class CuratorNotifier
         if (! empty($payment->proof_path)) {
             $lines[] = '📎 Приложен файл подтверждения';
         }
+        // H6534: мульти-блочный клейм — один перевод, N строк учёта; карточка
+        // показывает разбивку по блокам, чтобы куратор подтверждал строки с
+        // полной картиной.
+        if ($payment->claimMeta('multi_block')) {
+            $lines[] = '';
+            $lines = array_merge($lines, $this->multiBlockBreakdownLines($payment));
+        }
         $lines[] = $this->adminLink($payment->user);
 
         $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Разбивка мульти-блочного клейма (H6534). Список блоков — общий для всех
+     * строк заявки, живёт в claim_meta.block_tariffs; итог — переведённая
+     * сумма одним переводом (claim_meta.foreign_total) и вердикт сверки.
+     * H6554: в кросс-курсовой заявке (claim_meta.cross_course) каждая строка
+     * помечена курсом блока — куратор подтверждает с разбивкой по курсам.
+     *
+     * @return array<int, string>
+     */
+    private function multiBlockBreakdownLines(Payment $payment): array
+    {
+        $currency = (string) ($payment->foreign_currency ?: 'EUR');
+        $isCrossCourse = (bool) $payment->claimMeta('cross_course');
+        $blocks = array_values(array_filter(
+            (array) $payment->claimMeta('block_tariffs', []),
+            fn ($block): bool => is_array($block),
+        ));
+
+        $lines = [$isCrossCourse
+            ? '<b>Один перевод на блоки разных курсов:</b>'
+            : '<b>Один перевод на несколько блоков:</b>'];
+        foreach ($blocks as $block) {
+            $line = '· ';
+            if ($isCrossCourse && ! empty($block['course_title'])) {
+                $line .= e((string) $block['course_title']).' · ';
+            }
+            $line .= e((string) ($block['label'] ?? 'блок')).' — '.$this->money((float) ($block['amount'] ?? 0));
+            if (! empty($block['foreign_amount'])) {
+                $line .= ' ('.$this->foreignMoney((float) $block['foreign_amount'], $currency).')';
+            }
+            $lines[] = $line;
+        }
+
+        $totalRub = array_sum(array_map(fn (array $block): float => (float) ($block['amount'] ?? 0), $blocks));
+        $totalForeign = (float) ($payment->claimMeta('foreign_total') ?: array_sum(array_map(
+            fn (array $block): float => (float) ($block['foreign_amount'] ?? 0),
+            $blocks,
+        )));
+
+        $lines[] = 'Итого по учёту: <b>'.$this->money($totalRub).'</b> · заявлено одним переводом: <b>'
+            .$this->foreignMoney($totalForeign, $currency).'</b>';
+        $verdict = $payment->claimMeta('amount_check')['verdict'] ?? null;
+        if ($verdict !== null) {
+            $lines[] = 'Сверка по общей сумме: <b>'.e((string) $verdict).'</b>';
+        }
+
+        return $lines;
+    }
+
+    private function foreignMoney(float $amount, string $currency): string
+    {
+        $symbol = match ($currency) {
+            'USD' => '$',
+            default => '€',
+        };
+
+        return number_format($amount, 2, '.', ' ').' '.$symbol;
     }
 
     /**
@@ -561,6 +628,25 @@ class CuratorNotifier
         if ($user) {
             $lines[] = $this->adminLink($user);
         }
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * 152-ФЗ ст. 21: студент запросил из кабинета удаление персональных данных.
+     * Срок ответа оператора — 30 дней; удаление выполняет куратор вручную
+     * (с учётом данных, которые обязаны храниться по налоговому учёту).
+     */
+    public function personalDataDeletionRequested(User $user, CarbonInterface $deadline): void
+    {
+        $lines = [
+            '🗑 <b>Запрос на удаление персональных данных</b> (152-ФЗ)',
+            '',
+            $this->studentLine($user),
+            'Срок по закону: до <b>'.$deadline->format('d.m.Y').'</b> (30 дней).',
+            'Задача заведена в поддержке. Платёжные документы храним по сроку налогового учёта — остальное удаляем или обезличиваем.',
+            $this->adminLink($user),
+        ];
 
         $this->dispatchToCurators($this->join($lines));
     }

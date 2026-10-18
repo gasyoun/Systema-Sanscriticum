@@ -1,5 +1,6 @@
 <?php
 
+use App\Logging\MaskPersonalData;
 use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
@@ -52,6 +53,13 @@ return [
     |
     */
 
+    /*
+     | 152-ФЗ: маскирование почты и телефонов в основном логе приложения
+     | (App\Logging\MaskPersonalData, tap каналов single/daily). Срок хранения
+     | daily-лога — 14 дней (days ниже).
+     */
+    'mask_personal_data' => (bool) env('LOG_MASK_PERSONAL_DATA', true),
+
     'channels' => [
         'stack' => [
             'driver' => 'stack',
@@ -64,6 +72,7 @@ return [
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
+            'tap' => [MaskPersonalData::class],
         ],
 
         'daily' => [
@@ -72,6 +81,7 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => 14,
             'replace_placeholders' => true,
+            'tap' => [MaskPersonalData::class],
         ],
 
         'slack' => [
