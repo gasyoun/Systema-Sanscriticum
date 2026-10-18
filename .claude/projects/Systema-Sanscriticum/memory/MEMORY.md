@@ -1,6 +1,6 @@
 # Memory index — Systema-Sanscriticum
 
-_Created: 16-09-2026 · Last updated: 24-09-2026_
+_Created: 16-09-2026 · Last updated: 18-10-2026_
 
 Committed memory store for **Systema-Sanscriticum** per the org Memory-routing rule ([`/danger-memory`](https://github.com/gasyoun/claude-config/blob/main/commands/danger-memory.md)): dangerous and durable facts land here **and** in the org store. One file per fact; one line per file below (`- [Title](file.md) — hook`). Scaffold: H4547.
 
@@ -18,5 +18,6 @@ Committed memory store for **Systema-Sanscriticum** per the org Memory-routing r
 - [Systema deploy = workflow_dispatch с human environment approval](2026-09-18-deploy-workflow-dispatch-human-approval.md) — merged ≠ live: deploy.yml только workflow_dispatch; агент может dispatch'ить, ставит в `waiting` до клика MG в Actions UI.
 - [Рулинг MG 18-09-2026: кабинет тегируется Метрикой — webvisor в кабинете навсегда выключен](2026-09-18-metrika-cabinet-tagging-mg-ruling.md) — Кабинетный init только {webvisor:false, clickmap:false}; PII в Метрике запрещён; условие, без которого рулинг не работает.
 - [Symlink/junction-vendor (не копия!): корень битого $baseDir — artisan мёртв до dump-autoload](2026-09-24-vendor-copy-between-trees-poisons-autoload-basedir.md) — Любой composer в дереве с symlink/junction-vendor пишет через ссылку в общий main/vendor и меняет $baseDir у всех шареров; копия лишь размножает яд; висячая цель лишает autoload сразу все деревья; лечится локальным vendor + dump-autoload на месте.
+- [Ссылка потока — от куратора заранее; живёт в `schedules.link`, не в курсе](2026-10-18-stream-zoom-link-before-launch.md) — MG 18-10-2026: постоянная Zoom-ссылка минимум за день до старта; куратор Иван (`@SourinamskiyPipa`; бот ему в личку не может — только чат кураторов); вписывать в КАЖДОЕ занятие серии, `Schedule::link` на `courses.zoom_link` не фолбэчит; ученикам выдаёт бот.
 
 _Гасунс_
