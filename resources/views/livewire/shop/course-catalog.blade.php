@@ -72,7 +72,7 @@
                 Идут сейчас
             </a>
 
-            {{-- Идёт набор --}}
+            {{-- Идёт набор / донабор (живой курс, ещё продаётся) --}}
             <a href="{{ route('shop.index.facets', ['facets' => 'format/enrolling']) }}" wire:click.prevent="$set('format', 'enrolling')"
                     @class([
                         'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition whitespace-nowrap cursor-pointer',
@@ -80,7 +80,7 @@
                         'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-amber-500/50 hover:text-white' => $format !== 'enrolling',
                     ])>
                 <i class="fas fa-bullhorn text-[11px]"></i>
-                Идет набор
+                Набор и донабор
             </a>
 
             {{-- В записи --}}
@@ -332,13 +332,13 @@
                 // H2379: library vocabulary when browsing recorded-only; otherwise section pair.
                 $sectionLabels = [
                     'live' => 'Идут сейчас',
-                    'enrolling' => 'Идет набор',
+                    'enrolling' => 'Набор и донабор',
                     'recorded' => $format === 'recorded' ? 'Библиотека записей' : 'В записи',
                     'other' => 'Другие курсы',
                 ];
                 $sectionHints = [
                     'live' => 'Живые потоки — можно присоединиться к идущему курсу.',
-                    'enrolling' => 'Группы ещё не стартовали — успейте записаться.',
+                    'enrolling' => 'Группы набираются или уже идут — присоединиться можно и после старта.',
                     'recorded' => 'Открытая библиотека: смотрите в своем темпе, доступ бессрочный.',
                     'other' => null,
                 ];
