@@ -209,7 +209,16 @@ class Course extends Model
      */
     public function isLateEnrollment(?CourseCadence $cadence = null): bool
     {
-        return $this->isEnrolling() && ($cadence ?? CourseCadence::for($this))->isUnderway();
+        if (! $this->isEnrolling()) {
+            return false;
+        }
+
+        $cadence ??= CourseCadence::for($this);
+
+        // Старт потока — по началу первого занятия, конец — по его последнему
+        // занятию: в первый вечер «донабор» уже идёт, хотя ни одно занятие ещё
+        // не закончилось.
+        return $cadence->hasStarted() && ! $cadence->isFinished();
     }
 
     /**

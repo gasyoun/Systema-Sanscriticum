@@ -101,6 +101,30 @@ class CourseEnrollingFormatTest extends TestCase
     }
 
     /** @test */
+    public function late_enrollment_starts_with_the_first_lesson_not_after_its_end(): void
+    {
+        $course = Course::factory()->create(['title' => 'Enrolling Course Qqq', 'format' => 'enrolling']);
+
+        // Первое занятие идёт прямо сейчас (началось 10 минут назад).
+        Schedule::create(['title' => 'Зан. 1', 'start' => now()->subMinutes(10), 'end' => now()->addHours(2), 'course_id' => $course->id]);
+        Schedule::create(['title' => 'Зан. 2', 'start' => now()->addWeek(), 'end' => now()->addWeek()->addHours(2), 'course_id' => $course->id]);
+
+        $this->assertTrue($course->isLateEnrollment());
+        $this->assertSame('Продолжается донабор', $course->recruitmentLabel());
+    }
+
+    /** @test */
+    public function enrolling_course_before_first_lesson_stays_a_plain_recruitment(): void
+    {
+        $course = Course::factory()->create(['title' => 'Enrolling Course Qqq', 'format' => 'enrolling']);
+
+        Schedule::create(['title' => 'Зан. 1', 'start' => now()->addDay(), 'end' => now()->addDay()->addHours(2), 'course_id' => $course->id]);
+
+        $this->assertFalse($course->isLateEnrollment());
+        $this->assertSame('Идет набор', $course->recruitmentLabel());
+    }
+
+    /** @test */
     public function finished_enrolling_course_is_no_longer_late_enrollment(): void
     {
         $course = Course::factory()->create(['title' => 'Enrolling Course Qqq', 'format' => 'enrolling']);
