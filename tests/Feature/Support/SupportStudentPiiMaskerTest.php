@@ -246,6 +246,143 @@ class SupportStudentPiiMaskerTest extends TestCase
         $this->assertSame('Мария Ковалёва и снова Мария.', $masker->unmask($masked));
     }
 
+    /**
+     * H6918-2: bare-фамилия после полного имени в ТОЙ ЖЕ беседе. Это ровно
+     * форма пропуска из вердикта H5562 («Ковалёва просила…»): имени в
+     * identity-сете нет, фамилия без имени газетиром не ловится — её берёт
+     * per-conversation словарь.
+     */
+    public function test_bare_surname_is_masked_after_full_name_in_same_conversation(): void
+    {
+        User::factory()->create(['name' => 'gasyoun']);
+        $masker = new SupportStudentPiiMasker;
+        $masker->newConversation();
+
+        [$first] = $masker->mask('Мария Ковалёва просит перенести занятие.');
+        $this->assertStringNotContainsString('Ковалёва', $first, $first);
+
+        [$second, $n] = $masker->mask('Ковалёва просила перенести на четверг.');
+
+        $this->assertStringNotContainsString('Ковалёва', $second, $second);
+        $this->assertSame(1, $n, $second);
+        $this->assertStringContainsString('<PII:person:', $second);
+        $this->assertFalse($masker->containsIdentity($second), $second);
+    }
+
+    /** H6918-2: двухпроходный maskAll() учит словарь ДО маскирования, даже если полное имя в последнем сообщении. */
+    public function test_mask_all_learns_names_before_masking_even_from_later_messages(): void
+    {
+        User::factory()->create(['name' => 'gasyoun']);
+        $masker = new SupportStudentPiiMasker;
+        $masker->newConversation();
+
+        $masked = $masker->maskAll([
+            'Ковалёва просила перенести.',
+            'Мария Ковалёва из группы 4.',
+            'Ковалёва ждёт ответа.',
+        ]);
+
+        foreach ($masked as $text) {
+            $this->assertStringNotContainsString('Ковалёва', $text, $text);
+            $this->assertStringNotContainsString('Мария', $text, $text);
+        }
+        $this->assertStringContainsString('<PII:person:', $masked[0]);
+    }
+
+    /** H6918-2: ник без @ после @-упоминания в той же беседе — второй пропуск из вердикта. */
+    public function test_nick_without_at_is_masked_after_handle_in_same_conversation(): void
+    {
+        User::factory()->create(['name' => 'gasyoun']);
+        $masker = new SupportStudentPiiMasker;
+        $masker->newConversation();
+
+        [$first] = $masker->mask('Пишет @masha_v в личку.');
+        $this->assertStringNotContainsString('@masha_v', $first, $first);
+
+        [$second, $n] = $masker->mask('masha_v обещала прислать чек.');
+
+        $this->assertStringNotContainsString('masha_v', $second, $second);
+        $this->assertSame(1, $n, $second);
+        $this->assertFalse($masker->containsIdentity($second), $second);
+    }
+
+    /** H6918-2: профиль участника (display name + username) сеет словарь ДО текста — bare-фамилия и ник ловятся с первого сообщения. */
+    public function test_seeded_participant_name_and_username_catch_bare_surname_and_nick(): void
+    {
+        User::factory()->create(['name' => 'gasyoun']);
+        $masker = new SupportStudentPiiMasker;
+        $masker->newConversation();
+        $masker->seedConversation(['Мария Ковалёва'], ['masha_v']);
+
+        [$masked, $n] = $masker->mask('Ковалёва просила, masha_v обещала.');
+
+        $this->assertStringNotContainsString('Ковалёва', $masked, $masked);
+        $this->assertStringNotContainsString('masha_v', $masked, $masked);
+        $this->assertSame(2, $n, $masked);
+        $this->assertStringContainsString('<PII:person:', $masked);
+    }
+
+    /** H6918-2: словарь живёт одну беседу — newConversation() его чистит, и имя из прошлого чата не маскирует слово в новом. */
+    public function test_conversation_dictionary_is_reset_between_conversations(): void
+    {
+        User::factory()->create(['name' => 'gasyoun']);
+        $masker = new SupportStudentPiiMasker;
+        $masker->newConversation();
+        $masker->seedConversation(['Мария Ковалёва'], ['masha_v']);
+        $masker->newConversation();
+
+        [$masked, $n] = $masker->mask('Ковалёва просила, masha_v обещала.');
+
+        $this->assertStringContainsString('Ковалёва', $masked, $masked);
+        $this->assertStringContainsString('masha_v', $masked, $masked);
+        $this->assertSame(0, $n, $masked);
+        $this->assertFalse($masker->containsIdentity($masked), $masked);
+    }
+
+    /** H6918-2: learn() видит bare-фамилию для containsIdentity() ещё до маскирования — round-trip гейт не слепнет. */
+    public function test_contains_identity_sees_learned_bare_surname(): void
+    {
+        User::factory()->create(['name' => 'gasyoun']);
+        $masker = new SupportStudentPiiMasker;
+        $masker->newConversation();
+        $masker->learn('Мария Ковалёва просит перенести.');
+
+        $this->assertTrue($masker->containsIdentity('Ковалёва ждёт ответа.'));
+    }
+
+    /** H6918-2: DM-композер сеет словарь профилем собеседника — bare-фамилия и ник без @ не уходят в промпт. */
+    public function test_dm_composer_seeds_conversation_dictionary_from_participants(): void
+    {
+        User::factory()->create(['name' => 'gasyoun']);
+        config([
+            'features.support_dm_llm_drafts' => true,
+            'features.support_dm_llm_drafts_local' => false,
+            'services.openrouter.api_key' => 'test-key',
+            'services.openrouter.base_url' => 'https://openrouter.example/api/v1',
+            'services.openrouter.model' => 'test-model',
+        ]);
+
+        $captured = null;
+        Http::fake(function (Request $request) use (&$captured) {
+            $captured = $request->data()['messages'][1]['content'] ?? null;
+
+            return Http::response(['model' => 'test-model', 'choices' => [['message' => ['content' => 'ответ']]]], 200);
+        });
+
+        $result = app(SupportDmLlmReplyComposer::class)->compose(
+            'Ковалёва просила перенести, masha_v обещала прислать чек.',
+            $this->dmContext(),
+            ['Мария Ковалёва'],
+            ['masha_v'],
+        );
+
+        $this->assertNotNull($result);
+        $this->assertNotNull($captured, 'внешний вызов обязан был состояться');
+        $this->assertStringNotContainsString('Ковалёва', $captured);
+        $this->assertStringNotContainsString('masha_v', $captured);
+        $this->assertStringContainsString('<PII:', $captured);
+    }
+
     /** H6144, фикс 2 (P2 из вердикта H6140): второй шов — вопрос в промпте DM-композера только замаскированным. */
     public function test_dm_composer_masks_question_text_before_llm_call(): void
     {

@@ -27,18 +27,34 @@ use App\Models\User;
  * H6918/гейт H5562 (18-10-2026, name-aware слой): сэмпл 30 диалогов поддержки
  * дал FAIL — 15 пропусков класса 1 из 24: маскер ловил только личности из
  * таблицы users, а имена нелинкованных студентов, диминутивы («Маша») и
- * хэндлы вида `@masha_v` уходили в текст сырыми. Добавлены три слоя БЕЗ
+ * хэндлы вида `@masha_v` уходили в текст сырыми. Добавлены четыре слоя БЕЗ
  * NER и без сети:
  *  1) @-хэндл-shaped фигура (`@masha_v`) — класс «контакт», любой, кроме allow;
  *  2) само-представление («меня зовут X») — имя маскируется, префикс остаётся;
  *  3) газетир русских личных имён (имен. падеж + диминутивы) с опциональной
  *     фамилией/отчеством-фигурой во втором токене — «Мария Ковалёва» = ОДИН тег;
- *     отдельно — standalone отчество (`…ович/…овна`), precision-safe.
+ *     отдельно — standalone отчество (`…ович/…овна`), precision-safe;
+ *  4) per-conversation словарь имён/ников — bare-фамилия («Ковалёва просила…»)
+ *     и ник без @ (`masha_v сказала…`), см. ниже.
  * Плата за это — осознанное over-redaction: имя-омоним с заглавной буквы
  * («Роман», «Вера» в начале фразы) тоже маскируется — сторона fail-closed.
- * Остаток, не покрытый слоями: фамилия БЕЗ имени («Ковалёва просила…») и
- * ники не в газетире без @ — их ловит только per-conversation словарь, это
- * следующий юнит, PASS гейта H5562 без него не пишется.
+ *
+ * H6918-2 (18-10-2026, per-conversation словарь): слой 4 закрывает остаток
+ * там, где имя вообще есть в беседе или в профиле участника; собирается из
+ * двух детерминированных источников:
+ *  a) участники беседы — display name и username контакта, имя связанного
+ *     студента — через seedConversation();
+ *  b) всё, что встретилось в тексте беседы: полное имя, bare-имя/фамилия,
+ *     само-представление, @-хэндл — через learn()/maskAll() ДО маскирования.
+ * Поэтому «Мария Ковалёва» в одном сообщении делает bare «Ковалёва», а
+ * `@masha_v` — bare «masha_v» словарными токенами для всех следующих
+ * сообщений. Словарь живёт РОВНО одну беседу: newConversation() его чистит,
+ * между чатами он не переиспользуется (иначе имя из прошлого разговора
+ * замаскировало бы слово в новом). Остаток вне словаря: имя, которое нигде
+ * в беседе не названо и отсутствует в профиле участника, детерминированно
+ * поймать нечем — это граница метода, а не забытый слой.
+ * PASS гейта H5562 по-прежнему требует нового 30-кейсового сэмпла: вердикт
+ * FAIL 18-10-2026 этим слоем не переписывается.
  *
  * Fail-closed: если identity-сет недоступен (БД упала), maskOrFail() бросает —
  * вызывающий ОБЯЗАН исключить текст из промпта (черновик собирается из одних
@@ -115,6 +131,20 @@ class SupportStudentPiiMasker
     /** Лениво собранный паттерн газетира (H6918, слой 3a) — один на инстанс. */
     private ?string $nameLane = null;
 
+    /**
+     * H6918-2, слой 4: per-conversation словарь имён/фамилий и ников.
+     * Ключ — lowercase-токен, значение — исходное написание для unmask().
+     *
+     * @var array<string, string>
+     */
+    private array $conversationPeople = [];
+
+    /** @var array<string, string> */
+    private array $conversationNicks = [];
+
+    /** Лениво собранный паттерн словаря беседы — сбрасывается при каждом learn(). */
+    private ?string $conversationLane = null;
+
     /** @var array<string, int> ключ (поле|значение или фигура|значение) => номер тега */
     private array $tags = [];
 
@@ -136,6 +166,96 @@ class SupportStudentPiiMasker
     {
         $this->tags = [];
         $this->values = [];
+    }
+
+    /**
+     * H6918-2: граница беседы. Очищает per-conversation словарь и область
+     * псевдонимов; между чатами словарь НЕ переиспользуется, иначе имя из
+     * прошлого разговора замаскировало бы слово в новом.
+     */
+    public function newConversation(): void
+    {
+        $this->conversationPeople = [];
+        $this->conversationNicks = [];
+        $this->conversationLane = null;
+        $this->begin();
+    }
+
+    /**
+     * H6918-2: засеять словарь беседы тем, что известно об участниках ВНЕ
+     * текста — display name и username Telegram-контакта, имя связанного
+     * студента. Полное имя даёт и отдельные токены: «Мария Ковалёва» из
+     * профиля ловит позднее bare «Ковалёва».
+     *
+     * @param  list<string>  $names
+     * @param  list<string>  $nicks
+     */
+    public function seedConversation(array $names = [], array $nicks = []): void
+    {
+        foreach ($names as $name) {
+            $this->rememberPerson((string) $name);
+        }
+        foreach ($nicks as $nick) {
+            $this->rememberNick((string) $nick);
+        }
+    }
+
+    /**
+     * H6918-2: запомнить имена/ники, встреченные в тексте беседы, ДО
+     * маскирования. Двухпроходный режим: learn() по всем сообщениям, затем
+     * mask() по каждому — «Мария Ковалёва» в первом сообщении делает
+     * «Ковалёва» из второго словарным токеном. Ничего не маскирует и не
+     * требует identity-сета, поэтому безопасен в offline-сэмпле.
+     */
+    public function learn(string $text): void
+    {
+        if (preg_match_all(self::STRUCT_HANDLE, $text, $matches) > 0) {
+            foreach ($matches[1] as $nick) {
+                $this->rememberNick((string) $nick);
+            }
+        }
+        if (preg_match_all(self::SELF_INTRO, $text, $matches) > 0) {
+            foreach ($matches['name'] as $name) {
+                $this->rememberPerson((string) $name);
+            }
+        }
+        if (preg_match_all($this->nameLane(), $text, $matches) > 0) {
+            foreach ($matches[0] as $name) {
+                $this->rememberPerson((string) $name);
+            }
+        }
+        if (preg_match_all(self::PATRONYMIC_ONLY, $text, $matches) > 0) {
+            foreach ($matches[0] as $name) {
+                $this->rememberPerson((string) $name);
+            }
+        }
+    }
+
+    /**
+     * H6918-2: маскировать несколько сообщений ОДНОЙ беседы как один проход.
+     * Сначала learn() по всем текстам (словарь беседы), затем mask() по
+     * каждому: имя, названное в первом сообщении, закрывает bare-фамилию/ник
+     * в следующих. Нумерация тегов сквозная — ответ можно восстановить unmask().
+     *
+     * @param  list<string>  $texts
+     * @return list<string>
+     *
+     * @throws \Throwable когда identity-сет недоступен (fail-closed, см. docblock)
+     */
+    public function maskAll(array $texts): array
+    {
+        $this->begin();
+        foreach ($texts as $text) {
+            $this->learn($text);
+        }
+
+        $masked = [];
+        foreach ($texts as $text) {
+            [$maskedText] = $this->mask($text);
+            $masked[] = $maskedText;
+        }
+
+        return $masked;
     }
 
     /**
@@ -183,10 +303,13 @@ class SupportStudentPiiMasker
         }
 
         // H6918, слой 1: @-хэндл-shaped фигура — контакт, независимо от users.
+        // H6918-2: ник запоминается без @ — bare «masha_v» в следующих
+        // сообщениях беседы закроет словарь.
         $text = preg_replace_callback(self::STRUCT_HANDLE, function (array $m) use (&$substitutions): string {
             if (in_array($m[1], self::ALLOW, true)) {
                 return $m[0];
             }
+            $this->rememberNick($m[1]);
             $substitutions++;
 
             return $this->tag('handle', '@'.$m[1]);
@@ -197,13 +320,24 @@ class SupportStudentPiiMasker
             if (in_array(mb_strtolower($m['name'], 'UTF-8'), self::ALLOW, true)) {
                 return $m[0];
             }
+            $this->rememberPerson($m['name']);
             $substitutions++;
 
             return $m['pre'].$this->tag('person', mb_strtolower($m['name'], 'UTF-8'), $m['name']);
         }, $text);
 
+        // H6918-2, слой 4: словарь беседы — bare-фамилия и ник без @. Идёт
+        // ПОСЛЕ @-хэндла (иначе ник разорвал бы @-фигуру) и ДО газетира,
+        // чтобы засеянное полное имя («Мария Ковалёва») осталось одним тегом.
+        $text = preg_replace_callback($this->conversationLane(), function (array $m) use (&$substitutions): string {
+            $substitutions++;
+
+            return $this->tag('person', mb_strtolower($m[0], 'UTF-8'), $m[0]);
+        }, $text);
+
         // H6918, слой 3a: имя из газетира, опционально с фамилией/отчеством — один тег.
         $text = preg_replace_callback($this->nameLane(), function (array $m) use (&$substitutions): string {
+            $this->rememberPerson($m[0]);
             $substitutions++;
 
             return $this->tag('person', mb_strtolower($m[0], 'UTF-8'), $m[0]);
@@ -211,6 +345,7 @@ class SupportStudentPiiMasker
 
         // H6918, слой 3b: standalone отчество.
         $text = preg_replace_callback(self::PATRONYMIC_ONLY, function (array $m) use (&$substitutions): string {
+            $this->rememberPerson($m[0]);
             $substitutions++;
 
             return $this->tag('person', mb_strtolower($m[0], 'UTF-8'), $m[0]);
@@ -255,6 +390,9 @@ class SupportStudentPiiMasker
         if (preg_match(self::SELF_INTRO, $text) === 1) {
             return true;
         }
+        if (preg_match($this->conversationLane(), $text) === 1) {
+            return true;
+        }
         if (preg_match($this->nameLane(), $text) === 1) {
             return true;
         }
@@ -281,6 +419,105 @@ class SupportStudentPiiMasker
         }
 
         return $this->nameLane;
+    }
+
+    /**
+     * H6918-2, слой 4: паттерн словаря беседы. Токены длиннее первыми, чтобы
+     * «Мария Ковалёва» съедалась целиком, а не за одной «Марией». Готовые
+     * `<PII:…>`-теги пропускаются `(*SKIP)(*F)`: иначе ник, случайно равный
+     * слову `person`, разорвал бы уже поставленный тег. Пустой словарь даёт
+     * заведомо несовпадающий паттерн — regex остаётся валидным.
+     */
+    private function conversationLane(): string
+    {
+        if ($this->conversationLane !== null) {
+            return $this->conversationLane;
+        }
+
+        $tokens = $this->conversationPeople + $this->conversationNicks;
+        if ($tokens === []) {
+            return $this->conversationLane = '/(?!)/u';
+        }
+
+        uksort($tokens, static fn (string $a, string $b): int => mb_strlen($b, 'UTF-8') <=> mb_strlen($a, 'UTF-8'));
+        $alternation = implode('|', array_map(
+            static fn (string $token): string => preg_quote($token, '/'),
+            array_values($tokens),
+        ));
+
+        return $this->conversationLane = '/(?:<PII:[a-z\-]+:\d+>(*SKIP)(*F))|(?<!\p{L})(?:'.$alternation.')(?!\p{L})/iu';
+    }
+
+    /**
+     * H6918-2: добавить в словарь беседы имя/фамилию. Полное имя кладётся
+     * целиком И отдельными токенами — «Мария Ковалёва» даёт ещё и «Ковалёва»,
+     * чтобы bare-фамилия в следующем сообщении не ушла сырой. Токены короче
+     * 3 букв, не-имена (цифры, эмодзи) и allow-лист отбрасываются.
+     */
+    private function rememberPerson(string $value): void
+    {
+        $value = preg_replace('/^[\s\p{P}]+|[\s\p{P}]+$/u', '', $value) ?? '';
+        if ($value === '' || mb_strlen($value, 'UTF-8') < 3
+            || in_array(mb_strtolower($value, 'UTF-8'), self::ALLOW, true)) {
+            return;
+        }
+
+        $parts = preg_split('/[\s\x{00A0}]+/u', $value) ?: [];
+        $valid = [];
+        foreach ($parts as $part) {
+            if ($this->looksLikePerson($part)) {
+                $valid[] = $part;
+            }
+        }
+
+        if ($valid !== [] && count($valid) === count($parts)) {
+            $this->addPersonToken($value);
+        }
+        foreach ($valid as $part) {
+            $this->addPersonToken($part);
+        }
+    }
+
+    /** Имя/фамилия-фигура: заглавная буква, дальше буквы/дефис, ≥3 символов. */
+    private function looksLikePerson(string $token): bool
+    {
+        return mb_strlen($token, 'UTF-8') >= 3
+            && preg_match('/^\p{Lu}[\p{Lu}\p{Ll}\-]+$/u', $token) === 1;
+    }
+
+    private function addPersonToken(string $token): void
+    {
+        $key = mb_strtolower($token, 'UTF-8');
+        if ($key === '' || in_array($key, self::ALLOW, true) || isset($this->conversationPeople[$key])) {
+            return;
+        }
+
+        $this->conversationPeople[$key] = $token;
+        $this->conversationLane = null;
+    }
+
+    /**
+     * H6918-2: добавить ник без @ в словарь беседы. Ник — буквы/цифры/
+     * подчёркивание, ≥3 символов и хотя бы одна буква (телефоны и суммы уже
+     * закрыты цифровыми слоями, числовой «ник» маскировать нельзя).
+     */
+    private function rememberNick(string $value): void
+    {
+        $value = ltrim(trim($value), '@');
+        if ($value === '' || mb_strlen($value, 'UTF-8') < 3) {
+            return;
+        }
+        if (preg_match('/^[\p{L}\p{N}_]+$/u', $value) !== 1 || preg_match('/\p{L}/u', $value) !== 1) {
+            return;
+        }
+
+        $key = mb_strtolower($value, 'UTF-8');
+        if (in_array($key, self::ALLOW, true) || isset($this->conversationNicks[$key])) {
+            return;
+        }
+
+        $this->conversationNicks[$key] = $value;
+        $this->conversationLane = null;
     }
 
     /** Сброс кэша identities (для долгоживущих воркеров после массовых правок users). */
