@@ -1,6 +1,6 @@
 # RAG corpus contract — bands, fences, gates
 
-_Created: 17-10-2026 · Last updated: 17-10-2026_
+_Created: 17-10-2026 · Last updated: 18-10-2026_
 
 _Owner: Dr. Mārcis Gasūns (content + corpus). Machine owner of the index:
 `knowledge_chunks` in the production database (`/var/www/html`)._
@@ -17,7 +17,6 @@ the stored `faq_chunk_id`s rely on. On 17-10-2026 exactly that happened (see
 | Band | File / table | Status | Source | Licence | Fence | Index command | Eval set |
 |---|---|---|---|---|---|---|---|
 | FAQ (live) | `resources/knowledge/faq.md` | **live** — 82 chunks today | ORS-FAQ `ors_faq/wiki/` via `python -m ors_faq.tools.export_bot_kb` | Apache-2.0 (ORS-FAQ `LICENSE`) | prices, dates, schedules are **not** in the corpus — the bot injects them from the live course catalog; the file is generated, never hand-edited | `php artisan knowledge:index` | `tests/fixtures/faq_rag_eval.json` (100 Q) |
-| FAQ from lectures | `resources/knowledge/faq_from_lectures.md` | **killed / dormant** — header only, 0 chunks | `KnowledgeFaqPublisher` appends on `faq_draft` Accept (`ContentCandidateObserver`) | in-house | not part of the ORS export; entries are written by the app, not by ORS-FAQ | same `knowledge:index` (parser merges `extra_paths` with a `faq_from_lectures/` prefix) | none of its own |
 | Lesson transcriptions | `lessons` → `knowledge_chunks` (`source_type=lesson`) | **OFF** (`LESSON_QA_ENABLED=false`) | lesson transcripts (`knowledge.lesson.*`) | in-house, paid-course content | access is gated by `LessonGate::canWatch`; retrieval is local-only (no external provider); short quotes only (`knowledge.lesson.quote_chars`), never a whole lecture | `php artisan knowledge:index-lessons` (no-ops while the flag is off) | — |
 | Support history | `telegram_support_messages` | **fenced** — never indexed | Telegram support sync (`TELEGRAM_SUPPORT_HISTORY_LIMIT`, default 50 dialogs) | in-house, contains student PII | only **anonymised** question text leaves the table, and only into the eval candidate build (`php artisan faq:eval-set-build --exclude-fixture=…`); no chunk is ever written from this table | none — by design | mined questions feed `tests/fixtures/faq_rag_eval.json` (q021–q100) |
 
@@ -26,10 +25,11 @@ Rules that follow from the table:
 - **Only `faq` and `lesson` are indexable source types.** `KnowledgeChunk::SOURCE_FAQ`
   and `SOURCE_LESSON` are the whole set; support history has no `source_type`
   and must not grow one.
-- `faq_from_lectures.md` is dormant, not deleted: the publisher path is live
-  code, but no `faq_draft` candidate has ever been accepted into it. Any growth
-  in that file is a review event (it bypasses the ORS export, so neither the
-  drift gate nor the eval fixture covers it).
+- The **FAQ-from-lectures band is retired** (18-10-2026, RAG grill card 6):
+  `faq_from_lectures.md`, `KnowledgeFaqPublisher`, the parser `extra_paths`
+  merge and the `faq_draft` Accept writer are deleted. Accepting a legacy
+  `faq_draft` candidate is now editorial-only and writes no knowledge file;
+  lecture material can only enter as lesson chunks with a timecode.
 - The lesson band is a privacy contour as much as a retrieval one. Turning it on
   is an explicit step: index, verify on your own account, then
   `LESSON_QA_ENABLED=true` + `config:cache`.

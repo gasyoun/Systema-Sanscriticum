@@ -149,8 +149,7 @@ class KnowledgeEvalCommand extends Command
     }
 
     /**
-     * Ранг (с 1) первого ожидаемого чанка в выдаче или null. Суффикс-фолбэк —
-     * чанки из дополнительных корпусов несут префикс файла (faq_from_lectures/…).
+     * Ранг (с 1) первого ожидаемого чанка в выдаче или null.
      *
      * @param  list<string>  $retrieved
      * @param  list<string>  $expected

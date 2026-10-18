@@ -189,7 +189,7 @@ return [
          | идёт по границе раздела (KnowledgeContext::promptBlockCapped).
          | 0 = без потолка. 12000 символов ≈ 4 тыс. токенов: при шести
          | разделах faq.md потолок не достигается, он сторожит распухший
-         | корпус и растущий faq_from_lectures.md.
+         | корпус.
          */
         'answer_max_chars' => (int) env('SUPPORT_FAQ_RAG_ANSWER_MAX_CHARS', 12000),
         // Okapi BM25 floor for money/policy refuse gate (category D).
