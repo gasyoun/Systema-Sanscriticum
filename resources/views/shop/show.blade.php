@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         @elseif($course->isEnrolling())
                             <span class="inline-flex items-center gap-1.5 bg-amber-500 text-white text-[11px] font-black uppercase px-3 py-1.5 rounded-full tracking-wider shadow-[0_4px_12px_rgba(245,158,11,0.35)]">
                                 <i class="fas fa-bullhorn text-[10px]"></i>
-                                Идет набор
+                                {{ $course->recruitmentLabel($cadence) }}
                             </span>
                         @elseif($course->format === 'recorded')
                             <span class="inline-flex items-center gap-1.5 bg-indigo-500/90 text-white text-[11px] font-black uppercase px-3 py-1.5 rounded-full tracking-wider">
@@ -383,7 +383,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <div class="absolute top-5 right-5 z-10">
                                 <span class="inline-flex items-center gap-1.5 bg-amber-500 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md tracking-wider">
                                     <i class="fas fa-bullhorn text-[9px]"></i>
-                                    Идет набор
+                                    {{ $course->recruitmentLabel($cadence) }}
                                 </span>
                             </div>
                         @elseif($course->format === 'recorded')
@@ -460,8 +460,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 $course->teacher
                     ? ['icon' => 'fas fa-user', 'label' => 'Преподаватель', 'value' => $course->teacher->name]
                     : null,
-                $course->formatLabel()
-                    ? ['icon' => 'fas fa-broadcast-tower', 'label' => 'Формат', 'value' => $course->formatLabel()]
+                $course->recruitmentLabel($cadence)
+                    ? ['icon' => 'fas fa-broadcast-tower', 'label' => 'Формат', 'value' => $course->recruitmentLabel($cadence)]
                     : null,
                 $course->lessons_count
                     ? ['icon' => 'fas fa-play-circle', 'label' => 'Занятий', 'value' => $course->lessons_count.' '.\App\Support\Plural::ru((int) $course->lessons_count, 'онлайн-занятие', 'онлайн-занятия', 'онлайн-занятий')]
