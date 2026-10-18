@@ -129,6 +129,16 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('trial-auto-advance');
 
+        // Донабор закрывается сам: enrolling-курс, у которого прошло последнее
+        // занятие, уходит в «В записи» (MG 18-10-2026 — не ждать ручного
+        // переключения админом). Проверка дешёвая: enrolling-курсов десятки,
+        // CourseCadence::forMany() — два запроса на весь прогон. Час, а не
+        // сутки, чтобы бейдж не врал «Идет набор» уже на следующий день.
+        $schedule->command('courses:close-finished-enrolling')
+            ->hourly()
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('close-finished-enrolling');
     }
 
     /** Season 1 open/notify/close cron + leaderboard refresh. */
