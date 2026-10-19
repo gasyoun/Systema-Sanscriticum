@@ -103,7 +103,7 @@ python3 scripts/drift_compare.py https://samskrte.ru/online --skip-cwv
 
 Ключ добавлен в `public/3d8b1b068ee599d1f5aa9ae9c63d0968.txt` (тело файла = ключ).
 Скрипт — [`scripts/indexnow_submit.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/indexnow_submit.py):
-stdlib, без `requests`, **dry-run по умолчанию**; 22 теста —
+stdlib, без `requests`, **dry-run по умолчанию**; 24 теста —
 `python3 -m unittest scripts/test_indexnow_submit.py -v`. После деплоя:
 
 ```sh

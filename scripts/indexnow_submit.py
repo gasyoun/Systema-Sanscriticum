@@ -161,6 +161,8 @@ def verify_key(*, host: str, key: str, key_location: str, timeout: float = 15.0)
         raise IndexNowError(f"key-location returned HTTP {exc.code}") from exc
     except urllib.error.URLError as exc:
         raise IndexNowError(f"key-location fetch failed: {exc.reason}") from exc
+    except TimeoutError as exc:
+        raise IndexNowError(f"key-location fetch timed out after {timeout:g}s") from exc
 
     if status != 200:
         raise IndexNowError(f"key-location returned HTTP {status}")
@@ -191,6 +193,8 @@ def submit(
         return exc.code, body
     except urllib.error.URLError as exc:
         raise IndexNowError(f"submit failed: {exc.reason}") from exc
+    except TimeoutError as exc:
+        raise IndexNowError(f"submit timed out after {timeout:g}s") from exc
 
 
 def main(argv: Sequence[str] | None = None) -> int:

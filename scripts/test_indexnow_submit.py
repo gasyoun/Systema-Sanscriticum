@@ -139,6 +139,15 @@ class VerifyKeyTest(unittest.TestCase):
             with self.assertRaises(indexnow.IndexNowError):
                 indexnow.verify_key(host="samskrte.ru", key=KEY, key_location=KEY_LOCATION)
 
+    def test_rejects_timeout(self):
+        with mock.patch.object(
+            indexnow.urllib.request,
+            "urlopen",
+            side_effect=TimeoutError("timed out"),
+        ):
+            with self.assertRaises(indexnow.IndexNowError):
+                indexnow.verify_key(host="samskrte.ru", key=KEY, key_location=KEY_LOCATION)
+
 
 class SubmitTest(unittest.TestCase):
     def test_posts_expected_payload(self):
@@ -168,6 +177,15 @@ class SubmitTest(unittest.TestCase):
 
         self.assertEqual(status, 400)
         self.assertEqual(body, "bad")
+
+    def test_timeout_raises_indexnow_error(self):
+        with mock.patch.object(
+            indexnow.urllib.request,
+            "urlopen",
+            side_effect=TimeoutError("timed out"),
+        ):
+            with self.assertRaises(indexnow.IndexNowError):
+                indexnow.submit({"host": "samskrte.ru"})
 
 
 class MainTest(unittest.TestCase):
