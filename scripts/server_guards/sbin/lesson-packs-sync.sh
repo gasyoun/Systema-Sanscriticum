@@ -143,7 +143,34 @@ RSYNC_OPTS=(-a --no-owner --no-group)
 changes="$(rsync "${RSYNC_OPTS[@]}" -n --itemize-changes --delete "$STAGE"/ "$DEST"/ 2>/dev/null | grep -v '^\.d' || true)"
 change_count="$(printf '%s\n' "$changes" | grep -c '[^[:space:]]' || true)"
 
+NOTICE_BODY="# Паки уроков LYW (zan1)
+
+Источник: SanskritGrammar, тег \`$TAG\` (коммит \`$TAG_COMMIT\`), путь
+\`$SUBTREE\`. Содержимое генерируется \`scripts/build_lessonpack.py\` из
+материалов курса; лицензия репозитория-источника — MIT
+(https://github.com/gasyoun/SanskritGrammar/blob/main/LICENSE).
+
+Выложено шагом деплоя \`scripts/server_guards/sbin/lesson-packs-sync.sh\`
+(H7069). Руками здесь не править: следующий деплой перезапишет дерево zan1.
+"
+# Лицензионная записка пишется ВСЕГДА, в том числе на no-op прогоне: иначе
+# первый деплой после её появления (когда паки уже совпадают) оставил бы паки
+# без записки, а следующий — только при следующем изменении содержимого.
+ensure_notice() {
+  local notice
+  notice="$(dirname "$DEST")/LYW_PACKS_NOTICE.md"
+  if [ -f "$notice" ] && printf '%s' "$NOTICE_BODY" | cmp -s - "$notice"; then
+    return 0
+  fi
+  printf '%s' "$NOTICE_BODY" > "$notice"
+  if [ "$(id -u)" = 0 ] || [ "$(id -un 2>/dev/null || true)" = "$APP_USER" ]; then
+    chown "$APP_USER:$APP_USER" "$notice" 2>/dev/null || true
+  fi
+  chmod 644 "$notice" 2>/dev/null || true
+}
+
 if [ "$change_count" = 0 ] && [ "$FORCE" = 0 ] && [ -f "$STAMP" ] && grep -qx "tag=$TAG" "$STAMP" 2>/dev/null; then
+  ensure_notice
   say "паки LYW уже совпадают с $TAG ($manifests манифестов, $files файлов) — no-op"
   exit 0
 fi
@@ -179,6 +206,8 @@ if [ "$(id -u)" = 0 ] || [ "$(id -un 2>/dev/null || true)" = "$APP_USER" ]; then
   chown -R "$APP_USER:$APP_USER" "$DEST" 2>/dev/null || true
 fi
 
+ensure_notice
+
 stamp_tmp="$STAMP.tmp.$$"
 {
   printf 'tag=%s\n' "$TAG"
@@ -189,26 +218,6 @@ stamp_tmp="$STAMP.tmp.$$"
   printf 'synced=%s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 } > "$stamp_tmp" && mv -f "$stamp_tmp" "$STAMP"
 chmod 644 "$STAMP" 2>/dev/null || true
-
-# ── Licence note рядом с паками (вне zan1: --delete его не съест) ────────────
-NOTICE="$(dirname "$DEST")/LYW_PACKS_NOTICE.md"
-NOTICE_BODY="# Паки уроков LYW (zan1)
-
-Источник: SanskritGrammar, тег \`$TAG\` (коммит \`$TAG_COMMIT\`), путь
-\`$SUBTREE\`. Содержимое генерируется \`scripts/build_lessonpack.py\` из
-материалов курса; лицензия репозитория-источника — MIT
-(https://github.com/gasyoun/SanskritGrammar/blob/main/LICENSE).
-
-Выложено шагом деплоя \`scripts/server_guards/sbin/lesson-packs-sync.sh\`
-(H7069). Руками здесь не править: следующий деплой перезапишет дерево zan1.
-"
-if [ ! -f "$NOTICE" ] || ! printf '%s' "$NOTICE_BODY" | cmp -s - "$NOTICE"; then
-  printf '%s' "$NOTICE_BODY" > "$NOTICE"
-  if [ "$(id -u)" = 0 ] || [ "$(id -un 2>/dev/null || true)" = "$APP_USER" ]; then
-    chown "$APP_USER:$APP_USER" "$NOTICE" 2>/dev/null || true
-  fi
-  chmod 644 "$NOTICE" 2>/dev/null || true
-fi
 
 say "паки LYW выложены из $TAG ($manifests манифестов, $files файлов) → $DEST"
 exit 0
