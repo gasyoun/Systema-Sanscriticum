@@ -5,7 +5,7 @@
     // their own title/description/H1 instead of reusing the catalog's.
     $categoryName = trim((string) ($category->name ?? ''));
     $catalogTitle = $categoryName !== ''
-        ? 'Курсы санскрита: '.e($categoryName)
+        ? 'Курсы санскрита: '.$categoryName
         : 'Курсы санскрита онлайн';
     $catalogDescription = $categoryName !== ''
         ? 'Курсы санскрита и хинди по направлению «'.$categoryName.'»: живые группы и записи, программа и преподаватели. От первых букв до чтения текстов.'

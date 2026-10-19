@@ -98,7 +98,7 @@ class PublicMetaTest extends TestCase
 
         $html = $this->get('/koloda/sanskrit-core')
             ->assertOk()
-            ->assertSee('<title>Колода «Санскрит — ядро» — карточки санскрита |', false)
+            ->assertSee('<title>Колода «Санскрит — ядро» |', false)
             ->assertDontSee('noindex, follow')
             ->getContent();
 
@@ -135,15 +135,15 @@ class PublicMetaTest extends TestCase
 
         $this->get('/koloda')
             ->assertOk()
-            ->assertSee('<title>Колоды карточек по санскриту — открытая галерея |', false);
+            ->assertSee('<title>Колоды карточек по санскриту | Общество ревнителей санскрита</title>', false);
 
         $this->get('/koloda/yazyk/hindi')
             ->assertOk()
-            ->assertSee('<title>Колоды карточек по хинди — открытая галерея |', false);
+            ->assertSee('<title>Колоды карточек по хинди | Общество ревнителей санскрита</title>', false);
 
         $this->get('/koloda/yazyk/vse')
             ->assertOk()
-            ->assertSee('<title>Колоды карточек по санскриту и хинди — открытая галерея |', false);
+            ->assertSee('<title>Колоды карточек по санскриту и хинди | ОРС</title>', false);
 
         $html = $this->get('/koloda/yazyk/sanskrit')
             ->assertOk()
@@ -202,6 +202,9 @@ class PublicMetaTest extends TestCase
                 preg_match_all('#<meta name="description"#i', $html),
                 "Expected exactly one meta description on {$url}"
             );
+
+            preg_match('#<title>(.*?)</title>#s', $html, $title);
+            $this->assertLessThanOrEqual(60, mb_strlen($title[1] ?? ''), "Title too long on {$url}");
         }
     }
 

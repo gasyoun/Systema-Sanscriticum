@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $page?->title }}</title>
+    <title>{{ \App\Support\SeoTitle::plain($page?->title) }}</title>
 
     @php
         // SEO-META-1: promo pages had no meta description at all — Yandex built the
@@ -33,7 +33,7 @@
     {{-- === SEO И OPEN GRAPH === --}}
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:title" content="{{ $page?->title }}">
+    <meta property="og:title" content="{{ \App\Support\SeoTitle::plain($page?->title) }}">
     <meta property="og:description" content="{{ $seoDescription }}">
 
     @php
