@@ -62,6 +62,17 @@ class ResponsiveDerivativesTest extends TestCase
         $this->assertSame([400, 532], array_column($result['created'], 'width'));
         $this->assertTrue(Storage::disk('public')->exists('media/card-w532.webp'));
         $this->assertTrue(Storage::disk('public')->exists('media/card-w400.webp'));
+
+        ResponsiveDerivatives::flushMemo();
+        $set = app(ResponsiveDerivatives::class)->variantsForUrl('/storage/media/card.png');
+
+        $this->assertNotNull($set);
+        $this->assertStringContainsString('card-w400.webp 400w', $set['srcset']);
+        $this->assertStringContainsString('card-w532.webp 532w', $set['srcset'], 'нативная ширина обязана попасть в srcset');
+
+        $filtered = app(ResponsiveDerivatives::class)->variantsForUrl('/storage/media/card.png', [400]);
+        $this->assertStringContainsString('card-w400.webp 400w', $filtered['srcset']);
+        $this->assertStringNotContainsString('card-w532.webp', $filtered['srcset']);
     }
 
     public function test_source_file_is_never_modified(): void
