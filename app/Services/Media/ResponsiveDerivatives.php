@@ -40,6 +40,9 @@ final class ResponsiveDerivatives
      */
     private static array $memo = [];
 
+    /** @var array<string, array<string, array<int, string>>> */
+    private static array $dirMemo = [];
+
     public function disk(): Filesystem
     {
         return Storage::disk((string) config('media.responsive.disk', 'public'));
@@ -76,7 +79,12 @@ final class ResponsiveDerivatives
     /**
      * Найти уже сгенерированные варианты для URL или storage-пути.
      *
-     * @param  list<int>|null  $widths
+     * Ширины НЕ берутся из конфига: генератор пишет ещё и нативный размер
+     * (у карточки 532×399 это 532w), и опрос только трёх констант оставлял бы
+     * десктоп с 400w на показе 533 px — мыло. Поэтому один раз читаем список
+     * файлов каталога и запоминаем его на запрос.
+     *
+     * @param  list<int>|null  $widths  необязательный фильтр (аватары: [200, 400])
      * @return array{srcset: string, variants: list<array{path: string, url: string, width: int}>}|null
      */
     public function variantsForUrl(string $src, ?array $widths = null): ?array
@@ -91,33 +99,30 @@ final class ResponsiveDerivatives
             return null;
         }
 
-        $widths ??= $this->widths();
         $fs = $this->disk();
-        $cacheKey = $this->diskRoot($fs).'|'.$path.'|'.implode(',', $widths);
+        $dir = trim((string) pathinfo($path, PATHINFO_DIRNAME), '.');
+        $stem = (string) pathinfo($path, PATHINFO_FILENAME);
+        $cacheKey = $this->diskRoot($fs).'|'.$dir.'|'.$stem.'|'.($widths === null ? '*' : implode(',', $widths));
 
         if (array_key_exists($cacheKey, self::$memo)) {
             return self::$memo[$cacheKey];
         }
 
-        $variants = [];
+        $found = $this->directoryVariants($dir)[$stem] ?? [];
 
-        try {
-            foreach ($widths as $width) {
-                $variant = $this->variantPath($path, $width);
-                if (! $fs->exists($variant)) {
-                    continue;
-                }
+        if ($widths !== null && $widths !== []) {
+            $found = array_intersect_key($found, array_flip(array_map('intval', $widths)));
+        }
 
-                $variants[] = ['path' => $variant, 'url' => $fs->url($variant), 'width' => $width];
-            }
-        } catch (\Throwable $e) {
-            Log::warning('responsive: variant lookup failed', ['path' => $path, 'error' => $e->getMessage()]);
-
+        if ($found === []) {
             return self::$memo[$cacheKey] = null;
         }
 
-        if ($variants === []) {
-            return self::$memo[$cacheKey] = null;
+        ksort($found);
+
+        $variants = [];
+        foreach ($found as $width => $variant) {
+            $variants[] = ['path' => $variant, 'url' => $fs->url($variant), 'width' => (int) $width];
         }
 
         $srcset = implode(', ', array_map(
@@ -128,10 +133,45 @@ final class ResponsiveDerivatives
         return self::$memo[$cacheKey] = ['srcset' => $srcset, 'variants' => $variants];
     }
 
+    /**
+     * `stem => [width => path]` для одного каталога.
+     *
+     * Один readdir на каталог вместо трёх stat на картинку: у /online ~90
+     * карточек в разных каталогах, у отзывов — все в одном.
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function directoryVariants(string $dir): array
+    {
+        $fs = $this->disk();
+        $key = $this->diskRoot($fs).'|dir|'.$dir;
+
+        if (isset(self::$dirMemo[$key])) {
+            return self::$dirMemo[$key];
+        }
+
+        $map = [];
+
+        try {
+            foreach ($fs->files($dir) as $file) {
+                if (preg_match('/^(.*)-w(\d+)\.webp$/i', basename($file), $m) !== 1) {
+                    continue;
+                }
+
+                $map[$m[1]][(int) $m[2]] = $file;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('responsive: directory scan failed', ['dir' => $dir, 'error' => $e->getMessage()]);
+        }
+
+        return self::$dirMemo[$key] = $map;
+    }
+
     /** Сбросить кэш запроса. Нужен тестам и командам, которые пишут варианты в том же процессе. */
     public static function flushMemo(): void
     {
         self::$memo = [];
+        self::$dirMemo = [];
     }
 
     /** `/storage/media/a.jpg`, `https://host/storage/media/a.jpg` и `media/a.jpg` → `media/a.jpg`. */
