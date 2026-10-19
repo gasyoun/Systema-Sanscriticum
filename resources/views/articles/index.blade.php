@@ -1,7 +1,7 @@
 @extends('layouts.articles')
 
-@section('title', 'Статьи о санскрите — Общество ревнителей санскрита')
-@section('meta_description', 'Статьи о санскрите: грамматика, философия, практика, культура. Честный разбор без мистики и пафоса.')
+@section('title', $categoryName ? 'Статьи по рубрике «'.$categoryName.'»' : 'Статьи о санскрите — Общество ревнителей санскрита')
+@section('meta_description', $categoryName ? 'Статьи по рубрике «'.$categoryName.'»: разборы, практика и философия санскрита.' : 'Статьи о санскрите: грамматика, философия, практика, культура. Честный разбор без мистики и пафоса.')
 @section('canonical', url($canonicalPath))
 @section('robots', $indexable ? 'index, follow' : 'noindex, follow')
 

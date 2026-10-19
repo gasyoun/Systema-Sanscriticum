@@ -81,10 +81,8 @@ class SrsDeck extends Model
 
     public function seoTitle(): string
     {
-        $subject = $this->language === 'hi' ? 'хинди' : 'санскрита';
-
-        // Goes through @yield('title') unescaped — escape the user-controlled name here.
-        return 'Колода «'.e($this->name).'» — карточки '.$subject;
+        // SeoTitle strips the brand, caps the result at 60 chars and escapes it.
+        return 'Колода «'.$this->name.'»';
     }
 
     public function seoDescription(): string
