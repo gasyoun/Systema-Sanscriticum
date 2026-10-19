@@ -7,10 +7,10 @@ namespace App\Support;
 /**
  * Builds a search-result title capped at 60 characters.
  *
- * The full organisation name is appended when it still fits; otherwise the
- * accepted short brand ("ОРС") is used, and only as a last resort is the base
- * truncated. Existing brand suffixes are stripped first, so a page title that
- * already ends with "— Общество ревнителей санскрита" never gets two brands.
+ * One short brand ("ОРС") is appended to every page; the base is truncated only
+ * when it would push the result past 60. Existing brand suffixes are stripped
+ * first, so a title that already ends with "— Общество ревнителей санскрита"
+ * never gets two brands.
  */
 final class SeoTitle
 {
@@ -28,20 +28,12 @@ final class SeoTitle
             return self::BRAND;
         }
 
-        // Reserve room for the shortest suffix so the result never exceeds MAX.
         $budget = self::MAX_LENGTH - mb_strlen(' | '.self::SHORT_BRAND);
         if (mb_strlen($base) > $budget) {
             $base = self::truncate($base, $budget);
         }
 
-        foreach ([self::BRAND, self::SHORT_BRAND] as $brand) {
-            $candidate = $base.' | '.$brand;
-            if (mb_strlen($candidate) <= self::MAX_LENGTH) {
-                return $candidate;
-            }
-        }
-
-        return $base;
+        return $base.' | '.self::SHORT_BRAND;
     }
 
     /**
