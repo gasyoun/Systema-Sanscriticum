@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\ServerGuards;
 
+use App\Services\LessonPackRepository;
 use RuntimeException;
 
 /**
@@ -45,7 +46,25 @@ final class ServerGuardsAuditor
             $this->auditFailedUnits(),
             $this->auditBackupFreshness(),
             $this->auditCertificateExpiry(),
+            $this->auditLywPacks(),
         ));
+    }
+
+    /**
+     * H7069: паки уроков LYW — контент, а не код.
+     *
+     * `storage/` не в git, поэтому паки приезжают деплоем из пина
+     * (scripts/server_guards/sbin/lesson-packs-sync.sh). Если мастер-выключатель
+     * поднят, а пака включённой группы нет, фича не падает — она отдаёт 404 на
+     * каждом уроке. Это ровно та тихая деградация, ради которой существует
+     * verify: находка blocking (critical), поэтому guards:verify и
+     * cabinet:probe говорят о ней, а не молчат до первого студента.
+     *
+     * @return list<GuardFinding>
+     */
+    private function auditLywPacks(): array
+    {
+        return (new LywPacksGuard(app(LessonPackRepository::class)))->findings();
     }
 
     /**
