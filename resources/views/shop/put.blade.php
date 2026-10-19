@@ -2,6 +2,8 @@
 
 @section('title', $page->title)
 
+@section('meta_description', 'Путь через курсы санскрита: три направления — письмо и чтение, грамматика, тексты. Как выбрать поток и с чего начать.')
+
 @section('content')
 <div class="min-h-screen bg-[#0A0D14] text-white py-16 lg:py-24 relative overflow-hidden font-sans">
 

@@ -4,7 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $page?->title }}</title>
-    
+
+    @php
+        // SEO-META-1: promo pages had no meta description at all — Yandex built the
+        // snippet from whatever it could. Prefer the constructor block text,
+        // then the legacy description, then a per-title fallback.
+        $seoDescription = trim(strip_tags((string) ($page?->showcase_description ?? '')));
+        if ($seoDescription === '') {
+            $seoDescription = trim(strip_tags((string) ($page?->description ?? '')));
+        }
+        if ($seoDescription === '') {
+            $seoDescription = '«'.($page?->title ?? 'Общество ревнителей санскрита').'» — курсы, вебинары и материалы по санскриту.';
+        }
+        $seoDescription = \Illuminate\Support\Str::limit(
+            preg_replace('/\s+/u', ' ', $seoDescription) ?? $seoDescription,
+            160
+        );
+    @endphp
+    <meta name="description" content="{{ $seoDescription }}">
+    <link rel="canonical" href="{{ url()->current() }}">
+
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
     {{-- H6211 Low-1: PNG 512 + apple-touch + публичный манифест (иконка в мобильной выдаче) --}}
     <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('images/icon-512.png') }}">
@@ -15,7 +34,7 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:title" content="{{ $page?->title }}">
-    <meta property="og:description" content="{{ Str::limit(strip_tags($page->description ?? 'Запишитесь на курс прямо сейчас!'), 150) }}"> 
+    <meta property="og:description" content="{{ $seoDescription }}">
 
     @php
         // OG-картинка берется СТРОГО из «Главного изображения» (поле image_path
