@@ -1255,6 +1255,11 @@ deliberate-fail selftest — `scripts/server_guards_n8n/sbin/test_guard_checks_r
 | Коды | 0 ok/no-op · 2 нет зеркала/тега или чужой коммит · 3 не девять манифестов · 4 rsync упал · 5 нет прав |
 | Деплой не роняет | сбой шага = красный баннер + строка `LYW PACKS rc=…` в `deploys.log`; `exit 1` завернул бы хороший код в откат (#1143) |
 
+**Лицензия.** Рядом с паками шаг пишет
+`storage/app/lesson-packs/LYW_PACKS_NOTICE.md` — источник, тег, коммит и
+лицензия (MIT репозитория SanskritGrammar). Записка лежит ВНЕ `zan1`, потому
+что `--delete` ограничен деревом паков и снёс бы её вместе с ними.
+
 **Страж.** `guards:verify` и `cabinet:probe` несут проверку `lyw-packs`: при
 `LYW_ENABLED=true` пак каждой **включённой** группы обязан существовать и
 читаться тем же `LessonPackRepository::load()`, которым его отдаёт контроллер

@@ -72,6 +72,10 @@ check "1d stamp несёт запиненный коммит" "grep -qx 'commit=
 check "1e структура уровня сохранена" "[ -f '$DEST/nol/yoga/manifest.json' ] && [ -f '$DEST/base/manifest.json' ]"
 check "1f сказал, что выложил" "printf '%s' \"\$out\" | grep -q 'выложены'"
 
+NOTICE="$WORK/live/LYW_PACKS_NOTICE.md"
+check "1g лицензионная записка записана рядом с паками" "[ -f '$NOTICE' ] && grep -q 'kochergina-uchebnik-v0.19.0' '$NOTICE' && grep -q 'MIT' '$NOTICE'"
+check "1h записка вне zan1 (--delete её не съест)" "[ -f '$WORK/live/LYW_PACKS_NOTICE.md' ] && [ ! -e '$DEST/LYW_PACKS_NOTICE.md' ]"
+
 echo "== 2. второй прогон подряд: no-op без записи =="
 before="$(stat -f '%m' "$STAMP" 2>/dev/null || stat -c '%Y' "$STAMP")"
 sleep 1
