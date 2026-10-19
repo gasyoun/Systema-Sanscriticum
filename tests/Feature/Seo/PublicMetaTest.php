@@ -112,6 +112,22 @@ class PublicMetaTest extends TestCase
         );
     }
 
+    public function test_long_deck_name_is_truncated_inside_quotes(): void
+    {
+        $this->makeDeck('anki-demo', 'Hindi Core 100 - Basic words (EN HI with audio)');
+
+        $html = $this->get('/koloda/anki-demo')
+            ->assertOk()
+            ->getContent();
+
+        preg_match('#<title>(.*?)</title>#s', $html, $matches);
+        $title = $matches[1] ?? '';
+
+        $this->assertLessThanOrEqual(60, mb_strlen($title));
+        $this->assertStringNotContainsString('audio', $title);
+        $this->assertMatchesRegularExpression('/«[^»]*»/u', $title);
+    }
+
     public function test_level_shells_are_noindex_and_not_in_sitemap(): void
     {
         $this->makeDeck('deck-level-1', 'Level 1');

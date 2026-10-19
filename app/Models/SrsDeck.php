@@ -81,8 +81,15 @@ class SrsDeck extends Model
 
     public function seoTitle(): string
     {
-        // SeoTitle strips the brand, caps the result at 60 chars and escapes it.
-        return 'Колода «'.$this->name.'»';
+        // SeoTitle strips the brand and caps the result at 60 chars. Budget the
+        // quoted name here so truncation never leaves an unbalanced «…».
+        $name = trim((string) $this->name);
+        $stripped = trim((string) preg_replace('/\s*\([^)]*\)\s*$/u', '', $name));
+        if ($stripped !== '') {
+            $name = $stripped;
+        }
+
+        return 'Колода «'.Str::limit($name, 43, '…').'»';
     }
 
     public function seoDescription(): string
