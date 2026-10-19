@@ -134,6 +134,14 @@ verify_line="$(grep -n 'php artisan guards:verify' "$DEPLOY_SH" | head -1 | cut 
 check "7b синхронизация стоит ДО guards:verify" "[ -n '$sync_line' ] && [ -n '$verify_line' ] && [ '$sync_line' -lt '$verify_line' ]"
 check "7c сбой шага не роняет деплой в rollback (#1143)" "! grep -q 'exit 1.*lesson-packs-sync' '$DEPLOY_SH'"
 
+echo "== 8. решение не зависит от владельца цели =="
+# Живой прогон 19-10-2026: root-овый rsync -a видел «владелец не тот» у каждого
+# файла (цель — www-data) и переписывал все 36 файлов на каждом деплое, то есть
+# no-op не наступал НИКОГДА. Владельца решает финальный chown, а не rsync.
+check "8a у rsync есть --no-owner --no-group" "grep -q -- '--no-owner --no-group' '$HELPER'"
+check "8b опции общие для решения и записи" "[ \"\$(grep -c 'RSYNC_OPTS\[@\]' '$HELPER')\" -ge 2 ]"
+check "8c голого rsync -a --delete не осталось" "! grep -q 'rsync -a --delete' '$HELPER'"
+
 echo
 if [ "$FAIL" -eq 0 ]; then
   printf '✔ test_lesson_packs_sync: %d/%d PASSED — пак из пина, повторный прогон не пишет, пустой архив отвергается\n' "$PASS" "$((PASS + FAIL))"

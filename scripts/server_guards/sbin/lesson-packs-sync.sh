@@ -135,7 +135,12 @@ fi
 # ── Что изменится ───────────────────────────────────────────────────────────
 # Решение принимает тот же движок, который будет применять: itemize-changes в
 # сухом прогоне. Пустой список = содержимое уже то самое, второй прогон — no-op.
-changes="$(rsync -an --itemize-changes --delete "$STAGE"/ "$DEST"/ 2>/dev/null | grep -v '^\.d' || true)"
+# --no-owner --no-group: владельца цели решает только финальный chown. Иначе
+# прогон из-под root видел «владелец не тот» у каждого файла и переписывал всё
+# заново даже при побайтово том же содержимом — no-op не наступал никогда
+# (поймано живым прогоном на .92, 19-10-2026).
+RSYNC_OPTS=(-a --no-owner --no-group)
+changes="$(rsync "${RSYNC_OPTS[@]}" -n --itemize-changes --delete "$STAGE"/ "$DEST"/ 2>/dev/null | grep -v '^\.d' || true)"
 change_count="$(printf '%s\n' "$changes" | grep -c '[^[:space:]]' || true)"
 
 if [ "$change_count" = 0 ] && [ "$FORCE" = 0 ] && [ -f "$STAMP" ] && grep -qx "tag=$TAG" "$STAMP" 2>/dev/null; then
@@ -165,7 +170,7 @@ if [ "$DRY_RUN" = 1 ]; then
 fi
 
 # ── Применить ───────────────────────────────────────────────────────────────
-if ! rsync -a --delete "$STAGE"/ "$DEST"/; then
+if ! rsync "${RSYNC_OPTS[@]}" --delete "$STAGE"/ "$DEST"/; then
   err "rsync в $DEST упал"
   exit 4
 fi
