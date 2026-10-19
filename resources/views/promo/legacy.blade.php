@@ -4,10 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $page->title }}</title>
+
+    @php
+        // SEO-META-1: legacy promo pages had no description meta at all.
+        $seoDescription = trim(strip_tags((string) ($page->hero_description ?? '')));
+        if ($seoDescription === '') {
+            $seoDescription = trim(strip_tags((string) ($page->showcase_description ?? '')));
+        }
+        if ($seoDescription === '') {
+            $seoDescription = '«'.$page->title.'» — курсы, вебинары и материалы по санскриту.';
+        }
+        $seoDescription = \Illuminate\Support\Str::limit(
+            preg_replace('/\s+/u', ' ', $seoDescription) ?? $seoDescription,
+            160
+        );
+    @endphp
+    <meta name="description" content="{{ $seoDescription }}">
+    <link rel="canonical" href="{{ url()->current() }}">
+
     <meta property="og:type" content="article">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:title" content="{{ $page->title }}">
-    <meta property="og:description" content="{{ Str::limit($page->hero_description, 150) }}"> 
+    <meta property="og:description" content="{{ $seoDescription }}">
     @if($page->image_path)
     <meta property="og:image" content="{{ url(Storage::url($page->image_path)) }}">
     <meta property="og:image:width" content="1200">

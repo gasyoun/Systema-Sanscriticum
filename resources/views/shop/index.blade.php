@@ -1,9 +1,21 @@
 @extends('layouts.shop')
 
-@section('title', 'Курсы санскрита онлайн')
+@php
+    // SEO-META-1: category facet pages are self-canonical and indexable, so they need
+    // their own title/description/H1 instead of reusing the catalog's.
+    $categoryName = trim((string) ($category->name ?? ''));
+    $catalogTitle = $categoryName !== ''
+        ? 'Курсы санскрита: '.e($categoryName)
+        : 'Курсы санскрита онлайн';
+    $catalogDescription = $categoryName !== ''
+        ? 'Курсы санскрита и хинди по направлению «'.$categoryName.'»: живые группы и записи, программа и преподаватели. От первых букв до чтения текстов.'
+        : 'Каталог курсов санскрита и хинди: живые группы и записи. От первой буквы до чтения текстов.';
+@endphp
+
+@section('title', $catalogTitle)
+@section('meta_description', $catalogDescription)
 
 @push('head')
-    <meta name="description" content="Каталог курсов санскрита и хинди: живые группы и записи. От первой буквы до чтения текстов.">
     <link rel="canonical" href="{{ url($canonicalPath) }}">
     <meta name="robots" content="{{ $indexable ? 'index, follow' : 'noindex, follow' }}">
 @endpush
@@ -20,7 +32,7 @@
     <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
         <div class="text-center mb-10">
             <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-6">
-                Курсы санскрита и хинди онлайн
+                {{ $categoryName !== '' ? 'Курсы санскрита: '.$categoryName : 'Курсы санскрита и хинди онлайн' }}
             </h1>
             {{-- Подзаголовок — ориентация, не лозунг (H1868): что здесь есть и
                  куда идти новичку, вместо «выберите курс» перед стеной карточек. --}}
