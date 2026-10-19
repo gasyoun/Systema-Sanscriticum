@@ -676,21 +676,42 @@ cat /var/www/html/storage/framework/auto-deploy-retries              # скол�
 обёртки: против до-H2149 копии он падает 5 из 14 — тест, зелёный на сломанном и
 на починенном коде, не доказывает ничего.
 
-> **Правка managed-файла: код выкладывается, apply — отдельный шаг (issue #1143).**
-> `deploy.sh` в конце зовёт `guards:verify` и **никогда** не зовёт
-> `server_guards_apply.sh` (выкладка кода не должна молча менять системный
-> конфиг). После merge копии РАЗНЫЕ (в git — новая, на машине — старая) — это
-> честный drift. С 06-08-2026 `deploy.sh` в этом случае выходит с кодом **0** (код жив; раньше был exit 1 → rollback)
-> (код уже жив), а `systema-auto-deploy-run.sh` **не откатывает** HEAD. До фикса
-> exit 1 вызывал цикл «накат → rollback → soft fuse» (05-08-2026, #1143).
+> **Правка managed-файла: код выкладывается, а дрейф чинит сам деплой — громко (H7060, 19-10-2026; история #1143 ниже).**
+> До H7060 `deploy.sh` звал `guards:verify` и **никогда** не звал
+> `server_guards_apply.sh`: дрейф от легитимного коммита жил вечно, баннер
+> «Вернуть: sudo bash …» висел до человека, 26 алертов за 36 часов ничего не
+> починили. Теперь при дрейфе деплой делает три шага **в этом порядке**:
 >
-> Apply по-прежнему нужен руками (или осознанным ops-шагом):
+> 1. **Объявляет** — печатает unified diff каждого расходящегося managed-файла
+>    (`server_guards_apply.sh --dry-run --diff`); выкладка кода по-прежнему не
+>    меняет системный конфиг молча — в `deploys.log` попадает каждая строка.
+> 2. **Применяет** — тот же санкционированный идемпотентный
+>    [`scripts/server_guards_apply.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards_apply.sh);
+>    второй деплой подряд — no-op (0 файлов разошлись).
+> 3. **Перепроверяет** — apply заканчивается на `guards:verify`; его код и есть
+>    вердикт. Дрейф, переживший apply, остаётся громким, и срабатывает прежний
+>    баннер + `exit 0` (#1143 — отката хорошего коммита нет).
+>
+> Шаг живёт в
+> [`scripts/server_guards/sbin/managed-guards-apply-on-deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/sbin/managed-guards-apply-on-deploy.sh)
+> и отказывает **именованно**: `3` — apply упал/дрейф остался, `4` — не root
+> (diff напечатан, apply не запускался), `5` — apply-скрипта нет в дереве.
+> Любой не-ноль означает «дрейф остался видимым», а не «деплой провален».
+>
+> Ручной apply остаётся для случаев вне деплоя (не-root прогон, apply упал,
+> машина без нового дерева):
 >
 > ```sh
-> cd /var/www/html && bash deploy.sh           # код доехал; exit 0 при drift — ОЖИДАЕМО
-> bash scripts/server_guards_apply.sh          # ставит новый managed-файл
+> cd /var/www/html && bash deploy.sh           # код доехал; apply — внутри, до баннера
+> bash scripts/server_guards_apply.sh          # если деплой сказал rc=3/4/5
 > sudo -u www-data env HOME=/tmp php artisan guards:verify   # «все проверки пройдены»
 > ```
+>
+> Регрессия закреплена
+> [`scripts/server_guards/sbin/test_managed_guards_apply_on_deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/sbin/test_managed_guards_apply_on_deploy.sh)
+> (24 проверки: row-9 replay, идемпотентный второй прогон, не-root отказ, упавший
+> apply, отсутствующий apply-скрипт, и позиция вызова ДО баннера). Тест проверен
+> на обеих версиях `deploy.sh`: против до-H7060 копии падают 3 проверки проводки.
 >
 > `ops:soft-remediate` **не** предлагает снять fuse, если в причине есть
 > GUARDS DRIFT / managed-file / предохранители — сначала apply, иначе цикл
