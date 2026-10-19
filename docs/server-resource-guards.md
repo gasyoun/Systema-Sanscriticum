@@ -1232,3 +1232,59 @@ _Dr. Mārcis Gasūns_
 На `.91` те же три вида едут в `scripts/server_guards_n8n_verify.sh`;
 решающие функции вынесены в `scripts/server_guards_n8n/sbin/guard_checks.sh`,
 deliberate-fail selftest — `scripts/server_guards_n8n/sbin/test_guard_checks_refuse.sh`.
+
+## 17. Паки уроков LYW: контент из пина, а не ручная копия (H7069, 19-10-2026)
+
+Девять паков зан1 (`storage/app/lesson-packs/zan1/…`) живут вне git: 18-10-2026
+их залили на `.92` руками, потому что `storage/` не в репозитории. Конфиг при
+этом говорит `LYW_ENABLED=true`, и первое же восстановление storage, пересборка
+сервера или второй бокс оставляли фичу включённой без содержимого — вкладка на
+месте, каждый урок 404. Ручная копия не воспроизводима: её нельзя повторить на
+другом боксе и нечем доказать, что залито именно то, что голосовали 14-10-2026.
+
+Деплой закрывает это шагом **7b** — `scripts/server_guards/sbin/lesson-packs-sync.sh`
+— и ставит его ДО `guards:verify`, чтобы проверка видела уже свежие паки.
+
+| Свойство | Как обеспечено |
+|---|---|
+| Пин | тег `kochergina-uchebnik-v0.19.0` **и** коммит `d270693e…`: зеркало с тем же именем тега на другом коммите отвергается (код 2) |
+| Офлайн | `git archive` из локального bare-зеркала на боксе; сеть в пути деплоя не нужна |
+| Идемпотентность | решение «менять/не менять» принимает `rsync --dry-run --itemize-changes`; второй прогон подряд — no-op, stamp не переписывается |
+| Объявление | перед записью печатается unified diff (≤120 строк) и уходит в `deploys.log` |
+| Границы | только `storage/app/lesson-packs/zan1`; `--delete` ограничен целью |
+| Коды | 0 ok/no-op · 2 нет зеркала/тега или чужой коммит · 3 не девять манифестов · 4 rsync упал · 5 нет прав |
+| Деплой не роняет | сбой шага = красный баннер + строка `LYW PACKS rc=…` в `deploys.log`; `exit 1` завернул бы хороший код в откат (#1143) |
+
+**Страж.** `guards:verify` и `cabinet:probe` несут проверку `lyw-packs`: при
+`LYW_ENABLED=true` пак каждой **включённой** группы обязан существовать и
+читаться тем же `LessonPackRepository::load()`, которым его отдаёт контроллер
+(манифест, схема, zan, quizzes, текст, mindmap); иначе — critical с именем
+группы, ожидаемым путём и командой починки. Выключенный рубильник и группа,
+отклонённая голосованием, находок не дают: их 404 — решение, а не авария.
+
+**Зеркало ставится один раз** — это провижининг бокса, а не шаг деплоя:
+
+```sh
+install -d -m 0755 /var/lib/systema/lyw-packs
+git clone --bare --depth 1 --branch kochergina-uchebnik-v0.19.0 \
+  https://github.com/gasyoun/SanskritGrammar.git \
+  /var/lib/systema/lyw-packs/SanskritGrammar.git
+```
+
+**Проверить руками:**
+
+```sh
+bash scripts/server_guards/sbin/lesson-packs-sync.sh --dry-run   # что изменится
+php artisan guards:verify                                        # проверка lyw-packs
+find storage/app/lesson-packs/zan1 -name manifest.json | wc -l    # 9
+```
+
+**Откат.** Паки — контент, а не схема: откатываются выкладкой прежнего тега
+(`LYW_PACKS_TAG=… LYW_PACKS_TAG_COMMIT=… bash …/lesson-packs-sync.sh`) или
+выключением `LYW_ENABLED`; код, миграции и путь `deploy.sh --rollback` паки не
+затрагивают.
+
+**Регрессия.** `scripts/server_guards/sbin/test_lesson_packs_sync.sh` — 27/27:
+девять манифестов приезжают, второй прогон не пишет, dry-run не создаёт цель,
+ручная правка объявляется диффом и снимается, чужой тег/коммит и неполный
+архив отвергаются, проводка в `deploy.sh` стоит до `guards:verify`.
