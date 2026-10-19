@@ -29,11 +29,12 @@ _Created: 19-10-2026_
 | лендинги/вебинары (promo builder) | нет description | `showcase_description` → `description` → фолбэк по title, лимит 160 |
 | лендинги (promo legacy) | нет description | `hero_description` → `showcase_description` → фолбэк, canonical |
 | `/online/put` | нет description | собственный description |
-| прочие shop-страницы | нет description | fallback в `layouts/shop` |
+| прочие shop-страницы | нет description | fallback в `layouts/shop` (брендовый, не каталожный) |
+| teacher/certificate/testimonials/hubs | description в `@push('head')` → второй тег рядом с layout-фолбэком | переведены на `@section('meta_description')` |
 
 ## Гейт
 
-`tests/Feature/Seo/PublicMetaTest.php` — 7 тестов, 32 утверждения:
+`tests/Feature/Seo/PublicMetaTest.php` — 8 тестов, 50 утверждений:
 
 1. категория не переиспользует title каталога и имеет свой H1/description;
 2. курс без описания всё равно получает непустой description;
@@ -41,7 +42,8 @@ _Created: 19-10-2026_
 4. «Level 2» отдаёт `noindex, follow` и отсутствует в sitemap, «Level 1» — присутствует;
 5. языковые хабы `/koloda` / `hindi` / `vse` имеют разные title, а `yazyk/sanskrit` канонизируется на `/koloda`;
 6. лендинг получает description;
-7. в sitemap нет дублей `<loc>`.
+7. каждая публичная страница отдаёт ровно один `<meta name="description">` (иначе layout-фолбэк дублировал уже существующий тег);
+8. в sitemap нет дублей `<loc>`.
 
 Локально: `php -d memory_limit=1G vendor/bin/phpunit tests/Feature/Seo` — 49 тестов зелёные (включая SRS public URLs).
 

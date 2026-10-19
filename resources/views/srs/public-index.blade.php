@@ -19,12 +19,12 @@
 @endphp
 
 @section('title', 'Колоды карточек по '.$langSubject.' — открытая галерея')
+{{-- H5184 N14: ключевые слова в description («колоды», «санскрит», «хинди»). --}}
+@section('meta_description', 'Открытая галерея колод карточек по '.$langSubject.': интервальное повторение, пробный режим без регистрации — прогресс сохранится после входа.')
 
 @push('head')
     <link rel="canonical" href="{{ url($canonicalPath) }}">
     <meta name="robots" content="index, follow">
-    {{-- H5184 N14: ключевые слова в description («колоды», «санскрит», «хинди»). --}}
-    <meta name="description" content="Открытая галерея колод карточек по {{ $langSubject }}: интервальное повторение, пробный режим без регистрации — прогресс сохранится после входа.">
 @endpush
 
 @section('content')

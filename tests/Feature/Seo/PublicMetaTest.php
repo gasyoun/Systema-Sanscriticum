@@ -169,6 +169,42 @@ class PublicMetaTest extends TestCase
             ->assertSee('name="description" content="Описание пробного вебинара по санскриту."', false);
     }
 
+    public function test_public_pages_emit_exactly_one_meta_description(): void
+    {
+        $category = Category::factory()->create(['name' => 'Грамматика', 'slug' => 'grammatika']);
+        $course = Course::factory()->create(['slug' => 'kurs-odin', 'title' => 'Курс один']);
+        $course->categories()->attach($category);
+        $this->makeDeck('sanskrit-core', 'Санскрит — ядро');
+
+        LandingPage::create([
+            'slug' => 'probnyi-vebinar',
+            'title' => 'Пробный вебинар',
+            'description' => 'Описание пробного вебинара по санскриту.',
+            'is_active' => true,
+        ]);
+
+        $urls = [
+            '/online',
+            '/online/kategoriya/grammatika',
+            '/k/kurs-odin',
+            '/koloda',
+            '/koloda/yazyk/hindi',
+            '/koloda/sanskrit-core',
+            '/probnyi-vebinar',
+            '/prepodavately',
+            '/sertifikat',
+        ];
+
+        foreach ($urls as $url) {
+            $html = $this->get($url)->assertOk()->getContent();
+            $this->assertSame(
+                1,
+                preg_match_all('#<meta name="description"#i', $html),
+                "Expected exactly one meta description on {$url}"
+            );
+        }
+    }
+
     public function test_sitemap_has_no_duplicate_locations(): void
     {
         $category = Category::factory()->create(['slug' => 'grammatika']);
