@@ -3,6 +3,15 @@
 @section('title', $page->title)
 
 @section('meta_description', 'Путь через курсы санскрита: три направления — письмо и чтение, грамматика, тексты. Как выбрать поток и с чего начать.')
+@section('meta_description', 'Путь через курсы санскрита: три направления — письмо и чтение, грамматика, тексты. Как выбрать поток и с чего начать.')
+
+@push('head')
+    @include('partials.schema-breadcrumbs', ['crumbs' => [
+        ['name' => 'Главная', 'url' => url('/')],
+        ['name' => 'Курсы', 'url' => url('/online')],
+        ['name' => 'Три направления'],
+    ]])
+@endpush
 
 @section('content')
 <div class="min-h-screen bg-[#0A0D14] text-white py-16 lg:py-24 relative overflow-hidden font-sans">

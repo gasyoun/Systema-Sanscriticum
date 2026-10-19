@@ -17,6 +17,13 @@
 
 @push('head')
     <link rel="canonical" href="{{ url($canonicalPath) }}">
+
+    {{-- Хлебные крошки: каталог и его категории — коммерческие точки входа. --}}
+    @include('partials.schema-breadcrumbs', ['crumbs' => array_values(array_filter([
+        ['name' => 'Главная', 'url' => url('/')],
+        ['name' => 'Курсы', 'url' => url('/online')],
+        $categoryName !== '' ? ['name' => $categoryName] : null,
+    ]))])
     <meta name="robots" content="{{ $indexable ? 'index, follow' : 'noindex, follow' }}">
 @endpush
 
