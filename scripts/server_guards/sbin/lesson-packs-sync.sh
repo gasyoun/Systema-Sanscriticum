@@ -135,7 +135,12 @@ fi
 # ── Что изменится ───────────────────────────────────────────────────────────
 # Решение принимает тот же движок, который будет применять: itemize-changes в
 # сухом прогоне. Пустой список = содержимое уже то самое, второй прогон — no-op.
-changes="$(rsync -an --itemize-changes --delete "$STAGE"/ "$DEST"/ 2>/dev/null | grep -v '^\.d' || true)"
+# --no-owner --no-group: владельца цели решает только финальный chown. Иначе
+# прогон из-под root видел «владелец не тот» у каждого файла и переписывал всё
+# заново даже при побайтово том же содержимом — no-op не наступал никогда
+# (поймано живым прогоном на .92, 19-10-2026).
+RSYNC_OPTS=(-a --no-owner --no-group)
+changes="$(rsync "${RSYNC_OPTS[@]}" -n --itemize-changes --delete "$STAGE"/ "$DEST"/ 2>/dev/null | grep -v '^\.d' || true)"
 change_count="$(printf '%s\n' "$changes" | grep -c '[^[:space:]]' || true)"
 
 if [ "$change_count" = 0 ] && [ "$FORCE" = 0 ] && [ -f "$STAMP" ] && grep -qx "tag=$TAG" "$STAMP" 2>/dev/null; then
@@ -165,7 +170,7 @@ if [ "$DRY_RUN" = 1 ]; then
 fi
 
 # ── Применить ───────────────────────────────────────────────────────────────
-if ! rsync -a --delete "$STAGE"/ "$DEST"/; then
+if ! rsync "${RSYNC_OPTS[@]}" --delete "$STAGE"/ "$DEST"/; then
   err "rsync в $DEST упал"
   exit 4
 fi
@@ -184,6 +189,26 @@ stamp_tmp="$STAMP.tmp.$$"
   printf 'synced=%s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 } > "$stamp_tmp" && mv -f "$stamp_tmp" "$STAMP"
 chmod 644 "$STAMP" 2>/dev/null || true
+
+# ── Licence note рядом с паками (вне zan1: --delete его не съест) ────────────
+NOTICE="$(dirname "$DEST")/LYW_PACKS_NOTICE.md"
+NOTICE_BODY="# Паки уроков LYW (zan1)
+
+Источник: SanskritGrammar, тег \`$TAG\` (коммит \`$TAG_COMMIT\`), путь
+\`$SUBTREE\`. Содержимое генерируется \`scripts/build_lessonpack.py\` из
+материалов курса; лицензия репозитория-источника — MIT
+(https://github.com/gasyoun/SanskritGrammar/blob/main/LICENSE).
+
+Выложено шагом деплоя \`scripts/server_guards/sbin/lesson-packs-sync.sh\`
+(H7069). Руками здесь не править: следующий деплой перезапишет дерево zan1.
+"
+if [ ! -f "$NOTICE" ] || ! printf '%s' "$NOTICE_BODY" | cmp -s - "$NOTICE"; then
+  printf '%s' "$NOTICE_BODY" > "$NOTICE"
+  if [ "$(id -u)" = 0 ] || [ "$(id -un 2>/dev/null || true)" = "$APP_USER" ]; then
+    chown "$APP_USER:$APP_USER" "$NOTICE" 2>/dev/null || true
+  fi
+  chmod 644 "$NOTICE" 2>/dev/null || true
+fi
 
 say "паки LYW выложены из $TAG ($manifests манифестов, $files файлов) → $DEST"
 exit 0

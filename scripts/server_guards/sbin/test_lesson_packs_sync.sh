@@ -72,6 +72,10 @@ check "1d stamp несёт запиненный коммит" "grep -qx 'commit=
 check "1e структура уровня сохранена" "[ -f '$DEST/nol/yoga/manifest.json' ] && [ -f '$DEST/base/manifest.json' ]"
 check "1f сказал, что выложил" "printf '%s' \"\$out\" | grep -q 'выложены'"
 
+NOTICE="$WORK/live/LYW_PACKS_NOTICE.md"
+check "1g лицензионная записка записана рядом с паками" "[ -f '$NOTICE' ] && grep -q 'kochergina-uchebnik-v0.19.0' '$NOTICE' && grep -q 'MIT' '$NOTICE'"
+check "1h записка вне zan1 (--delete её не съест)" "[ -f '$WORK/live/LYW_PACKS_NOTICE.md' ] && [ ! -e '$DEST/LYW_PACKS_NOTICE.md' ]"
+
 echo "== 2. второй прогон подряд: no-op без записи =="
 before="$(stat -f '%m' "$STAMP" 2>/dev/null || stat -c '%Y' "$STAMP")"
 sleep 1
@@ -133,6 +137,14 @@ sync_line="$(grep -n 'lesson-packs-sync.sh' "$DEPLOY_SH" | head -1 | cut -d: -f1
 verify_line="$(grep -n 'php artisan guards:verify' "$DEPLOY_SH" | head -1 | cut -d: -f1)"
 check "7b синхронизация стоит ДО guards:verify" "[ -n '$sync_line' ] && [ -n '$verify_line' ] && [ '$sync_line' -lt '$verify_line' ]"
 check "7c сбой шага не роняет деплой в rollback (#1143)" "! grep -q 'exit 1.*lesson-packs-sync' '$DEPLOY_SH'"
+
+echo "== 8. решение не зависит от владельца цели =="
+# Живой прогон 19-10-2026: root-овый rsync -a видел «владелец не тот» у каждого
+# файла (цель — www-data) и переписывал все 36 файлов на каждом деплое, то есть
+# no-op не наступал НИКОГДА. Владельца решает финальный chown, а не rsync.
+check "8a у rsync есть --no-owner --no-group" "grep -q -- '--no-owner --no-group' '$HELPER'"
+check "8b опции общие для решения и записи" "[ \"\$(grep -c 'RSYNC_OPTS\[@\]' '$HELPER')\" -ge 2 ]"
+check "8c голого rsync -a --delete не осталось" "! grep -q 'rsync -a --delete' '$HELPER'"
 
 echo
 if [ "$FAIL" -eq 0 ]; then
