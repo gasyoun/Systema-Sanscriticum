@@ -8,7 +8,7 @@
 
     <title>@yield('title', 'Магазин курсов') | Общество ревнителей санскрита</title>
     {{-- SEO-META-1: fallback description for every shop page; child views override via @section('meta_description') --}}
-    <meta name="description" content="{{ \Illuminate\Support\Str::limit(trim(strip_tags($__env->yieldContent('meta_description', 'Курсы санскрита и хинди онлайн: живые группы и записи, от первых букв до чтения текстов. Общество ревнителей санскрита.'))), 160) }}">
+    <meta name="description" content="{{ \Illuminate\Support\Str::limit(trim(strip_tags($__env->yieldContent('meta_description', 'Общество ревнителей санскрита: курсы санскрита и хинди, преподаватели, статьи и материалы.'))), 160) }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
     {{-- H6211 Low-1: PNG 512 + apple-touch + публичный манифест (иконка в мобильной выдаче) --}}
     <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('images/icon-512.png') }}">
