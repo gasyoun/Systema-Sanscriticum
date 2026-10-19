@@ -151,7 +151,9 @@
                     
                     <div class="relative rounded-[2.5rem] overflow-hidden shadow-2xl border-[8px] md:border-[10px] border-white z-10 bg-white">
                         @if($page->image_path)
-                            <img src="{{ Storage::url($page->image_path) }}" alt="Expert" fetchpriority="high" decoding="async" class="w-full h-auto object-cover transform transition duration-700 hover:scale-105">
+                            <x-responsive-image :src="Storage::url($page->image_path)" alt="Expert" fetchpriority="high" decoding="async"
+                                sizes="(min-width: 1024px) 480px, 100vw"
+                                class="w-full h-auto object-cover transform transition duration-700 hover:scale-105" />
                         @else
                             <div class="w-full h-[400px] md:h-[500px] bg-gray-100 flex items-center justify-center text-gray-400 flex-col">
                                 <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
