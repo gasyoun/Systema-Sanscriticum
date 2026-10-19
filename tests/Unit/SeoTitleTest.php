@@ -12,12 +12,12 @@ use PHPUnit\Framework\TestCase;
  */
 class SeoTitleTest extends TestCase
 {
-    public function test_short_base_gets_full_brand(): void
+    public function test_short_base_gets_short_brand(): void
     {
-        $this->assertSame(
-            'Курсы санскрита с нуля | Общество ревнителей санскрита',
-            SeoTitle::render('Курсы санскрита с нуля')
-        );
+        $title = SeoTitle::render('Курсы санскрита с нуля');
+
+        $this->assertSame('Курсы санскрита с нуля | ОРС', $title);
+        $this->assertStringNotContainsString('Общество ревнителей', $title);
     }
 
     public function test_medium_base_falls_back_to_short_brand(): void
@@ -40,7 +40,7 @@ class SeoTitleTest extends TestCase
     public function test_existing_brand_is_stripped_before_reappending(): void
     {
         $this->assertSame(
-            'Статьи о санскрите | Общество ревнителей санскрита',
+            'Статьи о санскрите | ОРС',
             SeoTitle::render('Статьи о санскрите — Общество ревнителей санскрита — ОРС')
         );
     }

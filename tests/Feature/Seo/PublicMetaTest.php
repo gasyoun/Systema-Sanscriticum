@@ -151,11 +151,11 @@ class PublicMetaTest extends TestCase
 
         $this->get('/koloda')
             ->assertOk()
-            ->assertSee('<title>Колоды карточек по санскриту | Общество ревнителей санскрита</title>', false);
+            ->assertSee('<title>Колоды карточек по санскриту | ОРС</title>', false);
 
         $this->get('/koloda/yazyk/hindi')
             ->assertOk()
-            ->assertSee('<title>Колоды карточек по хинди | Общество ревнителей санскрита</title>', false);
+            ->assertSee('<title>Колоды карточек по хинди | ОРС</title>', false);
 
         $this->get('/koloda/yazyk/vse')
             ->assertOk()
