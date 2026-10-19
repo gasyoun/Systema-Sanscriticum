@@ -6,6 +6,11 @@
 
 @push('head')
     <link rel="canonical" href="{{ route('certificate.registry') }}">
+
+    @include('partials.schema-breadcrumbs', ['crumbs' => [
+        ['name' => 'Главная', 'url' => url('/')],
+        ['name' => 'Сертификаты'],
+    ]])
 @endpush
 
 @section('content')
