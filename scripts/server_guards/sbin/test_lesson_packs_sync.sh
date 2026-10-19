@@ -86,6 +86,14 @@ check "2a exit 0" "[ $rc -eq 0 ]"
 check "2b сказал no-op" "printf '%s' \"\$out\" | grep -q 'no-op'"
 check "2c stamp не переписан" "[ '$before' = '$after' ]"
 
+# no-op прогон обязан восстанавливать записку: иначе первый деплой после её
+# появления (паки уже совпадают) оставил бы паки без записки до следующего
+# изменения содержимого.
+rm -f "$WORK/live/LYW_PACKS_NOTICE.md"
+out="$(run)"
+check "2d no-op восстановил лицензионную записку" "[ -f '$WORK/live/LYW_PACKS_NOTICE.md' ]"
+check "2e и всё ещё говорит no-op" "printf '%s' \"\$out\" | grep -q 'no-op'"
+
 echo "== 3. dry-run на пустой цели ничего не пишет =="
 rm -rf "$WORK/live"
 out="$(run --dry-run)"
