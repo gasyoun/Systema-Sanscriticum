@@ -136,7 +136,7 @@ $vas26Campaign = 'vasishtha_open_oct_2026';
 
 foreach (['c', 't', 'h'] as $creative) {
     $links["vas26-ors-{$creative}"] = [
-        'destination' => '/k/medlennoe-ctenie-ioga-vasistxi',
+        'destination' => '/k/yoga-vasistha',
         'utm' => [
             'utm_source' => $channels['ors']['source'],
             'utm_medium' => $channels['ors']['medium'],
