@@ -109,6 +109,50 @@ $links['bi26-ors-c'] = [
 ];
 
 /*
+ * vas26 — открытый урок «Медленного чтения Йога-васиштхи» (курс 334, занятие
+ * #49 22-10-2026 12:00 МСК; чт 12:00, блоки по 4 занятия 4 800 ₽): маршрут
+ * попадания на занятие — куратор (@rusamskrtam), поэтому /ga/-ключ ведет на
+ * карточку курса (условия + оплата блока). Креативы = гипотезы поста:
+ * c — программа, t — преподаватель/формат занятия, h — время/слот.
+ */
+$vas26Campaign = 'vasishtha_open_oct_2026';
+
+foreach (['c', 't', 'h'] as $creative) {
+    $links["vas26-ors-{$creative}"] = [
+        'destination' => '/k/medlennoe-ctenie-ioga-vasistxi',
+        'utm' => [
+            'utm_source' => $channels['ors']['source'],
+            'utm_medium' => $channels['ors']['medium'],
+            'utm_campaign' => $vas26Campaign,
+            'utm_content' => "vas26_{$creative}",
+            'utm_term' => 'slow_reading',
+        ],
+    ];
+}
+
+/*
+ * syn26 — открытое занятие «Синтаксиса санскрита» (курс 266, занятие #268
+ * 25-10-2026 17:00 МСК; вс 17:00, блоки по 4 занятия 4 800 ₽, аудитория с
+ * базой санскрита): маршрут попадания — куратор, /ga/-ключ ведет на карточку
+ * курса (условия + оплата блока). Креативы = гипотезы поста: c — программа,
+ * t — преподаватель/формат занятия, h — время/слот.
+ */
+$syn26Campaign = 'syntax_open_oct_2026';
+
+foreach (['c', 't', 'h'] as $creative) {
+    $links["syn26-ors-{$creative}"] = [
+        'destination' => '/k/sintaksis-sanskrita',
+        'utm' => [
+            'utm_source' => $channels['ors']['source'],
+            'utm_medium' => $channels['ors']['medium'],
+            'utm_campaign' => $syn26Campaign,
+            'utm_content' => "syn26_{$creative}",
+            'utm_term' => 'advanced',
+        ],
+    ];
+}
+
+/*
  * Демо-кампания — постоянная смок-фикстура скилла anons-attribution-mint
  * (H5934): живые /ga/demo-* ключи, чтобы прогонять редирект + метки без
  * реального набора. Синтетические utm_source помечены demo_, поэтому
