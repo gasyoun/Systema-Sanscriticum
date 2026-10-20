@@ -301,15 +301,16 @@ FENCE_PATTERNS = [
     (r"https?://|t\.me/", "url"),
     (r"(?<!\d)\d{6,}(?!\d)", "long-numeric-id"),
 ]
-_FENCE_SAFE = re.compile(
-    r"tests/fixtures/faq_rag_eval\.json|faq_rag_eval|user_sim|harness\.py"
-)
+# Only the scanner's own source file is exempt (it carries the fence regexes
+# themselves — @-decorator false positives). No dir-wide exemptions: every
+# other artifact (personas.json, transcripts, reports, protocol docs) is
+# scanned for real-data shapes. Tightened per H6851 verifier finding.
+FENCE_SELF = "harness.py"
 
 
 def fence_violations(text: str, path: str = "") -> list[tuple[str, str]]:
-    """Real-data shapes found in a payload/artifact (fixture path references
-    and this harness's own identifiers are exempt)."""
-    if path and _FENCE_SAFE.search(path):
+    """Real-data shapes found in a payload/artifact."""
+    if path and os.path.basename(path) == FENCE_SELF:
         return []
     hits = []
     for pat, kind in FENCE_PATTERNS:
@@ -417,8 +418,13 @@ def selftest() -> int:
     if meta_a["payload_sha256"] != meta_b["payload_sha256"]:
         failures.append("determinism: payload hashes differ across runs")
 
-    # 6. 152-FZ fence: zero real-data shapes in every payload + artifact text.
-    for path in [PERSONAS, Path(__file__)]:
+    # 6. 152-FZ fence: zero real-data shapes in every committed artifact
+    # (scanner source exempt; everything else genuinely scanned).
+    scan_paths = [PERSONAS, HERE / "PILOT_PROTOCOL.md"]
+    runs_dir = HERE / "runs" / "2026-10-20-pilot-stub"
+    if runs_dir.is_dir():
+        scan_paths += sorted(runs_dir.glob("*"))
+    for path in scan_paths:
         hits = fence_violations(path.read_text(encoding="utf-8"), str(path))
         if hits:
             failures.append(f"fence: {path.name} hits={hits[:3]}")
