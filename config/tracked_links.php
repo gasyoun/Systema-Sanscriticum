@@ -93,6 +93,23 @@ foreach (['c', 't', 'h'] as $creative) {
 }
 
 /*
+ * Креатив r — рекап открытой лекции 19-10 (старт группы 154): маршрут ведет
+ * на WP-статью записи лекции на samskrtam.ru (rutube/vk/youtube + стенограмма),
+ * а не на карточку курса. Внешний destination — как у t.me-хопов ниже:
+ * флеш-цель Метрики на нем не ставится, клик пишется в anons_link_clicks.
+ */
+$links['san26-ors-r'] = [
+    'destination' => 'https://samskrtam.ru/kurs-filosofiya-sankhi/',
+    'utm' => [
+        'utm_source' => $channels['ors']['source'],
+        'utm_medium' => $channels['ors']['medium'],
+        'utm_campaign' => $san26Campaign,
+        'utm_content' => 'san26_r',
+        'utm_term' => 'philosophy',
+    ],
+];
+
+/*
  * bi26 — бесплатное самостоятельное знакомство с санскритом: отдельный
  * текстовый анонс @samskrte 13-10-2026. Проверка за 500 ₽ закрыта;
  * единственный читательский маршрут ведет на страницу с честными условиями.
