@@ -156,6 +156,46 @@ class TrackedLinkTest extends TestCase
     }
 
     /** @test */
+    public function vas26_open_lesson_keys_route_to_the_vasishtha_course_card(): void
+    {
+        foreach ([
+            'vas26-ors-c' => 'vas26_c',
+            'vas26-ors-t' => 'vas26_t',
+            'vas26-ors-h' => 'vas26_h',
+        ] as $token => $content) {
+            $this->flushSession();
+            $this->get('/ga/'.$token)->assertRedirect('/k/medlennoe-ctenie-ioga-vasistxi');
+
+            $attribution = session(config('tracked_links.session_key'));
+            $this->assertSame('telegram_samskrte', $attribution['utm_source'], "{$token} source");
+            $this->assertSame('owned_channel', $attribution['utm_medium'], "{$token} medium");
+            $this->assertSame('vasishtha_open_oct_2026', $attribution['utm_campaign'], "{$token} campaign");
+            $this->assertSame($content, $attribution['utm_content'], "{$token} content");
+            $this->assertSame('slow_reading', $attribution['utm_term'], "{$token} term");
+        }
+    }
+
+    /** @test */
+    public function syn26_open_lesson_keys_route_to_the_syntax_course_card(): void
+    {
+        foreach ([
+            'syn26-ors-c' => 'syn26_c',
+            'syn26-ors-t' => 'syn26_t',
+            'syn26-ors-h' => 'syn26_h',
+        ] as $token => $content) {
+            $this->flushSession();
+            $this->get('/ga/'.$token)->assertRedirect('/k/sintaksis-sanskrita');
+
+            $attribution = session(config('tracked_links.session_key'));
+            $this->assertSame('telegram_samskrte', $attribution['utm_source'], "{$token} source");
+            $this->assertSame('owned_channel', $attribution['utm_medium'], "{$token} medium");
+            $this->assertSame('syntax_open_oct_2026', $attribution['utm_campaign'], "{$token} campaign");
+            $this->assertSame($content, $attribution['utm_content'], "{$token} content");
+            $this->assertSame('advanced', $attribution['utm_term'], "{$token} term");
+        }
+    }
+
+    /** @test */
     public function demo_smoke_fixture_redirects_and_carries_demo_marked_attribution(): void
     {
         $this->get('/ga/demo-ors-h')->assertRedirect('/online');
