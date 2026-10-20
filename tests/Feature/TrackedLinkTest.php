@@ -164,7 +164,7 @@ class TrackedLinkTest extends TestCase
             'vas26-ors-h' => 'vas26_h',
         ] as $token => $content) {
             $this->flushSession();
-            $this->get('/ga/'.$token)->assertRedirect('/k/medlennoe-ctenie-ioga-vasistxi');
+            $this->get('/ga/'.$token)->assertRedirect('/k/yoga-vasistha');
 
             $attribution = session(config('tracked_links.session_key'));
             $this->assertSame('telegram_samskrte', $attribution['utm_source'], "{$token} source");
