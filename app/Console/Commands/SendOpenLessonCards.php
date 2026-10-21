@@ -55,7 +55,7 @@ class SendOpenLessonCards extends Command
         $queued = 0;
 
         foreach ($lessons as $schedule) {
-            if ($stage === OpenLessonCardSend::STAGE_ZOOM && $occasions->joinUrl($schedule) === null) {
+            if ($stage === OpenLessonCardSend::STAGE_ZOOM && $occasions->joinUrl($schedule) === null && $occasions->streamLinks($schedule) === []) {
                 $this->alertNoLink($schedule);
                 $this->warn("#{$schedule->id}: нет ссылки на подключение — ссылки не отправлены");
 
