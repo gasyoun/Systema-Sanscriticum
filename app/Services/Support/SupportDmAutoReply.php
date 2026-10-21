@@ -178,6 +178,9 @@ final class SupportDmAutoReply
         private readonly SendPolicyGate $policyGate,
         private readonly Ceilings $ceilings,
         private readonly EnrollmentGroupResolver $enrollGroups,
+        // H6767: сэмплер вариантов ответа (флаг support_reply_variant_sampling,
+        // default OFF). RNG инъекцируется — сеемый в тестах.
+        private readonly ReplyVariantSampler $variants = new ReplyVariantSampler,
     ) {}
 
     public function isEnabled(): bool
@@ -415,10 +418,21 @@ final class SupportDmAutoReply
             && ! $this->recentOutgoingInChat($incoming)
             && ! $this->moneyReport($text)
         ) {
-            $template = MessageTemplate::query()
-                ->boundToSuggesterCategory($category)
-                ->orderByDesc('updated_at')
-                ->first();
+            // H6767: флаг support_reply_variant_sampling меняет «последний
+            // updated_at выигрывает» на равномерный выбор из ВСЕХ строк пула
+            // категории (осознанное изменение — см. policy/sufler.policy.yml,
+            // блок sampling). Флаг OFF — прежний детерминированный выбор.
+            $templateQuery = MessageTemplate::query()->boundToSuggesterCategory($category);
+
+            $variantMeta = [];
+
+            if ($this->variantSamplingEnabled()) {
+                $pool = $templateQuery->get()->all();
+                $template = $this->variants->pickTemplate($pool);
+                $variantMeta = $template === null ? [] : $this->variantMeta('template', (int) $template->id, count($pool));
+            } else {
+                $template = $templateQuery->orderByDesc('updated_at')->first();
+            }
 
             if ($template !== null) {
                 $draft = $template->renderForSupport($user, $text);
@@ -427,6 +441,7 @@ final class SupportDmAutoReply
                     return $this->sendAuto($incoming, $user, $category, $draft, 'template', [
                         'template_id' => $template->id,
                         'template_title' => $template->title,
+                        ...$variantMeta,
                     ]);
                 }
             }
@@ -436,15 +451,26 @@ final class SupportDmAutoReply
         // cooldown-окно на чат: серия сообщений студента не плодит серию болванок.
         // Без linked-пользователя очередь не построить — только hint.
         if ($mayReachStudent && $user !== null && $this->ackEnabledFor($incoming)) {
+            // H6767: при support_reply_variant_sampling ack берётся из пула
+            // services.telegram_support.auto_ack_variants (равномерно, RNG);
+            // пустой пул — прежний единственный auto_ack_text (вариант 0 из
+            // пула размера 1). Флаг OFF — байт-в-байт прежняя строка.
+            $fallbackAck = (string) config(
+                'services.telegram_support.auto_ack_text',
+                "Намасте!\n\nПолучили ваше сообщение и уже разбираемся. Ответим в течение рабочего дня.",
+            );
+
+            $ack = $this->variantSamplingEnabled()
+                ? $this->variants->pickText($this->ackPool(), $fallbackAck)
+                : ['text' => $fallbackAck, 'variant_id' => null, 'pool_size' => null];
+
             return $this->sendAuto(
                 $incoming,
                 $user,
                 $category,
-                (string) config(
-                    'services.telegram_support.auto_ack_text',
-                    "Намасте!\n\nПолучили ваше сообщение и уже разбираемся. Ответим в течение рабочего дня.",
-                ),
+                $ack['text'],
                 'ack',
+                $ack['variant_id'] === null ? [] : $this->variantMeta('ack', $ack['variant_id'], $ack['pool_size']),
             );
         }
 
@@ -504,6 +530,51 @@ final class SupportDmAutoReply
         }
 
         return ! $this->recentOutgoingInChat($incoming);
+    }
+
+    /**
+     * H6767: включён ли сэмплинг вариантов ответа (один флаг на обе ветки —
+     * ack и template). Default OFF (дисциплина флагов дома).
+     */
+    private function variantSamplingEnabled(): bool
+    {
+        return (bool) config('features.support_reply_variant_sampling', false);
+    }
+
+    /**
+     * H6767: пул одобренных парафраз ack'а. Нормализуем к list<string> без
+     * пустых строк: пустой/нестрочный мусор в конфиге = fallback на
+     * единственный auto_ack_text, а не исключение в проде.
+     *
+     * @return list<string>
+     */
+    private function ackPool(): array
+    {
+        $pool = config('services.telegram_support.auto_ack_variants', []);
+
+        if (! is_array($pool)) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            array_map(static fn ($text): string => (string) $text, $pool),
+            static fn (string $text): bool => trim($text) !== '',
+        ));
+    }
+
+    /**
+     * H6767: провенанс варианта в meta dm_auto_sent — только id и размер
+     * пула, НИКОГДА тексты (privacy-забор handoff H6767).
+     *
+     * @return array{variant_kind: string, variant_id: int|string, variant_pool_size: int}
+     */
+    private function variantMeta(string $kind, int|string $variantId, int $poolSize): array
+    {
+        return [
+            'variant_kind' => $kind,
+            'variant_id' => $variantId,
+            'variant_pool_size' => $poolSize,
+        ];
     }
 
     /**
