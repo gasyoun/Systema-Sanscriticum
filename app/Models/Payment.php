@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Jobs\SendGroupChatInviteJob;
 use App\Jobs\SendTelegramMessageJob;
 use App\Mail\CourseWelcomeMail;
 use App\Mail\DepositReceivedMail;
@@ -43,6 +44,9 @@ class Payment extends Model
         'user_id',
         'lead_id',
         'course_id',
+        // Группа, выбранная в личке (подписанная ссылка бота), 20-10-2026.
+        'group_id',
+        'chat_invite_sent_at',
         'promo_code_id',
         'amount',
         // Справочная сумма в валюте (USD/EUR) — только для отчёта, в расчётах не участвует.
@@ -170,6 +174,7 @@ class Payment extends Model
         'consumed_amount' => 'decimal:2',
         'deposit_credit_applied' => 'decimal:2',
         'payment_link_expires_at' => 'datetime',
+        'chat_invite_sent_at' => 'datetime',
         'claim_meta' => 'array',
         // Поблочная оплата: в БД nullable int, но без каста Eloquent отдаёт
         // строку и ломает strict-typed ?int в CuratorNotifier::blocksLabel().
@@ -185,6 +190,12 @@ class Payment extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    /** Группа, выбранная студентом при записи (features.grant_chosen_group). */
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
     }
 
     public function fiscalReceipt(): HasOne
@@ -1085,6 +1096,12 @@ class Payment extends Model
         }
 
         SendTelegramMessageJob::dispatch($this->user_id, $text);
+
+        // 20-10-2026: ссылка-заявка в чат группы. Только реальная оплата;
+        // джоб идемпотентен по chat_invite_sent_at. Флаг OFF → no-op.
+        if (! $this->is_conditional && config('features.paid_chat_join_request')) {
+            SendGroupChatInviteJob::dispatch($this->id);
+        }
     }
 
     // ==========================================
@@ -1607,6 +1624,18 @@ class Payment extends Model
             }
 
             return;
+        }
+
+        // 20-10-2026: на курсе с НЕСКОЛЬКИМИ группами (набор 2026: суббота /
+        // вторник) выбранная в личке группа — единственная выдаваемая. Группа
+        // обязана быть среди групп курса; иначе (и на курсе с одной группой)
+        // поведение прежнее. Флаг money-контура, дефолт OFF.
+        if (config('features.grant_chosen_group')
+            && $this->group_id !== null
+            && count($groupIds) > 1
+            && in_array((int) $this->group_id, array_map('intval', $groupIds), true)
+        ) {
+            $groupIds = [(int) $this->group_id];
         }
 
         // syncWithoutDetaching — добавляет новые связи, не удаляя существующие
