@@ -14,6 +14,7 @@ use App\Services\Anons\PublicationManifest;
 use App\Services\Anons\SessionHealthProbe;
 use App\Services\Stories\StoryPublisher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -49,7 +50,7 @@ class AnonsVideoLaneTest extends TestCase
         MarketingSetting::flushCached();
         config(['services.telegram_story.channel_chat_id' => '@samskrte']);
 
-        Http::fake(function (\Illuminate\Http\Client\Request $request) {
+        Http::fake(function (Request $request) {
             return str_contains($request->url(), '/getChat')
                 ? Http::response(['ok' => true, 'result' => ['id' => -100123]])
                 : Http::response(['ok' => true, 'result' => ['message_id' => 647]]);
