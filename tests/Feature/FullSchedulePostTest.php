@@ -324,4 +324,25 @@ class FullSchedulePostTest extends TestCase
         $this->assertStringContainsString('2-е занятие: 28 октября 2026 (среда), 09:00', $text);
         $this->assertStringNotContainsString('Грамматика по Кочергиной гр.55 (#46', $text);
     }
+
+    /** @test */
+    public function single_odd_row_among_uniform_titles_does_not_flip_to_topics(): void
+    {
+        // Порог агрегатный: одна служебная строка среди однотипного потока
+        // не переводит весь пост в «темы» (иначе все строки получили бы
+        // меткой название курса).
+        $group = Group::factory()->create();
+
+        Schedule::create(['title' => 'Курс X гр.1 (#1, 01.03.27)', 'start' => Carbon::parse('2027-03-01 11:00'), 'group_id' => $group->id]);
+        Schedule::create(['title' => 'Курс X гр.1 (#2, 08.03.27)', 'start' => Carbon::parse('2027-03-08 11:00'), 'group_id' => $group->id]);
+        Schedule::create(['title' => 'Экзамен', 'start' => Carbon::parse('2027-03-15 11:00'), 'group_id' => $group->id]);
+
+        $post = FullSchedulePost::forGroup($group);
+        $this->assertNotNull($post);
+
+        $text = $post->text();
+        $this->assertStringContainsString('1-е занятие: 1 марта 2027 (понедельник), 11:00', $text);
+        $this->assertStringContainsString('3-е занятие: 15 марта 2027 (понедельник), 11:00', $text);
+        $this->assertStringNotContainsString('Курс X гр.1 (#', $text);
+    }
 }

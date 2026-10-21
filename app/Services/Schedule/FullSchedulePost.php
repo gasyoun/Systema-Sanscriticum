@@ -48,7 +48,7 @@ final class FullSchedulePost
     /**
      * @param  string|null  $cadence  «Еженедельно по субботам в 11:00 (по МСК)»
      * @param  array{label: string, date: string}|null  $overview
-     * @param  list<array{label: string, date: string}>  $lessons  метки БЕЗ двоеточия
+     * @param  list<array{label: string, date: string}>  $lessons  метки; тема может содержать двоеточия — строка склеивается как «метка: дата»
      */
     private function __construct(
         public readonly string $title,
@@ -147,15 +147,19 @@ final class FullSchedulePost
         $lastPast = null;
 
         // Меткой строки служит тема занятия (титул без служебного тега серии
-        // «(#13, 08.09.26)»), но только когда у строк потока РЕАЛЬНО разные
-        // темы — универсальный курс с программой («Лекция N. …»). Однотипные
-        // титулы потока («<курс> гр.55», «Занятие #N» — при сравнении цифры
-        // стёрты) повторяли бы название курса в каждой строке — остаётся
-        // позиционное «N-е занятие».
+        // «(#13, 08.09.26)»), но только когда темы есть у БОЛЬШИНСТВА строк
+        // потока и каждая по-своему — универсальный курс с программой
+        // («Лекция N. …»). Метрика: доля строк с уникальным base'ом (цифры
+        // вычищены). Однотипные титулы потока («<курс> гр.55», «Занятие #N»)
+        // и «поток + одна служебная строка» дают долю ~0 — остаётся
+        // позиционное «N-е занятие», а не повтор названия курса в каждой
+        // строке. Границы эвристики: программы, различающиеся только
+        // номерами («Глава 1» / «Глава 2»), остаются позиционными — осознанно.
         $topics = $lessons->map(fn (Schedule $s): ?string => self::topicOf($s->title));
-        $hasTopics = $topics
-            ->map(fn (?string $topic): string => (string) preg_replace('/\d+/u', '', (string) $topic))
-            ->unique()->count() > 1;
+        $normalized = $topics->map(fn (?string $topic): string => (string) preg_replace('/\d+/u', '', (string) $topic));
+        $baseCounts = $normalized->countBy()->all();
+        $singletons = $normalized->reject(fn (string $base): bool => ($baseCounts[$base] ?? 0) > 1)->count();
+        $hasTopics = $singletons * 2 > $lessons->count();
 
         $lessonLines = $lessons->map(function (Schedule $s, int $i) use (&$pastCount, &$lastPast, $topics, $hasTopics): array {
             $isPast = self::isPast($s);
@@ -221,6 +225,10 @@ final class FullSchedulePost
 
         $topic = trim((string) preg_replace('/\s*\(#\d+,\s*[^\)]*\)/u', ' ', $title));
         $topic = (string) preg_replace('/\s{2,}/u', ' ', $topic);
+        // Ручной тег со скобкой внутри («(#1, 26.10.26 (МСК))») оставляет
+        // висячую «)» — срезаем хвостовую после пробела (легитимная скобка
+        // влита в слово — «(саткарьявада)» — не задевается).
+        $topic = (string) preg_replace('/\s+\)$/u', '', $topic);
 
         return $topic === '' ? null : $topic;
     }
