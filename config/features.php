@@ -2040,4 +2040,32 @@ return [
      | config:cache — deploy-шаг человека.
      */
     'mini_course_quick_enroll' => (bool) env('MINI_COURSE_QUICK_ENROLL', false),
+
+    /*
+     | Запись в группу из лички (20-10-2026). Студент пишет «запишите меня на
+     | субботу 11» / «готова оплатить» — EnrollmentGroupResolver по номеру
+     | группы или дню+часу находит ОДНУ группу, автоответ отдаёт чекаут блока
+     | этой группы с подписанным ?group=. Неоднозначно → подсказка куратору со
+     | списком кандидатов. Сумма — только из Tariff (kind 'facts').
+     | ВЫКЛ по умолчанию (денежный контур): SUPPORT_ENROLL_PAY_LINK=true.
+     */
+    'support_enroll_pay_link' => (bool) env('SUPPORT_ENROLL_PAY_LINK', false),
+
+    /*
+     | Выбранная группа в платеже: чекаут пишет payments.group_id из
+     | подписанной ссылки, grantAccess() на курсе с НЕСКОЛЬКИМИ группами
+     | выдаёт только её. Курс с одной группой — поведение прежнее.
+     | ВЫКЛ по умолчанию (money-контур): GRANT_CHOSEN_GROUP=true.
+     */
+    'grant_chosen_group' => (bool) env('GRANT_CHOSEN_GROUP', false),
+
+    /*
+     | После оплаты студенту уходит ссылка-заявка в Telegram-чат его группы
+     | (creates_join_request, бот @zapisi_ORSbot). Заявку бот одобряет сам,
+     | только если у Telegram-аккаунта есть оплаченное активное членство в
+     | этой группе и нет снятия за долг; иначе заявка висит, кураторам алерт.
+     | Требует: бот — админ с can_invite_users, вебхук с chat_join_request
+     | (php artisan zapisi:set-webhook). ВЫКЛ по умолчанию: PAID_CHAT_JOIN_REQUEST=true.
+     */
+    'paid_chat_join_request' => (bool) env('PAID_CHAT_JOIN_REQUEST', false),
 ];

@@ -16,6 +16,7 @@ use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use App\Services\ReferralService;
 use App\Support\Consent\ConsentRules;
+use App\Support\EnrollmentGroupLink;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -89,6 +90,13 @@ class PaymentController extends Controller
         // Флаг OFF → параметр игнорируется, поведение байт-в-байт прежнее.
         $isGift = (bool) config('features.gift_certificates') && $request->boolean('gift');
 
+        // 20-10-2026: группа, выбранная в личке (ссылка бота). Поле клиентское —
+        // подпись и принадлежность курсу тарифа проверяются здесь авторитетно;
+        // неверная подпись = обычный платёж без группы. Флаг OFF → всегда null.
+        $chosenGroupId = (config('features.grant_chosen_group') && ! $isGift)
+            ? EnrollmentGroupLink::resolve($tariff, $request->input('group_id'), $request->input('gsig'))?->id
+            : null;
+
         // A paid entitlement has no deliverable without a course group. Refuse the
         // checkout before creating a Payment or asking Tochka for a bank link; once
         // the course is configured, the customer can submit the checkout again.
@@ -159,7 +167,7 @@ class PaymentController extends Controller
         // Только запись в БД — в транзакции. HTTP-вызов в Tochka делается ПОСЛЕ
         // commit, иначе медленный/упавший эквайринг держит row-lock на
         // promo_codes/users/payments всё время сетевого запроса (см. DepositController).
-        $result = DB::transaction(function () use ($request, $prana, $user, $tariff, $isGift) {
+        $result = DB::transaction(function () use ($request, $prana, $user, $tariff, $isGift, $chosenGroupId) {
             // Auth может держать модель User, загруженную до начала транзакции.
             // При включённом флаге перечитываем и лочим кошелёк первым действием:
             // все расчёты и списание ниже используют один DB-authoritative снимок.
@@ -351,6 +359,8 @@ class PaymentController extends Controller
                 'user_id' => $user->id,
                 'lead_id' => $leadId,
                 'course_id' => $tariff->course->id ?? null,
+                // 20-10-2026: группа из подписанной ссылки бота (подарок — без группы).
+                'group_id' => $chosenGroupId,
                 'promo_code_id' => $promo?->id,
                 'amount' => $finalPrice,
                 'discount_percent' => $discount['percent'],

@@ -343,6 +343,13 @@ document.addEventListener('alpine:init', () => {
                              lose it, which used to charge full price silently. Re-resolved
                              authoritatively server-side (it is client-supplied). --}}
                         <input type="hidden" name="promo_code" value="{{ $appliedPromo?->code }}">
+                        {{-- 20-10-2026: группа из ссылки бота лички (подписана). Сервер
+                             перепроверяет подпись и курс; флаг features.grant_chosen_group. --}}
+                        @if(!empty($chosenGroup))
+                            <input type="hidden" name="group_id" value="{{ $chosenGroup->id }}">
+                            <input type="hidden" name="gsig" value="{{ request()->query('gsig') }}">
+                            <p class="text-sm text-gray-600">Группа: <strong>{{ $chosenGroup->name }}</strong></p>
+                        @endif
 
                         @auth
                             {{-- H1396 §2 — mark that this form was rendered for a logged-in
