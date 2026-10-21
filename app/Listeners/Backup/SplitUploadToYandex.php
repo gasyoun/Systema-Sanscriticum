@@ -74,11 +74,26 @@ use Throwable;
  *
  * Любой сбой здесь НЕ должен портить уже успешный local-бэкап: логируем и
  * выходим — за свежестью off-site следят guards независимо.
+ *
+ * H6556 (прод 12-10-2026): докатку стал блокировать не Яндекс, а флапающий
+ * sabre-листинг (backup:list OK 17:03/18:22 UTC, stall 19:00–19:20; raw curl
+ * PROPFIND 207 x3 стабильно в тот же час). Листинг off-site в докатке
+ * (resumePendingGroups) идёт СВЕЖИМ subprocess'ом (backup:list-yandex-parts,
+ * по образцу backup:verify-yandex-part), имена и размеры — из одного
+ * Depth-1 PROPFIND свежего хендла; сабра в докатке остаются только записи
+ * (PUT/удаление частей).
  */
 class SplitUploadToYandex
 {
     /** Секунды на один свежепроцессный PROPFIND части. */
     private const VERIFY_TIMEOUT_SECONDS = 120;
+
+    /**
+     * Секунды на свежепроцессный листинг off-site (один Depth-1 PROPFIND по
+     * каталогу с сотнями частей — сотни секунд потолок на мёртвой сети;
+     * зависание дольше этого — уже не «медленный Яндекс», а стоп-сигнал).
+     */
+    private const LISTING_TIMEOUT_SECONDS = 300;
 
     /**
      * Худший случай одной части: PUT под CURLOPT_TIMEOUT=300
@@ -104,6 +119,9 @@ class SplitUploadToYandex
 
     /** @var bool Гейт верификации (тесты выключают — subprocess не видит fake-диски). */
     private bool $verifyEnabled = true;
+
+    /** @var bool Гейт свежепроцессного листинга докатки (тесты выключают — subprocess не видит fake-диски). */
+    private bool $freshListEnabled = true;
 
     /** @var int|null Сколько групп после resumePendingGroups() остались неполными (H3410, для громкой строки исхода). */
     private ?int $incompleteGroupsRemaining = null;
@@ -159,6 +177,8 @@ class SplitUploadToYandex
             return;
         }
 
+        $this->freshListEnabled = (bool) config('backup.backup.split_upload.fresh_list', true);
+
         $name = (string) config('backup.backup.name', '');
         if ($name === '') {
             return;
@@ -207,6 +227,7 @@ class SplitUploadToYandex
                 $dir === '.' ? '' : $dir,
                 '',
                 (int) config('backup.backup.split_upload.max_part_mb', 700) * 1024 * 1024,
+                $targetDiskName,
             );
         } catch (Throwable $e) {
             Log::error('split-upload: докатка не удалась, local-копия в безопасности', [
@@ -273,7 +294,7 @@ class SplitUploadToYandex
 
         // H3371: сначала добиваем незавершённые группы прошлых прогонов,
         // потом льём свою — свежий off-site важнее нового ствола.
-        $this->resumePendingGroups($sourceDisk, $target, $dir, $stem, $maxPartBytes);
+        $this->resumePendingGroups($sourceDisk, $target, $dir, $stem, $maxPartBytes, $targetDiskName);
 
         // Идемпотентность повторного запуска: группа уже уехала целиком — выходим.
         if ($this->groupAlreadyUploaded($target, $plan)) {
@@ -484,25 +505,25 @@ class SplitUploadToYandex
         string $dir,
         string $currentStem,
         int $maxPartBytes,
+        string $targetDiskName = '',
     ): void {
         if ($maxPartBytes < 1) {
             return;
         }
 
-        try {
-            $basenames = array_map(
-                fn (string $file): string => basename($file),
-                $target->files($dir),
-            );
-        } catch (Throwable $e) {
-            Log::warning('split-upload: листинг off-site не удался, докатка отложена', [
-                'exception' => $e->getMessage(),
-            ]);
+        // H6556: листинг off-site — свежим процессом (свежий curl-хендл):
+        // флап персистентного sabre-хендла ронял докатку целиком. Вместе с
+        // именами приходит размер каждой части (один Depth-1 PROPFIND), так
+        // что сверка раскладки ниже тоже не ходит в sabre.
+        $listing = $this->listOffsite($target, $dir, $targetDiskName);
+
+        if ($listing === null) {
+            Log::warning('split-upload: листинг off-site не удался, докатка отложена');
 
             return;
         }
 
-        foreach (SplitGroupMath::parseGroups($basenames) as $stem => $group) {
+        foreach (SplitGroupMath::parseGroups(array_keys($listing)) as $stem => $group) {
             if ($stem === $currentStem || SplitGroupMath::isComplete($group)) {
                 continue;
             }
@@ -528,10 +549,12 @@ class SplitUploadToYandex
 
             // Уже лежащие куски обязаны совпасть с раскладкой байт-в-байт по
             // размеру: иначе это мусор от другой конфигурации, не докатываем.
+            // Размеры берутся из свежепроцессного листинга (H6556), не из
+            // sabre-size() на каждую часть.
             $consistent = true;
             foreach (array_keys($group['indices']) as $index) {
                 $placed = $plan[$index - 1] ?? null;
-                if ($placed === null || (int) $target->size($placed['path']) !== $placed['length']) {
+                if ($placed === null || ($listing[basename($placed['path'])] ?? null) !== $placed['length']) {
                     $consistent = false;
 
                     break;
@@ -598,6 +621,80 @@ class SplitUploadToYandex
                 break;
             }
         }
+    }
+
+    /**
+     * Листинг off-site каталога для докатки: карта basename => размер.
+     *
+     * H6556: по умолчанию — свежий subprocess (backup:list-yandex-parts,
+     * свежий curl-хендл, один Depth-1 PROPFIND на каталог); null = листинг
+     * не удался в пределах таймаута (кривые креды/мёртвая сеть — негативный
+     * контроль обязан выйти, а не зависнуть). Гейт fresh_list выключен
+     * (тесты: subprocess не видит Storage::fake) — листим in-process, как
+     * до H6556.
+     *
+     * @return array<string, int>|null
+     */
+    private function listOffsite(Filesystem $target, string $dir, string $targetDiskName): ?array
+    {
+        if (! $this->freshListEnabled || $targetDiskName === '') {
+            try {
+                $map = [];
+                foreach ($target->files($dir) as $file) {
+                    $map[basename($file)] = (int) $target->size($file);
+                }
+            } catch (Throwable) {
+                return null;
+            }
+
+            return $map;
+        }
+
+        $artisan = defined('ARTISAN_BINARY') && is_file(ARTISAN_BINARY)
+            ? ARTISAN_BINARY
+            : base_path('artisan');
+
+        try {
+            $startedAt = microtime(true);
+            $result = Process::timeout(self::LISTING_TIMEOUT_SECONDS)->run([
+                PHP_BINARY,
+                $artisan,
+                'backup:list-yandex-parts',
+                $dir,
+                '--disk='.$targetDiskName,
+            ]);
+        } catch (Throwable) {
+            return null;
+        }
+
+        if (! $result->successful()) {
+            Log::warning('split-upload: свежепроцессный листинг off-site не удался', [
+                'disk' => $targetDiskName,
+                'dir' => $dir,
+                'stderr' => mb_substr(trim($result->errorOutput()), 0, 300),
+            ]);
+
+            return null;
+        }
+
+        $map = [];
+        foreach (preg_split('/\r?\n/', trim($result->output())) ?: [] as $line) {
+            if ($line === '' || ! str_contains($line, "\t")) {
+                continue;
+            }
+
+            [$name, $size] = explode("\t", $line, 2);
+            $map[$name] = (int) $size;
+        }
+
+        Log::info('split-upload: листинг off-site свежим процессом', [
+            'disk' => $targetDiskName,
+            'dir' => $dir,
+            'files' => count($map),
+            'seconds' => round(microtime(true) - $startedAt, 1),
+        ]);
+
+        return $map;
     }
 
     /**

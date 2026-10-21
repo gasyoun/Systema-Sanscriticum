@@ -6,8 +6,10 @@ namespace Tests\Feature\Backup;
 
 use App\Listeners\Backup\SplitUploadToYandex;
 use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Backup\Events\BackupWasSuccessful;
 use Tests\TestCase;
@@ -29,6 +31,10 @@ class SplitUploadToYandexTest extends TestCase
             // Свежепроцессная верификация в тестах выключена: subprocess не
             // видит Storage::fake. Сама команда покрыта VerifyYandexPartTest.
             'backup.backup.split_upload.verify' => false,
+            // Свежепроцессный листинг докатки — по той же причине (H6556):
+            // subprocess не видит fake-диски. Сам механизм покрыт тестами
+            // fresh_list ниже (Process::fake).
+            'backup.backup.split_upload.fresh_list' => false,
         ]);
         Storage::fake('local');
         Storage::fake('yandex_disk');
@@ -310,6 +316,90 @@ class SplitUploadToYandexTest extends TestCase
         $this->assertTrue($target->exists(self::NAME."/{$stem}.part-02-of-04.zip"));
         $this->assertTrue($target->exists(self::NAME."/{$stem}.part-03-of-04.zip"));
         $this->assertTrue($target->exists(self::NAME."/{$stem}.part-04-of-04.zip"));
+    }
+
+    /**
+     * H6556: при включённом fresh_list листинг off-site приходит ИЗ
+     * subprocess'а (backup:list-yandex-parts), а не с fake-диска: раскладка
+     * в выводе процесса расходится с диском — докатка обязана поверить
+     * процессу и отказаться от группы (мусор от другой конфигурации).
+     */
+    public function test_resume_uses_fresh_process_listing_not_the_local_disk_view(): void
+    {
+        config(['backup.backup.split_upload.fresh_list' => true]);
+
+        $original = random_bytes(2 * 1024 * 1024 + 500);
+        $stem = '2026-08-22-17-09-58';
+        Storage::disk('local')->put(self::NAME."/{$stem}.zip", $original);
+        $target = Storage::disk('yandex_disk');
+        $target->put(self::NAME."/{$stem}.part-01-of-03.zip", substr($original, 0, 1024 * 1024));
+        $target->put(self::NAME."/{$stem}.part-02-of-03.zip", substr($original, 1024 * 1024, 1024 * 1024));
+        $this->seedLocalArchive('2026-08-23-10-00-00', 100);
+
+        // Процесс отвечает размером part-02, расходящимся с раскладкой
+        // (sabre-листинг на диске показывает честный 1048576 — и он не
+        // должен использоваться).
+        Process::fake([
+            '*backup:list-yandex-parts*' => Process::result(
+                output: "{$stem}.part-01-of-03.zip\t1048576\n{$stem}.part-02-of-03.zip\t999\n",
+            ),
+        ]);
+        Log::spy();
+
+        (new SplitUploadToYandex)->resumeOffsite();
+
+        Process::assertRan(fn (PendingProcess $process): bool => str_contains(
+            implode(' ', (array) $process->command),
+            'backup:list-yandex-parts',
+        ));
+
+        $this->assertFalse(
+            $target->exists(self::NAME."/{$stem}.part-03-of-03.zip"),
+            'Раскладка, не сходящаяся по СВЕЖЕМУ листингу, не докатывается.'
+        );
+        Log::shouldHaveReceived('warning')
+            ->withArgs(fn (string $message): bool => str_contains($message, 'не сходится с локальным архивом'))
+            ->once();
+    }
+
+    /**
+     * H6556, негативный контроль: кривые креды/мёртвая сеть — subprocess
+     * листинга падает (exit 1) в пределах таймаута, докатка честно
+     * откладывается и НЕ зависает, части не льются.
+     */
+    public function test_resume_defers_when_fresh_process_listing_fails(): void
+    {
+        config(['backup.backup.split_upload.fresh_list' => true]);
+
+        $original = random_bytes(2 * 1024 * 1024 + 500);
+        $stem = '2026-08-22-17-09-58';
+        Storage::disk('local')->put(self::NAME."/{$stem}.zip", $original);
+        $target = Storage::disk('yandex_disk');
+        $target->put(self::NAME."/{$stem}.part-01-of-03.zip", substr($original, 0, 1024 * 1024));
+        $this->seedLocalArchive('2026-08-23-10-00-00', 100);
+
+        Process::fake([
+            '*backup:list-yandex-parts*' => Process::result(
+                output: '',
+                errorOutput: 'curl: (7) Failed to connect: Access denied',
+                exitCode: 1,
+            ),
+        ]);
+        Log::spy();
+
+        (new SplitUploadToYandex)->resumeOffsite();
+
+        $this->assertFalse(
+            $target->exists(self::NAME."/{$stem}.part-02-of-03.zip"),
+            'Без листинга части не льются — докатка отложена до следующего прогона.'
+        );
+        Log::shouldHaveReceived('warning')
+            ->withArgs(fn (string $message): bool => str_contains($message, 'листинг off-site не удался, докатка отложена'))
+            ->once();
+        Log::shouldHaveReceived('warning')
+            ->withArgs(fn (string $message, array $context): bool => str_contains($message, 'свежепроцессный листинг off-site не удался')
+                && str_contains((string) ($context['stderr'] ?? ''), 'Access denied'))
+            ->once();
     }
 
     /**

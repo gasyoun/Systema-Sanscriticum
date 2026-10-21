@@ -119,6 +119,12 @@ return [
             // 900 = 1200 минус запас на bootstrap, листинг off-site и чистку.
             // 0 — без ограничения (поведение до #2411).
             'resume_budget_seconds' => (int) env('BACKUP_RESUME_BUDGET_SECONDS', 900),
+            // Свежепроцессный листинг off-site в докатке (backup:list-yandex-parts,
+            // H6556): флап персистентного sabre-хендла (прод 12-10-2026, stall
+            // 19:00–19:20 UTC при живом raw curl) ронял листинг докатки целиком.
+            // Листинг идёт отдельным коротким процессом со свежим curl-хендлом;
+            // сабра в докатке остаются только записи (PUT/удаление частей).
+            'fresh_list' => (bool) env('BACKUP_FRESH_LIST_OFFSITE', true),
         ],
 
         'temporary_directory' => storage_path('app/backup-temp'),
