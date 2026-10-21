@@ -169,6 +169,42 @@ class SupportDmEnrollPayLinkTest extends TestCase
         $this->assertStringContainsString('gsig=', (string) $this->studentOutgoing()?->text);
     }
 
+    public function test_old_human_message_does_not_block_link(): void
+    {
+        // Прод 21-10: исходящее школы трёхчасовой давности о другом заглушало бота.
+        $this->message('Приём ДЗ открыт', 'outgoing', '2026-10-20 15:00:00', 'unknown');
+        $this->message('Суббота 11 - имеете в виду, в 11:00?', at: '2026-10-20 18:07:23');
+        $incoming = $this->message('Можно меня тогда на нее записать?');
+
+        $result = app(SupportDmAutoReply::class)->handle($incoming, $this->user->id, 'private');
+
+        $this->assertSame('sent', $result['status']);
+        $this->assertStringContainsString('gsig=', (string) $this->studentOutgoing()?->text);
+    }
+
+    public function test_ready_link_hint_is_not_swallowed_by_old_open_hint(): void
+    {
+        // Старая «открытая» подсказка в этом чате (прод: висела с 30-09).
+        $old = $this->message('старый вопрос', at: '2026-09-30 17:00:00');
+        SupportAiReplyEvent::create([
+            'telegram_support_message_id' => $old->id,
+            'event_type' => SupportDmAutoReply::EVENT_HINTED,
+            'meta' => ['via' => SupportDmAutoReply::VIA, 'series_count' => 7],
+        ]);
+        $this->message('Суббота 11, это и есть с нуля', 'outgoing', '2026-10-20 18:05:00', 'curator');
+        $this->message('Суббота 11 - имеете в виду, в 11:00?', at: '2026-10-20 18:07:23');
+        $incoming = $this->message('Можно меня тогда на нее записать?');
+
+        app(SupportDmAutoReply::class)->handle($incoming, $this->user->id, 'private');
+
+        $this->assertNull($this->studentOutgoing());
+        Http::assertSent(fn ($r) => str_contains((string) ($r['text'] ?? ''), 'Готовая ссылка на оплату'));
+        $this->assertTrue(SupportAiReplyEvent::query()
+            ->where('telegram_support_message_id', $incoming->id)
+            ->where('event_type', SupportDmAutoReply::EVENT_HINTED)
+            ->exists());
+    }
+
     public function test_flag_off_sends_no_pay_link(): void
     {
         config(['features.support_enroll_pay_link' => false]);

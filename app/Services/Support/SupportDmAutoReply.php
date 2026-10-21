@@ -121,6 +121,9 @@ final class SupportDmAutoReply
      * Просьба записать в группу / готовность оплатить / «дайте ссылку на
      * оплату» (20-10-2026). Узко: «запись урока» сюда не попадает.
      */
+    /** Окно «человек уже в разговоре» для ветки записи, минут. */
+    private const ENROLL_HUMAN_WINDOW_MINUTES = 30;
+
     private const ENROLL_INTENT_PATTERN = '/запиш(?:ите|ете|ешь)|записать|записатьс|записываюсь|готов[аы]?\s+(?:оплатить|платить|оплачивать)|ссылк\p{L}*\s+(?:на|для)\s+оплат|как\s+(?:можно\s+)?оплатить|куда\s+(?:оплатить|платить)|хочу\s+(?:оплатить|записат|в\s+групп)/iu';
 
     /** H5452: подсказка не ушла куратору — сообщение отфильтровано как шум (reason в meta). */
@@ -691,6 +694,7 @@ final class SupportDmAutoReply
         bool $aged = false,
         ?array $resolvedFacts = null,
         ?string $escalation = null,
+        bool $standalone = false,
     ): array {
         // H5452: шум-фильтр на ХИНТ. Сервисные чаты и инфра-алерты («система
         // пишет сама себе») не занимают саппорт-полосу куратора. Молчаливое
@@ -711,7 +715,9 @@ final class SupportDmAutoReply
         // серии прилипает к открытому хинту.
         $fire = $this->moneyIntent($text) || $this->hasTrialIntent($text);
 
-        if ($this->dedupEnabled()) {
+        // $standalone: подсказка несёт новое действие (готовая ссылка на оплату),
+        // её нельзя дописать в старую серию — та могла висеть неделями (21-10-2026).
+        if ($this->dedupEnabled() && ! $standalone) {
             $openHint = $this->openHintInChat($incoming);
 
             if ($openHint !== null) {
@@ -1442,7 +1448,8 @@ final class SupportDmAutoReply
             return $this->hintComplex($incoming, $user, $category ?? SupportAnswerSuggestion::CATEGORY_PAYMENT, $text, false, null,
                 $names !== ''
                     ? "🧭 Студент хочет записаться, группа неоднозначна: {$names}. Уточните и пришлите ссылку на оплату."
-                    : '🧭 Студент хочет записаться, но подходящей группы с активным тарифом не нашлось. Ответьте сами.');
+                    : '🧭 Студент хочет записаться, но подходящей группы с активным тарифом не нашлось. Ответьте сами.',
+                standalone: true);
         }
 
         $tariff = $resolved['tariff'];
@@ -1454,7 +1461,8 @@ final class SupportDmAutoReply
 
         if ($this->recentHumanOutgoingInChat($incoming)) {
             return $this->hintComplex($incoming, $user, $category ?? SupportAnswerSuggestion::CATEGORY_PAYMENT, $text, false, null,
-                "🧭 Готовая ссылка на оплату (группа «{$group->name}», блок {$resolved['block']}, {$price} ₽): {$resolved['url']}");
+                "🧭 Готовая ссылка на оплату (группа «{$group->name}», блок {$resolved['block']}, {$price} ₽): {$resolved['url']}",
+                standalone: true);
         }
 
         if (! TelegramSendGuard::claimKey('enroll-pay-link:'.$incoming->telegram_chat_id.':'.$group->id, 86400)) {
@@ -1480,12 +1488,13 @@ final class SupportDmAutoReply
     /** Свежее исходящее в чате, написанное человеком (не ботом). */
     private function recentHumanOutgoingInChat(TelegramSupportMessage $incoming): bool
     {
-        $hours = max(1, (int) config('services.telegram_support.auto_ack_cooldown_hours', 6));
-
+        // Человек «уже отвечает» — только живой разговор, а не любое исходящее
+        // за cooldown ack'а: письмо школы трёхчасовой давности о другом не
+        // повод молчать на «запишите меня» (21-10-2026).
         return TelegramSupportMessage::query()
             ->where('telegram_chat_id', $incoming->telegram_chat_id)
             ->where('direction', 'outgoing')
-            ->where('sent_at', '>=', now()->subHours($hours))
+            ->where('sent_at', '>=', now()->subMinutes(self::ENROLL_HUMAN_WINDOW_MINUTES))
             ->where(fn ($q) => $q->whereNull('responder_type')->orWhere('responder_type', '!=', 'ai'))
             ->exists();
     }
