@@ -176,6 +176,7 @@ class TrackedLinkTest extends TestCase
             'vas26-ors-c' => 'vas26_c',
             'vas26-ors-t' => 'vas26_t',
             'vas26-ors-h' => 'vas26_h',
+            'vas26-ors-p' => 'vas26_p',
         ] as $token => $content) {
             $this->flushSession();
             $this->get('/ga/'.$token)->assertRedirect('/k/yoga-vasistha');
@@ -196,6 +197,7 @@ class TrackedLinkTest extends TestCase
             'syn26-ors-c' => 'syn26_c',
             'syn26-ors-t' => 'syn26_t',
             'syn26-ors-h' => 'syn26_h',
+            'syn26-ors-p' => 'syn26_p',
         ] as $token => $content) {
             $this->flushSession();
             $this->get('/ga/'.$token)->assertRedirect('/k/sintaksis-sanskrita');
