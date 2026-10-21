@@ -47,6 +47,7 @@ class Payment extends Model
         // Группа, выбранная в личке (подписанная ссылка бота), 20-10-2026.
         'group_id',
         'chat_invite_sent_at',
+        'telegram_support_contact_id',
         'promo_code_id',
         'amount',
         // Справочная сумма в валюте (USD/EUR) — только для отчёта, в расчётах не участвует.
@@ -196,6 +197,12 @@ class Payment extends Model
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
+    }
+
+    /** Контакт лички, которому бот выдал ссылку на оплату (21-10-2026). */
+    public function telegramSupportContact(): BelongsTo
+    {
+        return $this->belongsTo(TelegramSupportContact::class);
     }
 
     public function fiscalReceipt(): HasOne

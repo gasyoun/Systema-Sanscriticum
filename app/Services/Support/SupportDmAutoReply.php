@@ -275,7 +275,9 @@ final class SupportDmAutoReply
         // 20-10-2026: «запишите меня / готова оплатить» + группа однозначно
         // понятна из переписки → чекаут блока этой группы. Стоит до факт-ветки:
         // та гасит любое денежное намерение, а здесь деньги считает система.
-        if ($mayReachStudent && $user !== null) {
+        // 21-10-2026: и для непривязанного контакта — ссылка понесёт его
+        // (подписанно), после оплаты контакт привяжется к плательщику.
+        if ($mayReachStudent) {
             $enroll = $this->enrollPayLink($incoming, $user, $category, $text);
 
             if ($enroll !== null) {
@@ -570,7 +572,7 @@ final class SupportDmAutoReply
      */
     private function sendAuto(
         TelegramSupportMessage $incoming,
-        User $user,
+        ?User $user,
         ?string $category,
         string $draft,
         string $kind,
@@ -648,16 +650,22 @@ final class SupportDmAutoReply
             );
         }
 
-        $outgoing = $this->replies->queueAiReply(
-            $user,
-            $draft,
-            (int) $incoming->telegram_message_id,
-            (int) $incoming->telegram_support_account_id ?: null,
-        );
+        // Без привязки (21-10-2026, только ветка записи) — прямо в чат лички.
+        $chat = $user === null ? $incoming->chat()->first() : null;
+        $outgoing = $user !== null
+            ? $this->replies->queueAiReply(
+                $user,
+                $draft,
+                (int) $incoming->telegram_message_id,
+                (int) $incoming->telegram_support_account_id ?: null,
+            )
+            : ($chat !== null
+                ? $this->replies->queueUnlinkedDmMessage($chat, $draft, (int) $incoming->telegram_message_id, self::VIA)
+                : null);
 
         if ($outgoing === null) {
             Log::warning('SupportDmAutoReply: не удалось поставить pending исходящее', [
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
                 'incoming_id' => $incoming->id,
                 'kind' => $kind,
             ]);
@@ -1410,7 +1418,7 @@ final class SupportDmAutoReply
      *
      * @return array{status: string, category: ?string}|null null — ветка не про это сообщение
      */
-    private function enrollPayLink(TelegramSupportMessage $incoming, User $user, ?string $category, string $text): ?array
+    private function enrollPayLink(TelegramSupportMessage $incoming, ?User $user, ?string $category, string $text): ?array
     {
         if (! (bool) config('features.support_enroll_pay_link', false)
             || preg_match(self::ENROLL_INTENT_PATTERN, $text) !== 1
@@ -1434,7 +1442,17 @@ final class SupportDmAutoReply
             ->pluck('text')
             ->all();
 
-        $resolved = $this->enrollGroups->resolve([$text, ...$history]);
+        // Без привязки к кабинету — только контакт лички, ещё ни к кому не
+        // привязанный: ссылку подпишем на него, привязку сделает оплата.
+        $contact = null;
+        if ($user === null) {
+            $contact = $incoming->contact()->with('chat')->first();
+            if ($contact === null || $contact->linked_user_id !== null || $contact->chat === null) {
+                return null;
+            }
+        }
+
+        $resolved = $this->enrollGroups->resolve([$text, ...$history], $contact);
 
         if ($resolved === null) {
             return null;

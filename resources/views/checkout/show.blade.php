@@ -348,6 +348,10 @@ document.addEventListener('alpine:init', () => {
                         @if(!empty($chosenGroup))
                             <input type="hidden" name="group_id" value="{{ $chosenGroup->id }}">
                             <input type="hidden" name="gsig" value="{{ request()->query('gsig') }}">
+                            @if(!empty($chosenContact))
+                                <input type="hidden" name="tgc" value="{{ $chosenContact->id }}">
+                                <input type="hidden" name="csig" value="{{ request()->query('csig') }}">
+                            @endif
                             <p class="text-sm text-gray-600">Группа: <strong>{{ $chosenGroup->name }}</strong></p>
                         @endif
 

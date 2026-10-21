@@ -98,11 +98,18 @@ class CheckoutController extends Controller
             ? EnrollmentGroupLink::resolve($tariff, $request->query('group'), $request->query('gsig'))
             : null;
 
+        // 21-10-2026: контакт лички без привязки едет дальше в форму (подпись
+        // проверит PaymentController); на странице его не показываем.
+        $chosenContact = $chosenGroup !== null
+            ? EnrollmentGroupLink::resolveContact($tariff, $chosenGroup, $request->query('tgc'), $request->query('csig'))
+            : null;
+
         return view('checkout.show', array_merge([
             'tariff' => $tariff,
             'page' => $page,
             'isGift' => $isGift,
             'chosenGroup' => $chosenGroup,
+            'chosenContact' => $chosenContact,
         ], $state));
     }
 

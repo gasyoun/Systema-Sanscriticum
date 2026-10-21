@@ -7,6 +7,7 @@ namespace App\Services\Support;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Tariff;
+use App\Models\TelegramSupportContact;
 use App\Support\EnrollmentGroupLink;
 use Illuminate\Support\Collection;
 
@@ -52,9 +53,10 @@ final class EnrollmentGroupResolver
      * но совпала не ровно одна группа (кандидаты в candidates).
      *
      * @param  list<string>  $texts  входящие студента, НОВЫЕ ПЕРВЫМИ
+     * @param  ?TelegramSupportContact  $contact  непривязанный контакт — едет в ссылку
      * @return array{group: ?Group, course: ?Course, tariff: ?Tariff, block: ?int, url: ?string, candidates: Collection<int, Group>}|null
      */
-    public function resolve(array $texts): ?array
+    public function resolve(array $texts, ?TelegramSupportContact $contact = null): ?array
     {
         $texts = array_values(array_filter(array_map('strval', $texts), fn (string $t) => trim($t) !== ''));
         if ($texts === []) {
@@ -80,7 +82,7 @@ final class EnrollmentGroupResolver
 
             $matches = $this->narrow($matches->values(), $all);
 
-            return $this->result($matches);
+            return $this->result($matches, $contact);
         }
 
         return null;
@@ -133,7 +135,7 @@ final class EnrollmentGroupResolver
      * @param  Collection<int, Group>  $matches
      * @return array{group: ?Group, course: ?Course, tariff: ?Tariff, block: ?int, url: ?string, candidates: Collection<int, Group>}
      */
-    private function result(Collection $matches): array
+    private function result(Collection $matches, ?TelegramSupportContact $contact = null): array
     {
         $none = ['group' => null, 'course' => null, 'tariff' => null, 'block' => null, 'url' => null, 'candidates' => $matches];
 
@@ -168,7 +170,7 @@ final class EnrollmentGroupResolver
             'course' => $course,
             'tariff' => $tariff,
             'block' => $block,
-            'url' => EnrollmentGroupLink::url($tariff, $group),
+            'url' => EnrollmentGroupLink::url($tariff, $group, $contact),
             'candidates' => $matches,
         ];
     }

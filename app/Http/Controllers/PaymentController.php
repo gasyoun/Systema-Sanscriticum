@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Group;
 use App\Models\Lead;
 use App\Models\Payment;
 use App\Models\PromoCode;
 use App\Models\Tariff;
+use App\Models\TelegramSupportContact;
 use App\Models\User;
 use App\Services\AttributionService;
 use App\Services\Consent\ConsentRecorder;
@@ -97,6 +99,25 @@ class PaymentController extends Controller
             ? EnrollmentGroupLink::resolve($tariff, $request->input('group_id'), $request->input('gsig'))?->id
             : null;
 
+        // 21-10-2026: контакт лички, которому бот дал ссылку (подпись — от той же
+        // группы). Гость с уже существующим email уйдёт на вход — запоминаем
+        // ссылку как intended, чтобы после входа вернуться к этой же группе.
+        $chosenGroup = $chosenGroupId !== null ? Group::query()->find($chosenGroupId) : null;
+        $chosenContactId = $chosenGroup !== null
+            ? EnrollmentGroupLink::resolveContact($tariff, $chosenGroup, $request->input('tgc'), $request->input('csig'))?->id
+            : null;
+
+        if ($chosenGroup !== null
+            && ! auth()->check()
+            && User::where('email', User::normalizeEmail($request->input('email')))->exists()
+        ) {
+            session()->put('url.intended', EnrollmentGroupLink::url(
+                $tariff,
+                $chosenGroup,
+                $chosenContactId !== null ? TelegramSupportContact::query()->find($chosenContactId) : null,
+            ));
+        }
+
         // A paid entitlement has no deliverable without a course group. Refuse the
         // checkout before creating a Payment or asking Tochka for a bank link; once
         // the course is configured, the customer can submit the checkout again.
@@ -167,7 +188,7 @@ class PaymentController extends Controller
         // Только запись в БД — в транзакции. HTTP-вызов в Tochka делается ПОСЛЕ
         // commit, иначе медленный/упавший эквайринг держит row-lock на
         // promo_codes/users/payments всё время сетевого запроса (см. DepositController).
-        $result = DB::transaction(function () use ($request, $prana, $user, $tariff, $isGift, $chosenGroupId) {
+        $result = DB::transaction(function () use ($request, $prana, $user, $tariff, $isGift, $chosenGroupId, $chosenContactId) {
             // Auth может держать модель User, загруженную до начала транзакции.
             // При включённом флаге перечитываем и лочим кошелёк первым действием:
             // все расчёты и списание ниже используют один DB-authoritative снимок.
@@ -361,6 +382,7 @@ class PaymentController extends Controller
                 'course_id' => $tariff->course->id ?? null,
                 // 20-10-2026: группа из подписанной ссылки бота (подарок — без группы).
                 'group_id' => $chosenGroupId,
+                'telegram_support_contact_id' => $chosenContactId,
                 'promo_code_id' => $promo?->id,
                 'amount' => $finalPrice,
                 'discount_percent' => $discount['percent'],
