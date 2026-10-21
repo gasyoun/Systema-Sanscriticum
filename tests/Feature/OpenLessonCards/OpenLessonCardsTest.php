@@ -254,6 +254,46 @@ class OpenLessonCardsTest extends TestCase
         $this->assertNotNull(OpenLessonRsvp::query()->where('chat_id', '1001')->value('zoom_sent_at'));
     }
 
+    public function test_stream_links_go_as_buttons_under_zoom(): void
+    {
+        $this->fakeTelegram();
+        $schedule = $this->lesson('2026-10-14 12:25', ['stream_links' => [
+            'rutube.ru/video/4834fe5da0ae9b02eb3ffe955351060b',
+            'vkvideo.ru/live-88831040_456240535',
+            'https://youtube.com/live/lD2LZPrz5tM',
+            '  ',
+        ]]);
+        OpenLessonRsvp::create(['schedule_id' => $schedule->id, 'chat_id' => '1001', 'going_at' => now()]);
+
+        $this->artisan('open-lessons:cards --stage=zoom')->assertSuccessful();
+
+        $zoom = $this->sent('sendMessage', '1001');
+        $this->assertCount(1, $zoom);
+        $this->assertStringContainsString('смотрите трансляцию', (string) $zoom[0]['text']);
+        $keyboard = json_decode((string) $zoom[0]['reply_markup'], true)['inline_keyboard'];
+        $this->assertSame('https://zoom.us/j/123', $keyboard[0][0]['url']);
+        $this->assertSame([
+            ['text' => '📺 Rutube', 'url' => 'https://rutube.ru/video/4834fe5da0ae9b02eb3ffe955351060b'],
+            ['text' => '📺 VK Видео', 'url' => 'https://vkvideo.ru/live-88831040_456240535'],
+            ['text' => '📺 YouTube', 'url' => 'https://youtube.com/live/lD2LZPrz5tM'],
+        ], $keyboard[1]);
+    }
+
+    public function test_stream_only_lesson_still_sends_links_without_admin_alert(): void
+    {
+        $this->fakeTelegram();
+        $schedule = $this->lesson('2026-10-14 12:25', ['link' => null, 'stream_links' => ['rutube.ru/video/abc']]);
+        OpenLessonRsvp::create(['schedule_id' => $schedule->id, 'chat_id' => '1001', 'going_at' => now()]);
+
+        $this->artisan('open-lessons:cards --stage=zoom')->assertSuccessful();
+
+        $zoom = $this->sent('sendMessage', '1001');
+        $this->assertCount(1, $zoom);
+        $keyboard = json_decode((string) $zoom[0]['reply_markup'], true)['inline_keyboard'];
+        $this->assertSame([[['text' => '📺 Rutube', 'url' => 'https://rutube.ru/video/abc']]], $keyboard);
+        Http::assertNotSent(fn (Request $r) => str_contains($r->url(), '/botADMIN-BOT/sendMessage'));
+    }
+
     public function test_missing_join_link_alerts_admin_and_sends_nothing_to_people(): void
     {
         $this->fakeTelegram();
