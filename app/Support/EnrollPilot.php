@@ -28,4 +28,16 @@ final class EnrollPilot
 
         return false;
     }
+
+    /**
+     * Пилот задан И человек в нём. Только тогда ветка записи может обойти
+     * общий переключатель аккаунта auto_reply_enabled: он включает все
+     * автоответы бота сразу, а для проверки нужен один человек.
+     *
+     * @param  iterable<int|string|null>  $telegramIds
+     */
+    public static function listed(iterable $telegramIds): bool
+    {
+        return (array) config('features.enroll_pilot_telegram_ids', []) !== [] && self::allows($telegramIds);
+    }
 }

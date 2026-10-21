@@ -1409,8 +1409,10 @@ final class SupportDmAutoReply
         if (! (bool) config('features.support_enroll_pay_link', false)
             || preg_match(self::ENROLL_INTENT_PATTERN, $text) !== 1
             || $this->moneyReport($text)
-            || ! $this->accountAllowsAutoReply($incoming)
             || ! EnrollPilot::allows([$incoming->telegram_chat_id])
+            // Пилотный аккаунт проверяется без auto_reply_enabled: включать
+            // ради проверки все автоответы аккаунта нельзя (21-10-2026).
+            || ! ($this->accountAllowsAutoReply($incoming) || EnrollPilot::listed([$incoming->telegram_chat_id]))
         ) {
             return null;
         }

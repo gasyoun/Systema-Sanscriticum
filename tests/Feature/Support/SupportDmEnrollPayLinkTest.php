@@ -146,6 +146,29 @@ class SupportDmEnrollPayLinkTest extends TestCase
         $this->assertStringContainsString('gsig=', (string) $this->studentOutgoing()?->text);
     }
 
+    public function test_pilot_works_with_account_auto_reply_off_but_others_stay_silent(): void
+    {
+        $this->account->update(['auto_reply_enabled' => false]);
+        $this->message('Суббота 11 - имеете в виду, в 11:00?', at: '2026-10-20 18:07:23');
+
+        // Без пилота выключенный аккаунт молчит, как раньше.
+        $incoming = $this->message('Можно меня тогда на нее записать?');
+        app(SupportDmAutoReply::class)->handle($incoming, $this->user->id, 'private');
+        $this->assertNull($this->studentOutgoing());
+
+        // Пилот на чужой ID — тоже молчит.
+        config(['features.enroll_pilot_telegram_ids' => ['111222333']]);
+        $other = $this->message('Готова оплатить');
+        app(SupportDmAutoReply::class)->handle($other, $this->user->id, 'private');
+        $this->assertNull($this->studentOutgoing());
+
+        // Свой ID в пилоте — ссылка приходит, хотя auto_reply_enabled снят.
+        config(['features.enroll_pilot_telegram_ids' => ['571472245']]);
+        $mine = $this->message('Тогда готова оплатить и ждать уроки');
+        app(SupportDmAutoReply::class)->handle($mine, $this->user->id, 'private');
+        $this->assertStringContainsString('gsig=', (string) $this->studentOutgoing()?->text);
+    }
+
     public function test_flag_off_sends_no_pay_link(): void
     {
         config(['features.support_enroll_pay_link' => false]);
