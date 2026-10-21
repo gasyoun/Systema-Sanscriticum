@@ -33,6 +33,12 @@ use Illuminate\Support\Collection;
  * не быть вовсе — текст поста от этого не меняется). Единица поста —
  * ГРУППА (поток): расписания и чаты обучения живут на group.
  *
+ * Метки занятий: когда у строк потока разные осмысленные титулы (курс
+ * с программой — «Лекция 1. Классическая санкхья…»), меткой строки служит
+ * титул без служебного тега «(#13, 08.09.26)»; однотипные титулы потока
+ * («<курс> гр.55», «Занятие #N») оставляют позиционное «N-е занятие» —
+ * иначе название курса повторялось бы в каждой строке.
+ *
  * Даты форматируются вручную (родительный падеж месяца + именительный
  * день недели): app locale = en, а Carbon locale('ru')->translatedFormat('F')
  * даёт именительный «март», не «марта» — хардкод надёжнее ICU.
@@ -140,15 +146,29 @@ final class FullSchedulePost
         $pastCount = 0;
         $lastPast = null;
 
-        $lessonLines = $lessons->map(function (Schedule $s, int $i) use (&$pastCount, &$lastPast): array {
+        // Меткой строки служит тема занятия (титул без служебного тега серии
+        // «(#13, 08.09.26)»), но только когда у строк потока РЕАЛЬНО разные
+        // темы — универсальный курс с программой («Лекция N. …»). Однотипные
+        // титулы потока («<курс> гр.55», «Занятие #N» — при сравнении цифры
+        // стёрты) повторяли бы название курса в каждой строке — остаётся
+        // позиционное «N-е занятие».
+        $topics = $lessons->map(fn (Schedule $s): ?string => self::topicOf($s->title));
+        $hasTopics = $topics
+            ->map(fn (?string $topic): string => (string) preg_replace('/\d+/u', '', (string) $topic))
+            ->unique()->count() > 1;
+
+        $lessonLines = $lessons->map(function (Schedule $s, int $i) use (&$pastCount, &$lastPast, $topics, $hasTopics): array {
             $isPast = self::isPast($s);
             if ($isPast) {
                 $pastCount++;
                 $lastPast = ['date' => self::formatDate($s->start), 'key' => $i];
             }
 
+            $topic = $topics[$i];
+            $isTopic = $hasTopics && $topic !== null && mb_strlen($topic) >= self::MIN_TOPIC_LENGTH;
+
             return [
-                'label' => ($i + 1).'-е занятие',
+                'label' => $isTopic ? (string) $topic : ($i + 1).'-е занятие',
                 'date' => self::formatDate($s->start),
                 'start' => $s->start->toIso8601String(),
                 'is_past' => $isPast,
@@ -184,6 +204,25 @@ final class FullSchedulePost
     private static function isPast(Schedule $s): bool
     {
         return ($s->end ?? $s->start->copy()->addHours(Schedule::DEFAULT_DURATION_HOURS))->isPast();
+    }
+
+    /** Короче этого тема не считается — не подставляем мусорные метки строк. */
+    private const MIN_TOPIC_LENGTH = 8;
+
+    /**
+     * Титул строки без служебного тега серии «(#13, 08.09.26)» (того самого,
+     * что читает LessonSeriesInfo::number); null — после снятия тега пусто.
+     */
+    private static function topicOf(?string $title): ?string
+    {
+        if ($title === null) {
+            return null;
+        }
+
+        $topic = trim((string) preg_replace('/\s*\(#\d+,\s*[^\)]*\)/u', ' ', $title));
+        $topic = (string) preg_replace('/\s{2,}/u', ' ', $topic);
+
+        return $topic === '' ? null : $topic;
     }
 
     /** Строка-статус над списком: сколько прошло и каким было последнее. */

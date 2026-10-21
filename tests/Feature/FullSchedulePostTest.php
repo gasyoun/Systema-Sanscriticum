@@ -282,4 +282,46 @@ class FullSchedulePostTest extends TestCase
         $this->assertStringContainsString('<span class="fs-last" style="background:#FDE047;color:#1F2430;padding:0 6px;border-radius:6px;"><strong>1-е занятие</strong>: ', $html);
         $this->assertStringContainsString('<strong>2-е занятие</strong>: ', $html);
     }
+
+    /** @test */
+    public function it_shows_distinct_lesson_topics_as_labels_without_service_tag(): void
+    {
+        // Курс с программой: у строк разные темы — меткой строки служит титул
+        // без служебного тега серии «(#N, дата)».
+        $group = Group::factory()->create(['name' => 'Философия санкхьи — пн 18:00 (2026)']);
+
+        Schedule::create(['title' => 'Лекция 1. Классическая санкхья. Обоснование учения (#1, 26.10.26)', 'start' => Carbon::parse('2026-10-26 18:00'), 'group_id' => $group->id]);
+        Schedule::create(['title' => 'Лекция 2. Эпистемология санкхьи: Три источника достоверного знания (#2, 02.11.26)', 'start' => Carbon::parse('2026-11-02 18:00'), 'group_id' => $group->id]);
+
+        $post = FullSchedulePost::forGroup($group);
+        $this->assertNotNull($post);
+
+        $text = $post->text();
+        $this->assertStringContainsString('Лекция 1. Классическая санкхья. Обоснование учения: 26 октября 2026 (понедельник), 18:00', $text);
+        $this->assertStringContainsString('Лекция 2. Эпистемология санкхьи: Три источника достоверного знания: 2 ноября 2026 (понедельник), 18:00', $text);
+        $this->assertStringNotContainsString('1-е занятие', $text);
+        $this->assertStringNotContainsString('(#1,', $text);
+
+        // Telegram-HTML: тема жирным, дата обычным.
+        $this->assertStringContainsString('<b>Лекция 1. Классическая санкхья. Обоснование учения</b>: 26 октября 2026 (понедельник), 18:00', $post->telegramHtml());
+    }
+
+    /** @test */
+    public function uniform_series_titles_keep_positional_labels(): void
+    {
+        // Однотипные титулы потока (название курса/группы + номер в теге):
+        // подстановка их в каждую строку — шум, остаётся «N-е занятие».
+        $group = Group::factory()->create(['name' => 'Грамматика по Кочергиной гр.55']);
+
+        Schedule::create(['title' => 'Грамматика по Кочергиной гр.55 (#46, 21.10.26)', 'start' => Carbon::parse('2026-10-21 09:00'), 'group_id' => $group->id]);
+        Schedule::create(['title' => 'Грамматика по Кочергиной гр.55 (#47, 28.10.26)', 'start' => Carbon::parse('2026-10-28 09:00'), 'group_id' => $group->id]);
+
+        $post = FullSchedulePost::forGroup($group);
+        $this->assertNotNull($post);
+
+        $text = $post->text();
+        $this->assertStringContainsString('1-е занятие: 21 октября 2026 (среда), 09:00', $text);
+        $this->assertStringContainsString('2-е занятие: 28 октября 2026 (среда), 09:00', $text);
+        $this->assertStringNotContainsString('Грамматика по Кочергиной гр.55 (#46', $text);
+    }
 }
