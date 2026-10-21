@@ -17,6 +17,7 @@ use App\Services\Support\Faq\HybridRetriever;
 use App\Services\Support\Faq\SharedKnowledgeBase;
 use App\Services\Support\Sufler\Ceilings;
 use App\Services\Support\Sufler\SendPolicyGate;
+use App\Support\EnrollPilot;
 use App\Support\SupportSmallTalk;
 use App\Support\TelegramSendGuard;
 use Illuminate\Support\Facades\Log;
@@ -1409,6 +1410,7 @@ final class SupportDmAutoReply
             || preg_match(self::ENROLL_INTENT_PATTERN, $text) !== 1
             || $this->moneyReport($text)
             || ! $this->accountAllowsAutoReply($incoming)
+            || ! EnrollPilot::allows([$incoming->telegram_chat_id])
         ) {
             return null;
         }

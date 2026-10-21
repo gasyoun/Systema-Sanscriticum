@@ -6,10 +6,12 @@ namespace App\Jobs;
 
 use App\Models\Group;
 use App\Models\Payment;
+use App\Models\TelegramSupportContact;
 use App\Services\Access\TelegramAdminNotifier;
 use App\Services\Support\SupportReplyService;
 use App\Services\Telegram\ZapisiChatMemberException;
 use App\Services\Telegram\ZapisiChatMemberService;
+use App\Support\EnrollPilot;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -50,6 +52,13 @@ final class SendGroupChatInviteJob implements ShouldQueue
         }
 
         $user = $payment->user;
+
+        $telegramIds = TelegramSupportContact::query()->where('linked_user_id', $user->id)
+            ->pluck('telegram_user_id')->push($user->telegram_id);
+        if (! EnrollPilot::allows($telegramIds)) {
+            return;
+        }
+
         $groups = $this->targetGroups($payment);
 
         if ($groups->count() !== 1) {

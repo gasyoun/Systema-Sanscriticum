@@ -2068,4 +2068,13 @@ return [
      | (php artisan zapisi:set-webhook). ВЫКЛ по умолчанию: PAID_CHAT_JOIN_REQUEST=true.
      */
     'paid_chat_join_request' => (bool) env('PAID_CHAT_JOIN_REQUEST', false),
+
+    /*
+     | Пилот записи через личку (21-10-2026): Telegram ID через запятую.
+     | Непусто — ссылка на оплату группы, ссылка-заявка после оплаты и
+     | автоодобрение работают ТОЛЬКО для этих аккаунтов, остальным — как при
+     | выключенных флагах (без ответов и алертов). Пусто — для всех.
+     | Пример: ENROLL_PILOT_TELEGRAM_IDS=123456789
+     */
+    'enroll_pilot_telegram_ids' => array_values(array_filter(array_map('trim', explode(',', (string) env('ENROLL_PILOT_TELEGRAM_IDS', ''))))),
 ];

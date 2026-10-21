@@ -184,6 +184,30 @@ class PaidChatJoinRequestTest extends TestCase
         Http::assertNotSent(fn ($r) => str_contains($r->url(), 'approveChatJoinRequest'));
     }
 
+    public function test_pilot_list_limits_invite_and_approval(): void
+    {
+        Queue::fake();
+        config(['features.enroll_pilot_telegram_ids' => ['555']]);
+        $pilot = User::factory()->create(['telegram_id' => 555]);
+        $pilot->groups()->attach($this->group->id);
+        $student = User::factory()->create(['telegram_id' => 666]);
+        $student->groups()->attach($this->group->id);
+
+        $this->runInviteJob($this->paid($student));
+        $this->joinRequest(666);
+
+        // Не из пилота — ни ссылки, ни одобрения, ни алерта: как при выключенном флаге.
+        $this->assertCount(0, Queue::pushed(SendTelegramMessageJob::class, fn ($job) => str_contains($job->text, 'JOINLINK')));
+        Http::assertNotSent(fn ($r) => str_contains($r->url(), 'approveChatJoinRequest'));
+        Http::assertNotSent(fn ($r) => str_contains((string) ($r['text'] ?? ''), 'не одобрена автоматически'));
+
+        $this->runInviteJob($this->paid($pilot));
+        $this->joinRequest(555);
+
+        $this->assertCount(1, Queue::pushed(SendTelegramMessageJob::class, fn ($job) => str_contains($job->text, 'JOINLINK')));
+        Http::assertSent(fn ($r) => str_contains($r->url(), 'approveChatJoinRequest') && (string) $r['user_id'] === '555');
+    }
+
     public function test_flag_off_ignores_join_request(): void
     {
         config(['features.paid_chat_join_request' => false]);

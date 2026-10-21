@@ -126,6 +126,26 @@ class SupportDmEnrollPayLinkTest extends TestCase
         $this->assertNull($this->studentOutgoing());
     }
 
+    public function test_pilot_list_excludes_other_students(): void
+    {
+        config(['features.enroll_pilot_telegram_ids' => ['111222333']]);
+        $this->message('Суббота 11 - имеете в виду, в 11:00?', at: '2026-10-20 18:07:23');
+        $incoming = $this->message('Можно меня тогда на нее записать?');
+
+        app(SupportDmAutoReply::class)->handle($incoming, $this->user->id, 'private');
+
+        $this->assertFalse(
+            TelegramSupportMessage::query()->where('direction', 'outgoing')->where('text', 'like', '%gsig=%')->exists(),
+        );
+
+        // Свой аккаунт в пилоте — ссылка приходит.
+        config(['features.enroll_pilot_telegram_ids' => ['571472245']]);
+        $again = $this->message('Готова оплатить');
+        app(SupportDmAutoReply::class)->handle($again, $this->user->id, 'private');
+
+        $this->assertStringContainsString('gsig=', (string) $this->studentOutgoing()?->text);
+    }
+
     public function test_flag_off_sends_no_pay_link(): void
     {
         config(['features.support_enroll_pay_link' => false]);

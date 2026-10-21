@@ -9,6 +9,7 @@ use App\Models\Group;
 use App\Models\TelegramSupportContact;
 use App\Models\User;
 use App\Services\Access\TelegramAdminNotifier;
+use App\Support\EnrollPilot;
 use App\Support\TelegramSendGuard;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -45,7 +46,7 @@ final class ChatJoinRequestApprover
 
         $chatId = (string) ($request['chat']['id'] ?? '');
         $fromId = (string) ($request['from']['id'] ?? '');
-        if ($chatId === '' || $fromId === '') {
+        if ($chatId === '' || $fromId === '' || ! EnrollPilot::allows([$fromId])) {
             return 'skip';
         }
 
