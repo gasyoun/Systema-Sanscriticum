@@ -9,6 +9,8 @@ use App\Models\ContentCalendarSlot;
 use App\Models\User;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -62,5 +64,33 @@ class ContentCalendarSlotResourceGateTest extends TestCase
         Livewire::test(ContentCalendarSlotResource\Pages\ListContentCalendarSlots::class)
             ->assertSuccessful()
             ->assertCanSeeTableRecords(ContentCalendarSlot::all());
+    }
+
+    public function test_edit_page_attaches_video_to_scheduled_slot(): void
+    {
+        config(['features.content_calendar' => true]);
+        Storage::fake(ContentCalendarSlot::MEDIA_DISK);
+        $admin = User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]);
+        $this->actingAs($admin);
+
+        $slot = ContentCalendarSlot::create([
+            'slot_date' => '2026-09-07',
+            'slot_type' => ContentCalendarSlot::TYPE_TEACHER_SPOTLIGHT,
+            'status' => ContentCalendarSlot::STATUS_SCHEDULED,
+            'publish_at' => '2026-09-07 12:00:00',
+            'title' => 'Спотлайт',
+            'body' => 'Текст',
+        ]);
+
+        Livewire::test(ContentCalendarSlotResource\Pages\EditContentCalendarSlot::class, ['record' => $slot->getRouteKey()])
+            ->assertSuccessful()
+            ->set('data.media_path', UploadedFile::fake()->create('teaser.mp4', 2048, 'video/mp4'))
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $slot->refresh();
+        $this->assertStringStartsWith('content-calendar/', (string) $slot->media_path);
+        Storage::disk(ContentCalendarSlot::MEDIA_DISK)->assertExists($slot->media_path);
+        $this->assertSame(ContentCalendarSlot::MEDIA_VIDEO, $slot->mediaType());
     }
 }
