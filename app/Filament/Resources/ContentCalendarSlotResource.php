@@ -60,19 +60,29 @@ class ContentCalendarSlotResource extends Resource
 
     public static function canCreate(): bool
     {
-        return false;
+        return static::canViewAny();
     }
 
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\DatePicker::make('slot_date')->label('Дата')->disabled(),
-            Forms\Components\TextInput::make('slot_type')->label('Тип')->disabled(),
-            Forms\Components\TextInput::make('status')->label('Статус')->disabled(),
-            Forms\Components\DateTimePicker::make('publish_at')->label('Публикация (MSK)'),
-            Forms\Components\TextInput::make('title')->label('Заголовок')->maxLength(255)->columnSpanFull(),
+            Forms\Components\DatePicker::make('slot_date')->label('Дата')->disabled()->hiddenOn('create'),
+            Forms\Components\TextInput::make('slot_type')->label('Тип')->disabled()->hiddenOn('create'),
+            Forms\Components\TextInput::make('status')->label('Статус')->disabled()->hiddenOn('create'),
+            Forms\Components\DateTimePicker::make('publish_at')
+                ->label('Публикация (MSK)')
+                ->seconds(false)
+                ->required(fn (string $operation): bool => $operation === 'create')
+                ->after(fn (string $operation): ?string => $operation === 'create' ? 'now' : null)
+                ->default(fn (): string => now('Europe/Moscow')->addDay()->setTime(12, 0)->toDateTimeString()),
+            Forms\Components\TextInput::make('title')
+                ->label('Заголовок (для себя, в пост не идёт)')
+                ->required(fn (string $operation): bool => $operation === 'create')
+                ->maxLength(255)
+                ->columnSpanFull(),
             TiptapEditor::make('body')
                 ->label('Текст')
+                ->required(fn (string $operation): bool => $operation === 'create')
                 ->tools(['bold', 'italic', 'underline', 'strike', '|', 'link', 'blockquote', 'code', 'code-block', 'highlight'])
                 ->output(TiptapOutput::Html)
                 ->disableFloatingMenus()
@@ -231,6 +241,8 @@ class ContentCalendarSlotResource extends Resource
                     ContentCalendarSlot::TYPE_EVENT => 'event',
                     ContentCalendarSlot::TYPE_TEACHER_SPOTLIGHT => 'teacher_spotlight',
                     ContentCalendarSlot::TYPE_STUDENT_STORY => 'student_story',
+                    ContentCalendarSlot::TYPE_MANUAL => 'manual',
+                    ContentCalendarSlot::TYPE_TG_CHANNEL => 'tg_channel',
                     ContentCalendarSlot::TYPE_EMPTY => 'empty',
                 ]),
             ])
@@ -297,6 +309,7 @@ class ContentCalendarSlotResource extends Resource
     {
         return [
             'index' => Pages\ListContentCalendarSlots::route('/'),
+            'create' => Pages\CreateContentCalendarSlot::route('/create'),
             'edit' => Pages\EditContentCalendarSlot::route('/{record}/edit'),
         ];
     }

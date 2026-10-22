@@ -134,6 +134,40 @@ class ContentCalendarSlotResourceGateTest extends TestCase
         $this->assertSame(['tg_a'], $slot->targetDestinations());
     }
 
+    public function test_admin_creates_scheduled_slot(): void
+    {
+        $this->crosspostSlot();
+
+        Livewire::test(ContentCalendarSlotResource\Pages\CreateContentCalendarSlot::class)
+            ->assertSuccessful()
+            ->fillForm([
+                'title' => 'Анонс мини-курса',
+                'publish_at' => now('Europe/Moscow')->addDays(2)->setTime(10, 30)->toDateTimeString(),
+                'body' => '<p><em>Скоро</em> старт</p>',
+                'destinations' => ['vk_a'],
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $slot = ContentCalendarSlot::query()->where('title', 'Анонс мини-курса')->sole();
+        $this->assertSame(ContentCalendarSlot::STATUS_SCHEDULED, $slot->status);
+        $this->assertSame(ContentCalendarSlot::TYPE_MANUAL, $slot->slot_type);
+        $this->assertSame(now('Europe/Moscow')->addDays(2)->toDateString(), $slot->slot_date->toDateString());
+        $this->assertSame('10:30', $slot->publish_at->format('H:i'));
+        $this->assertSame('<p><em>Скоро</em> старт</p>', $slot->body);
+        $this->assertSame(['vk_a'], $slot->destinations);
+    }
+
+    public function test_create_requires_future_time_and_text(): void
+    {
+        $this->crosspostSlot();
+
+        Livewire::test(ContentCalendarSlotResource\Pages\CreateContentCalendarSlot::class)
+            ->fillForm(['title' => 'x', 'publish_at' => now()->subHour()->toDateTimeString(), 'body' => null])
+            ->call('create')
+            ->assertHasFormErrors(['publish_at', 'body']);
+    }
+
     public function test_caption_over_1024_with_media_is_rejected(): void
     {
         Storage::fake(ContentCalendarSlot::MEDIA_DISK);
