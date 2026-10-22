@@ -43,6 +43,7 @@ use App\Services\Telegram\DaemonProcessProbe;
 use App\Services\Telegram\ProcDaemonProcessProbe;
 use App\Services\Webinar\WebinarProvider;
 use App\Services\Zoom\ZoomService;
+use App\Support\Backup\BackupListCommand;
 use App\Support\Backup\BackupRunCommand;
 use App\Support\Deploy\DeployDriftInspector;
 use App\Support\NextIntroSession;
@@ -61,6 +62,7 @@ use League\Flysystem\Filesystem;
 use League\Flysystem\WebDAV\WebDAVAdapter;
 use Sabre\DAV\Client;
 use Spatie\Backup\Commands\BackupCommand;
+use Spatie\Backup\Commands\ListCommand;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -124,6 +126,13 @@ class AppServiceProvider extends ServiceProvider
         // fails backup:run with ER_DATA_LENGTH. Bind our command so the zip
         // path snapshots each member next to the archive before addFile.
         $this->app->bind(BackupCommand::class, BackupRunCommand::class);
+
+        // H6916: spatie backup:list меряет каждый файл отдельным WebDAV-запросом
+        // (414 частей off-site = сотни PROPFIND, >3 минут на прогон), поэтому
+        // живая проба списка архивов непригодна. Bind нашего ListCommand, который
+        // считает строку диска из ОДНОГО Depth-1 листинга каталога off-site —
+        // `php artisan backup:list` остаётся точкой входа, vendor/ не тронут.
+        $this->app->bind(ListCommand::class, BackupListCommand::class);
 
         // H4001 (Wave 3 leverage-плана): dense-нога FAQ-ретривала. bind, а не
         // singleton: driver читается из config на момент резолва — тесты и
