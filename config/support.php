@@ -321,7 +321,7 @@ return [
      */
     'pay_llm' => [
         'min_confidence' => (float) env('SUPPORT_PAY_LLM_MIN_CONFIDENCE', 0.7),
-        'timeout' => (int) env('SUPPORT_PAY_LLM_TIMEOUT', 30),
+        'timeout' => (int) env('SUPPORT_PAY_LLM_TIMEOUT', 60),
         'history' => (int) env('SUPPORT_PAY_LLM_HISTORY', 20),
     ],
 ];

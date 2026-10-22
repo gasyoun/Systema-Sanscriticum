@@ -57,7 +57,7 @@ final class PayDialogInterpreter
             ['role' => 'system', 'content' => $this->systemPrompt()],
             ['role' => 'user', 'content' => "КАТАЛОГ:\n".($catalog === [] ? '(пусто)' : implode("\n", array_column($catalog, 'line')))
                 ."\n\nПЕРЕПИСКА (старые сверху, последнее — сообщение, на которое отвечаем):\n".$transcript],
-        ], (int) config('support.pay_llm.timeout', 30), 0.0);
+        ], (int) config('support.pay_llm.timeout', 60), 0.0);
 
         $data = $this->json($reply['content'] ?? null);
         if ($data === null) {

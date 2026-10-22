@@ -850,7 +850,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_PAY_DIALOG_LLM` | optional | `'off'` | config/features.php:2069<br>config/features.php:2070 |
 | `SUPPORT_PAY_LLM_HISTORY` | optional | `20` | config/support.php:325 |
 | `SUPPORT_PAY_LLM_MIN_CONFIDENCE` | optional | `0.7` | config/support.php:323 |
-| `SUPPORT_PAY_LLM_TIMEOUT` | optional | `30` | config/support.php:324 |
+| `SUPPORT_PAY_LLM_TIMEOUT` | optional | `60` | config/support.php:324 |
 | `SUPPORT_PRESENCE_BEACON_SECONDS` | optional | `20` | config/support_presence.php:25 |
 | `SUPPORT_PRESENCE_ONLINE_SECONDS` | optional | `75` | config/support_presence.php:33 |
 | `SUPPORT_PRESENCE_PRUNE_MINUTES` | optional | `15` | config/support_presence.php:41 |
