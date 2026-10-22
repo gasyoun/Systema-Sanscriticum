@@ -245,6 +245,15 @@ return [
             'TELEGRAM_SUPPORT_AUTO_ACK_TEXT',
             "Намасте!\n\nПолучили ваше сообщение и уже разбираемся. Ответим в течение рабочего дня.",
         ),
+        // H6767: пул одобренных парафраз ack'а (флаг support_reply_variant_sampling,
+        // default OFF). Разделитель «||»: в текстах есть точки и запятые, но не
+        // двойная труба. Пусто (по умолчанию) — ack один, поведение прежнее.
+        // Варианты — выверенная копия человека (черновик: docs/SUFLER_ACK_VARIANTS_DRAFT_*.md),
+        // не свободная генерация; пока пул не одобрен MG — держать пустым.
+        'auto_ack_variants' => array_values(array_filter(array_map(
+            'trim',
+            explode('||', (string) env('TELEGRAM_SUPPORT_AUTO_ACK_VARIANTS', '')),
+        ), static fn (string $text): bool => $text !== '')),
         'auto_ack_cooldown_hours' => (int) env('TELEGRAM_SUPPORT_AUTO_ACK_COOLDOWN_HOURS', 6),
         // H3380 v2.2: входящие старше этого возраста (часов) не порождают ни
         // автоответа, ни подсказки — первичный history-забор новой сессии

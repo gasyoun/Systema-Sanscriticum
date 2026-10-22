@@ -355,6 +355,18 @@ return [
     'support_auto_ack' => (bool) env('SUPPORT_AUTO_ACK', false),
 
     /*
+     | H6767: сэмплинг вариантов ответа суфлёра. При ON ветки ack и template
+     | берут текст из одобренного пула (ack — services.telegram_support.
+     | auto_ack_variants с fallback на auto_ack_text; template — ВСЕ строки
+     | MessageTemplate категории, равномерный выбор вместо «последний
+     | updated_at выигрывает»), выбор — RNG в момент отправки, провенанс —
+     | в meta dm_auto_sent (variant_id/variant_pool_size/variant_kind).
+     | ВЫКЛ по умолчанию: пулы сначала проходят ревью человека (GTD,
+     | Отдел заботы / MG), включение — отдельным решением. Откат: false.
+     */
+    'support_reply_variant_sampling' => (bool) env('SUPPORT_REPLY_VARIANT_SAMPLING', false),
+
+    /*
      | H5450: мгновенный ack вебчата samskrte.ru. Посетитель виджета получает
      | bot-сообщение «приняли, куратор ответит» + ссылку на FAQ сразу после
      | отправки (порог T-Бизнеса 45 с), один раз за cooldown-окно треда
