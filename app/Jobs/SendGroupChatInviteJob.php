@@ -66,6 +66,12 @@ final class SendGroupChatInviteJob implements ShouldQueue
             return;
         }
 
+        // Продолжающий студент (курс уже оплачивал раньше) в чате уже есть:
+        // ссылку на каждый новый блок не шлём (22-10-2026, оплата по уточнению).
+        if ($this->paidThisCourseBefore($payment)) {
+            return;
+        }
+
         $groups = $this->targetGroups($payment);
 
         if ($groups->count() !== 1) {
@@ -125,6 +131,17 @@ final class SendGroupChatInviteJob implements ShouldQueue
             'group_id' => $group->id,
             'via' => $queued !== null ? 'support' : 'student_bot',
         ]);
+    }
+
+    private function paidThisCourseBefore(Payment $payment): bool
+    {
+        return Payment::query()
+            ->where('user_id', $payment->user_id)
+            ->where('course_id', $payment->course_id)
+            ->where('id', '<', $payment->id)
+            ->whereIn('status', Payment::PAID_STATUSES)
+            ->where('is_conditional', false)
+            ->exists();
     }
 
     /** @return Collection<int, Group> */
