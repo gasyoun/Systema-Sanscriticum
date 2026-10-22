@@ -142,6 +142,20 @@ class TrackedLinkTest extends TestCase
     }
 
     /** @test */
+    public function san26_recap_key_routes_to_the_open_lecture_recording_article(): void
+    {
+        $this->get('/ga/san26-ors-r')
+            ->assertRedirect('https://samskrtam.ru/kurs-filosofiya-sankhi/');
+
+        $attribution = session(config('tracked_links.session_key'));
+        $this->assertSame('telegram_samskrte', $attribution['utm_source'], 'source');
+        $this->assertSame('owned_channel', $attribution['utm_medium'], 'medium');
+        $this->assertSame('sankhya_kurs_oct_2026', $attribution['utm_campaign'], 'campaign');
+        $this->assertSame('san26_r', $attribution['utm_content'], 'content');
+        $this->assertSame('philosophy', $attribution['utm_term'], 'term');
+    }
+
+    /** @test */
     public function beginner_intro_channel_link_leads_to_the_free_first_step_and_keeps_source(): void
     {
         $this->get('/ga/bi26-ors-c')->assertRedirect('/online/poprobovat');
@@ -153,6 +167,48 @@ class TrackedLinkTest extends TestCase
             'utm_content' => 'bi26_c',
             'utm_term' => 'beginner',
         ], session(config('tracked_links.session_key')));
+    }
+
+    /** @test */
+    public function vas26_open_lesson_keys_route_to_the_vasishtha_course_card(): void
+    {
+        foreach ([
+            'vas26-ors-c' => 'vas26_c',
+            'vas26-ors-t' => 'vas26_t',
+            'vas26-ors-h' => 'vas26_h',
+            'vas26-ors-p' => 'vas26_p',
+        ] as $token => $content) {
+            $this->flushSession();
+            $this->get('/ga/'.$token)->assertRedirect('/k/yoga-vasistha');
+
+            $attribution = session(config('tracked_links.session_key'));
+            $this->assertSame('telegram_samskrte', $attribution['utm_source'], "{$token} source");
+            $this->assertSame('owned_channel', $attribution['utm_medium'], "{$token} medium");
+            $this->assertSame('vasishtha_open_oct_2026', $attribution['utm_campaign'], "{$token} campaign");
+            $this->assertSame($content, $attribution['utm_content'], "{$token} content");
+            $this->assertSame('slow_reading', $attribution['utm_term'], "{$token} term");
+        }
+    }
+
+    /** @test */
+    public function syn26_open_lesson_keys_route_to_the_syntax_course_card(): void
+    {
+        foreach ([
+            'syn26-ors-c' => 'syn26_c',
+            'syn26-ors-t' => 'syn26_t',
+            'syn26-ors-h' => 'syn26_h',
+            'syn26-ors-p' => 'syn26_p',
+        ] as $token => $content) {
+            $this->flushSession();
+            $this->get('/ga/'.$token)->assertRedirect('/k/sintaksis-sanskrita');
+
+            $attribution = session(config('tracked_links.session_key'));
+            $this->assertSame('telegram_samskrte', $attribution['utm_source'], "{$token} source");
+            $this->assertSame('owned_channel', $attribution['utm_medium'], "{$token} medium");
+            $this->assertSame('syntax_open_oct_2026', $attribution['utm_campaign'], "{$token} campaign");
+            $this->assertSame($content, $attribution['utm_content'], "{$token} content");
+            $this->assertSame('advanced', $attribution['utm_term'], "{$token} term");
+        }
     }
 
     /** @test */

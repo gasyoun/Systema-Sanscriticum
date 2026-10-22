@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Support;
 
 use App\Models\FollowUpTask;
+use App\Models\Group;
 use App\Models\MessageTemplate;
 use App\Models\SupportAiReplyEvent;
 use App\Models\SupportAnswerSuggestion;
@@ -16,7 +17,9 @@ use App\Services\Support\Faq\HybridRetriever;
 use App\Services\Support\Faq\SharedKnowledgeBase;
 use App\Services\Support\Sufler\Ceilings;
 use App\Services\Support\Sufler\SendPolicyGate;
+use App\Support\EnrollPilot;
 use App\Support\SupportSmallTalk;
+use App\Support\TelegramSendGuard;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -114,6 +117,15 @@ final class SupportDmAutoReply
      */
     private const TRIAL_INTENT_PATTERN = '/пробн|попробоват|записатьс|записываюсь|запиш(?:усь|итесь|ись)/iu';
 
+    /**
+     * Просьба записать в группу / готовность оплатить / «дайте ссылку на
+     * оплату» (20-10-2026). Узко: «запись урока» сюда не попадает.
+     */
+    /** Окно «человек уже в разговоре» для ветки записи, минут. */
+    private const ENROLL_HUMAN_WINDOW_MINUTES = 30;
+
+    private const ENROLL_INTENT_PATTERN = '/запиш(?:ите|ете|ешь)|записать|записатьс|записываюсь|готов[аы]?\s+(?:оплатить|платить|оплачивать)|ссылк\p{L}*\s+(?:на|для)\s+оплат|как\s+(?:можно\s+)?оплатить|куда\s+(?:оплатить|платить)|хочу\s+(?:оплатить|записат|в\s+групп)/iu';
+
     /** H5452: подсказка не ушла куратору — сообщение отфильтровано как шум (reason в meta). */
     public const EVENT_HINT_SUPPRESSED = 'dm_hint_suppressed';
 
@@ -165,6 +177,7 @@ final class SupportDmAutoReply
         // machinery с авто-стопом и трейсом. См. policy/sufler.policy.yml v1.
         private readonly SendPolicyGate $policyGate,
         private readonly Ceilings $ceilings,
+        private readonly EnrollmentGroupResolver $enrollGroups,
     ) {}
 
     public function isEnabled(): bool
@@ -257,6 +270,17 @@ final class SupportDmAutoReply
             }
 
             return ['status' => 'skip', 'category' => null];
+        }
+
+        // 20-10-2026: «запишите меня / готова оплатить» + группа однозначно
+        // понятна из переписки → чекаут блока этой группы. Стоит до факт-ветки:
+        // та гасит любое денежное намерение, а здесь деньги считает система.
+        if ($mayReachStudent && $user !== null) {
+            $enroll = $this->enrollPayLink($incoming, $user, $category, $text);
+
+            if ($enroll !== null) {
+                return $enroll;
+            }
         }
 
         // H3999 (волна 1 leverage-плана): резолверов стало восемь, и решение
@@ -670,6 +694,7 @@ final class SupportDmAutoReply
         bool $aged = false,
         ?array $resolvedFacts = null,
         ?string $escalation = null,
+        bool $standalone = false,
     ): array {
         // H5452: шум-фильтр на ХИНТ. Сервисные чаты и инфра-алерты («система
         // пишет сама себе») не занимают саппорт-полосу куратора. Молчаливое
@@ -690,7 +715,9 @@ final class SupportDmAutoReply
         // серии прилипает к открытому хинту.
         $fire = $this->moneyIntent($text) || $this->hasTrialIntent($text);
 
-        if ($this->dedupEnabled()) {
+        // $standalone: подсказка несёт новое действие (готовая ссылка на оплату),
+        // её нельзя дописать в старую серию — та могла висеть неделями (21-10-2026).
+        if ($this->dedupEnabled() && ! $standalone) {
             $openHint = $this->openHintInChat($incoming);
 
             if ($openHint !== null) {
@@ -1369,6 +1396,107 @@ final class SupportDmAutoReply
     private function moneyIntent(string $text): bool
     {
         return preg_match(self::MONEY_INTENT_PATTERN, $text) === 1;
+    }
+
+    /**
+     * Ссылка на оплату выбранной группы (features.support_enroll_pay_link).
+     *
+     * Ответ — kind 'facts': сумма и ссылка взяты из Tariff системой, так что
+     * гейт money_amount_matches_system её пропускает (fact_type — цитата).
+     * Человек уже отвечает в чате (свежее исходящее не от бота) → бот не
+     * встревает, а кладёт готовую ссылку в подсказку куратору. Группа не
+     * понята однозначно → подсказка со списком кандидатов. Одна и та же
+     * ссылка в один чат — не чаще раза в сутки.
+     *
+     * @return array{status: string, category: ?string}|null null — ветка не про это сообщение
+     */
+    private function enrollPayLink(TelegramSupportMessage $incoming, User $user, ?string $category, string $text): ?array
+    {
+        if (! (bool) config('features.support_enroll_pay_link', false)
+            || preg_match(self::ENROLL_INTENT_PATTERN, $text) !== 1
+            || $this->moneyReport($text)
+            || ! EnrollPilot::allows([$incoming->telegram_chat_id])
+            // Пилотный аккаунт проверяется без auto_reply_enabled: включать
+            // ради проверки все автоответы аккаунта нельзя (21-10-2026).
+            || ! ($this->accountAllowsAutoReply($incoming) || EnrollPilot::listed([$incoming->telegram_chat_id]))
+        ) {
+            return null;
+        }
+
+        $history = TelegramSupportMessage::query()
+            ->where('telegram_chat_id', $incoming->telegram_chat_id)
+            ->where('direction', 'incoming')
+            ->where('sent_at', '>=', now()->subHours(48))
+            ->where('id', '!=', $incoming->id)
+            ->orderByDesc('sent_at')
+            ->orderByDesc('id')
+            ->limit(15)
+            ->pluck('text')
+            ->all();
+
+        $resolved = $this->enrollGroups->resolve([$text, ...$history]);
+
+        if ($resolved === null) {
+            return null;
+        }
+
+        $group = $resolved['group'];
+
+        if ($group === null) {
+            $names = $resolved['candidates']->take(5)->pluck('name')->implode('; ');
+
+            return $this->hintComplex($incoming, $user, $category ?? SupportAnswerSuggestion::CATEGORY_PAYMENT, $text, false, null,
+                $names !== ''
+                    ? "🧭 Студент хочет записаться, группа неоднозначна: {$names}. Уточните и пришлите ссылку на оплату."
+                    : '🧭 Студент хочет записаться, но подходящей группы с активным тарифом не нашлось. Ответьте сами.',
+                standalone: true);
+        }
+
+        $tariff = $resolved['tariff'];
+        $price = number_format((float) $tariff->price, 0, ',', ' ');
+        $slot = $this->groupSlotLabel($group);
+        $draft = "Намасте!\n\nЗаписываем вас в группу «{$group->name}»".($slot !== '' ? " ({$slot})" : '').'.'
+            ."\n\nОплата блока {$resolved['block']} — {$price} ₽: {$resolved['url']}"
+            ."\n\nПосле оплаты пришлём ссылку для входа в чат группы.";
+
+        if ($this->recentHumanOutgoingInChat($incoming)) {
+            return $this->hintComplex($incoming, $user, $category ?? SupportAnswerSuggestion::CATEGORY_PAYMENT, $text, false, null,
+                "🧭 Готовая ссылка на оплату (группа «{$group->name}», блок {$resolved['block']}, {$price} ₽): {$resolved['url']}",
+                standalone: true);
+        }
+
+        if (! TelegramSendGuard::claimKey('enroll-pay-link:'.$incoming->telegram_chat_id.':'.$group->id, 86400)) {
+            return ['status' => 'skip', 'category' => $category];
+        }
+
+        return $this->sendAuto($incoming, $user, $category, $draft, 'facts', [
+            'fact_type' => 'enroll_pay_link',
+            'group_id' => $group->id,
+            'tariff_id' => $tariff->id,
+            'block' => $resolved['block'],
+        ]);
+    }
+
+    /** «суббота 11:00» по ближайшему будущему занятию группы; нет занятий — пусто. */
+    private function groupSlotLabel(Group $group): string
+    {
+        $next = $group->schedules()->where('start', '>=', now())->orderBy('start')->first();
+
+        return $next?->start ? $next->start->locale('ru')->isoFormat('dddd HH:mm') : '';
+    }
+
+    /** Свежее исходящее в чате, написанное человеком (не ботом). */
+    private function recentHumanOutgoingInChat(TelegramSupportMessage $incoming): bool
+    {
+        // Человек «уже отвечает» — только живой разговор, а не любое исходящее
+        // за cooldown ack'а: письмо школы трёхчасовой давности о другом не
+        // повод молчать на «запишите меня» (21-10-2026).
+        return TelegramSupportMessage::query()
+            ->where('telegram_chat_id', $incoming->telegram_chat_id)
+            ->where('direction', 'outgoing')
+            ->where('sent_at', '>=', now()->subMinutes(self::ENROLL_HUMAN_WINDOW_MINUTES))
+            ->where(fn ($q) => $q->whereNull('responder_type')->orWhere('responder_type', '!=', 'ai'))
+            ->exists();
     }
 
     /**
