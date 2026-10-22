@@ -88,6 +88,9 @@ class CalendarPublishService
             'calendar_slot_id' => $slot->id,
             'slot_type' => $slot->slot_type,
             'text_vk' => (string) $slot->body,
+            // photo|video + публичный URL; n8n грузит файл в VK и прикладывает к wall.post.
+            'media_type' => $slot->mediaType(),
+            'media_url' => $slot->mediaUrl(),
             'source_kind' => $slot->source_kind,
             'source_ref' => $slot->source_ref,
             'publish_at' => $slot->publish_at?->toIso8601String(),

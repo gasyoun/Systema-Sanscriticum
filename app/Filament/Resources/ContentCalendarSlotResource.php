@@ -61,6 +61,20 @@ class ContentCalendarSlotResource extends Resource
             Forms\Components\DateTimePicker::make('publish_at')->label('Публикация (MSK)'),
             Forms\Components\TextInput::make('title')->label('Заголовок')->maxLength(255)->columnSpanFull(),
             Forms\Components\Textarea::make('body')->label('Текст')->rows(8)->columnSpanFull(),
+            Forms\Components\FileUpload::make('media_path')
+                ->label('Картинка или видео (необязательно)')
+                ->helperText('Одно вложение к посту: JPG/PNG/WebP/GIF или MP4/MOV/WebM, до 100 МБ.')
+                ->disk(ContentCalendarSlot::MEDIA_DISK)
+                ->directory('content-calendar')
+                ->visibility('public')
+                ->acceptedFileTypes([
+                    'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+                    'video/mp4', 'video/quicktime', 'video/webm',
+                ])
+                ->maxSize(102400)
+                ->openable()
+                ->downloadable()
+                ->columnSpanFull(),
             Forms\Components\TextInput::make('source_ref')->label('Источник (id)')->disabled(),
         ]);
     }
@@ -75,6 +89,15 @@ class ContentCalendarSlotResource extends Resource
                 Tables\Columns\TextColumn::make('status')->label('Статус')->badge(),
                 Tables\Columns\TextColumn::make('title')->label('Заголовок')->limit(40)->wrap(),
                 Tables\Columns\TextColumn::make('body')->label('Текст')->limit(50)->toggleable(),
+                Tables\Columns\IconColumn::make('media_path')
+                    ->label('Медиа')
+                    ->icon(fn (ContentCalendarSlot $record): ?string => match ($record->mediaType()) {
+                        ContentCalendarSlot::MEDIA_PHOTO => 'heroicon-o-photo',
+                        ContentCalendarSlot::MEDIA_VIDEO => 'heroicon-o-film',
+                        default => null,
+                    })
+                    ->tooltip(fn (ContentCalendarSlot $record): ?string => $record->mediaType())
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('publish_at')->label('Publish at')->dateTime('d.m.Y H:i')->sortable(),
             ])
             ->filters([

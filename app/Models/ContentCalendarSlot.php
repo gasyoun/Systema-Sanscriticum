@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * One planned VK (or later channel) content slot (H1564, content calendar W1).
@@ -48,6 +49,15 @@ class ContentCalendarSlot extends Model
 
     public const STATUS_CANCELED = 'canceled';
 
+    public const MEDIA_DISK = 'public';
+
+    public const MEDIA_PHOTO = 'photo';
+
+    public const MEDIA_VIDEO = 'video';
+
+    /** Расширения, которые VK принимает как видео; всё остальное загруженное — фото. */
+    private const VIDEO_EXTENSIONS = ['mp4', 'mov', 'webm'];
+
     protected $fillable = [
         'channel',
         'slot_date',
@@ -58,6 +68,7 @@ class ContentCalendarSlot extends Model
         'source_ref',
         'title',
         'body',
+        'media_path',
         'meta',
     ];
 
@@ -76,6 +87,24 @@ class ContentCalendarSlot extends Model
     public function candidates(): HasMany
     {
         return $this->hasMany(ContentCandidate::class, 'calendar_slot_id');
+    }
+
+    /** photo|video по расширению вложения, null — пост без медиа. */
+    public function mediaType(): ?string
+    {
+        if (blank($this->media_path)) {
+            return null;
+        }
+
+        $ext = strtolower(pathinfo((string) $this->media_path, PATHINFO_EXTENSION));
+
+        return in_array($ext, self::VIDEO_EXTENSIONS, true) ? self::MEDIA_VIDEO : self::MEDIA_PHOTO;
+    }
+
+    /** Публичный абсолютный URL вложения — его скачивает n8n перед wall.post. */
+    public function mediaUrl(): ?string
+    {
+        return blank($this->media_path) ? null : Storage::disk(self::MEDIA_DISK)->url((string) $this->media_path);
     }
 
     public function scopeForMonth(Builder $query, int $year, int $month): Builder

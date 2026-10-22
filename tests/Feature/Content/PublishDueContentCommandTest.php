@@ -132,6 +132,33 @@ class PublishDueContentCommandTest extends TestCase
         $this->assertSame(ContentCalendarSlot::STATUS_SCHEDULED, $slot->fresh()->status);
     }
 
+    public function test_attached_media_is_forwarded_as_public_url_with_type(): void
+    {
+        config([
+            'features.content_calendar_autopilot' => true,
+            'services.n8n.calendar_post_webhook' => 'https://n8n.example/webhook/vk-calendar-post',
+            'filesystems.disks.public.url' => 'https://samskrte.test/storage',
+        ]);
+        Http::fake(['n8n.example/*' => Http::response(['ok' => true])]);
+
+        $photo = $this->slot(['media_path' => 'content-calendar/cover.JPG']);
+        $video = $this->slot(['media_path' => 'content-calendar/teaser.mp4', 'publish_at' => now()->subMinutes(30)]);
+        $plain = $this->slot(['publish_at' => now()->subMinutes(10)]);
+
+        $this->artisan('content:publish-due')->assertSuccessful();
+
+        Http::assertSentCount(3);
+        Http::assertSent(fn ($request) => $request['calendar_slot_id'] === $photo->id
+            && $request['media_type'] === 'photo'
+            && $request['media_url'] === 'https://samskrte.test/storage/content-calendar/cover.JPG');
+        Http::assertSent(fn ($request) => $request['calendar_slot_id'] === $video->id
+            && $request['media_type'] === 'video'
+            && $request['media_url'] === 'https://samskrte.test/storage/content-calendar/teaser.mp4');
+        Http::assertSent(fn ($request) => $request['calendar_slot_id'] === $plain->id
+            && $request['media_type'] === null
+            && $request['media_url'] === null);
+    }
+
     /** E4: no real VK/n8n call ever fires from a test run — Http::fake makes any live URL impossible. */
     public function test_never_calls_live_vk_api(): void
     {
