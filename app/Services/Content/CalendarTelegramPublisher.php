@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Content;
 
 use App\Models\ContentCalendarSlot;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
@@ -58,7 +59,7 @@ class CalendarTelegramPublisher
     }
 
     /** @param  list<array{name: string, contents: string}>  $extra */
-    private function sendFile(string $url, string $field, ContentCalendarSlot $slot, string $chatId, string $caption, array $extra = []): \Illuminate\Http\Client\Response
+    private function sendFile(string $url, string $field, ContentCalendarSlot $slot, string $chatId, string $caption, array $extra = []): Response
     {
         $disk = Storage::disk(ContentCalendarSlot::MEDIA_DISK);
         $path = (string) $slot->media_path;
