@@ -69,6 +69,7 @@ class ContentCalendarSlot extends Model
         'title',
         'body',
         'media_path',
+        'destinations',
         'meta',
     ];
 
@@ -76,6 +77,7 @@ class ContentCalendarSlot extends Model
         'slot_date' => 'date',
         'publish_at' => 'datetime',
         'meta' => 'array',
+        'destinations' => 'array',
     ];
 
     protected $attributes = [
@@ -87,6 +89,43 @@ class ContentCalendarSlot extends Model
     public function candidates(): HasMany
     {
         return $this->hasMany(ContentCandidate::class, 'calendar_slot_id');
+    }
+
+    public function publications(): HasMany
+    {
+        return $this->hasMany(ContentCalendarPublication::class, 'content_calendar_slot_id');
+    }
+
+    /**
+     * Площадки, включённые в config/content_calendar.php (непустой chat_id /
+     * group_id), ключ => конфиг.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public static function enabledDestinations(): array
+    {
+        return array_filter(
+            (array) config('content_calendar.destinations', []),
+            static fn (array $d): bool => ($d['platform'] ?? null) === 'telegram'
+                ? filled($d['chat_id'] ?? null)
+                : (int) ($d['group_id'] ?? 0) > 0,
+        );
+    }
+
+    /**
+     * Куда уходит этот слот: выбранные галочками площадки ∩ включённые.
+     * null в destinations = все включённые.
+     *
+     * @return list<string>
+     */
+    public function targetDestinations(): array
+    {
+        $enabled = array_keys(self::enabledDestinations());
+        if ($this->destinations === null) {
+            return $enabled;
+        }
+
+        return array_values(array_intersect($enabled, (array) $this->destinations));
     }
 
     /** photo|video по расширению вложения, null — пост без медиа. */
