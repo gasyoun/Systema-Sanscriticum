@@ -21,9 +21,17 @@ class CalendarPublishService
 {
     public function __construct(private readonly ContentProhibitionsChecklist $checklist = new ContentProhibitionsChecklist) {}
 
-    /** @return array{dispatched: int, held: int} */
+    /** @return array{dispatched: int, held: int, skipped_no_destinations: bool} */
     public function publishDue(?Carbon $now = null): array
     {
+        // Площадки не настроены — тик ничего не трогает (слоты не уходят в
+        // draft): прод включил автопилот раньше, чем появились CONTENT_CAL_*.
+        if (ContentCalendarSlot::enabledDestinations() === []) {
+            Log::warning('CalendarPublishService: площадки CONTENT_CAL_* не заданы — пропуск.');
+
+            return ['dispatched' => 0, 'held' => 0, 'skipped_no_destinations' => true];
+        }
+
         $now = $now ?? Carbon::now('Europe/Moscow');
 
         $due = ContentCalendarSlot::query()
@@ -34,8 +42,24 @@ class CalendarPublishService
 
         $dispatched = 0;
         $held = 0;
+        $staleBefore = $now->copy()->subHours((int) config('content_calendar.max_lateness_hours', 24));
 
         foreach ($due as $slot) {
+            if ($slot->publications()->doesntExist() && $slot->publish_at->lt($staleBefore)) {
+                // Протухший слот (автопилот стоял, площадок не было) не
+                // выстреливает пачкой старых постов — ждёт новую дату.
+                $slot->forceFill([
+                    'status' => ContentCalendarSlot::STATUS_DRAFT,
+                    'meta' => array_merge($slot->meta ?? [], [
+                        'stale_hold' => 'publish_at '.$slot->publish_at->format('d.m.Y H:i').' прошёл больше '
+                            .config('content_calendar.max_lateness_hours', 24).' ч назад — поставьте новую дату и Keep',
+                    ]),
+                ])->save();
+                $held++;
+
+                continue;
+            }
+
             if (! $this->passesChecklist($slot)) {
                 $held++;
 
@@ -46,7 +70,7 @@ class CalendarPublishService
             $dispatched++;
         }
 
-        return ['dispatched' => $dispatched, 'held' => $held];
+        return ['dispatched' => $dispatched, 'held' => $held, 'skipped_no_destinations' => false];
     }
 
     private function passesChecklist(ContentCalendarSlot $slot): bool

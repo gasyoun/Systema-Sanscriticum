@@ -316,6 +316,39 @@ class PublishDueContentCommandTest extends TestCase
         $this->assertStringContainsString('price_or_live_date', $good->fresh()->meta['prohibition_warn'][0]);
     }
 
+    public function test_without_configured_destinations_tick_touches_nothing(): void
+    {
+        config(['content_calendar.destinations' => [
+            'tg_a' => ['platform' => 'telegram', 'label' => 'TG A', 'chat_id' => ''],
+            'vk_a' => ['platform' => 'vk', 'label' => 'VK A', 'group_id' => 0],
+        ]]);
+        Http::fake();
+
+        $slot = $this->slot(['publish_at' => now()->subDays(40)]);
+        $this->artisan('content:publish-due')->assertSuccessful();
+
+        Http::assertNothingSent();
+        $this->assertSame(ContentCalendarSlot::STATUS_SCHEDULED, $slot->fresh()->status);
+        $this->assertNull($slot->fresh()->meta);
+    }
+
+    public function test_long_overdue_slot_is_held_not_burst_published(): void
+    {
+        $this->fakeApis();
+
+        $stale = $this->slot(['publish_at' => now()->subDays(30)]);
+        $recent = $this->slot(['publish_at' => now()->subHours(3), 'destinations' => ['tg_a']]);
+
+        $this->artisan('content:publish-due')->assertSuccessful();
+
+        $this->assertSame(1, self::sentTo('api.telegram.org'));
+        $this->assertSame(0, $stale->publications()->count());
+        $held = $stale->fresh();
+        $this->assertSame(ContentCalendarSlot::STATUS_DRAFT, $held->status);
+        $this->assertStringContainsString('поставьте новую дату', $held->meta['stale_hold']);
+        $this->assertSame(ContentCalendarSlot::STATUS_PUBLISHED, $recent->fresh()->status);
+    }
+
     public function test_vk_waits_for_token_instead_of_failing_when_token_expired(): void
     {
         VkUserToken::query()->update(['expires_at' => now()->subMinute()]);

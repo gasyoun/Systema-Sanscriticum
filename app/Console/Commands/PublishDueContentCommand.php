@@ -30,6 +30,12 @@ class PublishDueContentCommand extends Command
 
         $result = $service->publishDue();
 
+        if ($result['skipped_no_destinations']) {
+            $this->warn('Площадки CONTENT_CAL_* не заданы — публиковать некуда, слоты не тронуты.');
+
+            return self::SUCCESS;
+        }
+
         $this->info(sprintf(
             'publish-due: dispatched=%d held=%d',
             $result['dispatched'],
