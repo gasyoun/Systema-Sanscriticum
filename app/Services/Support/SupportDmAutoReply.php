@@ -1552,11 +1552,18 @@ final class SupportDmAutoReply
             return $this->answerPayClarify($open, $incoming, $user, $contact, $category, $text);
         }
 
-        if (preg_match(self::PAY_HELP_PATTERN, $text) !== 1 || preg_match(self::PAY_HUMAN_PATTERN, $text) === 1) {
+        // Разговор об оплате уже идёт (вопрос был сегодня): «философия санкхья
+        // 2 блок» без слова «оплатить» — тоже просьба о ссылке (22-10-2026).
+        $payTalk = preg_match(self::PAY_HELP_PATTERN, $text) === 1;
+        $asked = $this->payClarifyEvents($incoming, 24);
+
+        $talkGoesOn = $asked->contains(fn (SupportAiReplyEvent $e) => $e->created_at >= now()->subHours(self::PAY_CLARIFY_WINDOW_HOURS));
+
+        if ((! $payTalk && ! $talkGoesOn) || preg_match(self::PAY_HUMAN_PATTERN, $text) === 1) {
             return null;
         }
 
-        $problem = preg_match(self::PAY_PROBLEM_PATTERN, $text) === 1;
+        $problem = $payTalk && preg_match(self::PAY_PROBLEM_PATTERN, $text) === 1;
 
         $explicit = $this->payChoices->explicit($user, $text);
         if ($explicit !== null) {
@@ -1565,6 +1572,10 @@ final class SupportDmAutoReply
             }
 
             return $this->sendPayChoiceLink($incoming, $user, $contact, $category, $text, $explicit, $problem);
+        }
+
+        if (! $payTalk) {
+            return null;
         }
 
         $options = $this->payChoices->for($user, [$text, ...$this->recentIncomingTexts($incoming)]);
@@ -1589,10 +1600,17 @@ final class SupportDmAutoReply
                 standalone: true);
         }
 
-        // Один вопрос на чат в сутки: по базе (Redis может лежать) и клеймом
-        // от гонки двух воркеров.
-        if ($this->payClarifyEvents($incoming, 24)->isNotEmpty()
-            || ! TelegramSendGuard::claimKey('pay-clarify:'.$incoming->telegram_chat_id, 86400)) {
+        // Не переспрашиваем по кругу: вопрос, на который за сутки не пришёл
+        // понятный ответ, второй раз не задаём — вопрос куратору. Вопрос,
+        // закончившийся ссылкой, новому не мешает. Учёт по базе (Redis может
+        // лежать), клейм — только от гонки двух воркеров.
+        if ($asked->contains(fn (SupportAiReplyEvent $e) => ($e->meta['outcome'] ?? null) !== 'link')) {
+            return $this->hintComplex($incoming, $user, $category, $text, false, null,
+                '🧭 Студент снова спрашивает про оплату, а на сегодняшний вопрос бота «что оплатить» понятного ответа не было. Ответьте сами.',
+                standalone: true);
+        }
+
+        if (! TelegramSendGuard::claimKey('pay-clarify:'.$incoming->telegram_chat_id.':'.$incoming->id, 300)) {
             return null;
         }
 
@@ -1672,7 +1690,12 @@ final class SupportDmAutoReply
             return null;
         }
 
-        $open->forceFill(['meta' => [...$open->meta, 'closed_at' => now()->toIso8601String(), 'answer_message_id' => $incoming->id]])->save();
+        $open->forceFill(['meta' => [
+            ...$open->meta,
+            'closed_at' => now()->toIso8601String(),
+            'answer_message_id' => $incoming->id,
+            'outcome' => $pick !== null ? 'link' : 'unparsed',
+        ]])->save();
 
         if ($pick === null) {
             $labels = array_values(array_filter(array_map(fn (array $o) => $this->payChoices->label($o, $user), $options)));
@@ -1710,14 +1733,15 @@ final class SupportDmAutoReply
 
         $price = number_format($link['amount'], 0, ',', ' ');
         $what = $link['group'] !== null ? "группы «{$link['group']->name}»" : "курса «{$link['course']->title}»";
-        $draft = "Ссылка на оплату блока {$link['block']} {$what} — {$price} ₽: {$link['url']}"
+        $block = $link['block'] === PayChoiceOptions::FULL ? 'всего курса' : "блока {$link['block']}";
+        $draft = "Ссылка на оплату {$block} {$what} — {$price} ₽: {$link['url']}"
             ."\n\nПосле оплаты доступ откроется автоматически."
             .($problem ? "\n\nЕсли оплата снова не пройдёт, пришлите, пожалуйста, снимок экрана — подключим куратора." : '');
 
         // Ответ на наш вопрос: человек после него не писал (openPayClarify).
         if (! $answering && $this->recentHumanOutgoingInChat($incoming)) {
             return $this->hintComplex($incoming, $user, $category, $text, false, null,
-                "🧭 Готовая ссылка на оплату (блок {$link['block']} {$what}, {$price} ₽): {$link['url']}", standalone: true);
+                "🧭 Готовая ссылка на оплату ({$block} {$what}, {$price} ₽): {$link['url']}", standalone: true);
         }
 
         if (! TelegramSendGuard::claimKey('pay-choice-link:'.$incoming->telegram_chat_id.':'.$link['tariff']->id, 3600)) {
