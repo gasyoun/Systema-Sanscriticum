@@ -329,7 +329,7 @@ final class PayChoiceOptions
     }
 
     /** @param  Option  $option */
-    private function alreadyPaid(?User $user, array $option): bool
+    public function alreadyPaid(?User $user, array $option): bool
     {
         if ($user === null) {
             return false;
@@ -342,7 +342,7 @@ final class PayChoiceOptions
     }
 
     /** @param  Option  $option */
-    private function tariff(array $option): ?Tariff
+    public function tariff(array $option): ?Tariff
     {
         if ($option['block'] === self::FULL) {
             return Tariff::query()
