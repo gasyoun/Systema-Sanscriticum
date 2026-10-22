@@ -221,6 +221,35 @@ class OpenLessonCardsTest extends TestCase
         $this->assertStringContainsString('Сегодня открытое занятие', (string) $this->sent('sendMessage', '1001')[0]['text']);
     }
 
+    public function test_morning_rerun_reaches_only_chats_without_the_card(): void
+    {
+        $this->fakeTelegram();
+        $schedule = $this->lesson('2026-10-14 19:00');
+        BotSubscriber::create(['chat_id' => '1001', 'menu_sent_at' => now()]);
+
+        Carbon::setTestNow(Carbon::parse('2026-10-14 09:05:00', 'Europe/Moscow'));
+        $this->artisan('open-lessons:cards --stage=morning')->assertSuccessful();
+
+        BotSubscriber::create(['chat_id' => '1002', 'menu_sent_at' => now()]);
+        Carbon::setTestNow(Carbon::parse('2026-10-14 09:10:00', 'Europe/Moscow'));
+        $this->artisan('open-lessons:cards --stage=morning')
+            ->expectsOutputToContain('получателей: 1')
+            ->assertSuccessful();
+
+        $this->assertCount(1, $this->sent('sendMessage', '1001'));
+        $this->assertCount(1, $this->sent('sendMessage', '1002'));
+        $this->assertSame(2, OpenLessonCardSend::query()->where('schedule_id', $schedule->id)->where('stage', 'morning')->count());
+    }
+
+    public function test_cards_are_scheduled_across_the_hour_not_one_minute(): void
+    {
+        $events = collect(app(\Illuminate\Console\Scheduling\Schedule::class)->events())
+            ->keyBy(fn ($event) => $event->description);
+
+        $this->assertSame('*/5 12 * * *', $events['open-lesson-cards-announce']->expression);
+        $this->assertSame('*/5 9,19 * * *', $events['open-lesson-cards-morning']->expression);
+    }
+
     public function test_early_lesson_gets_its_morning_card_the_evening_before(): void
     {
         $this->fakeTelegram();
