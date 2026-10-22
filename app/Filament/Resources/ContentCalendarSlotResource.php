@@ -6,18 +6,29 @@ namespace App\Filament\Resources;
 
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\ContentCalendarSlotResource\Pages;
+use App\Models\ContentCalendarPublication;
 use App\Models\ContentCalendarSlot;
+use App\Services\Content\PostFormatter;
 use App\Support\RoleGate;
+use Closure;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use FilamentTiptapEditor\Enums\TiptapOutput;
+use FilamentTiptapEditor\TiptapEditor;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\HtmlString;
 
 /**
- * Monthly content calendar ops surface (H1564). No live VK publish here.
+ * Monthly content calendar ops surface (H1564). Публикацию делает не этот
+ * экран, а content:publish-due → PublishCalendarSlotJob (кросспостинг в
+ * TG-каналы и VK-сообщества, 22-10-2026); здесь — текст с разметкой,
+ * вложение, выбор площадок и статус публикаций.
  */
 class ContentCalendarSlotResource extends Resource
 {
@@ -60,10 +71,30 @@ class ContentCalendarSlotResource extends Resource
             Forms\Components\TextInput::make('status')->label('Статус')->disabled(),
             Forms\Components\DateTimePicker::make('publish_at')->label('Публикация (MSK)'),
             Forms\Components\TextInput::make('title')->label('Заголовок')->maxLength(255)->columnSpanFull(),
-            Forms\Components\Textarea::make('body')->label('Текст')->rows(8)->columnSpanFull(),
+            TiptapEditor::make('body')
+                ->label('Текст')
+                ->tools(['bold', 'italic', 'underline', 'strike', '|', 'link', 'blockquote', 'code', 'code-block', 'highlight'])
+                ->output(TiptapOutput::Html)
+                ->disableFloatingMenus()
+                ->live(onBlur: true)
+                ->helperText('Маркер = спойлер в Telegram. В VK форматирование не переносится: уходит простой текст, ссылка — «текст (url)».')
+                ->rules([
+                    fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                        $length = PostFormatter::telegramLength(self::bodyHtml($value));
+                        $limit = filled($get('media_path')) ? PostFormatter::TG_CAPTION_LIMIT : PostFormatter::TG_MESSAGE_LIMIT;
+                        if ($length > $limit) {
+                            $fail(filled($get('media_path'))
+                                ? "С фото/видео Telegram допускает подпись до {$limit} символов, сейчас {$length}. Сократите текст или уберите вложение."
+                                : "Telegram допускает сообщение до {$limit} символов, сейчас {$length}.");
+                        }
+                    },
+                ])
+                ->columnSpanFull(),
             Forms\Components\FileUpload::make('media_path')
                 ->label('Картинка или видео (необязательно)')
-                ->helperText('Одно вложение к посту: JPG/PNG/WebP/GIF или MP4/MOV/WebM, до 100 МБ.')
+                ->helperText('Одно вложение: JPG/PNG/WebP/GIF или MP4/MOV/WebM, до 50 МБ (предел Telegram для бота). '
+                    .'С вложением текст — не длиннее 1024 символов. '
+                    .'В VK вложение уходит, только если у VK-токена есть права photos/video.')
                 ->disk(ContentCalendarSlot::MEDIA_DISK)
                 ->directory('content-calendar')
                 ->visibility('public')
@@ -71,24 +102,108 @@ class ContentCalendarSlotResource extends Resource
                     'image/jpeg', 'image/png', 'image/webp', 'image/gif',
                     'video/mp4', 'video/quicktime', 'video/webm',
                 ])
-                ->maxSize(102400)
+                ->maxSize(51200)
+                ->live()
                 ->openable()
                 ->downloadable()
+                ->columnSpanFull(),
+            Forms\Components\CheckboxList::make('destinations')
+                ->label('Куда публиковать')
+                ->options(fn (): array => array_map(
+                    static fn (array $d): string => (string) $d['label'],
+                    ContentCalendarSlot::enabledDestinations(),
+                ))
+                ->default(fn (): array => array_keys(ContentCalendarSlot::enabledDestinations()))
+                ->afterStateHydrated(function (Forms\Components\CheckboxList $component, mixed $state): void {
+                    if ($state === null) {
+                        $component->state(array_keys(ContentCalendarSlot::enabledDestinations()));
+                    }
+                })
+                ->helperText(fn (): ?string => ContentCalendarSlot::enabledDestinations() === []
+                    ? 'Площадки не настроены (CONTENT_CAL_* в .env) — публиковать некуда.'
+                    : null)
+                ->columns(2)
+                ->columnSpanFull(),
+            Forms\Components\Placeholder::make('vk_preview')
+                ->label('Как увидит VK')
+                ->content(fn (Get $get): HtmlString => new HtmlString(
+                    '<div style="white-space: pre-wrap">'.e(PostFormatter::toPlain(self::bodyHtml($get('body')))).'</div>'
+                ))
+                ->columnSpanFull(),
+            Forms\Components\Placeholder::make('publications_report')
+                ->label('Публикации')
+                ->visible(fn (?ContentCalendarSlot $record): bool => $record?->publications()->exists() ?? false)
+                ->content(fn (ContentCalendarSlot $record): HtmlString => self::publicationsReport($record))
                 ->columnSpanFull(),
             Forms\Components\TextInput::make('source_ref')->label('Источник (id)')->disabled(),
         ]);
     }
 
+    /** Внутри формы TiptapEditor держит JSON-документ; в БД уходит HTML. */
+    private static function bodyHtml(mixed $state): ?string
+    {
+        if (is_array($state)) {
+            return tiptap_converter()->asHTML($state);
+        }
+
+        return is_string($state) ? $state : null;
+    }
+
+    private static function publicationsReport(ContentCalendarSlot $record): HtmlString
+    {
+        $labels = array_map(static fn (array $d): string => (string) $d['label'], (array) config('content_calendar.destinations', []));
+        $icons = [
+            ContentCalendarPublication::STATUS_PUBLISHED => '✅',
+            ContentCalendarPublication::STATUS_PENDING => '⏳',
+            ContentCalendarPublication::STATUS_FAILED => '❌',
+        ];
+
+        $rows = $record->publications()->orderBy('destination')->get()->map(function (ContentCalendarPublication $p) use ($labels, $icons): string {
+            $line = ($icons[$p->status] ?? '').' '.e($labels[$p->destination] ?? $p->destination);
+            if ($p->permalink) {
+                $line .= ' — <a href="'.e($p->permalink).'" target="_blank" rel="noopener" class="underline">пост</a>';
+            }
+            if ($p->status !== ContentCalendarPublication::STATUS_PUBLISHED && $p->error) {
+                $line .= ' — '.e($p->error).' (попыток: '.$p->attempts.')';
+            }
+            if ($p->warning) {
+                $line .= ' — ⚠️ '.e($p->warning);
+            }
+
+            return $line;
+        });
+
+        return new HtmlString($rows->implode('<br>'));
+    }
+
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('publications'))
             ->defaultSort('slot_date')
             ->columns([
                 Tables\Columns\TextColumn::make('slot_date')->label('Дата')->date('d.m.Y')->sortable(),
                 Tables\Columns\TextColumn::make('slot_type')->label('Тип')->badge(),
                 Tables\Columns\TextColumn::make('status')->label('Статус')->badge(),
                 Tables\Columns\TextColumn::make('title')->label('Заголовок')->limit(40)->wrap(),
-                Tables\Columns\TextColumn::make('body')->label('Текст')->limit(50)->toggleable(),
+                Tables\Columns\TextColumn::make('body')
+                    ->label('Текст')
+                    ->formatStateUsing(fn (?string $state): string => PostFormatter::toPlain($state))
+                    ->limit(50)
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('crosspost')
+                    ->label('Площадки')
+                    ->state(function (ContentCalendarSlot $record): string {
+                        $targets = count($record->targetDestinations());
+                        $done = $record->publications->where('status', ContentCalendarPublication::STATUS_PUBLISHED)->count();
+                        $failed = $record->publications->where('status', ContentCalendarPublication::STATUS_FAILED)->count();
+
+                        return $record->publications->isEmpty()
+                            ? (string) $targets
+                            : "{$done}/{$targets}".($failed > 0 ? " · ошибок: {$failed}" : '');
+                    })
+                    ->color(fn (ContentCalendarSlot $record): ?string => $record->publications->contains('status', ContentCalendarPublication::STATUS_FAILED) ? 'danger' : null)
+                    ->toggleable(),
                 Tables\Columns\IconColumn::make('media_path')
                     ->label('Медиа')
                     ->icon(fn (ContentCalendarSlot $record): ?string => match ($record->mediaType()) {

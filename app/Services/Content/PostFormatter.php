@@ -68,6 +68,24 @@ final class PostFormatter
         return intdiv(strlen((string) mb_convert_encoding($visible, 'UTF-16LE', 'UTF-8')), 2);
     }
 
+    /**
+     * Простой текст старых слотов → абзацы для редактора: иначе Tiptap при
+     * открытии склеит переносы строк в пробелы. HTML возвращается как есть.
+     */
+    public static function toEditorHtml(?string $text): ?string
+    {
+        if ($text === null || $text === '' || self::hasMarkup($text)) {
+            return $text;
+        }
+
+        $lines = preg_split('/\r\n|\n|\r/', $text) ?: [$text];
+
+        return implode('', array_map(
+            static fn (string $line): string => '<p>'.htmlspecialchars($line, ENT_NOQUOTES, 'UTF-8').'</p>',
+            $lines,
+        ));
+    }
+
     private static function hasMarkup(string $text): bool
     {
         return preg_match('#</?[a-z][a-z0-9-]*(\s[^<>]*)?/?>#i', $text) === 1;

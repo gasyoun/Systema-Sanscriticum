@@ -93,4 +93,62 @@ class ContentCalendarSlotResourceGateTest extends TestCase
         Storage::disk(ContentCalendarSlot::MEDIA_DISK)->assertExists($slot->media_path);
         $this->assertSame(ContentCalendarSlot::MEDIA_VIDEO, $slot->mediaType());
     }
+
+    private function crosspostSlot(): ContentCalendarSlot
+    {
+        config([
+            'features.content_calendar' => true,
+            'content_calendar.destinations' => [
+                'tg_a' => ['platform' => 'telegram', 'label' => 'TG A', 'chat_id' => '@a'],
+                'tg_off' => ['platform' => 'telegram', 'label' => 'TG off', 'chat_id' => ''],
+                'vk_a' => ['platform' => 'vk', 'label' => 'VK A', 'group_id' => 111],
+            ],
+        ]);
+        $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
+
+        return ContentCalendarSlot::create([
+            'slot_date' => '2026-09-07',
+            'slot_type' => ContentCalendarSlot::TYPE_EVERGREEN,
+            'status' => ContentCalendarSlot::STATUS_SCHEDULED,
+            'publish_at' => '2026-09-07 12:00:00',
+            'body' => 'Старый простой текст',
+        ]);
+    }
+
+    public function test_edit_saves_formatted_body_and_chosen_destinations(): void
+    {
+        $slot = $this->crosspostSlot();
+
+        Livewire::test(ContentCalendarSlotResource\Pages\EditContentCalendarSlot::class, ['record' => $slot->getRouteKey()])
+            ->assertSuccessful()
+            ->assertFormSet(['destinations' => ['tg_a', 'vk_a']])
+            ->assertSee('Старый простой текст')
+            ->set('data.body', '<p><strong>Ом</strong> <mark>тайна</mark></p>')
+            ->set('data.destinations', ['tg_a'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $slot->refresh();
+        $this->assertSame('<p><strong>Ом</strong> <mark>тайна</mark></p>', $slot->body);
+        $this->assertSame(['tg_a'], $slot->destinations);
+        $this->assertSame(['tg_a'], $slot->targetDestinations());
+    }
+
+    public function test_caption_over_1024_with_media_is_rejected(): void
+    {
+        Storage::fake(ContentCalendarSlot::MEDIA_DISK);
+        $slot = $this->crosspostSlot();
+        $long = '<p>'.str_repeat('а', 1025).'</p>';
+
+        Livewire::test(ContentCalendarSlotResource\Pages\EditContentCalendarSlot::class, ['record' => $slot->getRouteKey()])
+            ->set('data.media_path', UploadedFile::fake()->image('cover.jpg'))
+            ->set('data.body', $long)
+            ->call('save')
+            ->assertHasFormErrors(['body']);
+
+        Livewire::test(ContentCalendarSlotResource\Pages\EditContentCalendarSlot::class, ['record' => $slot->getRouteKey()])
+            ->set('data.body', $long)
+            ->call('save')
+            ->assertHasNoFormErrors();
+    }
 }

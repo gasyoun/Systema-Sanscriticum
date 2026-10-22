@@ -63,6 +63,13 @@ class PostFormatterTest extends TestCase
         $this->assertSame($plain, PostFormatter::toPlain($plain));
     }
 
+    public function test_legacy_plain_text_becomes_editor_paragraphs(): void
+    {
+        $this->assertSame('<p>раз &lt;3</p><p></p><p>два</p>', PostFormatter::toEditorHtml("раз <3\n\nдва"));
+        $this->assertSame('<p>уже HTML</p>', PostFormatter::toEditorHtml('<p>уже HTML</p>'));
+        $this->assertSame("раз &lt;3\n\nдва", PostFormatter::toTelegramHtml(PostFormatter::toEditorHtml("раз <3\n\nдва")));
+    }
+
     public function test_telegram_length_counts_visible_utf16(): void
     {
         // эмодзи 🙏 = 2 UTF-16 units; URL ссылки в длину не входит.
