@@ -220,6 +220,14 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('publish-due-content-calendar');
 
+        // Часовой VK ID токен кросспостинга календаря: refresh ротирует пару,
+        // владелец один — прод. No-op, пока токен не импортирован.
+        $schedule->command('vk:token-refresh')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('vk-token-refresh');
+
         // Канал @rusamskrtam: автопилот очереди story_posts (H3930, Phase 1).
         // Ежечасный, как content:publish-due: точность слота «09:00/19:00»
         // важнее редкости. Прод-инертен, пока features.telegram_story_publisher

@@ -63,13 +63,8 @@ return [
     // уходит уведомление; дальше её не повторяем.
     'max_attempts' => 3,
 
+    // VK ID user-токен админа сообществ — не здесь, а в БД (vk_user_tokens,
+    // encrypted): живёт час, его обновляет vk:token-refresh, импорт — vk:token-import.
     'vk_api_version' => '5.199',
-
-    /*
-     | VK ID user-токен (админ сообществ) живёт час и ротируется вместе с
-     | refresh_token. Хранится в БД (vk_user_tokens, encrypted), единственный
-     | владелец — прод: vk:token-refresh обновляет его по расписанию.
-     */
-    'vk_token_refresh_minutes' => 20,
 
 ];
