@@ -211,8 +211,8 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('lesson-banners-render');
 
-        // VK/ORS content calendar auto-pilot (H1568, Wave 5): hourly tick
-        // posts every due `scheduled` slot via n8n. No-op while
+        // Content calendar auto-pilot (H1568, Wave 5): hourly tick crossposts
+        // every due `scheduled` slot to TG + VK (PublishCalendarSlotJob). No-op while
         // features.content_calendar_autopilot is OFF (default).
         $schedule->command('content:publish-due')
             ->hourly()
