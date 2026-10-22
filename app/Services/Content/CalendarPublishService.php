@@ -45,7 +45,7 @@ class CalendarPublishService
         $staleBefore = $now->copy()->subHours((int) config('content_calendar.max_lateness_hours', 24));
 
         foreach ($due as $slot) {
-            if ($slot->publications()->doesntExist() && $slot->publish_at->lt($staleBefore)) {
+            if (blank($slot->meta['checklist_passed_at'] ?? null) && $slot->publish_at->lt($staleBefore)) {
                 // Протухший слот (автопилот стоял, площадок не было) не
                 // выстреливает пачкой старых постов — ждёт новую дату.
                 $slot->forceFill([
@@ -73,11 +73,14 @@ class CalendarPublishService
         return ['dispatched' => $dispatched, 'held' => $held, 'skipped_no_destinations' => false];
     }
 
-    private function passesChecklist(ContentCalendarSlot $slot): bool
+    /**
+     * Чек-лист §2.8 один раз на слот (meta.checklist_passed_at): частично
+     * опубликованный слот на повторном тике пополам не удерживается. Слоты
+     * из TG-канала проходят его в PublishCalendarSlotJob перед разносом.
+     */
+    public function passesChecklist(ContentCalendarSlot $slot): bool
     {
-        // Already partly published (some destinations done): the text went
-        // through the checklist on the first tick — never hold it half-way.
-        if ($slot->publications()->exists()) {
+        if (filled($slot->meta['checklist_passed_at'] ?? null)) {
             return true;
         }
 
@@ -100,11 +103,11 @@ class CalendarPublishService
 
             return false;
         }
+        $meta = ['checklist_passed_at' => now()->toDateTimeString()];
         if ($verdict['warns'] !== []) {
-            $slot->forceFill(['meta' => array_merge($slot->meta ?? [], [
-                'prohibition_warn' => array_map(static fn (array $w): string => $w['rule'].' («'.$w['match'].'»)', $verdict['warns']),
-            ])])->save();
+            $meta['prohibition_warn'] = array_map(static fn (array $w): string => $w['rule'].' («'.$w['match'].'»)', $verdict['warns']);
         }
+        $slot->forceFill(['meta' => array_merge($slot->meta ?? [], $meta)])->save();
 
         return true;
     }

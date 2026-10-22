@@ -9,6 +9,7 @@ use App\Models\ContentCalendarSlot;
 use App\Models\ContentCandidate;
 use App\Services\Access\TelegramAdminNotifier;
 use App\Services\Content\CalendarPublishException;
+use App\Services\Content\CalendarPublishService;
 use App\Services\Content\CalendarTelegramPublisher;
 use App\Services\Content\CalendarVkPublisher;
 use App\Support\TelegramSendGuard;
@@ -65,9 +66,18 @@ class PublishCalendarSlotJob implements ShouldBeUnique, ShouldQueue
         CalendarTelegramPublisher $telegram,
         CalendarVkPublisher $vk,
         TelegramAdminNotifier $notifier,
+        CalendarPublishService $service,
     ): void {
         $slot = ContentCalendarSlot::find($this->slotId);
         if ($slot === null || $slot->status !== ContentCalendarSlot::STATUS_SCHEDULED) {
+            return;
+        }
+
+        // Слот из TG-канала диспатчится в обход content:publish-due — чек-лист
+        // §2.8 здесь (для остальных no-op: тик уже отметил checklist_passed_at).
+        if (! $service->passesChecklist($slot)) {
+            $notifier->notifyAdmins("Календарь контента, слот #{$slot->id}: пост не разнесён по площадкам — {$slot->meta['prohibition_hold']}");
+
             return;
         }
 

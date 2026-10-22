@@ -37,6 +37,14 @@ class ContentCalendarSlot extends Model
 
     public const TYPE_STUDENT_STORY = 'student_story';
 
+    /** Слот, созданный вручную в админке. */
+    public const TYPE_MANUAL = 'manual';
+
+    /** Слот из поста, вышедшего в TG-канале-источнике (ContentCalendarTelegramIngest). */
+    public const TYPE_TG_CHANNEL = 'tg_channel';
+
+    public const SOURCE_TG_CHANNEL = 'tg_channel';
+
     public const STATUS_EMPTY = 'empty';
 
     public const STATUS_DRAFT = 'draft';

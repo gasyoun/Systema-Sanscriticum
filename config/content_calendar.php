@@ -57,7 +57,21 @@ return [
     ],
 
     // Бот, назначенный админом (с правом публикации) во всех TG-каналах выше.
+    // ОТДЕЛЬНЫЙ бот: content:tg-webhook вешает на него свой вебхук.
     'tg_bot_token' => env('CONTENT_CAL_TG_BOT_TOKEN', ''),
+
+    /*
+     | Пост, вышедший в канале-источнике (его публикует любой админ канала,
+     | в т.ч. отложкой Telegram), становится слотом календаря и уходит в
+     | остальные площадки. Бот получает channel_post на вебхук
+     | /api/webhooks/content-calendar-tg (секрет — заголовок
+     | X-Telegram-Bot-Api-Secret-Token). OFF по умолчанию.
+     */
+    'tg_ingest_enabled' => (bool) env('CONTENT_CAL_TG_INGEST', false),
+    'tg_ingest_source' => 'tg_opoveshchenie',
+    'tg_webhook_secret' => env('CONTENT_CAL_TG_WEBHOOK_SECRET', ''),
+    // Альбом приходит отдельными апдейтами; ждём, пока придут все части.
+    'tg_album_wait_seconds' => 20,
 
     // После стольких неудачных тиков площадка помечается failed и админам
     // уходит уведомление; дальше её не повторяем.

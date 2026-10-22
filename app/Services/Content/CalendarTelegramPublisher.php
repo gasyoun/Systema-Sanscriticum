@@ -29,8 +29,16 @@ class CalendarTelegramPublisher
             throw CalendarPublishException::permanent('telegram: не настроен CONTENT_CAL_TG_BOT_TOKEN или chat_id площадки');
         }
 
-        $text = PostFormatter::toTelegramHtml($slot->body);
         $api = "https://api.telegram.org/bot{$token}";
+
+        // Пост пришёл из TG-канала-источника — копируем оригинал (разметка,
+        // медиа и альбом как есть, без лимитов скачивания).
+        $source = $slot->meta['tg_source'] ?? null;
+        if (is_array($source) && filled($source['chat_id'] ?? null) && ($source['message_ids'] ?? []) !== []) {
+            return $this->copy($api, $chatId, (string) $source['chat_id'], array_map('intval', (array) $source['message_ids']));
+        }
+
+        $text = PostFormatter::toTelegramHtml($slot->body);
 
         $response = match ($slot->mediaType()) {
             ContentCalendarSlot::MEDIA_PHOTO => $this->sendFile($api.'/sendPhoto', 'photo', $slot, $chatId, $text),
@@ -49,6 +57,36 @@ class CalendarTelegramPublisher
             throw new CalendarPublishException(
                 'telegram: '.($response->json('description') ?? 'HTTP '.$response->status())
             );
+        }
+
+        return [
+            'external_id' => (string) $messageId,
+            'permalink' => self::permalink($chatId, (int) $messageId),
+            'warning' => null,
+        ];
+    }
+
+    /**
+     * @param  list<int>  $messageIds
+     * @return array{external_id: string, permalink: ?string, warning: ?string}
+     */
+    private function copy(string $api, string $chatId, string $fromChatId, array $messageIds): array
+    {
+        $response = count($messageIds) > 1
+            ? Http::timeout(60)->asForm()->post($api.'/copyMessages', [
+                'chat_id' => $chatId,
+                'from_chat_id' => $fromChatId,
+                'message_ids' => json_encode($messageIds),
+            ])
+            : Http::timeout(60)->asForm()->post($api.'/copyMessage', [
+                'chat_id' => $chatId,
+                'from_chat_id' => $fromChatId,
+                'message_id' => $messageIds[0],
+            ]);
+
+        $messageId = $response->json('result.message_id') ?? $response->json('result.0.message_id');
+        if (! $response->successful() || $response->json('ok') !== true || $messageId === null) {
+            throw new CalendarPublishException('telegram: '.($response->json('description') ?? 'HTTP '.$response->status()));
         }
 
         return [
