@@ -188,7 +188,7 @@ final class SupportPayLinkResolver
      * Выигрывает курс с наибольшим числом совпавших основ; ничья («грамматика»
      * у десятка групп) — не угадываем, null.
      */
-    private function courseNamedIn(?string $text): ?Course
+    public function courseNamedIn(?string $text): ?Course
     {
         $wanted = $this->stems($text);
         if ($wanted === []) {
