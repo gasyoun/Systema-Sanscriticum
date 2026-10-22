@@ -292,9 +292,8 @@ JSON. В env n8n их держать тоже нельзя: в этой инст
 
 Воркфлоу [`vk-calendar-post.workflow.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/vk-calendar-post.workflow.json)
 принимает один готовый пост из Laravel и публикует его на стене сообщества
-ВКонтакте (VK-only per D10, TG-зеркала здесь нет в отличие от social_post W2).
-С 22-10-2026 к посту можно приложить одну картинку или одно видео: поле
-«Картинка или видео» в форме слота (Filament → Календарь контента → Edit).
+ВКонтакте (текст, без картинки — VK-only per D10, TG-зеркала здесь нет в
+отличие от social_post W2).
 
 ## Кто инициирует
 
@@ -313,8 +312,6 @@ Laravel — команда `content:publish-due` (планировщик: **еж
   "calendar_slot_id": 42,
   "slot_type": "evergreen",
   "text_vk": "…",
-  "media_type": "photo",
-  "media_url": "https://samskrte.ru/storage/content-calendar/….jpg",
   "source_kind": "vk_ors_post",
   "source_ref": "wall-88831040_12345",
   "publish_at": "2026-08-01T09:00:00+00:00"
@@ -323,27 +320,11 @@ Laravel — команда `content:publish-due` (планировщик: **еж
 
 Заголовок `X-Webhook-Secret` = `N8N_CALENDAR_POST_SECRET`.
 
-`media_type` — `photo` | `video` | `null` (по расширению файла: mp4/mov/webm —
-видео), `media_url` — публичный URL на диске `public` или `null`. VK не берёт
-медиа по ссылке, поэтому n8n скачивает файл и грузит его сам:
-
-- **фото**: `photos.getWallUploadServer` → скачать → POST `photo` на
-  `upload_url` → `photos.saveWallPhoto` → `attachments=photo<owner>_<id>`;
-- **видео**: `video.save` (`wallpost=0`) → скачать → POST `video_file` на
-  `upload_url` → `attachments=video<owner>_<video_id>`;
-- без медиа — `wall.post` с пустым `attachments`, как раньше.
-
-Методы загрузки работают **только с пользовательским токеном** (ключ
-сообщества их не умеет), см. п. 2 настройки.
-
 ## Успех / отказ
 
 `wall.post` успешен → Laravel помечает слот `published` и любой связанный
 `ContentCandidate` тоже `published`. Не-2xx ответ → слот **остаётся**
 `scheduled` и будет повторён на следующем часовом тике — тихого дропа нет.
-VK отвечает на ошибки HTTP 200 с полем `error`, поэтому после `wall.post` стоит
-нода `VK ошибка?` → *Stop and Error*: вебхук отдаёт 500, и Laravel не пометит
-слот опубликованным. Сбой скачивания/загрузки медиа роняет execution так же.
 
 ## Настройка после импорта
 
@@ -351,12 +332,6 @@ VK отвечает на ошибки HTTP 200 с полем `error`, поэто
 2. **VK**: в ноде `VK: wall.post` заменить `REPLACE_VK_GROUP_ID` (числовой ID
    сообщества) и `REPLACE_VK_GROUP_TOKEN` (community access token с правом
    `wall`). `owner_id` = `-<GROUP_ID>` (минус уже стоит в шаблоне).
-   В нодах `VK: photos.getWallUploadServer`, `VK: photos.saveWallPhoto` и
-   `VK: video.save` — тот же `REPLACE_VK_GROUP_ID` (без минуса) и
-   `REPLACE_VK_USER_TOKEN`: пользовательский токен администратора сообщества
-   с правами `photos,video,wall,offline`.
-   Сервер n8n должен видеть `https://samskrte.ru/storage/…` (диск `public`,
-   `php artisan storage:link` на проде).
 3. **Активировать**, скопировать *Production* URL вебхука.
 4. **Laravel** `.env`:
    ```
