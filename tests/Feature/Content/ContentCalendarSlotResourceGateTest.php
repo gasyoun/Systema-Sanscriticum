@@ -168,6 +168,35 @@ class ContentCalendarSlotResourceGateTest extends TestCase
             ->assertHasFormErrors(['publish_at', 'body']);
     }
 
+    public function test_unconfigured_destination_is_shown_but_cannot_be_chosen(): void
+    {
+        $slot = $this->crosspostSlot();
+
+        Livewire::test(ContentCalendarSlotResource\Pages\EditContentCalendarSlot::class, ['record' => $slot->getRouteKey()])
+            ->assertSee('TG off')
+            ->assertSee('не настроено')
+            ->set('data.destinations', ['tg_a', 'tg_off'])
+            ->call('save')
+            ->assertHasFormErrors(['destinations']);
+    }
+
+    public function test_bulk_action_sets_destinations_except_published(): void
+    {
+        $scheduled = $this->crosspostSlot();
+        $published = ContentCalendarSlot::create([
+            'slot_date' => '2026-09-08', 'slot_type' => ContentCalendarSlot::TYPE_MANUAL,
+            'status' => ContentCalendarSlot::STATUS_PUBLISHED, 'body' => '<p>вышел</p>',
+            'destinations' => ['tg_a', 'vk_a'],
+        ]);
+
+        Livewire::test(ContentCalendarSlotResource\Pages\ListContentCalendarSlots::class)
+            ->callTableBulkAction('destinations', [$scheduled, $published], data: ['destinations' => ['vk_a']])
+            ->assertHasNoTableBulkActionErrors();
+
+        $this->assertSame(['vk_a'], $scheduled->refresh()->destinations);
+        $this->assertSame(['tg_a', 'vk_a'], $published->refresh()->destinations);
+    }
+
     public function test_ready_vk_media_links_are_normalised_and_garbage_rejected(): void
     {
         $slot = $this->crosspostSlot();
