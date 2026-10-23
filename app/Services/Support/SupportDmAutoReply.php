@@ -1597,11 +1597,16 @@ final class SupportDmAutoReply
             $decision = [...$decision, 'option' => null, 'missing' => 'what'];
         }
 
-        // Студент назвал то, под что подходит несколько групп («по понедельникам»)
-        // — модель выбрала бы наугад (пилот 23-10-2026). Тут переспрашивают правила.
-        if ($decision !== null && $decision['option'] !== null
-            && $this->payChoices->resolve($user, $text, $this->payContext($open))['kind'] === 'which') {
-            $decision = [...$decision, 'option' => null, 'missing' => 'what'];
+        // Модель выбирает, только когда правила по словам студента ничего не
+        // нашли («тот же, что в прошлый раз»). Назвал курс, группу или день —
+        // решают правила: модель брала группу из прошлого разговора («весь
+        // курс санкхьи» → упанишады) и угадывала одну из нескольких («по
+        // понедельникам»), пилот 23-10-2026.
+        if ($decision !== null && $decision['option'] !== null) {
+            $rules = $this->payChoices->resolve($user, $text, $this->payContext($open));
+            if ($rules['kind'] !== 'none' || ($rules['note'] ?? null) !== null) {
+                $decision = [...$decision, 'option' => null, 'missing' => $rules['kind'] === 'block' ? 'block' : 'what'];
+            }
         }
 
         if ($llmCalled) {
