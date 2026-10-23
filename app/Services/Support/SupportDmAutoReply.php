@@ -1589,7 +1589,9 @@ final class SupportDmAutoReply
         }
 
         if ($mode === 'live' && $decision !== null) {
-            if ($decision['intent'] === 'human' && $talkGoesOn) {
+            // Модель зовётся только на сообщения про оплату — «человек» здесь
+            // и вне начатого разговора значит рассрочку, скидку, спор о сумме.
+            if ($decision['intent'] === 'human') {
                 return $this->payHandoff($open, $incoming, $user, $category, $text, 'human');
             }
 
