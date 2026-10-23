@@ -143,6 +143,9 @@ final class SupportDmAutoReply
     /** Сколько ждём ответа на уточняющий вопрос об оплате, часов. */
     private const PAY_CLARIFY_WINDOW_HOURS = 2;
 
+    /** Тень разбора разговора моделью: что решила LLM и что сделали регулярки. */
+    public const EVENT_PAY_LLM_SHADOW = 'dm_pay_llm_shadow';
+
     /** H5452: подсказка не ушла куратору — сообщение отфильтровано как шум (reason в meta). */
     public const EVENT_HINT_SUPPRESSED = 'dm_hint_suppressed';
 
@@ -196,6 +199,7 @@ final class SupportDmAutoReply
         private readonly Ceilings $ceilings,
         private readonly EnrollmentGroupResolver $enrollGroups,
         private readonly PayChoiceOptions $payChoices,
+        private readonly PayDialogInterpreter $payDialog,
     ) {}
 
     public function isEnabled(): bool
@@ -1547,16 +1551,73 @@ final class SupportDmAutoReply
 
         $category ??= SupportAnswerSuggestion::CATEGORY_PAYMENT;
         $open = $this->openPayClarify($incoming);
+        $asked = $this->payClarifyEvents($incoming, 24);
+        $talkGoesOn = $asked->contains(fn (SupportAiReplyEvent $e) => $e->created_at >= now()->subHours(self::PAY_CLARIFY_WINDOW_HOURS));
 
+        // 22-10-2026: разговор понимает локальная модель (весь диалог, не
+        // слова-триггеры). Возврат/рассрочка/скидки ей не отдаём — это человек.
+        $mode = (string) config('features.support_pay_dialog_llm', 'off');
+        $decision = null;
+
+        if ($mode !== 'off'
+            && preg_match(self::PAY_HUMAN_PATTERN, $text) !== 1
+            && ($open !== null || $talkGoesOn || $this->moneyIntent($text)
+                || preg_match(self::ENROLL_INTENT_PATTERN, $text) === 1 || $this->payChoices->hasChoiceCue($text))
+        ) {
+            $decision = $this->payDialog->interpret($incoming, $user, [$text, ...$this->recentIncomingTexts($incoming)]);
+        }
+
+        if ($mode === 'live' && $decision !== null) {
+            return $this->applyPayDecision($decision, $open, $asked, $incoming, $user, $contact, $category, $text);
+        }
+
+        $result = $this->payClarifyByRules($incoming, $user, $contact, $category, $text, $open, $asked, $talkGoesOn);
+
+        if ($mode === 'shadow' && $decision !== null) {
+            SupportAiReplyEvent::create([
+                'telegram_support_message_id' => $incoming->id,
+                'event_type' => self::EVENT_PAY_LLM_SHADOW,
+                'meta' => [
+                    'via' => self::VIA,
+                    'llm' => $decision,
+                    'rules_status' => $result['status'] ?? null,
+                    'text' => mb_substr($text, 0, 300),
+                ],
+            ]);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Прежний путь на регулярках (он же запасной, когда модель молчит).
+     *
+     * @param  Collection<int, SupportAiReplyEvent>  $asked
+     * @return array{status: string, category: ?string}|null
+     */
+    private function payClarifyByRules(
+        TelegramSupportMessage $incoming,
+        ?User $user,
+        ?TelegramSupportContact $contact,
+        string $category,
+        string $text,
+        ?SupportAiReplyEvent $open,
+        Collection $asked,
+        bool $talkGoesOn,
+    ): ?array {
         if ($open !== null) {
             return $this->answerPayClarify($open, $incoming, $user, $contact, $category, $text);
         }
 
-        if (preg_match(self::PAY_HELP_PATTERN, $text) !== 1 || preg_match(self::PAY_HUMAN_PATTERN, $text) === 1) {
+        // Разговор об оплате уже идёт (вопрос был сегодня): «философия санкхья
+        // 2 блок» без слова «оплатить» — тоже просьба о ссылке (22-10-2026).
+        $payTalk = preg_match(self::PAY_HELP_PATTERN, $text) === 1;
+
+        if ((! $payTalk && ! $talkGoesOn) || preg_match(self::PAY_HUMAN_PATTERN, $text) === 1) {
             return null;
         }
 
-        $problem = preg_match(self::PAY_PROBLEM_PATTERN, $text) === 1;
+        $problem = $payTalk && preg_match(self::PAY_PROBLEM_PATTERN, $text) === 1;
 
         $explicit = $this->payChoices->explicit($user, $text);
         if ($explicit !== null) {
@@ -1567,6 +1628,91 @@ final class SupportDmAutoReply
             return $this->sendPayChoiceLink($incoming, $user, $contact, $category, $text, $explicit, $problem);
         }
 
+        if (! $payTalk) {
+            return null;
+        }
+
+        return $this->askPayQuestion($incoming, $user, $category, $text, $problem, $asked);
+    }
+
+    /**
+     * Решение модели → действие. Суммы и ссылки — код, модель лишь выбрала.
+     *
+     * @param  array{intent: string, option: ?array, missing: ?string, confidence: float, model: ?string}  $decision
+     * @param  Collection<int, SupportAiReplyEvent>  $asked
+     * @return array{status: string, category: ?string}|null
+     */
+    private function applyPayDecision(
+        array $decision,
+        ?SupportAiReplyEvent $open,
+        Collection $asked,
+        TelegramSupportMessage $incoming,
+        ?User $user,
+        ?TelegramSupportContact $contact,
+        string $category,
+        string $text,
+    ): ?array {
+        $intent = $decision['intent'];
+
+        // Не про оплату — открытый вопрос продолжает ждать, конвейер идёт дальше.
+        if ($intent === 'other') {
+            return null;
+        }
+
+        $close = function (string $outcome) use ($open, $incoming): void {
+            $open?->forceFill(['meta' => [
+                ...$open->meta,
+                'closed_at' => now()->toIso8601String(),
+                'answer_message_id' => $incoming->id,
+                'outcome' => $outcome,
+            ]])->save();
+        };
+
+        if ($intent === 'human') {
+            $close('human');
+
+            return $this->hintComplex($incoming, $user, $category, $text, false, null,
+                '🧭 По разговору студенту нужен человек (возврат, рассрочка, спор о сумме или жалоба). Ответьте сами.',
+                standalone: true);
+        }
+
+        $problem = $intent === 'pay_problem' || (bool) ($open?->meta['pay_problem'] ?? false);
+
+        if ($decision['option'] !== null) {
+            $close('link');
+            if ($intent === 'pay_problem') {
+                $this->payProblemHint($incoming, $user, $category, $text);
+            }
+
+            return $this->sendPayChoiceLink($incoming, $user, $contact, $category, $text, $decision['option'], $problem, answering: $open !== null);
+        }
+
+        // Уже спрашивали и снова непонятно — второй раз не спрашиваем.
+        if ($open !== null) {
+            $close('unparsed');
+
+            return $this->hintComplex($incoming, $user, $category, $text, false, null,
+                '🧭 Бот спросил, что оплатить, но и по разговору не понял ответ. Пришлите студенту ссылку сами.',
+                standalone: true);
+        }
+
+        return $this->askPayQuestion($incoming, $user, $category, $text, $intent === 'pay_problem', $asked);
+    }
+
+    /**
+     * Вопрос «что оплатить» с вариантами и ценами из Tariff.
+     *
+     * @param  Collection<int, SupportAiReplyEvent>  $asked
+     * @return array{status: string, category: ?string}|null
+     */
+    private function askPayQuestion(
+        TelegramSupportMessage $incoming,
+        ?User $user,
+        string $category,
+        string $text,
+        bool $problem,
+        Collection $asked,
+    ): ?array {
         $options = $this->payChoices->for($user, [$text, ...$this->recentIncomingTexts($incoming)]);
         $labels = array_values(array_filter(array_map(fn (array $o) => $this->payChoices->label($o, $user), $options)));
 
@@ -1589,10 +1735,17 @@ final class SupportDmAutoReply
                 standalone: true);
         }
 
-        // Один вопрос на чат в сутки: по базе (Redis может лежать) и клеймом
-        // от гонки двух воркеров.
-        if ($this->payClarifyEvents($incoming, 24)->isNotEmpty()
-            || ! TelegramSendGuard::claimKey('pay-clarify:'.$incoming->telegram_chat_id, 86400)) {
+        // Не переспрашиваем по кругу: вопрос, на который за сутки не пришёл
+        // понятный ответ, второй раз не задаём — вопрос куратору. Вопрос,
+        // закончившийся ссылкой, новому не мешает. Учёт по базе (Redis может
+        // лежать), клейм — только от гонки двух воркеров.
+        if ($asked->contains(fn (SupportAiReplyEvent $e) => ($e->meta['outcome'] ?? null) !== 'link')) {
+            return $this->hintComplex($incoming, $user, $category, $text, false, null,
+                '🧭 Студент снова спрашивает про оплату, а на сегодняшний вопрос бота «что оплатить» понятного ответа не было. Ответьте сами.',
+                standalone: true);
+        }
+
+        if (! TelegramSendGuard::claimKey('pay-clarify:'.$incoming->telegram_chat_id.':'.$incoming->id, 300)) {
             return null;
         }
 
@@ -1672,7 +1825,12 @@ final class SupportDmAutoReply
             return null;
         }
 
-        $open->forceFill(['meta' => [...$open->meta, 'closed_at' => now()->toIso8601String(), 'answer_message_id' => $incoming->id]])->save();
+        $open->forceFill(['meta' => [
+            ...$open->meta,
+            'closed_at' => now()->toIso8601String(),
+            'answer_message_id' => $incoming->id,
+            'outcome' => $pick !== null ? 'link' : 'unparsed',
+        ]])->save();
 
         if ($pick === null) {
             $labels = array_values(array_filter(array_map(fn (array $o) => $this->payChoices->label($o, $user), $options)));
@@ -1710,14 +1868,15 @@ final class SupportDmAutoReply
 
         $price = number_format($link['amount'], 0, ',', ' ');
         $what = $link['group'] !== null ? "группы «{$link['group']->name}»" : "курса «{$link['course']->title}»";
-        $draft = "Ссылка на оплату блока {$link['block']} {$what} — {$price} ₽: {$link['url']}"
+        $block = $link['block'] === PayChoiceOptions::FULL ? 'всего курса' : "блока {$link['block']}";
+        $draft = "Ссылка на оплату {$block} {$what} — {$price} ₽: {$link['url']}"
             ."\n\nПосле оплаты доступ откроется автоматически."
             .($problem ? "\n\nЕсли оплата снова не пройдёт, пришлите, пожалуйста, снимок экрана — подключим куратора." : '');
 
         // Ответ на наш вопрос: человек после него не писал (openPayClarify).
         if (! $answering && $this->recentHumanOutgoingInChat($incoming)) {
             return $this->hintComplex($incoming, $user, $category, $text, false, null,
-                "🧭 Готовая ссылка на оплату (блок {$link['block']} {$what}, {$price} ₽): {$link['url']}", standalone: true);
+                "🧭 Готовая ссылка на оплату ({$block} {$what}, {$price} ₽): {$link['url']}", standalone: true);
         }
 
         if (! TelegramSendGuard::claimKey('pay-choice-link:'.$incoming->telegram_chat_id.':'.$link['tariff']->id, 3600)) {

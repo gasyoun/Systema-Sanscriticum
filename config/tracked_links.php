@@ -149,6 +149,23 @@ foreach (['c', 't', 'h', 'p'] as $creative) {
 }
 
 /*
+ * Креатив r — рекап открытого урока 22-10 (как у san26-ors-r): маршрут ведет
+ * на WP-статью записи урока на samskrtam.ru (rutube/vk/youtube + стенограмма),
+ * а не на карточку курса. Внешний destination — как у t.me-хопов ниже:
+ * флеш-цель Метрики на нем не ставится, клик пишется в anons_link_clicks.
+ */
+$links['vas26-ors-r'] = [
+    'destination' => 'https://samskrtam.ru/kurs-joga-vasishtha/',
+    'utm' => [
+        'utm_source' => $channels['ors']['source'],
+        'utm_medium' => $channels['ors']['medium'],
+        'utm_campaign' => $vas26Campaign,
+        'utm_content' => 'vas26_r',
+        'utm_term' => 'slow_reading',
+    ],
+];
+
+/*
  * syn26 — открытое занятие «Синтаксиса санскрита» (курс 266, занятие #268
  * 25-10-2026 17:00 МСК; вс 17:00, блоки по 4 занятия 4 800 ₽, аудитория с
  * базой санскрита): маршрут попадания — куратор, /ga/-ключи ведут на карточку
