@@ -168,6 +168,26 @@ class ContentCalendarSlotResourceGateTest extends TestCase
             ->assertHasFormErrors(['publish_at', 'body']);
     }
 
+    public function test_ready_vk_media_links_are_normalised_and_garbage_rejected(): void
+    {
+        $slot = $this->crosspostSlot();
+
+        Livewire::test(ContentCalendarSlotResource\Pages\EditContentCalendarSlot::class, ['record' => $slot->getRouteKey()])
+            ->set('data.vk_attachments', 'https://vk.com/wall-236973776_52')
+            ->call('save')
+            ->assertHasFormErrors(['vk_attachments']);
+
+        Livewire::test(ContentCalendarSlotResource\Pages\EditContentCalendarSlot::class, ['record' => $slot->getRouteKey()])
+            ->set('data.vk_attachments', "https://vk.com/photo-236973776_457239017\nhttps://vkvideo.ru/video-236973776_456239020")
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame('photo-236973776_457239017,video-236973776_456239020', $slot->refresh()->vk_attachments);
+
+        Livewire::test(ContentCalendarSlotResource\Pages\EditContentCalendarSlot::class, ['record' => $slot->getRouteKey()])
+            ->assertFormSet(['vk_attachments' => "photo-236973776_457239017\nvideo-236973776_456239020"]);
+    }
+
     public function test_caption_over_1024_with_media_is_rejected(): void
     {
         Storage::fake(ContentCalendarSlot::MEDIA_DISK);
