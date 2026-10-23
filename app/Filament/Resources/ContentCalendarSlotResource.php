@@ -140,22 +140,12 @@ class ContentCalendarSlotResource extends Resource
                     },
                 ])
                 ->columnSpanFull(),
-            Forms\Components\CheckboxList::make('destinations')
-                ->label('Куда публиковать')
-                ->options(fn (): array => array_map(
-                    static fn (array $d): string => (string) $d['label'],
-                    ContentCalendarSlot::enabledDestinations(),
-                ))
-                ->default(fn (): array => array_keys(ContentCalendarSlot::enabledDestinations()))
+            self::destinationsField()
                 ->afterStateHydrated(function (Forms\Components\CheckboxList $component, mixed $state): void {
                     if ($state === null) {
                         $component->state(array_keys(ContentCalendarSlot::enabledDestinations()));
                     }
                 })
-                ->helperText(fn (): ?string => ContentCalendarSlot::enabledDestinations() === []
-                    ? 'Площадки не настроены (CONTENT_CAL_* в .env) — публиковать некуда.'
-                    : null)
-                ->columns(2)
                 ->columnSpanFull(),
             Forms\Components\Placeholder::make('vk_preview')
                 ->label('Как увидит VK')
@@ -170,6 +160,32 @@ class ContentCalendarSlotResource extends Resource
                 ->columnSpanFull(),
             Forms\Components\TextInput::make('source_ref')->label('Источник (id)')->disabled(),
         ]);
+    }
+
+    /**
+     * Галочки площадок: видны все шесть из config/content_calendar.php,
+     * ненастроенные (нет chat_id / group_id в .env) — серые, их не выбрать.
+     */
+    private static function destinationsField(): Forms\Components\CheckboxList
+    {
+        $enabled = ContentCalendarSlot::enabledDestinations();
+
+        return Forms\Components\CheckboxList::make('destinations')
+            ->label('Куда публиковать')
+            ->options(array_map(
+                static fn (array $d): string => (string) $d['label'],
+                (array) config('content_calendar.destinations', []),
+            ))
+            ->descriptions(array_map(
+                static fn (): string => 'не настроено',
+                array_diff_key((array) config('content_calendar.destinations', []), $enabled),
+            ))
+            ->disableOptionWhen(static fn (string $value): bool => ! isset($enabled[$value]))
+            ->default(array_keys($enabled))
+            ->helperText($enabled === []
+                ? 'Площадки не настроены (CONTENT_CAL_* в .env) — публиковать пока некуда.'
+                : null)
+            ->columns(2);
     }
 
     /** Внутри формы TiptapEditor держит JSON-документ; в БД уходит HTML. */
@@ -236,6 +252,10 @@ class ContentCalendarSlotResource extends Resource
                             : "{$done}/{$targets}".($failed > 0 ? " · ошибок: {$failed}" : '');
                     })
                     ->color(fn (ContentCalendarSlot $record): ?string => $record->publications->contains('status', ContentCalendarPublication::STATUS_FAILED) ? 'danger' : null)
+                    ->tooltip(fn (ContentCalendarSlot $record): string => implode(', ', array_map(
+                        static fn (string $key): string => (string) (config("content_calendar.destinations.{$key}.label") ?? $key),
+                        $record->targetDestinations(),
+                    )) ?: 'никуда')
                     ->toggleable(),
                 Tables\Columns\IconColumn::make('media_path')
                     ->label('Медиа')
@@ -309,6 +329,22 @@ class ContentCalendarSlotResource extends Resource
                         }
                         Notification::make()->title('Выбранные слоты запланированы')->success()->send();
                     }),
+                Tables\Actions\BulkAction::make('destinations')
+                    ->label('Куда публиковать')
+                    ->icon('heroicon-o-megaphone')
+                    ->form([self::destinationsField()->required()])
+                    ->action(function (Collection $records, array $data): void {
+                        $n = 0;
+                        foreach ($records as $record) {
+                            /** @var ContentCalendarSlot $record */
+                            if ($record->status !== ContentCalendarSlot::STATUS_PUBLISHED) {
+                                $record->update(['destinations' => array_values($data['destinations'])]);
+                                $n++;
+                            }
+                        }
+                        Notification::make()->title("Площадки заданы слотам: {$n} (опубликованные не трогаем)")->success()->send();
+                    })
+                    ->deselectRecordsAfterCompletion(),
                 Tables\Actions\BulkAction::make('cancel')
                     ->label('Cancel')
                     ->icon('heroicon-o-x-mark')
