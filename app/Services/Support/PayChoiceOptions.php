@@ -330,7 +330,10 @@ final class PayChoiceOptions
 
         $course = $this->payLinks->courseNamedIn($text);
         if ($course === null) {
-            return [];
+            // Название подходит нескольким курсам («санкхьи»: курс и курс-поток
+            // «— пн 18:00») — все группы с лучшим совпадением, оплаченные
+            // отсеет resolve().
+            return $this->targetsOf($this->bestByTitle($pool, $text));
         }
 
         $member = $user !== null ? $this->memberGroupId($user, $course) : null;
@@ -343,6 +346,29 @@ final class PayChoiceOptions
         return $open->isEmpty()
             ? [['course_id' => (int) $course->id, 'group_id' => null]]
             : $open->map(fn ($id) => ['course_id' => (int) $course->id, 'group_id' => (int) $id])->values()->all();
+    }
+
+    /**
+     * Группы пула, чьи курс/название лучше всех совпали со словами студента.
+     *
+     * @param  Collection<int, Group>  $pool
+     * @return Collection<int, Group>
+     */
+    private function bestByTitle(Collection $pool, string $text): Collection
+    {
+        $wanted = $this->payLinks->stems($text);
+        if ($wanted === []) {
+            return collect();
+        }
+
+        $scored = $pool->map(fn (Group $g) => [$g, count(array_intersect(
+            $this->payLinks->stems($g->name.' '.$this->groups->courseOf($g)?->title),
+            $wanted,
+        ))])->filter(fn (array $row) => $row[1] > 0);
+
+        $best = $scored->max(fn (array $row) => $row[1]);
+
+        return $scored->filter(fn (array $row) => $row[1] === $best)->map(fn (array $row) => $row[0])->values();
     }
 
     /**

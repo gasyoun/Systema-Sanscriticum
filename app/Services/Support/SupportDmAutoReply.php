@@ -1602,9 +1602,11 @@ final class SupportDmAutoReply
         // решают правила: модель брала группу из прошлого разговора («весь
         // курс санкхьи» → упанишады) и угадывала одну из нескольких («по
         // понедельникам»), пилот 23-10-2026.
+        // И только как ответ на вопрос бота: на новое сообщение модель тянула
+        // группу из прошлого разговора.
         if ($decision !== null && $decision['option'] !== null) {
             $rules = $this->payChoices->resolve($user, $text, $this->payContext($open));
-            if ($rules['kind'] !== 'none' || ($rules['note'] ?? null) !== null) {
+            if ($open === null || $rules['kind'] !== 'none' || ($rules['note'] ?? null) !== null) {
                 $decision = [...$decision, 'option' => null, 'missing' => $rules['kind'] === 'block' ? 'block' : 'what'];
             }
         }
