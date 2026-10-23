@@ -185,7 +185,7 @@ final class PayChoiceOptions
 
         $block = $this->blockIn($text);
         // Ответ на «какой блок?» — просто «2» или «второй».
-        if ($block === null && $payable === [] && $current !== null) {
+        if ($block === null && $current !== null && ($payable === [] || $this->sameAsRejected($payable, [$current]))) {
             $block = $this->choiceNumberIn($text);
         }
         $note = null;
@@ -289,6 +289,15 @@ final class PayChoiceOptions
 
             $pool = Group::query()->with(EnrollmentGroupResolver::eagerForMatching())
                 ->whereIn('id', array_filter(array_column($asked, 'group_id')))->get();
+
+            // «61» — номер одной из названных групп (без «гр.»).
+            if (preg_match('/^\D*?(\d{2,3})\D*$/u', trim($text), $m) === 1) {
+                $byNumber = $pool->filter(fn (Group $g) => in_array((int) $m[1], $this->payLinks->groupNumbersIn($g->name.' '.$g->courses->pluck('title')->implode(' ')), true));
+                if ($byNumber->count() === 1) {
+                    return $this->targetsOf($byNumber);
+                }
+            }
+
             $hit = $this->groups->matching($pool, $text);
             if ($hit->isEmpty()) {
                 $wanted = $this->payLinks->stems($text);

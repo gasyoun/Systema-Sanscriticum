@@ -268,16 +268,16 @@ class SupportDmPayClarifyTest extends TestCase
 
     public function test_my_group_phrase_searches_only_own_groups(): void
     {
-        $own = $this->groupWithCourse('Грамматика по Кочергиной гр.62', 'Грамматика по Кочергиной гр.62, ср 20:00', 6000);
-        $this->groupWithCourse('Грамматика хинди гр. 1', 'Грамматика хинди гр. 1, ср 08:00', 5000);
-        $this->groupWithCourse('Продленка санскрита', 'Продленка санскрита ср 19:00', 4000);
+        $own = $this->groupWithCourse('Грамматика по Кочергиной гр.62', 'Грамматика по Кочергиной гр.62, среда 20:00', 6000);
+        $this->groupWithCourse('Грамматика хинди гр. 1', 'Грамматика хинди гр. 1, среда 08:00', 5000);
+        $this->groupWithCourse('Продленка санскрита', 'Продленка санскрита среда 19:00', 4000);
         $this->user->activeGroups()->attach($own->id);
 
         $this->ask('как оплатить?');
         Carbon::setTestNow(now()->addMinutes(1));
         $this->ask('ну ту, где я по средам занимаюсь');
 
-        $this->assertStringContainsString('блока 1 группы «Грамматика по Кочергиной гр.62, ср 20:00»', $this->lastBotText());
+        $this->assertStringContainsString('блока 1 группы «Грамматика по Кочергиной гр.62, среда 20:00»', $this->lastBotText());
     }
 
     public function test_ordinal_answer_to_which_question(): void

@@ -144,6 +144,9 @@ final class SupportDmAutoReply
     /** Сколько раз бот уточняет, прежде чем передать куратору (23-10-2026). */
     private const PAY_CLARIFY_MAX_ROUNDS = 3;
 
+    /** Предел вопросов в одном разговоре, даже если он продвигается (переспросы, блок). */
+    private const PAY_CLARIFY_MAX_STEPS = 6;
+
     private const PAY_CLARIFY_WINDOW_HOURS = 2;
 
     /** Тень разбора разговора моделью: что решила LLM и что сделали регулярки. */
@@ -1724,8 +1727,11 @@ final class SupportDmAutoReply
             return $this->sendPayChoiceLink($incoming, $user, $contact, $category, $text, $resolved['option'], $problem, answering: true);
         }
 
+        // Считаются только непонятые ответы: «по понедельникам» → «какая
+        // из групп» → «по грамматике» — разговор идёт, это не промах.
         $round = (int) ($open->meta['round'] ?? 1);
-        if ($round >= self::PAY_CLARIFY_MAX_ROUNDS) {
+        $misses = (int) ($open->meta['misses'] ?? 0) + ($resolved['kind'] === 'none' && ($resolved['note'] ?? null) === null ? 1 : 0);
+        if ($misses >= self::PAY_CLARIFY_MAX_ROUNDS || $round >= self::PAY_CLARIFY_MAX_STEPS) {
             return $this->payHandoff($open, $incoming, $user, $category, $text, 'unparsed');
         }
 
@@ -1733,7 +1739,7 @@ final class SupportDmAutoReply
 
         $said = array_slice([...$this->payContext($open)['texts'], $text], -4);
 
-        return $this->askPayQuestion($incoming, $user, $category, $text, $problem, $resolved, $round + 1, $said);
+        return $this->askPayQuestion($incoming, $user, $category, $text, $problem, $resolved, $round + 1, $said, $misses);
     }
 
     /**
@@ -1754,6 +1760,7 @@ final class SupportDmAutoReply
         array $resolved,
         int $round,
         array $said = [],
+        int $misses = 0,
     ): ?array {
         $kind = $resolved['kind'];
         $note = $resolved['note'] ?? null;
@@ -1783,6 +1790,7 @@ final class SupportDmAutoReply
             'pay_texts' => array_values($said),
             'pay_rejected' => $resolved['rejected'] ?? [],
             'round' => $round,
+            'misses' => $misses,
         ]);
     }
 
