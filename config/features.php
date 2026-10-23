@@ -2061,6 +2061,16 @@ return [
     'support_pay_clarify' => (bool) env('SUPPORT_PAY_CLARIFY', false),
 
     /*
+     | 22-10-2026: разговор об оплате/записи понимает локальная LLM (Ollama),
+     | читая весь диалог (студент, бот, куратор). off — нет; shadow — модель
+     | решает, решение пишется событием dm_pay_llm_shadow, отвечают регулярки;
+     | live — отвечает решение модели (суммы и ссылки — всё равно из Tariff).
+     */
+    'support_pay_dialog_llm' => in_array(env('SUPPORT_PAY_DIALOG_LLM', 'off'), ['shadow', 'live'], true)
+        ? (string) env('SUPPORT_PAY_DIALOG_LLM')
+        : 'off',
+
+    /*
      | Выбранная группа в платеже: чекаут пишет payments.group_id из
      | подписанной ссылки, grantAccess() на курсе с НЕСКОЛЬКИМИ группами
      | выдаёт только её. Курс с одной группой — поведение прежнее.

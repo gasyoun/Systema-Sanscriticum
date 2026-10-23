@@ -181,7 +181,7 @@ final class EnrollmentGroupResolver
      *
      * @return Collection<int, Group>
      */
-    private function candidates(): Collection
+    public function candidates(): Collection
     {
         return Group::query()
             ->whereIn('status', ['forming', 'active'])
