@@ -227,6 +227,77 @@ class SupportDmPayClarifyTest extends TestCase
         $this->assertSame($sankhya->id, SupportAiReplyEvent::query()->get()->last(fn ($e) => ($e->meta['fact_type'] ?? null) === 'pay_choice_link')->meta['group_id']);
     }
 
+    public function test_pilot_replay_monday_lists_open_groups_skips_paid_and_understands_other(): void
+    {
+        // Скриншот 23-10-2026: «группа по понедельникам» → бот взял свою
+        // оплаченную санкхью; «нет, другая по грамматике» — повторил вопрос.
+        $sankhya = $this->groupWithCourse('Философия санкхьи', 'Философия санкхьи — пн 18:00 (2026)', 6000);
+        $hindi = $this->groupWithCourse('Грамматика хинди гр. 5', 'Грамматика хинди гр. 5, пн', 5000);
+        $this->user->activeGroups()->attach([$sankhya->id, $hindi->id]);
+        Payment::create(['user_id' => $this->user->id, 'course_id' => $sankhya->courses()->first()->id, 'amount' => 1, 'tariff' => 'full', 'status' => 'paid']);
+        $this->groupWithCourse('Грамматика по Кочергиной гр.61', 'Грамматика по Кочергиной гр.61, пн 08:00', 8000);
+        $this->groupWithCourse('Традиции толкования упанишад', 'Упанишады — пн 20:00', 7000);
+
+        $this->ask('Хочу оплатить, подскажите как');
+        Carbon::setTestNow(now()->addMinutes(1));
+        $this->ask('группа по понедельникам');
+
+        $which = $this->lastBotText();
+        $this->assertStringContainsString('гр.61', $which);
+        $this->assertStringContainsString('Упанишады', $which);
+        $this->assertStringNotContainsString('санкхьи', $which);
+        $this->assertStringNotContainsString('хинди', $which);
+
+        Carbon::setTestNow(now()->addMinutes(1));
+        $this->ask('нет, другая по грамматике');
+
+        $this->assertStringContainsString('блока 1 группы «Грамматика по Кочергиной гр.61, пн 08:00» — 8 000 ₽', $this->lastBotText());
+    }
+
+    public function test_time_of_day_narrows_which_question(): void
+    {
+        $this->groupWithCourse('Грамматика гр.61', 'Грамматика гр.61, пн', 8000)
+            ->schedules()->create(['title' => 'урок', 'start' => '2026-10-26 08:00:00', 'end' => '2026-10-26 10:00:00']);
+        $this->groupWithCourse('Грамматика гр.53', 'Грамматика гр.53, пн', 6000)
+            ->schedules()->create(['title' => 'урок', 'start' => '2026-10-26 20:00:00', 'end' => '2026-10-26 22:00:00']);
+
+        $this->ask('как оплатить?');
+        Carbon::setTestNow(now()->addMinutes(1));
+        $this->ask('по понедельникам');
+        $this->assertStringContainsString('Нашёл несколько подходящих групп', $this->lastBotText());
+
+        Carbon::setTestNow(now()->addMinutes(1));
+        $this->ask('та, что в 8 утра');
+
+        $this->assertStringContainsString('группы «Грамматика гр.61, пн» — 8 000 ₽', $this->lastBotText());
+    }
+
+    public function test_fully_paid_course_named_says_so_instead_of_asking_block(): void
+    {
+        $sankhya = $this->groupWithCourse('Философия санкхьи', 'Философия санкхьи — пн 18:00 (2026)', 6000);
+        $this->user->activeGroups()->attach($sankhya->id);
+        Payment::create(['user_id' => $this->user->id, 'course_id' => $sankhya->courses()->first()->id, 'amount' => 1, 'tariff' => 'full', 'status' => 'paid']);
+
+        $this->ask('как оплатить санкхью?');
+
+        $this->assertStringContainsString('у вас уже оплачен полностью', $this->lastBotText());
+        $this->assertStringNotContainsString('Какой блок', $this->lastBotText());
+    }
+
+    public function test_my_group_phrase_searches_only_own_groups(): void
+    {
+        $own = $this->groupWithCourse('Грамматика по Кочергиной гр.62', 'Грамматика по Кочергиной гр.62, среда 20:00', 6000);
+        $this->groupWithCourse('Грамматика хинди гр. 1', 'Грамматика хинди гр. 1, среда 08:00', 5000);
+        $this->groupWithCourse('Продленка санскрита', 'Продленка санскрита среда 19:00', 4000);
+        $this->user->activeGroups()->attach($own->id);
+
+        $this->ask('как оплатить?');
+        Carbon::setTestNow(now()->addMinutes(1));
+        $this->ask('ну ту, где я по средам занимаюсь');
+
+        $this->assertStringContainsString('блока 1 группы «Грамматика по Кочергиной гр.62, среда 20:00»', $this->lastBotText());
+    }
+
     public function test_ordinal_answer_to_which_question(): void
     {
         $this->groupWithCourse('Философия санкхьи', 'Санкхья — пн 18:00', 6000);

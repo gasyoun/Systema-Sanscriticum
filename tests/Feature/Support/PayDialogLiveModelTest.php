@@ -78,14 +78,18 @@ class PayDialogLiveModelTest extends TestCase
         $this->g['61'] = $this->group('Грамматика по Кочергиной гр.61', 'forming', 1, 8, 8000, 4);
         $this->g['upan'] = $this->group('Традиции толкования упанишад (2 поток, 2026)', 'forming', 1, 20, 7000, 4, full: 25000);
         $this->g['sankhya'] = $this->group('Философия санкхьи', 'forming', 4, 19, 6000, 4);
+        $this->g['53'] = $this->group('Грамматика по Кочергиной гр.53', 'active', 1, 10, 6000, 6);
+        $this->g['sankhyaMon'] = $this->group('Философия санкхьи — пн 18:00 (2026)', 'forming', 1, 18, 6000, 4);
+        $this->g['hindi5'] = $this->group('Грамматика хинди гр. 5, вт', 'forming', 1, 9, 5000, 4);
 
-        foreach (['63', '58', '62'] as $own) {
+        foreach (['63', '58', '62', 'sankhyaMon', 'hindi5'] as $own) {
             $this->user->activeGroups()->attach($this->g[$own]->id);
         }
         foreach (range(1, 10) as $n) {
             $this->paid($this->g['58'], $n);
         }
         $this->paid($this->g['62'], 1);
+        Payment::create(['user_id' => $this->user->id, 'course_id' => $this->g['sankhyaMon']->courses()->first()->id, 'amount' => 1, 'tariff' => 'full', 'status' => 'paid']);
 
         $this->account = TelegramSupportAccount::create(['name' => 'telegram-business', 'auto_reply_enabled' => true]);
         $this->chat = TelegramSupportChat::create([
@@ -166,6 +170,20 @@ class PayDialogLiveModelTest extends TestCase
 
     public function test_pilot_dialogs(): void
     {
+        // Скриншот 23-10-2026 14:44 дословно.
+        $r = $this->say('Хочу оплатить, подскажите как');
+        $r = $this->say('группа по понедельникам');
+        $this->assertStringContainsString('гр.61', $r);
+        $this->assertStringContainsString('гр.53', $r);
+        $this->assertStringNotContainsString('санкхьи — пн', $r);
+        $this->assertStringNotContainsString('хинди', $r);
+        $r = $this->say('нет, другая по грамматике');
+        $this->assertStringNotContainsString('упанишад', $r);
+        $this->assertMatchesRegularExpression('/гр\.(53|61)/u', $r);
+        $r = $this->say('61');
+        $this->assertStringContainsString('блока 1 группы «Грамматика по Кочергиной гр.61»', $r);
+
+        $this->newConversation();
         $r = $this->say('Хочу оплатить, подскажите как');
         $this->assertStringContainsString('что хотите оплатить', $r);
         $this->assertStringNotContainsString('₽', $r);

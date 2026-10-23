@@ -144,6 +144,9 @@ final class SupportDmAutoReply
     /** Сколько раз бот уточняет, прежде чем передать куратору (23-10-2026). */
     private const PAY_CLARIFY_MAX_ROUNDS = 3;
 
+    /** Предел вопросов в одном разговоре, даже если он продвигается (переспросы, блок). */
+    private const PAY_CLARIFY_MAX_STEPS = 6;
+
     private const PAY_CLARIFY_WINDOW_HOURS = 2;
 
     /** Тень разбора разговора моделью: что решила LLM и что сделали регулярки. */
@@ -1594,14 +1597,18 @@ final class SupportDmAutoReply
             $decision = [...$decision, 'option' => null, 'missing' => 'what'];
         }
 
-        // Студент назвал то, под что подходит несколько групп («по понедельникам»)
-        // — модель выбрала бы наугад (пилот 23-10-2026). Тут переспрашивают правила.
-        if ($decision !== null && $decision['option'] !== null
-            && $this->payChoices->resolve($user, $text, [
-                'target' => is_array($open?->meta['pay_target'] ?? null) ? $open->meta['pay_target'] : null,
-                'candidates' => array_values(array_filter((array) ($open?->meta['pay_candidates'] ?? []), 'is_array')),
-            ])['kind'] === 'which') {
-            $decision = [...$decision, 'option' => null, 'missing' => 'what'];
+        // Модель выбирает, только когда правила по словам студента ничего не
+        // нашли («тот же, что в прошлый раз»). Назвал курс, группу или день —
+        // решают правила: модель брала группу из прошлого разговора («весь
+        // курс санкхьи» → упанишады) и угадывала одну из нескольких («по
+        // понедельникам»), пилот 23-10-2026.
+        // И только как ответ на вопрос бота: на новое сообщение модель тянула
+        // группу из прошлого разговора.
+        if ($decision !== null && $decision['option'] !== null) {
+            $rules = $this->payChoices->resolve($user, $text, $this->payContext($open));
+            if ($open === null || $rules['kind'] !== 'none' || ($rules['note'] ?? null) !== null) {
+                $decision = [...$decision, 'option' => null, 'missing' => $rules['kind'] === 'block' ? 'block' : 'what'];
+            }
         }
 
         if ($llmCalled) {
@@ -1693,7 +1700,8 @@ final class SupportDmAutoReply
                 standalone: true);
         }
 
-        return $this->askPayQuestion($incoming, $user, $category, $text, $problem, $resolved, 1);
+        return $this->askPayQuestion($incoming, $user, $category, $text, $problem, $resolved, 1,
+            $this->payChoices->namesTarget($text) ? [$text] : []);
     }
 
     /**
@@ -1709,10 +1717,7 @@ final class SupportDmAutoReply
         string $category,
         string $text,
     ): ?array {
-        $resolved = $this->payChoices->resolve($user, $text, [
-            'target' => is_array($open->meta['pay_target'] ?? null) ? $open->meta['pay_target'] : null,
-            'candidates' => array_values(array_filter((array) ($open->meta['pay_candidates'] ?? []), 'is_array')),
-        ]);
+        $resolved = $this->payChoices->resolve($user, $text, $this->payContext($open));
 
         // Ни группы, ни блока, ни слова об оплате — это другой вопрос, а не
         // ответ: его обработает обычный конвейер, вопрос об оплате ждёт.
@@ -1729,14 +1734,19 @@ final class SupportDmAutoReply
             return $this->sendPayChoiceLink($incoming, $user, $contact, $category, $text, $resolved['option'], $problem, answering: true);
         }
 
+        // Считаются только непонятые ответы: «по понедельникам» → «какая
+        // из групп» → «по грамматике» — разговор идёт, это не промах.
         $round = (int) ($open->meta['round'] ?? 1);
-        if ($round >= self::PAY_CLARIFY_MAX_ROUNDS) {
+        $misses = (int) ($open->meta['misses'] ?? 0) + ($resolved['kind'] === 'none' && ($resolved['note'] ?? null) === null ? 1 : 0);
+        if ($misses >= self::PAY_CLARIFY_MAX_ROUNDS || $round >= self::PAY_CLARIFY_MAX_STEPS) {
             return $this->payHandoff($open, $incoming, $user, $category, $text, 'unparsed');
         }
 
         $this->closePayClarify($open, $incoming, 'asked');
 
-        return $this->askPayQuestion($incoming, $user, $category, $text, $problem, $resolved, $round + 1);
+        $said = array_slice([...$this->payContext($open)['texts'], $text], -4);
+
+        return $this->askPayQuestion($incoming, $user, $category, $text, $problem, $resolved, $round + 1, $said, $misses);
     }
 
     /**
@@ -1745,6 +1755,7 @@ final class SupportDmAutoReply
      * сам студент.
      *
      * @param  array{kind: string, targets?: list<array{course_id: int, group_id: ?int}>, target?: array{course_id: int, group_id: ?int}, note?: ?string}  $resolved
+     * @param  list<string>  $said  что студент уже сказал в этом разговоре
      * @return array{status: string, category: ?string}|null
      */
     private function askPayQuestion(
@@ -1755,17 +1766,22 @@ final class SupportDmAutoReply
         bool $problem,
         array $resolved,
         int $round,
+        array $said = [],
+        int $misses = 0,
     ): ?array {
         $kind = $resolved['kind'];
+        $note = $resolved['note'] ?? null;
 
         $draft = match ($kind) {
             'which' => "Нашёл несколько подходящих групп:\n"
                 .implode("\n", array_map(fn (array $t) => '— '.$this->payChoices->targetLabel($t), $resolved['targets']))
                 ."\n\nКакую из них оплатить и какой блок?",
             'block' => trim(($resolved['note'] ?? '')."\n\nКакой блок ".$this->payChoices->targetLabel($resolved['target']).' оплатить? Напишите номер блока — пришлю ссылку.'),
-            default => $round === 1
-                ? "Намасте!\n\nПодскажите, пожалуйста, что хотите оплатить: название курса или группы (можно номер группы или день и время занятий) и какой блок. Пришлю ссылку на оплату."
-                : 'Не нашёл такой курс или группу. Напишите, пожалуйста, название курса или номер группы (например, «гр.63») и блок.',
+            default => match (true) {
+                $note !== null => $note."\n\nЧто ещё хотите оплатить? Напишите название курса или номер группы и блок.",
+                $round === 1 => "Намасте!\n\nПодскажите, пожалуйста, что хотите оплатить: название курса или группы (можно номер группы или день и время занятий) и какой блок. Пришлю ссылку на оплату.",
+                default => 'Не нашёл такой курс или группу. Напишите, пожалуйста, название курса или номер группы (например, «гр.63») и блок.',
+            },
         };
 
         if (! TelegramSendGuard::claimKey('pay-clarify:'.$incoming->telegram_chat_id.':'.$incoming->id, 300)) {
@@ -1778,7 +1794,10 @@ final class SupportDmAutoReply
             'pay_target' => $resolved['target'] ?? null,
             'pay_candidates' => $resolved['targets'] ?? [],
             'pay_problem' => $problem,
+            'pay_texts' => array_values($said),
+            'pay_rejected' => $resolved['rejected'] ?? [],
             'round' => $round,
+            'misses' => $misses,
         ]);
     }
 
@@ -1829,6 +1848,24 @@ final class SupportDmAutoReply
         return (preg_match('/оплат|заплат|ссылк\p{L}*\s+на\s+оплат/iu', $text) === 1
                 || preg_match('/(?<!\p{L})за\s+(?:весь|целый|\d{1,2}|\p{L}+\s+блок)/iu', $text) === 1)
             && $this->payChoices->namesTarget($text);
+    }
+
+    /**
+     * Разговор, который ведёт открытый вопрос: что бот уточнял и что студент
+     * уже сказал ({@see PayChoiceOptions::resolve()}).
+     *
+     * @return array{target: ?array, candidates: list<array>, texts: list<string>, rejected: list<array>}
+     */
+    private function payContext(?SupportAiReplyEvent $open): array
+    {
+        $meta = $open?->meta ?? [];
+
+        return [
+            'target' => is_array($meta['pay_target'] ?? null) ? $meta['pay_target'] : null,
+            'candidates' => array_values(array_filter((array) ($meta['pay_candidates'] ?? []), 'is_array')),
+            'texts' => array_values(array_filter((array) ($meta['pay_texts'] ?? []), 'is_string')),
+            'rejected' => array_values(array_filter((array) ($meta['pay_rejected'] ?? []), 'is_array')),
+        ];
     }
 
     private function closePayClarify(?SupportAiReplyEvent $open, TelegramSupportMessage $incoming, string $outcome): void
