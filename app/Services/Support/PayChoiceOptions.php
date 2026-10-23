@@ -40,7 +40,7 @@ final class PayChoiceOptions
 
     private const MAX_OPTIONS = 5;
 
-    private const FULL_PATTERN = '/весь\s+курс|курс\s+целиком|целиком|полност\p{L}*|полн\p{L}+\s+курс|за\s+весь|все\s+блоки/u';
+    private const FULL_PATTERN = '/весь\s+курс|курс\s+целиком|целиком|полност\p{L}*|полн\p{L}+\s+курс|за\s+весь|все\s+блоки|сразу\s+(?:за\s+)?вс[её](?!\p{L})|вс[её]\s+сразу|за\s+вс[её](?!\p{L})/u';
 
     /** Основа порядкового числительного → число. */
     private const ORDINALS = [

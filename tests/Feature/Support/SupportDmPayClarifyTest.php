@@ -344,6 +344,17 @@ class SupportDmPayClarifyTest extends TestCase
         $this->assertStringContainsString('что хотите оплатить', $this->lastBotText());
     }
 
+    public function test_group_mentioned_after_link_without_pay_word_gets_no_link(): void
+    {
+        $this->joinWithFirstBlockPaid($this->sanskrit);
+
+        $this->ask('Как оплатить 2 блок гр.71?');
+        Carbon::setTestNow(now()->addMinutes(5));
+        $this->ask('а в гр.71 когда следующее занятие?');
+
+        $this->assertSame(['pay_choice_link'], $this->sentFactTypes());
+    }
+
     public function test_whole_course_gets_full_tariff_link(): void
     {
         $course = $this->sanskrit->courses()->first();
@@ -404,6 +415,21 @@ class SupportDmPayClarifyTest extends TestCase
         $this->ask('как оплатить?');
 
         $this->assertSame([], $this->sentFactTypes());
+    }
+
+    public function test_pilot_test_chat_is_not_stopped_by_auto_send_ceiling(): void
+    {
+        config([
+            'features.enroll_pilot_telegram_ids' => [(string) self::TG],
+            'services.telegram_support.sufler_max_steps_per_ticket' => 1,
+        ]);
+        $this->joinWithFirstBlockPaid($this->sanskrit);
+
+        $this->ask('как оплатить?');
+        Carbon::setTestNow(now()->addMinutes(2));
+        $this->ask('гр.71');
+
+        $this->assertSame(['pay_clarify', 'pay_choice_link'], $this->sentFactTypes());
     }
 
     public function test_pilot_list_excludes_other_students(): void

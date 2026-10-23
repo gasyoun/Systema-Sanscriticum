@@ -615,7 +615,12 @@ final class SupportDmAutoReply
         // H5776, политика v1, потолок первым: machinery со значением из
         // конфига. Нарушение = авто-стоп с трейсом (не вмешательство человека
         // в бота): студенту молчание, куратору подсказка, событие-трейс в meta.
-        $ceiling = $this->ceilings->exceeded((int) $incoming->telegram_chat_id, $kind, $metaExtra);
+        // Пилотные тестовые чаты (ENROLL_PILOT_TELEGRAM_IDS — сотрудники) потолком
+        // не ограничены: прогон десятка диалогов подряд упирался в 8 автоответов
+        // за сутки и выглядел как «бот молчит» (23-10-2026).
+        $ceiling = EnrollPilot::listed([$incoming->telegram_chat_id])
+            ? null
+            : $this->ceilings->exceeded((int) $incoming->telegram_chat_id, $kind, $metaExtra);
 
         if ($ceiling !== null) {
             SupportAiReplyEvent::firstOrCreate(
@@ -1584,7 +1589,8 @@ final class SupportDmAutoReply
         // выбрала вчерашнюю группу из истории. Без открытого вопроса и без
         // названного в сообщении курса/группы/блока — не угадываем, спрашиваем.
         if ($decision !== null && $decision['option'] !== null && $open === null
-            && ! $this->payChoices->namesTarget($text)) {
+            && (! $this->payChoices->namesTarget($text)
+                || (! $this->asksToPay($text) && ! $this->payChoices->namesBlock($text)))) {
             $decision = [...$decision, 'option' => null, 'missing' => 'what'];
         }
 
@@ -1666,9 +1672,10 @@ final class SupportDmAutoReply
         $problem = $payTalk && preg_match(self::PAY_PROBLEM_PATTERN, $text) === 1;
         $resolved = $this->payChoices->namesTarget($text) ? $this->payChoices->resolve($user, $text) : ['kind' => 'none'];
 
-        // Продолжение разговора без слова «оплатить» и без названной группы —
-        // это уже о другом.
-        if (! $payTalk && $resolved['kind'] === 'none') {
+        // Продолжение разговора без слова «оплатить»: ссылка, только если
+        // названы и группа, и блок («санкхья 2 блок»); «а в гр.63 когда
+        // занятие?» — уже о другом.
+        if (! $payTalk && ($resolved['kind'] !== 'link' || ! $this->payChoices->namesBlock($text))) {
             return null;
         }
 
