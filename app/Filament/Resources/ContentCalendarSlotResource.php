@@ -181,6 +181,14 @@ class ContentCalendarSlotResource extends Resource
                 array_diff_key((array) config('content_calendar.destinations', []), $enabled),
             ))
             ->disableOptionWhen(static fn (string $value): bool => ! isset($enabled[$value]))
+            ->rules([
+                static fn (): Closure => static function (string $attribute, mixed $value, Closure $fail) use ($enabled): void {
+                    $off = array_diff((array) $value, array_keys($enabled));
+                    if ($off !== []) {
+                        $fail('Площадка не настроена: '.implode(', ', $off).'.');
+                    }
+                },
+            ])
             ->default(array_keys($enabled))
             ->helperText($enabled === []
                 ? 'Площадки не настроены (CONTENT_CAL_* в .env) — публиковать пока некуда.'
@@ -338,7 +346,7 @@ class ContentCalendarSlotResource extends Resource
                         foreach ($records as $record) {
                             /** @var ContentCalendarSlot $record */
                             if ($record->status !== ContentCalendarSlot::STATUS_PUBLISHED) {
-                                $record->update(['destinations' => array_values($data['destinations'])]);
+                                $record->update(['destinations' => array_values(array_unique((array) $data['destinations']))]);
                                 $n++;
                             }
                         }
