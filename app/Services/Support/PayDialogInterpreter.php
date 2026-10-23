@@ -69,6 +69,12 @@ final class PayDialogInterpreter
             return null;
         }
 
+        // Номер блока, которого студент не называл, модель придумывает
+        // («следующий» → 3 вместо 2, пилот 23-10-2026) — берём следующий неоплаченный.
+        if (! $this->choices->namesBlock((string) $incoming->text)) {
+            $data['block'] = null;
+        }
+
         return $this->validate($data, $catalog, $user, $reply['model'] ?? null);
     }
 

@@ -294,6 +294,12 @@ final class PayChoiceOptions
             || $this->groups->slotsIn($text) !== [];
     }
 
+    /** Назван ли в сообщении блок: «2 блок», «весь курс» или просто «2» / «второй». */
+    public function namesBlock(string $text): bool
+    {
+        return $this->blockIn($text) !== null || $this->choiceNumberIn($text) !== null;
+    }
+
     /** Студент сам указал, что оплачивает: курс, группу, день, номер или блок. */
     public function namesTarget(string $text): bool
     {

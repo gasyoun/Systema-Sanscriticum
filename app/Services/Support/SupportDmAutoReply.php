@@ -1573,7 +1573,7 @@ final class SupportDmAutoReply
         $llmCalled = false;
 
         if ($mode !== 'off'
-            && ($talkGoesOn || $this->moneyIntent($text) || preg_match(self::PAY_HELP_PATTERN, $text) === 1
+            && ($talkGoesOn || $this->moneyIntent($text) || $this->asksToPay($text)
                 || preg_match(self::ENROLL_INTENT_PATTERN, $text) === 1)
         ) {
             $decision = $this->payDialog->interpret($incoming, $user, [$text, ...$this->recentIncomingTexts($incoming)]);
@@ -1586,6 +1586,24 @@ final class SupportDmAutoReply
         if ($decision !== null && $decision['option'] !== null && $open === null
             && ! $this->payChoices->namesTarget($text)) {
             $decision = [...$decision, 'option' => null, 'missing' => 'what'];
+        }
+
+        // Студент назвал то, под что подходит несколько групп («по понедельникам»)
+        // — модель выбрала бы наугад (пилот 23-10-2026). Тут переспрашивают правила.
+        if ($decision !== null && $decision['option'] !== null
+            && $this->payChoices->resolve($user, $text, [
+                'target' => is_array($open?->meta['pay_target'] ?? null) ? $open->meta['pay_target'] : null,
+                'candidates' => array_values(array_filter((array) ($open?->meta['pay_candidates'] ?? []), 'is_array')),
+            ])['kind'] === 'which') {
+            $decision = [...$decision, 'option' => null, 'missing' => 'what'];
+        }
+
+        if ($llmCalled) {
+            SupportAiReplyEvent::create([
+                'telegram_support_message_id' => $incoming->id,
+                'event_type' => self::EVENT_PAY_LLM_SHADOW,
+                'meta' => ['via' => self::VIA, 'mode' => $mode, 'llm' => $decision, 'text' => mb_substr($text, 0, 300)],
+            ]);
         }
 
         if ($mode === 'live' && $decision !== null) {
@@ -1608,18 +1626,12 @@ final class SupportDmAutoReply
 
         $result = $this->payClarifyByRules($incoming, $user, $contact, $category, $text, $open, $talkGoesOn);
 
-        // Пишем и «модель не решила» (llm = null): видно, где она молчит.
-        if ($mode === 'shadow' && $llmCalled) {
-            SupportAiReplyEvent::create([
-                'telegram_support_message_id' => $incoming->id,
-                'event_type' => self::EVENT_PAY_LLM_SHADOW,
-                'meta' => [
-                    'via' => self::VIA,
-                    'llm' => $decision,
-                    'rules_status' => $result['status'] ?? null,
-                    'text' => mb_substr($text, 0, 300),
-                ],
-            ]);
+        // Решение модели записано выше (и «не решила», llm = null) — рядом то,
+        // что сделали правила: так видно, где она права, а где молчит.
+        if ($llmCalled) {
+            $event = SupportAiReplyEvent::query()->where('telegram_support_message_id', $incoming->id)
+                ->where('event_type', self::EVENT_PAY_LLM_SHADOW)->latest('id')->first();
+            $event?->forceFill(['meta' => [...$event->meta, 'rules_status' => $result['status'] ?? null]])->save();
         }
 
         return $result;
@@ -1645,7 +1657,7 @@ final class SupportDmAutoReply
 
         // Разговор об оплате уже идёт (вопрос был недавно): «философия санкхья
         // 2 блок» без слова «оплатить» — тоже просьба о ссылке (22-10-2026).
-        $payTalk = preg_match(self::PAY_HELP_PATTERN, $text) === 1;
+        $payTalk = $this->asksToPay($text);
 
         if (! $payTalk && ! $talkGoesOn) {
             return null;
@@ -1698,7 +1710,7 @@ final class SupportDmAutoReply
         // Ни группы, ни блока, ни слова об оплате — это другой вопрос, а не
         // ответ: его обработает обычный конвейер, вопрос об оплате ждёт.
         if ($resolved['kind'] === 'none' && ! $this->payChoices->namesTarget($text) && ! $this->moneyIntent($text)
-            && preg_match(self::PAY_HELP_PATTERN, $text) !== 1) {
+            && ! $this->asksToPay($text)) {
             return null;
         }
 
@@ -1790,10 +1802,26 @@ final class SupportDmAutoReply
         }
 
         return $this->sendAuto($incoming, $user, $category,
-            "Передаю ваш вопрос куратору — он ответит здесь, в этом чате.", 'facts', [
+            'Передаю ваш вопрос куратору — он ответит здесь, в этом чате.', 'facts', [
                 'fact_type' => 'pay_handoff',
                 'reason' => $reason,
             ]);
+    }
+
+    /**
+     * Просьба об оплате: «как оплатить», «хочу оплатить», а также «можно сразу
+     * за весь курс санкхьи?» и «оплата 2 блока гр.63» — слово об оплате или
+     * «за весь курс / за N блок» рядом с названным курсом или группой.
+     */
+    private function asksToPay(string $text): bool
+    {
+        if (preg_match(self::PAY_HELP_PATTERN, $text) === 1) {
+            return true;
+        }
+
+        return (preg_match('/оплат|заплат|ссылк\p{L}*\s+на\s+оплат/iu', $text) === 1
+                || preg_match('/(?<!\p{L})за\s+(?:весь|целый|\d{1,2}|\p{L}+\s+блок)/iu', $text) === 1)
+            && $this->payChoices->namesTarget($text);
     }
 
     private function closePayClarify(?SupportAiReplyEvent $open, TelegramSupportMessage $incoming, string $outcome): void
