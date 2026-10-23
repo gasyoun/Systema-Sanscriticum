@@ -165,6 +165,43 @@ class SupportDmPayClarifyTest extends TestCase
         $this->assertSame(['pay_clarify', 'pay_choice_link'], $this->sentFactTypes());
     }
 
+    /** @return iterable<string, array{0: string}> */
+    public static function payHelpPhrasings(): iterable
+    {
+        // Пилот 23-10-2026: первая фраза осталась без ответа.
+        yield 'оплатить, подскажите как' => ['Хочу оплатить, подскажите как'];
+        yield 'хочу оплатить' => ['Здравствуйте! Хочу оплатить следующий блок'];
+        yield 'нужно заплатить' => ['Мне нужно заплатить, куда?'];
+    }
+
+    /** @dataProvider payHelpPhrasings */
+    public function test_pay_help_phrasings_get_question(string $text): void
+    {
+        $this->joinWithFirstBlockPaid($this->sanskrit);
+
+        $this->assertSame('sent', $this->ask($text)['status']);
+        $this->assertStringContainsString('1) «Санскрит — гр.71» — блок 2', $this->lastBotText());
+    }
+
+    public function test_question_closed_before_outcome_marks_does_not_block_new_one(): void
+    {
+        // Пилот 23-10-2026: вчерашний вопрос закрыт кодом до #3439 (без outcome)
+        // — бот считал его неотвеченным и молчал, отдавая куратору.
+        $this->joinWithFirstBlockPaid($this->sanskrit);
+        $this->ask('Здравствуйте, как оплатить?');
+        Carbon::setTestNow(now()->addMinutes(3));
+        $this->ask('да');
+
+        $event = SupportAiReplyEvent::query()->get()->first(fn ($e) => ($e->meta['fact_type'] ?? null) === 'pay_clarify');
+        $meta = $event->meta;
+        unset($meta['outcome']);
+        $event->forceFill(['meta' => $meta])->save();
+
+        Carbon::setTestNow(now()->addHours(3));
+        $this->assertSame('sent', $this->ask('Здравствуйте, как оплатить?')['status']);
+        $this->assertStringContainsString('Подскажите, что хотите оплатить', $this->lastBotText());
+    }
+
     public function test_single_option_still_asks_and_yes_gets_link(): void
     {
         $this->joinWithFirstBlockPaid($this->sanskrit);
