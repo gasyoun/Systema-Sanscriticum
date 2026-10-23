@@ -34,10 +34,13 @@ final class PayDialogInterpreter
 
     private const MISSING = ['what', 'block', 'both'];
 
+    private const MAX_CATALOG = 20;
+
     public function __construct(
         private readonly CuratorAi $ai,
         private readonly PayChoiceOptions $choices,
         private readonly EnrollmentGroupResolver $groups,
+        private readonly SupportPayLinkResolver $payLinks,
     ) {}
 
     /**
@@ -57,7 +60,7 @@ final class PayDialogInterpreter
             ['role' => 'system', 'content' => $this->systemPrompt()],
             ['role' => 'user', 'content' => "КАТАЛОГ:\n".($catalog === [] ? '(пусто)' : implode("\n", array_column($catalog, 'line')))
                 ."\n\nПЕРЕПИСКА (старые сверху, последнее — сообщение, на которое отвечаем):\n".$transcript],
-        ], (int) config('support.pay_llm.timeout', 60), 0.0);
+        ], (int) config('support.pay_llm.timeout', 60), 0.0, think: false, maxTokens: 300);
 
         $data = $this->json($reply['content'] ?? null);
         if ($data === null) {
@@ -79,9 +82,15 @@ final class PayDialogInterpreter
         $intent = is_string($data['intent'] ?? null) ? $data['intent'] : '';
         $confidence = is_numeric($data['confidence'] ?? null) ? (float) $data['confidence'] : 0.0;
 
-        if (! in_array($intent, self::INTENTS, true)
-            || $confidence < (float) config('support.pay_llm.min_confidence', 0.7)) {
-            return $this->reject('intent/уверенность', $data);
+        if (! in_array($intent, self::INTENTS, true)) {
+            return $this->reject('intent', $data);
+        }
+
+        // Уверенность нужна там, где решение действует: ссылка или человек.
+        // «Не понял, что оплатить» безопасно и при низкой — бот просто спросит.
+        $sure = $confidence >= (float) config('support.pay_llm.min_confidence', 0.7);
+        if ($intent === 'human' && ! $sure) {
+            return $this->reject('уверенность', $data);
         }
 
         $key = is_string($data['option'] ?? null) ? trim($data['option']) : '';
@@ -96,12 +105,22 @@ final class PayDialogInterpreter
                 return $this->reject('вариант не из каталога', $data);
             }
 
+            $target = ['course_id' => $catalog[$key]['course_id'], 'group_id' => $catalog[$key]['group_id']];
+
             if ($block !== null) {
-                $option = ['course_id' => $catalog[$key]['course_id'], 'group_id' => $catalog[$key]['group_id'], 'block' => $block];
+                $option = [...$target, 'block' => $block];
                 if ($this->choices->tariff($option) === null || $this->choices->alreadyPaid($user, $option)) {
                     return $this->reject('нет тарифа или блок оплачен', $data);
                 }
+            } else {
+                // Группа выбрана, блок не назван — следующий неоплаченный, как у правил.
+                $default = $this->choices->resolve($user, '', ['target' => $target]);
+                $option = $default['kind'] === 'link' ? $default['option'] : null;
             }
+        }
+
+        if (! $sure) {
+            $option = null;
         }
 
         if (in_array($intent, ['pay', 'enroll', 'pay_problem'], true) && $option === null) {
@@ -137,13 +156,22 @@ final class PayDialogInterpreter
             ];
         }
 
-        foreach ($this->groups->candidates() as $group) {
-            $course = $group->courses->first(fn (Course $c) => $c->tariffs->isNotEmpty());
-            if ($course === null) {
-                continue;
+        // Не все группы школы (85 строк — модель тонула в каталоге, пилот
+        // 23-10-2026), а только те, что студент назвал номером, днём или курсом.
+        $pool = $this->groups->candidates();
+        foreach (array_slice($studentTexts, 0, 6) as $text) {
+            $named = $this->groups->matching($pool, (string) $text);
+            $course = $this->payLinks->courseNamedIn((string) $text);
+            if ($course !== null) {
+                $named = $named->merge($pool->filter(fn (Group $g) => $g->courses->contains('id', $course->id)));
             }
 
-            $catalog['g'.$group->id] ??= ['course_id' => (int) $course->id, 'group_id' => (int) $group->id, 'note' => null];
+            foreach ($named as $group) {
+                $course = $this->groups->courseOf($group);
+                if ($course !== null && count($catalog) < self::MAX_CATALOG) {
+                    $catalog['g'.$group->id] ??= ['course_id' => (int) $course->id, 'group_id' => (int) $group->id, 'note' => null];
+                }
+            }
         }
 
         $out = [];
@@ -259,9 +287,9 @@ intent:
 - "human" — возврат денег, рассрочка, скидка, спор о сумме, оплата из-за рубежа, жалоба — это решает человек;
 - "other" — последнее сообщение не про оплату и не про запись.
 
-option — id варианта из КАТАЛОГА (например "g155" или "c459"), который имеет в виду студент; null, если непонятно. Выбирай ТОЛЬКО из каталога, не придумывай. Если бот перечислил варианты под номерами, «второй» значит второй из перечисленных ботом. День недели и время, номер группы («гр.63»), название курса, «тот же, что сейчас» — всё это способы указать вариант. Новый вопрос об оплате («хочу оплатить», «как оплатить?»), в котором вариант не назван, — option null и missing "what", даже если раньше в переписке студент что-то выбирал или уже получал ссылку: прошлый выбор не ответ на новый вопрос.
+option — id варианта из КАТАЛОГА (например "g155" или "c459"), который имеет в виду студент; null, если непонятно. Выбирай ТОЛЬКО из каталога, не придумывай. Если бот переспросил, перечислив несколько групп, «вторая» значит вторая из перечисленных ботом. День недели и время, номер группы («гр.63»), название курса, «тот же, что сейчас» — всё это способы указать вариант. Новый вопрос об оплате («хочу оплатить», «как оплатить?»), в котором вариант не назван, — option null и missing "what", даже если раньше в переписке студент что-то выбирал или уже получал ссылку: прошлый выбор не ответ на новый вопрос.
 
-block — номер блока (целое), "full" если студент хочет оплатить весь курс сразу, null если не назван и не следует из разговора. Если вариант «у студента к оплате» и студент не назвал другой блок, а просто подтверждает — бери блок из этого варианта.
+block — номер блока (целое), "full" если студент хочет оплатить весь курс сразу, null если не назван и не следует из разговора (тогда возьмём следующий неоплаченный блок).
 
 missing — чего не хватает, чтобы дать ссылку: "what" (непонятно что), "block" (непонятно какой блок), "both", или null.
 

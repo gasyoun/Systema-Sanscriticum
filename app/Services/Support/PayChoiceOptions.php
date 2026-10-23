@@ -153,6 +153,10 @@ final class PayChoiceOptions
         }
 
         $block = $this->blockIn($text);
+        // Ответ на «какой блок?» — просто «2» или «второй».
+        if ($block === null && $targets === [] && ($context['target'] ?? null) !== null) {
+            $block = $this->choiceNumberIn($text);
+        }
         $note = null;
 
         if ($block !== null) {
