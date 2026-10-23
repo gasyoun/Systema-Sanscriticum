@@ -104,7 +104,8 @@ class ContentCalendarSlotResource extends Resource
                 ->label('Картинка или видео (необязательно)')
                 ->helperText('Одно вложение: JPG/PNG/WebP/GIF или MP4/MOV/WebM, до 50 МБ (предел Telegram для бота). '
                     .'С вложением текст — не длиннее 1024 символов. '
-                    .'В VK вложение уходит, только если у VK-токена есть права photos/video.')
+                    .'В VK картинка уходит карточкой-ссылкой с этой картинкой, видео не уходит — '
+                    .'для настоящего фото или видео в VK заполните «Готовое медиа VK».')
                 ->disk(ContentCalendarSlot::MEDIA_DISK)
                 ->directory('content-calendar')
                 ->visibility('public')
@@ -116,6 +117,28 @@ class ContentCalendarSlotResource extends Resource
                 ->live()
                 ->openable()
                 ->downloadable()
+                ->columnSpanFull(),
+            Forms\Components\Textarea::make('vk_attachments')
+                ->label('Готовое медиа VK (необязательно)')
+                ->helperText('Ссылки на фото или видео, уже загруженные в VK (vk.com/photo-…, vk.com/video-…, '
+                    .'vk.com/clip-…), через пробел или с новой строки — до '.ContentCalendarSlot::VK_ATTACHMENT_LIMIT.'. '
+                    .'Прикрепляются к постам в VK вместо файла выше; в Telegram не идут.')
+                ->rows(2)
+                ->formatStateUsing(fn (?string $state): ?string => blank($state) ? null : str_replace(',', "\n", $state))
+                ->dehydrateStateUsing(fn (?string $state): ?string => implode(',', ContentCalendarSlot::parseVkAttachments($state)) ?: null)
+                ->rules([
+                    fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
+                        if (blank($value)) {
+                            return;
+                        }
+                        $ids = ContentCalendarSlot::parseVkAttachments((string) $value);
+                        if ($ids === []) {
+                            $fail('Не нашёл ссылок на фото или видео VK. Нужны ссылки вида vk.com/photo-236973776_457239017.');
+                        } elseif (count($ids) > ContentCalendarSlot::VK_ATTACHMENT_LIMIT) {
+                            $fail('VK прикрепляет к посту не больше '.ContentCalendarSlot::VK_ATTACHMENT_LIMIT.' вложений, сейчас '.count($ids).'.');
+                        }
+                    },
+                ])
                 ->columnSpanFull(),
             Forms\Components\CheckboxList::make('destinations')
                 ->label('Куда публиковать')

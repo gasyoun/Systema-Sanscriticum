@@ -18,11 +18,14 @@ use Throwable;
  * Гейт как у PublishVideoAnonsVkWallJob: group_id обязан стоять в
  * VK_PUBLISH_AUTHORIZED_GROUPS, иначе отказ без повторов.
  *
- * Вложение: фото — photos.getWallUploadServer → загрузка → saveWallPhoto,
- * видео — video.save → загрузка. Нет нужного права у токена или загрузка
- * сорвалась — пост уходит текстом, причина возвращается как warning
- * (деградация названа, а не молчит). Стена разметку не понимает — текст
- * уходит плоским (PostFormatter::toPlain).
+ * Вложение, по порядку:
+ *  1. «Готовое медиа VK» слота (vk_attachments) — фото/видео уже в VK,
+ *     прикрепляются без загрузки: хватает права wall;
+ *  2. файл слота загружается в VK (фото — getWallUploadServer → saveWallPhoto,
+ *     видео — video.save), если у токена есть photos/video;
+ *  3. иначе картинка уходит карточкой-ссылкой на /cc/{slot}/{sig} (og:image),
+ *     а видео — текстом с warning (деградация названа, а не молчит).
+ * Стена разметку не понимает — текст уходит плоским (PostFormatter::toPlain).
  */
 class CalendarVkPublisher
 {
@@ -72,6 +75,11 @@ class CalendarVkPublisher
     /** @return array{0: list<string>, 1: ?string} */
     private function attachment(ContentCalendarSlot $slot, VkUserToken $tokenRow, string $token, int $groupId): array
     {
+        $ready = ContentCalendarSlot::parseVkAttachments($slot->vk_attachments);
+        if ($ready !== []) {
+            return [array_slice($ready, 0, ContentCalendarSlot::VK_ATTACHMENT_LIMIT), null];
+        }
+
         $type = $slot->mediaType();
         if ($type === null) {
             return [[], null];
@@ -79,7 +87,10 @@ class CalendarVkPublisher
 
         $scope = $type === ContentCalendarSlot::MEDIA_PHOTO ? 'photos' : 'video';
         if (! $tokenRow->hasScope($scope)) {
-            return [[], "VK: у токена нет права «{$scope}» — пост опубликован без вложения"];
+            return $type === ContentCalendarSlot::MEDIA_PHOTO
+                ? [[$slot->shareUrl()], null]
+                : [[], 'VK: у токена нет права «video» — пост опубликован без видео. '
+                    .'Загрузите видео в VK и вставьте ссылку в «Готовое медиа VK».'];
         }
 
         try {
@@ -87,13 +98,15 @@ class CalendarVkPublisher
                 ? $this->uploadPhoto($slot, $token, $groupId)
                 : $this->uploadVideo($slot, $token, $groupId);
         } catch (Throwable $e) {
-            Log::warning('CalendarVkPublisher: вложение не загрузилось — пост уходит текстом', [
+            Log::warning('CalendarVkPublisher: вложение не загрузилось', [
                 'calendar_slot_id' => $slot->id,
                 'group_id' => $groupId,
                 'error' => $e->getMessage(),
             ]);
 
-            return [[], 'VK: вложение не загрузилось ('.$e->getMessage().') — пост опубликован текстом'];
+            return $type === ContentCalendarSlot::MEDIA_PHOTO
+                ? [[$slot->shareUrl()], 'VK: фото не загрузилось ('.$e->getMessage().') — ушло карточкой-ссылкой']
+                : [[], 'VK: видео не загрузилось ('.$e->getMessage().') — пост опубликован текстом'];
         }
 
         return [[$attachment], null];

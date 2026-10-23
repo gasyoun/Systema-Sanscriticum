@@ -66,6 +66,9 @@ class ContentCalendarSlot extends Model
     /** Расширения, которые VK принимает как видео; всё остальное загруженное — фото. */
     private const VIDEO_EXTENSIONS = ['mp4', 'mov', 'webm'];
 
+    /** Предел вложений одного wall.post. */
+    public const VK_ATTACHMENT_LIMIT = 10;
+
     protected $fillable = [
         'channel',
         'slot_date',
@@ -77,6 +80,7 @@ class ContentCalendarSlot extends Model
         'title',
         'body',
         'media_path',
+        'vk_attachments',
         'destinations',
         'meta',
     ];
@@ -148,10 +152,46 @@ class ContentCalendarSlot extends Model
         return in_array($ext, self::VIDEO_EXTENSIONS, true) ? self::MEDIA_VIDEO : self::MEDIA_PHOTO;
     }
 
-    /** Публичный абсолютный URL вложения — его скачивает n8n перед wall.post. */
+    /** Публичный абсолютный URL вложения (og:image страницы-карточки). */
     public function mediaUrl(): ?string
     {
         return blank($this->media_path) ? null : Storage::disk(self::MEDIA_DISK)->url((string) $this->media_path);
+    }
+
+    /**
+     * Ссылки на медиа, уже загруженные в VK, → id вложений wall.post.
+     * Понимает vk.com/photo-1_2, vk.com/video-1_2, vk.com/clip-1_2,
+     * vkvideo.ru/video-1_2, ?z=photo-1_2%2F… и голые «photo-1_2»; клип — это
+     * видео. Хвост «_ключ» доступа к закрытому видео сохраняется.
+     *
+     * @return list<string>
+     */
+    public static function parseVkAttachments(?string $raw): array
+    {
+        preg_match_all('/(?<![a-z])(photo|video|clip)(-?\d+)_(\d+)(_[0-9a-f]{6,})?/i', (string) $raw, $matches, PREG_SET_ORDER);
+
+        $ids = array_map(static function (array $m): string {
+            $type = strtolower($m[1]) === 'photo' ? 'photo' : 'video';
+
+            return $type.$m[2].'_'.$m[3].($m[4] ?? '');
+        }, $matches);
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * Публичная страница-карточка слота: og:image = картинка вложения. VK
+     * рисует по ней превью ссылки — так картинка попадает в пост без права
+     * photos у токена. Подпись в URL: id слота не перебрать до публикации.
+     */
+    public function shareUrl(): string
+    {
+        return route('content-calendar.share', ['slot' => $this->id, 'sig' => self::shareSignature($this->id)]);
+    }
+
+    public static function shareSignature(int $slotId): string
+    {
+        return substr(hash_hmac('sha256', 'content-calendar-share:'.$slotId, (string) config('app.key')), 0, 16);
     }
 
     public function scopeForMonth(Builder $query, int $year, int $month): Builder
