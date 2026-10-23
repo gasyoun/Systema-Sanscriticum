@@ -1558,6 +1558,7 @@ final class SupportDmAutoReply
         // слова-триггеры). Возврат/рассрочка/скидки ей не отдаём — это человек.
         $mode = (string) config('features.support_pay_dialog_llm', 'off');
         $decision = null;
+        $llmCalled = false;
 
         if ($mode !== 'off'
             && preg_match(self::PAY_HUMAN_PATTERN, $text) !== 1
@@ -1565,6 +1566,7 @@ final class SupportDmAutoReply
                 || preg_match(self::ENROLL_INTENT_PATTERN, $text) === 1 || $this->payChoices->hasChoiceCue($text))
         ) {
             $decision = $this->payDialog->interpret($incoming, $user, [$text, ...$this->recentIncomingTexts($incoming)]);
+            $llmCalled = true;
         }
 
         // «Всегда уточнять» (пилот 23-10-2026): на свежее «хочу оплатить» модель
@@ -1581,7 +1583,8 @@ final class SupportDmAutoReply
 
         $result = $this->payClarifyByRules($incoming, $user, $contact, $category, $text, $open, $asked, $talkGoesOn);
 
-        if ($mode === 'shadow' && $decision !== null) {
+        // Пишем и «модель не решила» (llm = null): видно, где она молчит.
+        if ($mode === 'shadow' && $llmCalled) {
             SupportAiReplyEvent::create([
                 'telegram_support_message_id' => $incoming->id,
                 'event_type' => self::EVENT_PAY_LLM_SHADOW,
@@ -1747,7 +1750,9 @@ final class SupportDmAutoReply
         // понятный ответ, второй раз не задаём — вопрос куратору. Вопрос,
         // закончившийся ссылкой, новому не мешает. Учёт по базе (Redis может
         // лежать), клейм — только от гонки двух воркеров.
-        if ($asked->contains(fn (SupportAiReplyEvent $e) => ($e->meta['outcome'] ?? null) !== 'link')) {
+        // 23-10-2026: только вопрос без ответа или с неразобранным ответом;
+        // закрытые до #3439 события пометки outcome не имеют — не мешают.
+        if ($asked->contains(fn (SupportAiReplyEvent $e) => empty($e->meta['closed_at']) || ($e->meta['outcome'] ?? null) === 'unparsed')) {
             return $this->hintComplex($incoming, $user, $category, $text, false, null,
                 '🧭 Студент снова спрашивает про оплату, а на сегодняшний вопрос бота «что оплатить» понятного ответа не было. Ответьте сами.',
                 standalone: true);

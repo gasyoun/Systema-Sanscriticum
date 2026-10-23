@@ -183,6 +183,25 @@ class SupportDmPayClarifyTest extends TestCase
         $this->assertStringContainsString('1) «Санскрит — гр.71» — блок 2', $this->lastBotText());
     }
 
+    public function test_question_closed_before_outcome_marks_does_not_block_new_one(): void
+    {
+        // Пилот 23-10-2026: вчерашний вопрос закрыт кодом до #3439 (без outcome)
+        // — бот считал его неотвеченным и молчал, отдавая куратору.
+        $this->joinWithFirstBlockPaid($this->sanskrit);
+        $this->ask('Здравствуйте, как оплатить?');
+        Carbon::setTestNow(now()->addMinutes(3));
+        $this->ask('да');
+
+        $event = SupportAiReplyEvent::query()->get()->first(fn ($e) => ($e->meta['fact_type'] ?? null) === 'pay_clarify');
+        $meta = $event->meta;
+        unset($meta['outcome']);
+        $event->forceFill(['meta' => $meta])->save();
+
+        Carbon::setTestNow(now()->addHours(3));
+        $this->assertSame('sent', $this->ask('Здравствуйте, как оплатить?')['status']);
+        $this->assertStringContainsString('Подскажите, что хотите оплатить', $this->lastBotText());
+    }
+
     public function test_single_option_still_asks_and_yes_gets_link(): void
     {
         $this->joinWithFirstBlockPaid($this->sanskrit);

@@ -81,7 +81,7 @@ final class PayDialogInterpreter
 
         if (! in_array($intent, self::INTENTS, true)
             || $confidence < (float) config('support.pay_llm.min_confidence', 0.7)) {
-            return null;
+            return $this->reject('intent/уверенность', $data);
         }
 
         $key = is_string($data['option'] ?? null) ? trim($data['option']) : '';
@@ -93,13 +93,13 @@ final class PayDialogInterpreter
         if ($key !== '' && $key !== 'null') {
             // Выдумала вариант — не верим всему ответу.
             if (! isset($catalog[$key])) {
-                return null;
+                return $this->reject('вариант не из каталога', $data);
             }
 
             if ($block !== null) {
                 $option = ['course_id' => $catalog[$key]['course_id'], 'group_id' => $catalog[$key]['group_id'], 'block' => $block];
                 if ($this->choices->tariff($option) === null || $this->choices->alreadyPaid($user, $option)) {
-                    return null;
+                    return $this->reject('нет тарифа или блок оплачен', $data);
                 }
             }
         }
@@ -216,6 +216,14 @@ final class PayDialogInterpreter
                 return sprintf('[%s %s] %s', $m->sent_at?->format('d.m H:i') ?? '', $who, mb_substr(trim($text), 0, 400));
             })
             ->implode("\n");
+    }
+
+    /** @param  array<string, mixed>  $data */
+    private function reject(string $reason, array $data): null
+    {
+        Log::info('PayDialogInterpreter: ответ модели отброшен — '.$reason, ['reply' => $data]);
+
+        return null;
     }
 
     /** @return array<string, mixed>|null */

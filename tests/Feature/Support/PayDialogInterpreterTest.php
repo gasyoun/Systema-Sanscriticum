@@ -265,6 +265,18 @@ class PayDialogInterpreterTest extends TestCase
         $this->assertSame('sent', $event->meta['rules_status']);
     }
 
+    public function test_shadow_records_rejected_model_reply_too(): void
+    {
+        config(['features.support_pay_dialog_llm' => 'shadow']);
+        $this->llmReplies = [['intent' => 'pay', 'confidence' => 0.4]];
+
+        $this->ask('как оплатить?');
+
+        $event = SupportAiReplyEvent::query()->where('event_type', SupportDmAutoReply::EVENT_PAY_LLM_SHADOW)->firstOrFail();
+        $this->assertNull($event->meta['llm']);
+        $this->assertSame('sent', $event->meta['rules_status']);
+    }
+
     public function test_reports_and_refunds_never_reach_the_model(): void
     {
         $this->ask('Я оплатила вчера, всё ок?');
