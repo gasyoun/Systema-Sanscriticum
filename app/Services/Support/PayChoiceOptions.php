@@ -24,14 +24,20 @@ use App\Support\EnrollmentGroupLink;
  *     рассрочки не предлагаем: там сумма куратора, решает человек);
  *  3) активные группы студента — следующий неоплаченный блок.
  * Ответ: номер варианта («2», «второй»), «да» при одном варианте, либо курс/
- * группа и блок словами («гр.63, 4 блок», «суббота 11, первый блок»).
+ * группа и блок словами («гр.63, 4 блок», «суббота 11, первый блок»), «весь
+ * курс» — тариф full. Уже оплаченные блоки не предлагаем.
  * Ничего не пишет; деньги и ссылка — из Tariff, путь — штатный чекаут.
  *
  * @phpstan-type Option array{course_id: int, group_id: ?int, block: int}
  */
 final class PayChoiceOptions
 {
+    /** «Весь курс» вместо номера блока — тариф full. */
+    public const FULL = 0;
+
     private const MAX_OPTIONS = 5;
+
+    private const FULL_PATTERN = '/весь\s+курс|курс\s+целиком|целиком|полност\p{L}*|полн\p{L}+\s+курс|за\s+весь|все\s+блоки/u';
 
     /** Основа порядкового числительного → число. */
     private const ORDINALS = [
@@ -85,15 +91,16 @@ final class PayChoiceOptions
             });
         }
 
+        // Сначала отсеять непродаваемое и оплаченное, потом один вариант на курс:
+        // иначе оплаченный блок из переписки вытеснял следующий блок курса.
         $unique = [];
         foreach ($options as $option) {
-            $unique[$option['course_id']] ??= $option;
+            if ($this->tariff($option) !== null && ! $this->alreadyPaid($user, $option)) {
+                $unique[$option['course_id']] ??= $option;
+            }
         }
 
-        return array_slice(array_values(array_filter(
-            $unique,
-            fn (array $o) => $this->tariff($o) !== null,
-        )), 0, self::MAX_OPTIONS);
+        return array_slice(array_values($unique), 0, self::MAX_OPTIONS);
     }
 
     /**
@@ -188,11 +195,12 @@ final class PayChoiceOptions
         }
 
         $what = $link['group'] !== null ? "«{$link['group']->name}»" : "«{$link['course']->title}»";
+        $block = $link['block'] === self::FULL ? 'весь курс' : 'блок '.$link['block'];
 
-        return sprintf('%s — блок %d, %s ₽', $what, $link['block'], number_format($link['amount'], 0, ',', ' '));
+        return sprintf('%s — %s, %s ₽', $what, $block, number_format($link['amount'], 0, ',', ' '));
     }
 
-    /** «блок 4», «4-й блок», «четвёртый блок». */
+    /** «блок 4», «4-й блок», «четвёртый блок»; «весь курс» — {@see self::FULL}. */
     public function blockIn(string $text): ?int
     {
         $lower = mb_strtolower($text);
@@ -202,11 +210,11 @@ final class PayChoiceOptions
             return (int) $m[1] ?: null;
         }
 
-        if (preg_match('/(\p{L}+)\s+блок/u', $lower, $m) === 1) {
-            return $this->ordinalOf($m[1]);
+        if (preg_match('/(\p{L}+)\s+блок/u', $lower, $m) === 1 && ($n = $this->ordinalOf($m[1])) !== null) {
+            return $n;
         }
 
-        return null;
+        return preg_match(self::FULL_PATTERN, $lower) === 1 ? self::FULL : null;
     }
 
     /**
@@ -292,13 +300,7 @@ final class PayChoiceOptions
     {
         $block = $group->status === 'forming' ? 1 : ($course->currentBlock()?->number ?? 1);
 
-        $paid = Payment::query()
-            ->where('user_id', $user->id)
-            ->where('course_id', $course->id)
-            ->whereIn('status', Payment::PAID_STATUSES)
-            ->where('is_conditional', false)
-            ->pluck('tariff')
-            ->all();
+        $paid = $this->paidKeys($user, (int) $course->id);
 
         if (in_array('full', $paid, true)) {
             return null;
@@ -313,9 +315,45 @@ final class PayChoiceOptions
         return null;
     }
 
+    /** @return list<string> ключи оплаченных тарифов курса (block_N, full) */
+    private function paidKeys(User $user, int $courseId): array
+    {
+        return Payment::query()
+            ->where('user_id', $user->id)
+            ->where('course_id', $courseId)
+            ->whereIn('status', Payment::PAID_STATUSES)
+            ->where('is_conditional', false)
+            ->pluck('tariff')
+            ->map(fn ($t) => (string) $t)
+            ->all();
+    }
+
+    /** @param  Option  $option */
+    private function alreadyPaid(?User $user, array $option): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        $paid = $this->paidKeys($user, $option['course_id']);
+
+        return in_array('full', $paid, true)
+            || ($option['block'] !== self::FULL && in_array('block_'.$option['block'], $paid, true));
+    }
+
     /** @param  Option  $option */
     private function tariff(array $option): ?Tariff
     {
+        if ($option['block'] === self::FULL) {
+            return Tariff::query()
+                ->where('course_id', $option['course_id'])
+                ->where('is_active', true)
+                ->where('type', 'full')
+                ->whereNull('membership_months')
+                ->whereHas('course', fn ($q) => $q->where('is_active', true))
+                ->first();
+        }
+
         return Tariff::query()
             ->where('course_id', $option['course_id'])
             ->where('is_active', true)

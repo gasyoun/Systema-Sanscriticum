@@ -238,6 +238,50 @@ class SupportDmPayClarifyTest extends TestCase
         $this->assertSame(1, $this->botMessages());
     }
 
+    public function test_after_link_follow_up_without_pay_word_and_new_question_work(): void
+    {
+        $this->joinWithFirstBlockPaid($this->hindi);
+        $this->joinWithFirstBlockPaid($this->sanskrit);
+
+        $this->ask('как оплатить?');
+        Carbon::setTestNow(now()->addMinutes(1));
+        $this->ask('гр.71 блок 2');
+        $this->assertStringContainsString('блока 2 группы «Санскрит — гр.71»', $this->lastBotText());
+
+        // Прод 22-10-2026: «философия санкхья 2 блок» вслед за разговором об оплате.
+        Carbon::setTestNow(now()->addMinutes(2));
+        $this->ask('хинди гр.70 2 блок');
+        $this->assertStringContainsString('блока 2 группы «Хинди — гр.70»', $this->lastBotText());
+
+        // Прошлый вопрос закончился ссылкой — новый вопрос можно задать.
+        Carbon::setTestNow(now()->addMinutes(2));
+        $this->ask('а как оплатить ещё раз?');
+        $this->assertStringContainsString('Подскажите, что хотите оплатить', $this->lastBotText());
+    }
+
+    public function test_whole_course_gets_full_tariff_link(): void
+    {
+        $course = $this->sanskrit->courses()->first();
+        $full = Tariff::factory()->for($course)->create(['price' => 30000]);
+
+        $this->ask('Как оплатить весь курс гр.71?');
+
+        $this->assertStringContainsString('всего курса группы «Санскрит — гр.71» — 30 000 ₽', $this->lastBotText());
+        $this->assertStringContainsString(route('checkout.show', $full), $this->lastBotText());
+    }
+
+    public function test_paid_block_from_chat_history_is_not_offered(): void
+    {
+        $this->joinWithFirstBlockPaid($this->sanskrit);
+        $this->incoming('есть ли места в гр.71?');
+
+        $this->ask('как оплатить?');
+
+        $question = $this->lastBotText();
+        $this->assertStringContainsString('«Санскрит — гр.71» — блок 2', $question);
+        $this->assertStringNotContainsString('блок 1', $question);
+    }
+
     public function test_unrelated_reply_leaves_question_open(): void
     {
         $this->joinWithFirstBlockPaid($this->sanskrit);
