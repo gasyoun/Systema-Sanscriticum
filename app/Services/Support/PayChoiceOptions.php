@@ -13,6 +13,8 @@ use App\Models\User;
 use App\Services\DebtPaymentResolver;
 use App\Services\StudentDebtsService;
 use App\Support\EnrollmentGroupLink;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * «Как оплатить?» → что именно и какой блок (22-10-2026).
@@ -29,6 +31,7 @@ use App\Support\EnrollmentGroupLink;
  * Ничего не пишет; деньги и ссылка — из Tariff, путь — штатный чекаут.
  *
  * @phpstan-type Option array{course_id: int, group_id: ?int, block: int}
+ * @phpstan-type Target array{course_id: int, group_id: ?int}
  */
 final class PayChoiceOptions
 {
@@ -123,34 +126,158 @@ final class PayChoiceOptions
     }
 
     /**
-     * Ответ на уточняющий вопрос. null — не разобрали.
+     * Ответ студента → что делать дальше (23-10-2026: бот спрашивает открыто,
+     * без списка, и ищет то, что назвал студент).
+     *  - link  — однозначно: курс/группа и блок (блок не назван — следующий
+     *            неоплаченный, у группы в наборе — первый);
+     *  - which — подошло несколько групп: переспросить, назвав только их;
+     *  - block — группа ясна, блок нет (или назван недоступный — note);
+     *  - none  — ничего не нашли.
+     * $context — что бот уже уточнял: target (группа ясна, ждём блок),
+     * candidates (переспрос «какая из групп»).
      *
-     * @param  list<Option>  $options
-     * @return Option|null
+     * @param  array{target?: ?Target, candidates?: list<Target>}  $context
+     * @return array{kind: string, option?: Option, targets?: list<Target>, target?: Target, note?: ?string}
      */
-    public function pick(array $options, ?User $user, string $text): ?array
+    public function resolve(?User $user, string $text, array $context = []): array
     {
-        $chosen = null;
-        $ordinal = $this->choiceNumberIn($text);
+        $targets = $this->targetsIn($user, $text, $context['candidates'] ?? []);
 
-        if ($ordinal !== null) {
-            $chosen = $options[$ordinal - 1] ?? null;
-        } elseif (count($options) === 1 && preg_match(self::YES_PATTERN, $text) === 1) {
-            $chosen = $options[0];
+        if (count($targets) > 1) {
+            return ['kind' => 'which', 'targets' => array_slice($targets, 0, self::MAX_OPTIONS)];
+        }
+
+        $target = $targets[0] ?? ($context['target'] ?? null);
+        if ($target === null) {
+            return ['kind' => 'none'];
+        }
+
+        $block = $this->blockIn($text);
+        $note = null;
+
+        if ($block !== null) {
+            $option = [...$target, 'block' => $block];
+            if ($this->alreadyPaid($user, $option)) {
+                $note = $block === self::FULL ? 'Курс у вас уже оплачен целиком.' : "Блок {$block} у вас уже оплачен.";
+                $block = null;
+            } elseif ($this->tariff($option) === null) {
+                $note = $block === self::FULL
+                    ? 'Весь курс сразу здесь оплатить нельзя — только по блокам.'
+                    : "Блока {$block} к оплате здесь нет.";
+                $block = null;
+            }
         } else {
-            $block = $this->blockIn($text);
-            $target = $this->targetIn($user, $text);
+            $block = $this->defaultBlock($user, $target);
+        }
 
-            if ($target !== null) {
-                $same = collect($options)->first(fn (array $o) => $o['course_id'] === $target['course_id']);
-                $block ??= $same['block'] ?? $this->firstBlockOfForming($target);
-                $chosen = $block !== null ? [...$target, 'group_id' => $target['group_id'] ?? ($same['group_id'] ?? null), 'block' => $block] : null;
-            } elseif ($block !== null && collect($options)->pluck('course_id')->unique()->count() === 1) {
-                $chosen = [...$options[0], 'block' => $block];
+        return $block === null
+            ? ['kind' => 'block', 'target' => $target, 'note' => $note]
+            : ['kind' => 'link', 'option' => [...$target, 'block' => $block]];
+    }
+
+    /**
+     * «Санкхья — пн 18:00» / «гр.63» (вторник 08:00) — для переспроса.
+     *
+     * @param  Target  $target
+     */
+    public function targetLabel(array $target): string
+    {
+        $group = $target['group_id'] !== null ? Group::find($target['group_id']) : null;
+        if ($group === null) {
+            return '«'.(Course::query()->whereKey($target['course_id'])->value('title') ?? 'курс').'»';
+        }
+
+        $next = $group->schedules()->where('start', '>=', now())->orderBy('start')->value('start');
+        $slot = $next !== null ? Carbon::parse($next)->locale('ru')->isoFormat('dddd HH:mm') : null;
+
+        return "«{$group->name}»".($slot !== null && $this->groups->slotsIn($group->name) === [] ? " ({$slot})" : '');
+    }
+
+    /**
+     * Что назвал студент: среди переспрошенных групп, своих групп, групп,
+     * открытых для записи, затем курс по названию.
+     *
+     * @param  list<Target>  $asked
+     * @return list<Target>
+     */
+    private function targetsIn(?User $user, string $text, array $asked): array
+    {
+        if ($asked !== []) {
+            $n = $this->choiceNumberIn($text);
+            if ($n !== null && isset($asked[$n - 1])) {
+                return [$asked[$n - 1]];
+            }
+
+            $pool = Group::query()->with(EnrollmentGroupResolver::eagerForMatching())
+                ->whereIn('id', array_filter(array_column($asked, 'group_id')))->get();
+            $hit = $this->groups->matching($pool, $text);
+            if ($hit->isEmpty()) {
+                $wanted = $this->payLinks->stems($text);
+                $hit = $pool->filter(fn (Group $g) => array_intersect(
+                    $this->payLinks->stems($g->name.' '.$g->courses->pluck('title')->implode(' ')),
+                    $wanted,
+                ) !== []);
+            }
+            if ($hit->count() === 1) {
+                return $this->targetsOf($hit);
             }
         }
 
-        return $chosen !== null && $this->tariff($chosen) !== null ? $chosen : null;
+        if ($user !== null) {
+            $own = $user->activeGroups()->with(EnrollmentGroupResolver::eagerForMatching())->get();
+            $hit = $this->groups->matching($own, $text);
+            if ($hit->isNotEmpty()) {
+                return $this->targetsOf($hit);
+            }
+        }
+
+        $hit = $this->groups->matching($this->groups->candidates(), $text);
+        if ($hit->isNotEmpty()) {
+            return $this->targetsOf($hit);
+        }
+
+        $course = $this->payLinks->courseNamedIn($text);
+        if ($course === null) {
+            return [];
+        }
+
+        $member = $user !== null ? $this->memberGroupId($user, $course) : null;
+        if ($member !== null) {
+            return [['course_id' => (int) $course->id, 'group_id' => $member]];
+        }
+
+        $open = $course->groups()->whereIn('status', ['forming', 'active'])->pluck('groups.id');
+
+        return $open->isEmpty()
+            ? [['course_id' => (int) $course->id, 'group_id' => null]]
+            : $open->map(fn ($id) => ['course_id' => (int) $course->id, 'group_id' => (int) $id])->values()->all();
+    }
+
+    /**
+     * @param  Collection<int, Group>  $groups
+     * @return list<Target>
+     */
+    private function targetsOf(Collection $groups): array
+    {
+        return $groups->map(function (Group $g): ?array {
+            $course = $this->groups->courseOf($g);
+
+            return $course !== null ? ['course_id' => (int) $course->id, 'group_id' => (int) $g->id] : null;
+        })->filter()->unique(fn (array $t) => $t['group_id'])->values()->all();
+    }
+
+    /**
+     * Блок по умолчанию: следующий неоплаченный (группа в наборе — с первого).
+     * Группа не ясна — null, бот спросит.
+     *
+     * @param  Target  $target
+     */
+    private function defaultBlock(?User $user, array $target): ?int
+    {
+        $group = $target['group_id'] !== null ? Group::find($target['group_id']) : null;
+        $course = Course::find($target['course_id']);
+
+        return $group !== null && $course !== null ? $this->nextBlock($user, $course, $group) : null;
     }
 
     /** Есть ли в ответе хоть какой-то признак выбора — иначе это другой вопрос. */
@@ -281,14 +408,6 @@ final class PayChoiceOptions
         return null;
     }
 
-    /** @param  array{course_id: int, group_id: ?int}  $target */
-    private function firstBlockOfForming(array $target): ?int
-    {
-        return $target['group_id'] !== null && Group::query()->whereKey($target['group_id'])->value('status') === 'forming'
-            ? 1
-            : null;
-    }
-
     private function memberGroupId(User $user, Course $course): ?int
     {
         $id = $user->activeGroups()
@@ -302,11 +421,11 @@ final class PayChoiceOptions
      * Следующий неоплаченный блок курса для участника группы: набор → 1,
      * идёт → текущий блок курса, а если он оплачен — следующие по порядку.
      */
-    private function nextBlock(User $user, Course $course, Group $group): ?int
+    private function nextBlock(?User $user, Course $course, Group $group): ?int
     {
         $block = $group->status === 'forming' ? 1 : ($course->currentBlock()?->number ?? 1);
 
-        $paid = $this->paidKeys($user, (int) $course->id);
+        $paid = $user !== null ? $this->paidKeys($user, (int) $course->id) : [];
 
         if (in_array('full', $paid, true)) {
             return null;

@@ -76,16 +76,44 @@ final class EnrollmentGroupResolver
 
             $pool ??= $this->candidates();
 
-            $matches = $numbers !== []
-                ? $pool->filter(fn (Group $g) => array_intersect($this->groupNumbersOf($g), $numbers) !== [])
-                : $pool->filter(fn (Group $g) => $this->slotsMatch($this->slotsOf($g), $slots));
-
-            $matches = $this->narrow($matches->values(), $all);
-
-            return $this->result($matches, $contact);
+            return $this->result($this->matching($pool, $text, $all), $contact);
         }
 
         return null;
+    }
+
+    /**
+     * Группы пула, названные в тексте номером («гр.63») или днём/часом
+     * («по понедельникам», «сб 11»); несколько — сужение по теме и языку.
+     * Пул грузится как в {@see self::candidates()} (courses.tariffs, schedules).
+     *
+     * @param  Collection<int, Group>  $pool
+     * @return Collection<int, Group>
+     */
+    public function matching(Collection $pool, string $text, ?string $context = null): Collection
+    {
+        $numbers = $this->payLinks->groupNumbersIn($text);
+        $slots = $this->slotsIn($text);
+
+        if ($numbers === [] && $slots === []) {
+            return collect();
+        }
+
+        $matches = $numbers !== []
+            ? $pool->filter(fn (Group $g) => array_intersect($this->groupNumbersOf($g), $numbers) !== [])
+            : $pool->filter(fn (Group $g) => $this->slotsMatch($this->slotsOf($g), $slots));
+
+        return $this->narrow($matches->values(), $context ?? $text);
+    }
+
+    /** Связи группы, нужные {@see self::matching()}. */
+    public static function eagerForMatching(): array
+    {
+        return [
+            'courses' => fn ($q) => $q->where('courses.is_active', true),
+            'courses.tariffs' => fn ($q) => $q->where('is_active', true)->where('type', 'block'),
+            'schedules' => fn ($q) => $q->orderByDesc('start')->limit(200),
+        ];
     }
 
     /**
@@ -187,15 +215,11 @@ final class EnrollmentGroupResolver
             ->whereIn('status', ['forming', 'active'])
             ->whereHas('courses', fn ($q) => $q->where('courses.is_active', true)
                 ->whereHas('tariffs', fn ($t) => $t->where('is_active', true)->where('type', 'block')))
-            ->with([
-                'courses' => fn ($q) => $q->where('courses.is_active', true),
-                'courses.tariffs' => fn ($q) => $q->where('is_active', true)->where('type', 'block'),
-                'schedules' => fn ($q) => $q->orderByDesc('start')->limit(200),
-            ])
+            ->with(self::eagerForMatching())
             ->get();
     }
 
-    private function courseOf(Group $group): ?Course
+    public function courseOf(Group $group): ?Course
     {
         return $group->courses->first(fn (Course $c) => $c->tariffs->isNotEmpty());
     }
