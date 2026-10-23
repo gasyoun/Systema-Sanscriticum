@@ -300,13 +300,18 @@ final class PayChoiceOptions
 
             $hit = $this->groups->matching($pool, $text);
             if ($hit->isEmpty()) {
+                $hit = $this->byTimeOfDay($pool, $text) ?? collect();
+            }
+            if ($hit->isEmpty()) {
                 $wanted = $this->payLinks->stems($text);
                 $hit = $pool->filter(fn (Group $g) => array_intersect(
                     $this->payLinks->stems($g->name.' '.$g->courses->pluck('title')->implode(' ')),
                     $wanted,
                 ) !== []);
             }
-            if ($hit->count() === 1) {
+            // Ответ сузил переспрос («по грамматике» из гр.53, гр.61, упанишад) —
+            // дальше только среди названных, а не заново по всей школе.
+            if ($hit->isNotEmpty()) {
                 return $this->targetsOf($hit);
             }
         }
@@ -325,7 +330,8 @@ final class PayChoiceOptions
         $pool = $own->concat($this->groups->candidates())->unique('id')->values();
         $hit = $this->groups->matching($pool, $text);
         if ($hit->isNotEmpty()) {
-            return $this->targetsOf($hit);
+            // «в понедельник вечером» — из понедельничных только вечерние.
+            return $this->targetsOf($hit->count() > 1 ? ($this->byTimeOfDay($hit, $text) ?? $hit) : $hit);
         }
 
         $course = $this->payLinks->courseNamedIn($text);
@@ -346,6 +352,43 @@ final class PayChoiceOptions
         return $open->isEmpty()
             ? [['course_id' => (int) $course->id, 'group_id' => null]]
             : $open->map(fn ($id) => ['course_id' => (int) $course->id, 'group_id' => (int) $id])->values()->all();
+    }
+
+    /**
+     * Группы пула по часу или времени суток из текста: «в 8», «8 утра»,
+     * «20:00», «утром», «вечером». В тексте нет времени или ни одна группа
+     * не подошла — null.
+     *
+     * @param  Collection<int, Group>  $pool
+     * @return Collection<int, Group>|null
+     */
+    private function byTimeOfDay(Collection $pool, string $text): ?Collection
+    {
+        $lower = mb_strtolower($text);
+        $hour = null;
+        if (preg_match('/(?<!\p{L})в\s+(\d{1,2})(?:[:.]\d{2})?(?!\d)|(?<!\d)(\d{1,2})[:.]\d{2}|(?<!\d)(\d{1,2})\s*(?:утра|вечера|дня|ч(?:ас\p{L}*)?)(?!\p{L})/u', $lower, $m) === 1) {
+            $hour = (int) ($m[1] !== '' ? $m[1] : ($m[2] ?? '' ?: ($m[3] ?? 0)));
+            if (str_contains($lower, 'вечер') && $hour < 12) {
+                $hour += 12;
+            }
+        }
+
+        $range = match (true) {
+            $hour !== null && $hour <= 23 => [$hour, $hour],
+            preg_match('/(?<!\p{L})утр/u', $lower) === 1 => [5, 11],
+            preg_match('/(?<!\p{L})(?:дн[её]м|днём|днем|в\s+обед)/u', $lower) === 1 => [12, 16],
+            preg_match('/(?<!\p{L})вечер/u', $lower) === 1 => [17, 23],
+            default => null,
+        };
+        if ($range === null) {
+            return null;
+        }
+
+        $hit = $pool->filter(fn (Group $g) => $g->schedules->contains(
+            fn ($s) => $s->start !== null && $s->start->hour >= $range[0] && $s->start->hour <= $range[1],
+        ))->values();
+
+        return $hit->isNotEmpty() ? $hit : null;
     }
 
     /**

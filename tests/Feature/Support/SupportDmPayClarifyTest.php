@@ -254,6 +254,24 @@ class SupportDmPayClarifyTest extends TestCase
         $this->assertStringContainsString('блока 1 группы «Грамматика по Кочергиной гр.61, пн 08:00» — 8 000 ₽', $this->lastBotText());
     }
 
+    public function test_time_of_day_narrows_which_question(): void
+    {
+        $this->groupWithCourse('Грамматика гр.61', 'Грамматика гр.61, пн', 8000)
+            ->schedules()->create(['title' => 'урок', 'start' => '2026-10-26 08:00:00', 'end' => '2026-10-26 10:00:00']);
+        $this->groupWithCourse('Грамматика гр.53', 'Грамматика гр.53, пн', 6000)
+            ->schedules()->create(['title' => 'урок', 'start' => '2026-10-26 20:00:00', 'end' => '2026-10-26 22:00:00']);
+
+        $this->ask('как оплатить?');
+        Carbon::setTestNow(now()->addMinutes(1));
+        $this->ask('по понедельникам');
+        $this->assertStringContainsString('Нашёл несколько подходящих групп', $this->lastBotText());
+
+        Carbon::setTestNow(now()->addMinutes(1));
+        $this->ask('та, что в 8 утра');
+
+        $this->assertStringContainsString('группы «Грамматика гр.61, пн» — 8 000 ₽', $this->lastBotText());
+    }
+
     public function test_fully_paid_course_named_says_so_instead_of_asking_block(): void
     {
         $sankhya = $this->groupWithCourse('Философия санкхьи', 'Философия санкхьи — пн 18:00 (2026)', 6000);
