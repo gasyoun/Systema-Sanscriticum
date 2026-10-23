@@ -316,7 +316,7 @@ class PublishDueContentCommandTest extends TestCase
     public function test_share_card_serves_og_image_only_with_valid_signature(): void
     {
         Storage::fake(ContentCalendarSlot::MEDIA_DISK);
-        $slot = $this->slot(['media_path' => 'content-calendar/cover.jpg', 'body' => "<p>Заголовок поста<br>Подробности</p>"]);
+        $slot = $this->slot(['media_path' => 'content-calendar/cover.jpg', 'body' => '<p>Заголовок поста<br>Подробности</p>']);
 
         $this->get($slot->shareUrl())
             ->assertOk()
