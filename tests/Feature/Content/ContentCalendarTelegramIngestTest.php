@@ -133,8 +133,7 @@ class ContentCalendarTelegramIngestTest extends TestCase
         PublishCalendarSlotJob::dispatchSync($slot->id);
 
         Http::assertSent(fn (Request $r) => str_contains($r->url(), '/copyMessages') && $r['message_ids'] === '[10,11]');
-        $vk = $slot->publications()->where('destination', 'vk_ors')->sole();
-        $this->assertStringContainsString('нет права «photos»', (string) $vk->warning);
+        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'wall.post') && $r['attachments'] === $slot->shareUrl());
     }
 
     public function test_oversized_media_is_not_downloaded(): void

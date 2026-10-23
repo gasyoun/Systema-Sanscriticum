@@ -255,7 +255,7 @@ class PublishDueContentCommandTest extends TestCase
         $this->assertStringContainsString('VK_PUBLISH_AUTHORIZED_GROUPS', $refused->error);
     }
 
-    public function test_photo_goes_to_telegram_and_degrades_to_text_in_vk_without_photos_scope(): void
+    public function test_photo_goes_to_telegram_and_to_vk_as_link_card_without_photos_scope(): void
     {
         Storage::fake(ContentCalendarSlot::MEDIA_DISK);
         Storage::disk(ContentCalendarSlot::MEDIA_DISK)->put('content-calendar/cover.jpg', 'JPEGDATA');
@@ -269,12 +269,64 @@ class PublishDueContentCommandTest extends TestCase
             && self::fields($r)['parse_mode'] === 'HTML'
             && self::fields($r)['photo'] === 'JPEGDATA');
         $this->assertSame(0, self::sentTo('photos.getWallUploadServer'));
-        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'wall.post') && $r['attachments'] === '');
+        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'wall.post')
+            && $r['attachments'] === $slot->shareUrl());
 
         $vk = $slot->publications()->where('destination', 'vk_a')->first();
         $this->assertSame(ContentCalendarPublication::STATUS_PUBLISHED, $vk->status);
-        $this->assertStringContainsString('нет права «photos»', $vk->warning);
+        $this->assertNull($vk->warning);
+    }
+
+    public function test_ready_vk_media_is_attached_without_upload(): void
+    {
+        Storage::fake(ContentCalendarSlot::MEDIA_DISK);
+        Storage::disk(ContentCalendarSlot::MEDIA_DISK)->put('content-calendar/teaser.mp4', 'MP4DATA');
+        $this->fakeApis();
+
+        $slot = $this->slot([
+            'media_path' => 'content-calendar/teaser.mp4',
+            'vk_attachments' => 'video-236973776_456239020,photo-236973776_457239017',
+            'destinations' => ['tg_a', 'vk_a'],
+        ]);
+        $this->artisan('content:publish-due')->assertSuccessful();
+
+        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'sendVideo'));
+        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'wall.post')
+            && $r['attachments'] === 'video-236973776_456239020,photo-236973776_457239017');
+        $this->assertSame(0, self::sentTo('video.save'));
+        $this->assertNull($slot->publications()->where('destination', 'vk_a')->first()->warning);
+    }
+
+    public function test_video_without_scope_or_ready_media_goes_to_vk_as_text_with_warning(): void
+    {
+        Storage::fake(ContentCalendarSlot::MEDIA_DISK);
+        Storage::disk(ContentCalendarSlot::MEDIA_DISK)->put('content-calendar/teaser.mp4', 'MP4DATA');
+        $this->fakeApis();
+
+        $slot = $this->slot(['media_path' => 'content-calendar/teaser.mp4', 'destinations' => ['vk_a']]);
+        $this->artisan('content:publish-due')->assertSuccessful();
+
+        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'wall.post') && $r['attachments'] === '');
+        $vk = $slot->publications()->first();
+        $this->assertSame(ContentCalendarPublication::STATUS_PUBLISHED, $vk->status);
+        $this->assertStringContainsString('Готовое медиа VK', (string) $vk->warning);
         $this->assertCount(1, $this->notified);
+    }
+
+    public function test_share_card_serves_og_image_only_with_valid_signature(): void
+    {
+        Storage::fake(ContentCalendarSlot::MEDIA_DISK);
+        $slot = $this->slot(['media_path' => 'content-calendar/cover.jpg', 'body' => "<p>Заголовок поста<br>Подробности</p>"]);
+
+        $this->get($slot->shareUrl())
+            ->assertOk()
+            ->assertSee('<meta property="og:image" content="'.e($slot->mediaUrl()).'">', false)
+            ->assertSee('<meta property="og:title" content="Заголовок поста">', false);
+
+        $this->get("/cc/{$slot->id}/0000000000000000")->assertNotFound();
+
+        $text = $this->slot(['media_path' => null]);
+        $this->get($text->shareUrl())->assertNotFound();
     }
 
     public function test_photo_is_uploaded_to_vk_when_token_has_photos_scope(): void
