@@ -348,6 +348,47 @@ final class CourseCadence
             ->all();
     }
 
+    /**
+     * Ход каждого потока ВНУТРИ блока: какое занятие идёт по счёту среди
+     * занятий, попавших в даты блока. Нужен админке «Ход курсов» — на витрине
+     * счёт идёт по всему курсу, а куратору важно «5-е из 12 во 2-м блоке».
+     *
+     * Границы блока инклюзивны по календарному дню, как в CourseBlock::isCurrent();
+     * пустая граница — открытая. Обзорные занятия (`is_overview`) в счёт не
+     * идут, как в FullSchedulePost. Потоки не складываются — строка на поток.
+     *
+     * @return array<int, array{group_id: int|null, slot: string|null, past: int, total: int, next: Schedule|null, last_past: Schedule|null}>
+     */
+    public function blockStreams(?Carbon $startsAt, ?Carbon $endsAt): array
+    {
+        $from = $startsAt?->copy()->startOfDay();
+        $to = $endsAt?->copy()->endOfDay();
+
+        return $this->streams()
+            ->map(function (Collection $sessions, $key) use ($from, $to) {
+                $inBlock = $sessions
+                    ->reject(fn (Schedule $s) => (bool) $s->is_overview)
+                    ->filter(fn (Schedule $s) => ($from === null || $s->start->gte($from))
+                        && ($to === null || $s->start->lte($to)))
+                    ->values();
+
+                $past = $inBlock->filter(fn (Schedule $s) => $this->endOf($s)->lt($this->now));
+
+                return [
+                    'group_id' => $key === 'course' ? null : (int) $key,
+                    'slot' => $this->slotOf($inBlock->isNotEmpty() ? $inBlock : $sessions),
+                    'past' => $past->count(),
+                    'total' => $inBlock->count(),
+                    'next' => $inBlock->first(fn (Schedule $s) => $this->endOf($s)->gte($this->now)),
+                    'last_past' => $past->last(),
+                ];
+            })
+            ->filter(fn (array $row) => $row['total'] > 0)
+            ->sortBy('slot')
+            ->values()
+            ->all();
+    }
+
     /** @param  Collection<int, Schedule>  $sessions */
     private function progressIn(Collection $sessions): ?string
     {

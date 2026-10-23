@@ -164,7 +164,7 @@ class CuratorAi
      * @param  list<array{role: string, content: string}>  $messages
      * @return array{content: ?string, usage: ?array{prompt_tokens: int, completion_tokens: int}, model: ?string}
      */
-    public function localChatWithUsage(array $messages): array
+    public function localChatWithUsage(array $messages, ?int $timeout = null, float $temperature = 0.3): array
     {
         $model = (string) config('knowledge.generation_model', 'qwen3:14b');
         $empty = ['content' => null, 'usage' => null, 'model' => $model];
@@ -175,11 +175,11 @@ class CuratorAi
         $endpoint = rtrim($base, '/').'/v1/chat/completions';
 
         try {
-            $response = Http::timeout((int) config('knowledge.generation_timeout', 120))
+            $response = Http::timeout($timeout ?? (int) config('knowledge.generation_timeout', 120))
                 ->post($endpoint, [
                     'model' => $model,
                     'messages' => $messages,
-                    'temperature' => 0.3,
+                    'temperature' => $temperature,
                     'max_tokens' => 2000,
                 ]);
 
