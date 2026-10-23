@@ -81,7 +81,7 @@ final class PayDialogInterpreter
 
         if (! in_array($intent, self::INTENTS, true)
             || $confidence < (float) config('support.pay_llm.min_confidence', 0.7)) {
-            return null;
+            return $this->reject('intent/уверенность', $data);
         }
 
         $key = is_string($data['option'] ?? null) ? trim($data['option']) : '';
@@ -93,13 +93,13 @@ final class PayDialogInterpreter
         if ($key !== '' && $key !== 'null') {
             // Выдумала вариант — не верим всему ответу.
             if (! isset($catalog[$key])) {
-                return null;
+                return $this->reject('вариант не из каталога', $data);
             }
 
             if ($block !== null) {
                 $option = ['course_id' => $catalog[$key]['course_id'], 'group_id' => $catalog[$key]['group_id'], 'block' => $block];
                 if ($this->choices->tariff($option) === null || $this->choices->alreadyPaid($user, $option)) {
-                    return null;
+                    return $this->reject('нет тарифа или блок оплачен', $data);
                 }
             }
         }
@@ -218,6 +218,14 @@ final class PayDialogInterpreter
             ->implode("\n");
     }
 
+    /** @param  array<string, mixed>  $data */
+    private function reject(string $reason, array $data): null
+    {
+        Log::info('PayDialogInterpreter: ответ модели отброшен — '.$reason, ['reply' => $data]);
+
+        return null;
+    }
+
     /** @return array<string, mixed>|null */
     private function json(?string $content): ?array
     {
@@ -251,7 +259,7 @@ intent:
 - "human" — возврат денег, рассрочка, скидка, спор о сумме, оплата из-за рубежа, жалоба — это решает человек;
 - "other" — последнее сообщение не про оплату и не про запись.
 
-option — id варианта из КАТАЛОГА (например "g155" или "c459"), который имеет в виду студент; null, если непонятно. Выбирай ТОЛЬКО из каталога, не придумывай. Если бот перечислил варианты под номерами, «второй» значит второй из перечисленных ботом. День недели и время, номер группы («гр.63»), название курса, «тот же, что сейчас» — всё это способы указать вариант.
+option — id варианта из КАТАЛОГА (например "g155" или "c459"), который имеет в виду студент; null, если непонятно. Выбирай ТОЛЬКО из каталога, не придумывай. Если бот перечислил варианты под номерами, «второй» значит второй из перечисленных ботом. День недели и время, номер группы («гр.63»), название курса, «тот же, что сейчас» — всё это способы указать вариант. Новый вопрос об оплате («хочу оплатить», «как оплатить?»), в котором вариант не назван, — option null и missing "what", даже если раньше в переписке студент что-то выбирал или уже получал ссылку: прошлый выбор не ответ на новый вопрос.
 
 block — номер блока (целое), "full" если студент хочет оплатить весь курс сразу, null если не назван и не следует из разговора. Если вариант «у студента к оплате» и студент не назвал другой блок, а просто подтверждает — бери блок из этого варианта.
 

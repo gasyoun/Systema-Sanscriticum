@@ -165,6 +165,26 @@ class PayDialogInterpreterTest extends TestCase
         $this->assertStringContainsString('студент] давайте тот, что по понедельникам', $prompt);
     }
 
+    public function test_fresh_question_asks_even_if_model_guesses_from_history(): void
+    {
+        // Пилот 23-10-2026: на «хочу оплатить» модель взяла вчерашнюю группу.
+        $this->llmReplies = [['intent' => 'pay', 'option' => 'g'.$this->monday->id, 'block' => 1, 'confidence' => 0.9]];
+
+        $this->ask('Хочу оплатить, подскажите как');
+
+        $this->assertStringContainsString('Подскажите, пожалуйста, что хотите оплатить', $this->lastBotText());
+        $this->assertSame(1, $this->botMessages());
+    }
+
+    public function test_fresh_message_naming_the_group_gets_link_from_model(): void
+    {
+        $this->llmReplies = [['intent' => 'pay', 'option' => 'g'.$this->monday->id, 'block' => 2, 'confidence' => 0.9]];
+
+        $this->ask('хочу оплатить философию санкхьи, 2 блок');
+
+        $this->assertStringContainsString('блока 2 группы «Санкхья — пн 18:00»', $this->lastBotText());
+    }
+
     public function test_whole_course_from_context(): void
     {
         $course = $this->saturday->courses()->first();
@@ -242,6 +262,18 @@ class PayDialogInterpreterTest extends TestCase
         $this->assertStringContainsString('Подскажите, пожалуйста, что хотите оплатить', $this->lastBotText());
         $event = SupportAiReplyEvent::query()->where('event_type', SupportDmAutoReply::EVENT_PAY_LLM_SHADOW)->firstOrFail();
         $this->assertSame('human', $event->meta['llm']['intent']);
+        $this->assertSame('sent', $event->meta['rules_status']);
+    }
+
+    public function test_shadow_records_rejected_model_reply_too(): void
+    {
+        config(['features.support_pay_dialog_llm' => 'shadow']);
+        $this->llmReplies = [['intent' => 'pay', 'confidence' => 0.4]];
+
+        $this->ask('как оплатить?');
+
+        $event = SupportAiReplyEvent::query()->where('event_type', SupportDmAutoReply::EVENT_PAY_LLM_SHADOW)->firstOrFail();
+        $this->assertNull($event->meta['llm']);
         $this->assertSame('sent', $event->meta['rules_status']);
     }
 

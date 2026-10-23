@@ -132,7 +132,7 @@ final class SupportDmAutoReply
      * Вопрос «как/где оплатить», «не могу оплатить через кабинет», «ссылка на
      * оплату следующего блока» (22-10-2026) — бот уточняет, что и какой блок.
      */
-    private const PAY_HELP_PATTERN = '/(?:как|где|куда|через\s+что|каким\s+образом)\s+(?:\p{L}+\s+){0,2}(?:оплатить|оплачивать|заплатить|платить|внести\s+оплату)|ссылк\p{L}*\s+(?:\p{L}+\s+)?(?:на|для)\s+оплат|оплатить\s+(?:\p{L}+\s+)?блок|не\s+(?:могу|можу|получается|выходит|удаётся|удается|проходит)\s+(?:\p{L}+\s+){0,2}(?:оплат|заплат)|оплат\p{L}*\s+не\s+(?:проход|получа|работа)|ошибк\p{L}*\s+(?:\p{L}+\s+)?(?:при|во\s+время)\s+оплат/iu';
+    private const PAY_HELP_PATTERN = '/(?:как|где|куда|через\s+что|каким\s+образом)\s+(?:\p{L}+\s+){0,2}(?:оплатить|оплачивать|заплатить|платить|внести\s+оплату)|(?:хочу|хотела?|хотим|нужно|надо)\s+(?:бы\s+)?(?:\p{L}+\s+)?(?:оплатить|заплатить|внести\s+оплату)|(?:оплатить|заплатить)[\s,]+(?:\p{L}+[\s,]+){0,2}(?:как|где|куда)(?!\p{L})|ссылк\p{L}*\s+(?:\p{L}+\s+)?(?:на|для)\s+оплат|оплатить\s+(?:\p{L}+\s+)?блок|не\s+(?:могу|можу|получается|выходит|удаётся|удается|проходит)\s+(?:\p{L}+\s+){0,2}(?:оплат|заплат)|оплат\p{L}*\s+не\s+(?:проход|получа|работа)|ошибк\p{L}*\s+(?:\p{L}+\s+)?(?:при|во\s+время)\s+оплат/iu';
 
     /** Оплата не проходит — к ссылке прикладываем подсказку куратору. */
     private const PAY_PROBLEM_PATTERN = '/не\s+(?:могу|можу|получается|выходит|удаётся|удается|проходит)|ошибк|не\s+(?:проход|работа)|не\s+открыва|не\s+пускает/iu';
@@ -1558,6 +1558,7 @@ final class SupportDmAutoReply
         // слова-триггеры). Возврат/рассрочка/скидки ей не отдаём — это человек.
         $mode = (string) config('features.support_pay_dialog_llm', 'off');
         $decision = null;
+        $llmCalled = false;
 
         if ($mode !== 'off'
             && preg_match(self::PAY_HUMAN_PATTERN, $text) !== 1
@@ -1565,6 +1566,15 @@ final class SupportDmAutoReply
                 || preg_match(self::ENROLL_INTENT_PATTERN, $text) === 1 || $this->payChoices->hasChoiceCue($text))
         ) {
             $decision = $this->payDialog->interpret($incoming, $user, [$text, ...$this->recentIncomingTexts($incoming)]);
+            $llmCalled = true;
+        }
+
+        // «Всегда уточнять» (пилот 23-10-2026): на свежее «хочу оплатить» модель
+        // выбрала вчерашнюю группу из истории. Без открытого вопроса и без
+        // названного в сообщении курса/группы/блока — не угадываем, спрашиваем.
+        if ($decision !== null && $decision['option'] !== null && $open === null
+            && ! $this->payChoices->namesTarget($text)) {
+            $decision = [...$decision, 'option' => null, 'missing' => 'what'];
         }
 
         if ($mode === 'live' && $decision !== null) {
@@ -1573,7 +1583,8 @@ final class SupportDmAutoReply
 
         $result = $this->payClarifyByRules($incoming, $user, $contact, $category, $text, $open, $asked, $talkGoesOn);
 
-        if ($mode === 'shadow' && $decision !== null) {
+        // Пишем и «модель не решила» (llm = null): видно, где она молчит.
+        if ($mode === 'shadow' && $llmCalled) {
             SupportAiReplyEvent::create([
                 'telegram_support_message_id' => $incoming->id,
                 'event_type' => self::EVENT_PAY_LLM_SHADOW,
@@ -1739,7 +1750,9 @@ final class SupportDmAutoReply
         // понятный ответ, второй раз не задаём — вопрос куратору. Вопрос,
         // закончившийся ссылкой, новому не мешает. Учёт по базе (Redis может
         // лежать), клейм — только от гонки двух воркеров.
-        if ($asked->contains(fn (SupportAiReplyEvent $e) => ($e->meta['outcome'] ?? null) !== 'link')) {
+        // 23-10-2026: только вопрос без ответа или с неразобранным ответом;
+        // закрытые до #3439 события пометки outcome не имеют — не мешают.
+        if ($asked->contains(fn (SupportAiReplyEvent $e) => empty($e->meta['closed_at']) || ($e->meta['outcome'] ?? null) === 'unparsed')) {
             return $this->hintComplex($incoming, $user, $category, $text, false, null,
                 '🧭 Студент снова спрашивает про оплату, а на сегодняшний вопрос бота «что оплатить» понятного ответа не было. Ответьте сами.',
                 standalone: true);
