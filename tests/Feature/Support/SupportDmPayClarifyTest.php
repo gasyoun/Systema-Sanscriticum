@@ -165,6 +165,24 @@ class SupportDmPayClarifyTest extends TestCase
         $this->assertSame(['pay_clarify', 'pay_choice_link'], $this->sentFactTypes());
     }
 
+    /** @return iterable<string, array{0: string}> */
+    public static function payHelpPhrasings(): iterable
+    {
+        // Пилот 23-10-2026: первая фраза осталась без ответа.
+        yield 'оплатить, подскажите как' => ['Хочу оплатить, подскажите как'];
+        yield 'хочу оплатить' => ['Здравствуйте! Хочу оплатить следующий блок'];
+        yield 'нужно заплатить' => ['Мне нужно заплатить, куда?'];
+    }
+
+    /** @dataProvider payHelpPhrasings */
+    public function test_pay_help_phrasings_get_question(string $text): void
+    {
+        $this->joinWithFirstBlockPaid($this->sanskrit);
+
+        $this->assertSame('sent', $this->ask($text)['status']);
+        $this->assertStringContainsString('1) «Санскрит — гр.71» — блок 2', $this->lastBotText());
+    }
+
     public function test_single_option_still_asks_and_yes_gets_link(): void
     {
         $this->joinWithFirstBlockPaid($this->sanskrit);

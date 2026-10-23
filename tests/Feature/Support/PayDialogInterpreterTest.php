@@ -165,6 +165,26 @@ class PayDialogInterpreterTest extends TestCase
         $this->assertStringContainsString('студент] давайте тот, что по понедельникам', $prompt);
     }
 
+    public function test_fresh_question_asks_even_if_model_guesses_from_history(): void
+    {
+        // Пилот 23-10-2026: на «хочу оплатить» модель взяла вчерашнюю группу.
+        $this->llmReplies = [['intent' => 'pay', 'option' => 'g'.$this->monday->id, 'block' => 1, 'confidence' => 0.9]];
+
+        $this->ask('Хочу оплатить, подскажите как');
+
+        $this->assertStringContainsString('Подскажите, пожалуйста, что хотите оплатить', $this->lastBotText());
+        $this->assertSame(1, $this->botMessages());
+    }
+
+    public function test_fresh_message_naming_the_group_gets_link_from_model(): void
+    {
+        $this->llmReplies = [['intent' => 'pay', 'option' => 'g'.$this->monday->id, 'block' => 2, 'confidence' => 0.9]];
+
+        $this->ask('хочу оплатить философию санкхьи, 2 блок');
+
+        $this->assertStringContainsString('блока 2 группы «Санкхья — пн 18:00»', $this->lastBotText());
+    }
+
     public function test_whole_course_from_context(): void
     {
         $course = $this->saturday->courses()->first();

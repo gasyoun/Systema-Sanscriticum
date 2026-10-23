@@ -163,6 +163,12 @@ final class PayChoiceOptions
             || $this->groups->slotsIn($text) !== [];
     }
 
+    /** Студент сам указал, что оплачивает: курс, группу, день, номер или блок. */
+    public function namesTarget(string $text): bool
+    {
+        return $this->hasChoiceCue($text) || $this->payLinks->courseNamedIn($text) !== null;
+    }
+
     /**
      * @param  Option  $option
      * @return array{tariff: Tariff, course: Course, group: ?Group, block: int, amount: float, url: string}|null
