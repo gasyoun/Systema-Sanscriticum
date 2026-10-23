@@ -1597,10 +1597,7 @@ final class SupportDmAutoReply
         // Студент назвал то, под что подходит несколько групп («по понедельникам»)
         // — модель выбрала бы наугад (пилот 23-10-2026). Тут переспрашивают правила.
         if ($decision !== null && $decision['option'] !== null
-            && $this->payChoices->resolve($user, $text, [
-                'target' => is_array($open?->meta['pay_target'] ?? null) ? $open->meta['pay_target'] : null,
-                'candidates' => array_values(array_filter((array) ($open?->meta['pay_candidates'] ?? []), 'is_array')),
-            ])['kind'] === 'which') {
+            && $this->payChoices->resolve($user, $text, $this->payContext($open))['kind'] === 'which') {
             $decision = [...$decision, 'option' => null, 'missing' => 'what'];
         }
 
@@ -1693,7 +1690,8 @@ final class SupportDmAutoReply
                 standalone: true);
         }
 
-        return $this->askPayQuestion($incoming, $user, $category, $text, $problem, $resolved, 1);
+        return $this->askPayQuestion($incoming, $user, $category, $text, $problem, $resolved, 1,
+            $this->payChoices->namesTarget($text) ? [$text] : []);
     }
 
     /**
@@ -1709,10 +1707,7 @@ final class SupportDmAutoReply
         string $category,
         string $text,
     ): ?array {
-        $resolved = $this->payChoices->resolve($user, $text, [
-            'target' => is_array($open->meta['pay_target'] ?? null) ? $open->meta['pay_target'] : null,
-            'candidates' => array_values(array_filter((array) ($open->meta['pay_candidates'] ?? []), 'is_array')),
-        ]);
+        $resolved = $this->payChoices->resolve($user, $text, $this->payContext($open));
 
         // Ни группы, ни блока, ни слова об оплате — это другой вопрос, а не
         // ответ: его обработает обычный конвейер, вопрос об оплате ждёт.
@@ -1736,7 +1731,9 @@ final class SupportDmAutoReply
 
         $this->closePayClarify($open, $incoming, 'asked');
 
-        return $this->askPayQuestion($incoming, $user, $category, $text, $problem, $resolved, $round + 1);
+        $said = array_slice([...$this->payContext($open)['texts'], $text], -4);
+
+        return $this->askPayQuestion($incoming, $user, $category, $text, $problem, $resolved, $round + 1, $said);
     }
 
     /**
@@ -1745,6 +1742,7 @@ final class SupportDmAutoReply
      * сам студент.
      *
      * @param  array{kind: string, targets?: list<array{course_id: int, group_id: ?int}>, target?: array{course_id: int, group_id: ?int}, note?: ?string}  $resolved
+     * @param  list<string>  $said  что студент уже сказал в этом разговоре
      * @return array{status: string, category: ?string}|null
      */
     private function askPayQuestion(
@@ -1755,17 +1753,21 @@ final class SupportDmAutoReply
         bool $problem,
         array $resolved,
         int $round,
+        array $said = [],
     ): ?array {
         $kind = $resolved['kind'];
+        $note = $resolved['note'] ?? null;
 
         $draft = match ($kind) {
             'which' => "Нашёл несколько подходящих групп:\n"
                 .implode("\n", array_map(fn (array $t) => '— '.$this->payChoices->targetLabel($t), $resolved['targets']))
                 ."\n\nКакую из них оплатить и какой блок?",
             'block' => trim(($resolved['note'] ?? '')."\n\nКакой блок ".$this->payChoices->targetLabel($resolved['target']).' оплатить? Напишите номер блока — пришлю ссылку.'),
-            default => $round === 1
-                ? "Намасте!\n\nПодскажите, пожалуйста, что хотите оплатить: название курса или группы (можно номер группы или день и время занятий) и какой блок. Пришлю ссылку на оплату."
-                : 'Не нашёл такой курс или группу. Напишите, пожалуйста, название курса или номер группы (например, «гр.63») и блок.',
+            default => match (true) {
+                $note !== null => $note."\n\nЧто ещё хотите оплатить? Напишите название курса или номер группы и блок.",
+                $round === 1 => "Намасте!\n\nПодскажите, пожалуйста, что хотите оплатить: название курса или группы (можно номер группы или день и время занятий) и какой блок. Пришлю ссылку на оплату.",
+                default => 'Не нашёл такой курс или группу. Напишите, пожалуйста, название курса или номер группы (например, «гр.63») и блок.',
+            },
         };
 
         if (! TelegramSendGuard::claimKey('pay-clarify:'.$incoming->telegram_chat_id.':'.$incoming->id, 300)) {
@@ -1778,6 +1780,8 @@ final class SupportDmAutoReply
             'pay_target' => $resolved['target'] ?? null,
             'pay_candidates' => $resolved['targets'] ?? [],
             'pay_problem' => $problem,
+            'pay_texts' => array_values($said),
+            'pay_rejected' => $resolved['rejected'] ?? [],
             'round' => $round,
         ]);
     }
@@ -1829,6 +1833,24 @@ final class SupportDmAutoReply
         return (preg_match('/оплат|заплат|ссылк\p{L}*\s+на\s+оплат/iu', $text) === 1
                 || preg_match('/(?<!\p{L})за\s+(?:весь|целый|\d{1,2}|\p{L}+\s+блок)/iu', $text) === 1)
             && $this->payChoices->namesTarget($text);
+    }
+
+    /**
+     * Разговор, который ведёт открытый вопрос: что бот уточнял и что студент
+     * уже сказал ({@see PayChoiceOptions::resolve()}).
+     *
+     * @return array{target: ?array, candidates: list<array>, texts: list<string>, rejected: list<array>}
+     */
+    private function payContext(?SupportAiReplyEvent $open): array
+    {
+        $meta = $open?->meta ?? [];
+
+        return [
+            'target' => is_array($meta['pay_target'] ?? null) ? $meta['pay_target'] : null,
+            'candidates' => array_values(array_filter((array) ($meta['pay_candidates'] ?? []), 'is_array')),
+            'texts' => array_values(array_filter((array) ($meta['pay_texts'] ?? []), 'is_string')),
+            'rejected' => array_values(array_filter((array) ($meta['pay_rejected'] ?? []), 'is_array')),
+        ];
     }
 
     private function closePayClarify(?SupportAiReplyEvent $open, TelegramSupportMessage $incoming, string $outcome): void

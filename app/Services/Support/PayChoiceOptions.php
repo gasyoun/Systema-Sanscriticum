@@ -48,6 +48,12 @@ final class PayChoiceOptions
         'шест' => 6, 'седьм' => 7, 'восьм' => 8, 'девят' => 9, 'десят' => 10,
     ];
 
+    /** «нет, другая», «не эта», «другую» — отказ от названной ботом группы. */
+    private const REJECT_PATTERN = '/(?:^|[\s,.!])нет(?:[\s,.!]|$)|(?<!\p{L})друг(?:ая|ой|ую|ое)(?!\p{L})|(?<!\p{L})не\s+(?:эт(?:а|от|у|о)|т(?:а|от|у|о))(?!\p{L})/iu';
+
+    /** «моя группа», «где я учусь/занимаюсь» — искать только среди своих групп. */
+    private const MINE_PATTERN = '/(?<!\p{L})(?:мо(?:я|ю|ей|ем|ём|й)|наш(?:а|у|ей|ем|ём)?)(?!\p{L})|(?<!\p{L})я\s+(?:\p{L}+\s+){0,3}(?:уч(?:усь|илась|ился)|занима(?:юсь|лась|лся)|хож(?:у))(?!\p{L})/iu';
+
     private const YES_PATTERN = '/^\s*(?:да|ага|угу|верно|точно|его|этот|эту|давайте|подходит|он(?:а|о)?)(?!\p{L})[\s.!)]*$/iu';
 
     public function __construct(
@@ -132,29 +138,54 @@ final class PayChoiceOptions
      *            неоплаченный, у группы в наборе — первый);
      *  - which — подошло несколько групп: переспросить, назвав только их;
      *  - block — группа ясна, блок нет (или назван недоступный — note);
-     *  - none  — ничего не нашли.
-     * $context — что бот уже уточнял: target (группа ясна, ждём блок),
-     * candidates (переспрос «какая из групп»).
+     *  - none  — ничего не нашли (note — например, «курс уже оплачен»).
+     * $context — разговор: target (группа ясна, ждём блок), candidates
+     * (переспрос «какая из групп»), texts (что студент уже сказал: «по
+     * понедельникам» + «нет, другая по грамматике»), rejected (отвергнутые
+     * «нет, другая» группы). В ответе rejected — для следующего шага.
      *
-     * @param  array{target?: ?Target, candidates?: list<Target>}  $context
-     * @return array{kind: string, option?: Option, targets?: list<Target>, target?: Target, note?: ?string}
+     * @param  array{target?: ?Target, candidates?: list<Target>, texts?: list<string>, rejected?: list<Target>}  $context
+     * @return array{kind: string, option?: Option, targets?: list<Target>, target?: Target, note?: ?string, rejected: list<Target>}
      */
     public function resolve(?User $user, string $text, array $context = []): array
     {
-        $targets = $this->targetsIn($user, $text, $context['candidates'] ?? []);
+        $rejected = array_values(array_filter($context['rejected'] ?? [], 'is_array'));
+        $current = $context['target'] ?? null;
 
-        if (count($targets) > 1) {
-            return ['kind' => 'which', 'targets' => array_slice($targets, 0, self::MAX_OPTIONS)];
+        // «нет, другая» — названная ботом группа не та.
+        if ($current !== null && preg_match(self::REJECT_PATTERN, $text) === 1) {
+            $rejected[] = $current;
+            $current = null;
         }
 
-        $target = $targets[0] ?? ($context['target'] ?? null);
+        $targets = $this->targetsIn($user, $text, $context['candidates'] ?? []);
+
+        // Сказанное раньше в этом разговоре: день из первого ответа + курс из второго.
+        $earlier = array_values(array_filter($context['texts'] ?? [], 'is_string'));
+        if ($earlier !== [] && ($targets === [] || ($current === null && $this->sameAsRejected($targets, $rejected)))) {
+            $targets = $this->targetsIn($user, implode("\n", [...$earlier, $text]), []);
+        }
+
+        $targets = array_values(array_filter($targets, fn (array $t) => ! $this->sameAsRejected([$t], $rejected)));
+
+        // Курс уже оплачен целиком — здесь платить нечего, такие отсеиваем.
+        $payable = array_values(array_filter($targets, fn (array $t) => ! $this->fullyPaid($user, $t)));
+        if ($targets !== [] && $payable === []) {
+            return ['kind' => 'none', 'note' => $this->targetLabel($targets[0]).' у вас уже оплачен полностью.', 'rejected' => $rejected];
+        }
+
+        if (count($payable) > 1) {
+            return ['kind' => 'which', 'targets' => array_slice($payable, 0, self::MAX_OPTIONS), 'rejected' => $rejected];
+        }
+
+        $target = $payable[0] ?? $current;
         if ($target === null) {
-            return ['kind' => 'none'];
+            return ['kind' => 'none', 'note' => null, 'rejected' => $rejected];
         }
 
         $block = $this->blockIn($text);
         // Ответ на «какой блок?» — просто «2» или «второй».
-        if ($block === null && $targets === [] && ($context['target'] ?? null) !== null) {
+        if ($block === null && $payable === [] && $current !== null) {
             $block = $this->choiceNumberIn($text);
         }
         $note = null;
@@ -175,8 +206,52 @@ final class PayChoiceOptions
         }
 
         return $block === null
-            ? ['kind' => 'block', 'target' => $target, 'note' => $note]
-            : ['kind' => 'link', 'option' => [...$target, 'block' => $block]];
+            ? ['kind' => 'block', 'target' => $target, 'note' => $note, 'rejected' => $rejected]
+            : ['kind' => 'link', 'option' => [...$target, 'block' => $block], 'rejected' => $rejected];
+    }
+
+    /**
+     * @param  list<Target>  $targets
+     * @param  list<Target>  $rejected
+     */
+    private function sameAsRejected(array $targets, array $rejected): bool
+    {
+        if ($targets === [] || $rejected === []) {
+            return false;
+        }
+
+        foreach ($targets as $t) {
+            $hit = collect($rejected)->contains(fn (array $r) => (int) $r['course_id'] === (int) $t['course_id']
+                && ($r['group_id'] ?? null) === ($t['group_id'] ?? null));
+            if (! $hit) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Курс оплачен целиком: тариф full или все активные блоки.
+     *
+     * @param  Target  $target
+     */
+    private function fullyPaid(?User $user, array $target): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        $paid = $this->paidKeys($user, (int) $target['course_id']);
+        if (in_array('full', $paid, true)) {
+            return true;
+        }
+
+        $blocks = Tariff::query()->where('course_id', $target['course_id'])->where('is_active', true)
+            ->where('type', 'block')->whereNull('block_half')->pluck('block_number')
+            ->map(fn ($n) => 'block_'.(int) $n)->unique()->values()->all();
+
+        return $blocks !== [] && array_diff($blocks, $paid) === [];
     }
 
     /**
@@ -227,15 +302,19 @@ final class PayChoiceOptions
             }
         }
 
-        if ($user !== null) {
-            $own = $user->activeGroups()->with(EnrollmentGroupResolver::eagerForMatching())->get();
+        // Свои группы и группы в наборе вместе: «по понедельникам» — это и
+        // гр.61 в наборе, а не только своя санкхья (пилот 23-10-2026). Только
+        // свои — когда студент так и говорит: «моя», «где я учусь».
+        $own = $user !== null ? $user->activeGroups()->with(EnrollmentGroupResolver::eagerForMatching())->get() : collect();
+        if ($own->isNotEmpty() && preg_match(self::MINE_PATTERN, $text) === 1) {
             $hit = $this->groups->matching($own, $text);
             if ($hit->isNotEmpty()) {
                 return $this->targetsOf($hit);
             }
         }
 
-        $hit = $this->groups->matching($this->groups->candidates(), $text);
+        $pool = $own->concat($this->groups->candidates())->unique('id')->values();
+        $hit = $this->groups->matching($pool, $text);
         if ($hit->isNotEmpty()) {
             return $this->targetsOf($hit);
         }
