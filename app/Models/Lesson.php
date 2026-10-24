@@ -6,6 +6,7 @@ use App\Enums\RecordingKind;
 use App\Services\HomeworkAutoOpener;
 use App\Services\Srs\LessonFlashCardsSync;
 use App\Support\HomeworkAutoOpenScope;
+use App\Support\RichHtml;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,6 +26,9 @@ class Lesson extends Model
         'title',
         'slug',
         'topic',
+        // Богатое тело урока (мини-курсы): HTML, санитизируется при записи
+        // (setContentHtmlAttribute) — в шаблоне печатается как есть.
+        'content_html',
         'lesson_date',
         'video_url',
         'rutube_url',
@@ -213,6 +217,12 @@ class Lesson extends Model
     // PHP-аксессоры используют колонки модели; query-скоупы дублируют ту
     // же логику в SQL для фильтров/счётчиков (паритет проверяется тестом).
     // ===================================================================
+
+    /** Богатое тело урока: санитизируем при записи — в шаблоне печатается как есть. */
+    public function setContentHtmlAttribute(?string $value): void
+    {
+        $this->attributes['content_html'] = RichHtml::sanitizeBody($value);
+    }
 
     public function hasVideo(): bool
     {

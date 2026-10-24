@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Anons;
 
+use App\Support\MediaAreaMath;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
@@ -283,19 +284,27 @@ final class PlaqueBounds
         $this->artifactPath = $artifactPath;
     }
 
+    /**
+     * H6678: mediaAreaCoordinates Telegram — x/y ЦЕНТР зоны (проценты
+     * холста), не левый-верхний угол. Прежняя версия отдавала y верхней
+     * кромки плашки → Telegram клал клик-зону на пол-плашки выше отрисовки
+     * (тап-тест 13-10-2026: плашка 352..442 из 640px, кликалась только
+     * 352..397). Конвертация измеренного px-прямоугольника — в
+     * MediaAreaMath::fromPlaqueBoxPx (единая точка истины).
+     */
     public function asMediaAreaCoordinates(): array
     {
         if ($this->canvasW === null || $this->canvasH === null || $this->rectPx === null) {
             throw new RuntimeException('No rendered plaque to derive media-area coordinates from.');
         }
 
-        return [
-            'x' => round($this->rectPx['x'] / $this->canvasW * 100.0, 1),
-            'y' => round($this->rectPx['y'] / $this->canvasH * 100.0, 1),
-            'w' => round($this->rectPx['w'] / $this->canvasW * 100.0, 1),
-            'h' => round($this->rectPx['h'] / $this->canvasH * 100.0, 1),
-            'rotation' => 0.0,
-            'radius' => CtaPlaqueCompositor::RECT['radius'],
-        ];
+        return MediaAreaMath::fromPlaqueBoxPx(
+            (float) $this->rectPx['x'],
+            (float) $this->rectPx['y'],
+            (float) $this->rectPx['w'],
+            (float) $this->rectPx['h'],
+            (float) $this->canvasW,
+            (float) $this->canvasH,
+        );
     }
 }

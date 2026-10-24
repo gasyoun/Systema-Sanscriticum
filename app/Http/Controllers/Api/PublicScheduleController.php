@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\PublicScheduleResource;
 use App\Models\Course;
 use App\Models\Schedule;
+use App\Services\Schedule\FullSchedulePost;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -71,11 +72,25 @@ class PublicScheduleController extends Controller
         $schedules = collect();
 
         foreach ($courses as $course) {
+            // H6313: вид курса — та же семантика irregular, что в сортировке
+            // /raspisanie (PublicSchedulePageController::compareRows): курс
+            // «разовое», когда у ВСЕХ его постов cadence=null. Считается один
+            // раз на курс; у смешанного курса (есть недельный ритм) строки —
+            // «обычное». Выбор фиксируется в PR-описании H6313.
+            $irregular = collect(FullSchedulePost::forCourse($course))
+                ->every(fn (FullSchedulePost $post): bool => $post->cadence === null);
+
             foreach ($course->upcomingSchedules() as $schedule) {
                 // Прикрепляем «владеющий» курс из итерации, чтобы направление и
                 // преподаватель разрешались детерминированно даже когда у самой
                 // строки расписания course_id пуст (только group_id).
                 $schedule->setRelation('course', $course);
+                // Вид строки для фида (канон SCHEDULE_KINDS_CANON_ANONS_SITE):
+                // обзорное — is_overview; разовое/обычное — по курсу. Пробные
+                // полем kind не дублируются — они уже выражены bookable/book_token.
+                $schedule->kind = $schedule->is_overview
+                    ? 'обзорное'
+                    : ($irregular ? 'разовое' : 'обычное');
                 $schedules->push($schedule);
             }
         }

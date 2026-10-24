@@ -40,7 +40,16 @@ final class TrackedLinkController extends Controller
             $request->session()->put($sessionKey, $definition['utm']);
         }
 
-        return redirect()->to($definition['destination']);
+        // H6521: /ga/ — 302, Метрика redirect не видит; цель ga_interstitial_view
+        // стреляет маркером на цели перехода (flash-канал shop-metrika, домашний
+        // паттерн access_renewal_complete). Внешним destination (t.me wl_-хоп)
+        // флеш не ставим — иначе цель солжёт на нерелевантном заходе позже.
+        $destination = (string) $definition['destination'];
+        if (str_starts_with($destination, '/') || str_starts_with($destination, url('/'))) {
+            $request->session()->flash('metrika_goal', 'ga_interstitial_view');
+        }
+
+        return redirect()->to($destination);
     }
 
     /**

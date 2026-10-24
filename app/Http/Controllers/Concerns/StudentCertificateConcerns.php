@@ -74,6 +74,17 @@ trait StudentCertificateConcerns
             }
         }
 
+        // VK: страница просмотра (vk.com/video-88831040_456239808, vkvideo.ru/video…)
+        // или готовый embed (video_ext.php?oid=-88831040&id=…). Возвращаем «oid_id».
+        if ($platform === 'vk') {
+            if (preg_match('/video(-?\d+)_(\d+)/', $url, $matches)) {
+                return $matches[1].'_'.$matches[2];
+            }
+            if (preg_match('/video_ext\.php\?[^#]*oid=(-?\d+)[&;]+id=(\d+)/', $url, $matches)) {
+                return $matches[1].'_'.$matches[2];
+            }
+        }
+
         return null;
     }
 }

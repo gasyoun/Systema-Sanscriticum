@@ -132,6 +132,17 @@
                     >
                 </div>
             @endif
+            @guest
+                {{-- 152-ФЗ: гость даёт согласие на обработку ПДн перед первым сообщением
+                     (имя/почта/телефон/текст обращения). Согласие уходит в журнал
+                     consents на сервере (ст. 9 ч. 3); в браузере помним только
+                     подтверждённую запись. --}}
+                <label class="scw-consent" id="scw-consent-row">
+                    <input type="checkbox" id="scw-consent" value="1">
+                    <span>Даю <a href="{{ route('docs.show', 'soglasie-pd') }}" target="_blank">согласие на обработку персональных данных</a>
+                        и ознакомлен(а) с <a href="{{ route('docs.show', 'privacy') }}" target="_blank">политикой конфиденциальности</a>.</span>
+                </label>
+            @endguest
             <div class="scw-input-row">
                 <textarea
                     class="scw-text"
@@ -203,6 +214,10 @@
         flex: 1; min-width: 0; padding: 8px 12px; border-radius: 10px; border: 1px solid #1f2937;
         background: #111827; color: #e5e7eb; font-size: 13px;
     }
+    .scw-consent { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; font-size: 11px; line-height: 1.4; color: #9ca3af; cursor: pointer; }
+    .scw-consent input { margin-top: 2px; flex-shrink: 0; }
+    .scw-consent a { color: #E85C24; }
+    .scw-consent.scw-consent-missing { color: #fca5a5; }
     .scw-input-row { display: flex; align-items: flex-end; gap: 8px; }
     .scw-text {
         flex: 1; resize: none; max-height: 120px; padding: 10px 12px; border-radius: 10px;
@@ -256,6 +271,17 @@
     var emailEl = document.getElementById('scw-email');
     var phoneEl = document.getElementById('scw-phone');
     var contactRow = document.getElementById('scw-contact-row');
+    // 152-ФЗ ст. 9 ч. 3: согласие гостя уходит в серверный журнал consents
+    // (PublicChatController → ConsentRecorder). В localStorage помним ТОЛЬКО
+    // подтверждённую запись — память браузера не должна опережать журнал.
+    var consentRow = document.getElementById('scw-consent-row');
+    var consentEl = document.getElementById('scw-consent');
+    // v2: ключ v1 ставился, когда журнала ещё не было (согласие жило в браузере
+    // и очистка хранилища стирала доказательство) — такому браузеру согласие
+    // придётся подтвердить ещё раз, иначе строки в журнале не появится.
+    var CONSENT_KEY = 'scw_pd_consent_v2';
+    try { if (consentRow && localStorage.getItem(CONSENT_KEY) === '1') { consentRow.hidden = true; } } catch (e) {}
+    if (consentEl) consentEl.addEventListener('change', function () { consentRow.classList.remove('scw-consent-missing'); });
     var sendBtn = document.getElementById('scw-send');
     var badge = document.getElementById('scw-badge');
 
@@ -469,7 +495,14 @@
     function submit() {
         var text = (textEl.value || '').trim();
         if (text === '') return;
+        var askConsent = consentRow && !consentRow.hidden;
+        if (askConsent && consentEl && !consentEl.checked) {
+            consentRow.classList.add('scw-consent-missing');
+            consentEl.focus();
+            return;
+        }
         var payload = { text: text };
+        if (askConsent) payload.pd_consent = true;
         if (nameEl && !nameEl.hidden && nameEl.value.trim() !== '') payload.name = nameEl.value.trim();
         // Необязательные телефон/почта — захват лида (H1199, S4). Не блокируем
         // отправку, если пусто.
@@ -507,6 +540,13 @@
             appendMessage(res.body.message);
             if (nameEl) { nameEl.hidden = true; } // имя спрашиваем только до первого сообщения
             if (contactRow) { contactRow.hidden = true; } // телефон/почта — тоже только до первого (H1199)
+            // Галочку прячем и запоминаем только когда сервер подтвердил
+            // запись в журнал. Сбой журнала (consent_recorded=false) оставляет
+            // её на месте — следующее сообщение пришлёт согласие снова.
+            if (askConsent && res.body.consent_recorded === true) {
+                consentRow.hidden = true;
+                try { localStorage.setItem(CONSENT_KEY, '1'); } catch (e) {}
+            }
             if (conversationId && conversationId !== had) subscribeLive();
         })
         .catch(function () { sendBtn.disabled = false; alert('Сеть недоступна. Попробуйте еще раз.'); });

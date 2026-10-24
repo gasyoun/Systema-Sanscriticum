@@ -8,14 +8,15 @@ use App\Mail\LeadAdHocMail;
 use App\Models\Lead;
 use App\Models\LeadNote;
 use App\Models\User;
+use App\Rules\HouseEmail;
 use App\Support\GreetingName;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
-use Filament\Resources\Resource;
 // --- ИМПОРТЫ ДЛЯ EXCEL (ВАЖНО!) ---
+use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
@@ -66,7 +67,7 @@ class LeadResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('name')->label('Имя'),
                         Forms\Components\TextInput::make('contact')->label('Телефон / TG'),
-                        Forms\Components\TextInput::make('email')->label('Email')->email(),
+                        Forms\Components\TextInput::make('email')->label('Email')->email()->rules([new HouseEmail]),
                         Forms\Components\Select::make('landing_page_id')
                             ->relationship('landingPage', 'title')
                             ->label('Лендинг'),
@@ -119,6 +120,12 @@ class LeadResource extends Resource
                             Forms\Components\TextInput::make('ip_address')->label('IP'),
                             Forms\Components\TextInput::make('referrer')->label('Referrer'),
                         ]),
+                        // H6531 HDYHAU: self-report «where did you hear about us» from the application form.
+                        // A canonical key is stored or the applicant's own words («Other»); readable as-is.
+                        Forms\Components\TextInput::make('reported_source')
+                            ->label('Where did you hear about us (self-report)')
+                            ->helperText('Applicant\'s answer from the form: canonical key (friends, tg_school, …) or their own words from the «Other» branch.')
+                            ->maxlength(255),
                         Forms\Components\Textarea::make('user_agent')->label('UA')->columnSpanFull(),
                     ]),
             ]);
@@ -252,6 +259,14 @@ class LeadResource extends Resource
                         default => 'gray',
                     })
                     ->sortable(),
+
+                // H6531 HDYHAU: самоотчёт заявителя «откуда узнали» — ключ из
+                // словаря рендерится подписью, «Другое» — слова заявителя как есть.
+                Tables\Columns\TextColumn::make('reported_source')
+                    ->label('Откуда узнали')
+                    ->formatStateUsing(fn (Lead $record): ?string => $record->reportedSourceLabel())
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([

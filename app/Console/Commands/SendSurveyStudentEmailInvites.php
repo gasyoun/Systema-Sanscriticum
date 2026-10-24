@@ -213,7 +213,8 @@ class SendSurveyStudentEmailInvites extends Command
             ->where(fn ($q) => $q->whereNull('role')->orWhereNotIn('role', self::STAFF_ROLES));
         $counts['staff'] = $counts['candidates'] - (clone $staffFree)->count();
 
-        $optedIn = (clone $staffFree)->where('wants_messenger_announcements', true);
+        // 152-ФЗ: канал — email, значит и согласие — на email-рассылку.
+        $optedIn = (clone $staffFree)->where('wants_email_announcements', true);
         $counts['opted_out'] = (clone $staffFree)->count() - (clone $optedIn)->count();
 
         $withEmail = (clone $optedIn)->whereNotNull('email')->where('email', '<>', '');
@@ -279,7 +280,7 @@ class SendSurveyStudentEmailInvites extends Command
         return $this->candidates()
             ->where('is_admin', false)
             ->where(fn ($q) => $q->whereNull('role')->orWhereNotIn('role', self::STAFF_ROLES))
-            ->where('wants_messenger_announcements', true)
+            ->where('wants_email_announcements', true)
             ->whereNotNull('email')
             ->where('email', '<>', '')
             ->where(fn ($q) => $q->whereNull('telegram_id')->orWhere('telegram_id', 0))

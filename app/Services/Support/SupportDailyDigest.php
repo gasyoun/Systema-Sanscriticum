@@ -14,7 +14,7 @@ use Throwable;
 
 /**
  * Вчерашняя сводка поддержки для Telegram (H3242). Числа — тот же пакет, что
- * Filament-страница; 🍎/gasuns — маркер исходящих H3233. Без имён студентов.
+ * Filament-страница; 🍎/🐢/gasuns — маркер исходящих H3233. Без имён студентов.
  *
  * H4429 (рулинг MG 08-09-2026): блок «LLM-тень» — вчерашние сформулированные
  * черновики ветки H4404, пока SUPPORT_DM_LLM_DRAFTS_LIVE выключен. Черновик —
@@ -40,7 +40,7 @@ final class SupportDailyDigest
      *     date: string,
      *     metrics: array<string, mixed>,
      *     topics: list<array{category: string, total: int}>,
-     *     attribution: array{apple: int, gasuns: int, ai: int, other: int},
+     *     attribution: array{apple: int, turtle: int, gasuns: int, ai: int, other: int},
      *     url: string,
      *     text: string
      * }
@@ -235,11 +235,11 @@ final class SupportDailyDigest
     }
 
     /**
-     * @return array{apple: int, gasuns: int, ai: int, other: int}
+     * @return array{apple: int, turtle: int, gasuns: int, ai: int, other: int}
      */
     private function attributionForDate(CarbonImmutable $day): array
     {
-        $counts = ['apple' => 0, 'gasuns' => 0, 'ai' => 0, 'other' => 0];
+        $counts = ['apple' => 0, 'turtle' => 0, 'gasuns' => 0, 'ai' => 0, 'other' => 0];
 
         $messages = TelegramSupportMessage::query()
             ->where('direction', 'outgoing')
@@ -256,6 +256,8 @@ final class SupportDailyDigest
             $marker = (string) ($message->responder_marker ?: SupportOutgoingAttribution::GASUNS_MARKER);
             if ($marker === SupportOutgoingAttribution::APPLE_MARKER) {
                 $counts['apple']++;
+            } elseif ($marker === SupportOutgoingAttribution::TURTLE_MARKER) {
+                $counts['turtle']++;
             } elseif ($marker === SupportOutgoingAttribution::GASUNS_MARKER) {
                 $counts['gasuns']++;
             } else {
@@ -269,7 +271,7 @@ final class SupportDailyDigest
     /**
      * @param  array<string, mixed>  $metrics
      * @param  list<array{category: string, total: int}>  $topics
-     * @param  array{apple: int, gasuns: int, ai: int, other: int}  $attribution
+     * @param  array{apple: int, turtle: int, gasuns: int, ai: int, other: int}  $attribution
      * @param  array{relevant: bool, would_send: int, refused: array<string, int>, sent: int, live: bool, draft_excerpt: ?string, model: ?string, spend_usd: ?float, streak_days: int, live_enabled_at: ?string}|null  $llm
      */
     private function formatHtml(
@@ -298,6 +300,7 @@ final class SupportDailyDigest
             'Новых контактов: '.(int) ($metrics['new_contacts'] ?? 0),
             'ИИ отправил: '.(int) ($metrics['ai_sent'] ?? 0),
             'Горбаченко '.SupportOutgoingAttribution::APPLE_MARKER.': '.$attribution['apple'],
+            'Иван '.SupportOutgoingAttribution::TURTLE_MARKER.': '.$attribution['turtle'],
             'Гасунс: '.$attribution['gasuns'],
         ];
 

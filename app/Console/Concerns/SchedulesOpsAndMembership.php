@@ -103,6 +103,16 @@ trait SchedulesOpsAndMembership
             ->onFailure(fn () => ScheduleFailureSignal::report('payments:expire-stale-checkouts'))
             ->name('expire-stale-checkouts');
 
+        // --- ПИСЬМА ДРИПА МИНИ-КУРСА «ПОДГОТОВИТЕЛЬНАЯ ГРУППА» ---
+        // Уроки открываются студенту раз в 3 дня от даты записи; команда шлёт
+        // письмо по самому свежему открытому уроку (часового тика достаточно:
+        // каденс дрипа — дни). Идемпотентность — mini_course_drip_emails.
+        $schedule->command('mini-course:send-drip-emails')
+            ->hourly()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('mini-course-drip-emails');
+
     }
 
     /** heartbeat ping + CSRF mismatch digest (+ cabinet:probe note). */
@@ -198,6 +208,22 @@ trait SchedulesOpsAndMembership
             ->onOneServer()
             ->onFailure(fn () => ScheduleFailureSignal::report('membership:grant-free-lesson'))
             ->name('membership-grant-free-lesson');
+
+        // --- НАПОМИНАНИЯ О ПРОДЛЕНИИ ЧЛЕНСТВА (H5823, C3 воронки продлений) ---
+        // Продление ручное, период кончается, expire-демон снимает право —
+        // поэтому напоминаем ДО отсечки: d7 → d3 → d0 → grace1 (первый день
+        // грейса, доступ ещё жив). Дедуп по журналу
+        // membership_renewal_reminders: одна стадия — максимум одно сообщение.
+        // Слот ВСЕГДА зарегистрирован (audit spec 7, урок expire-stale-checkouts);
+        // features.membership_renewal_reminders (дефолт OFF) гейтит отправку
+        // внутри команды: с флагом OFF — только отчёт, --send запрещён даже
+        // руками. 10:20 МСК — после утренних демонов, до вечерней почты.
+        $schedule->command('membership:renewal-reminders --send')
+            ->dailyAt('10:20')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->onFailure(fn () => ScheduleFailureSignal::report('membership:renewal-reminders'))
+            ->name('membership-renewal-reminders');
 
         // --- PAYPAL: FIXED EUR/USD PRICE LIST (H3821) ---
         // Ежемесячный пересчёт published fixed price за тариф — заменяет ад-хок

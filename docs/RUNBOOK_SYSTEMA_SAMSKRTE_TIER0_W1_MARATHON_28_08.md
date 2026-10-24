@@ -1,6 +1,8 @@
 # Marathon 28-08 — LIVE runbook + evidence log
 
-_Created: 30-07-2026 · Last updated: 16-08-2026_
+> **Исход окна (штамп 05-10, H6091): марафон W1 завершён.** Оконный ранбук запуска Tier-0 W1 28-08 исполнен и не является действующим; живой контур запуска курса — [PLAYBOOK_COURSE_LAUNCH_FROM_ZERO](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAYBOOK_COURSE_LAUNCH_FROM_ZERO_2026-10.md).
+
+_Created: 30-07-2026 · Last updated: 05-10-2026_
 
 > **Пересверено на проде 16-08-2026 ([H2865](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2865-Opus_Systema-Sanscriticum_28aug-integrated-launch-gate_16.08.26.md), Opus 5).
 > Вердикт `BLOCKED` ниже — снимок 30-07 и УСТАРЕЛ по трём строкам: D (Telegram) теперь

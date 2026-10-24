@@ -1,0 +1,235 @@
+{
+  "tool": "suveren",
+  "target": "samskrtam.ru",
+  "started_at": "2026-10-12T12:19:10.897766+00:00",
+  "finished_at": "2026-10-12T12:21:40.120524+00:00",
+  "score": 96,
+  "grade": "A",
+  "countries": {
+    "RU": 83,
+    "US": 17
+  },
+  "findings": [
+    {
+      "category": "tls",
+      "title": "SSL-сертификат: Let's Encrypt (США)",
+      "severity": "low",
+      "description": "Сертификат выпустил иностранный удостоверяющий центр. Он может отозвать сертификат или отказать в продлении: в 2022 году так поступали с рядом российских организаций.",
+      "recommendation": "Настроить автоматический выпуск по ACME, чтобы быстро сменить УЦ. Для аудитории в России можно дополнительно выпустить сертификат НУЦ Минцифры.",
+      "services": [
+        "Let's Encrypt"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "category": "zone",
+      "category_title": "Доменная зона",
+      "service": ".ru — Координационный центр доменов .RU/.РФ",
+      "country": "RU",
+      "foreign": false,
+      "evidence": "samskrtam.ru",
+      "severity": null,
+      "note": ""
+    },
+    {
+      "category": "registrar",
+      "category_title": "Регистратор домена",
+      "service": "REG.RU",
+      "country": "RU",
+      "foreign": false,
+      "evidence": "REGRU-RU",
+      "severity": null,
+      "note": ""
+    },
+    {
+      "category": "dns",
+      "category_title": "DNS-серверы",
+      "service": "Selectel",
+      "country": "RU",
+      "foreign": false,
+      "evidence": "NS a.ns.selectel.ru, NS b.ns.selectel.ru, NS c.ns.selectel.ru, NS d.ns.selectel.ru",
+      "severity": null,
+      "note": ""
+    },
+    {
+      "category": "mail",
+      "category_title": "Почта",
+      "service": "LLC «Pudlink»",
+      "country": "RU",
+      "foreign": false,
+      "evidence": "MX mail.samskrtam.ru",
+      "severity": null,
+      "note": ""
+    },
+    {
+      "category": "hosting",
+      "category_title": "Хостинг сайта",
+      "service": "LLC «Pudlink»",
+      "country": "RU",
+      "foreign": false,
+      "evidence": "IP 193.232.229.95 (AS198070)",
+      "severity": null,
+      "note": ""
+    },
+    {
+      "category": "tls",
+      "category_title": "SSL-сертификат",
+      "service": "Let's Encrypt",
+      "country": "US",
+      "foreign": true,
+      "evidence": "Let's Encrypt",
+      "severity": "low",
+      "note": ""
+    }
+  ],
+  "checks": [
+    {
+      "group": "Персональные данные (152-ФЗ)",
+      "title": "Политика обработки персональных данных",
+      "status": "warn",
+      "details": "Ссылка на политику есть, но страница не открылась: ReadTimeout.",
+      "recommendation": "Проверьте, что ссылка рабочая.",
+      "link": "https://samskrtam.ru/soglasie-na-obrabotku-personalnyh-dannyh/",
+      "law": "152-ФЗ, ст. 18.1",
+      "law_url": "https://www.consultant.ru/document/cons_doc_LAW_61801/"
+    },
+    {
+      "group": "Персональные данные (152-ФЗ)",
+      "title": "Согласие на обработку в формах",
+      "status": "unknown",
+      "details": "На проверенных страницах (2) нет форм с персональными данными. Проверьте формы на остальных страницах вручную.",
+      "recommendation": "",
+      "link": null,
+      "law": "152-ФЗ, ст. 9",
+      "law_url": "https://www.consultant.ru/document/cons_doc_LAW_61801/"
+    },
+    {
+      "group": "Персональные данные (152-ФЗ)",
+      "title": "Трансграничная передача данных",
+      "status": "ok",
+      "details": "Скрипты иностранных сервисов, получающие данные посетителей, не найдены.",
+      "recommendation": "",
+      "link": null,
+      "law": "152-ФЗ, ст. 12",
+      "law_url": "https://www.consultant.ru/document/cons_doc_LAW_61801/"
+    },
+    {
+      "group": "Персональные данные (152-ФЗ)",
+      "title": "Хранение данных в России",
+      "status": "ok",
+      "details": "Сервер сайта в России.",
+      "recommendation": "",
+      "link": null,
+      "law": "152-ФЗ, ст. 18 ч. 5",
+      "law_url": "https://www.consultant.ru/document/cons_doc_LAW_61801/"
+    },
+    {
+      "group": "Персональные данные (152-ФЗ)",
+      "title": "Защищённое соединение",
+      "status": "ok",
+      "details": "Сайт работает по HTTPS.",
+      "recommendation": "",
+      "link": null,
+      "law": "152-ФЗ, ст. 19",
+      "law_url": "https://www.consultant.ru/document/cons_doc_LAW_61801/"
+    },
+    {
+      "group": "Персональные данные (152-ФЗ)",
+      "title": "Реестр операторов персональных данных",
+      "status": "unknown",
+      "details": "ИНН компании на сайте не найден, поэтому реестр не проверялся.",
+      "recommendation": "Укажите реквизиты компании на сайте. Проверить реестр можно командой suveren company <ИНН>.",
+      "link": null,
+      "law": "152-ФЗ, ст. 22",
+      "law_url": "https://www.consultant.ru/document/cons_doc_LAW_61801/"
+    },
+    {
+      "group": "Блокировки в России",
+      "title": "Домен в реестре блокировок",
+      "status": "ok",
+      "details": "Домен не заблокирован.",
+      "recommendation": "",
+      "link": null,
+      "law": null,
+      "law_url": null
+    },
+    {
+      "group": "Блокировки в России",
+      "title": "IP-адреса сайта",
+      "status": "ok",
+      "details": "IP сайта не заблокированы.",
+      "recommendation": "",
+      "link": null,
+      "law": null,
+      "law_url": null
+    }
+  ],
+  "facts": {
+    "host": "samskrtam.ru",
+    "domain": "samskrtam.ru",
+    "ns": [
+      {
+        "host": "a.ns.selectel.ru",
+        "ip": "188.68.203.1",
+        "asn": "AS49505",
+        "as_name": "JSC Selectel",
+        "country": "RU"
+      },
+      {
+        "host": "b.ns.selectel.ru",
+        "ip": "77.223.114.2",
+        "asn": "AS49505",
+        "as_name": "JSC Selectel",
+        "country": "RU"
+      },
+      {
+        "host": "c.ns.selectel.ru",
+        "ip": "188.68.203.3",
+        "asn": "AS49505",
+        "as_name": "JSC Selectel",
+        "country": "RU"
+      },
+      {
+        "host": "d.ns.selectel.ru",
+        "ip": "77.223.114.4",
+        "asn": "AS49505",
+        "as_name": "JSC Selectel",
+        "country": "RU"
+      }
+    ],
+    "mx": [
+      {
+        "host": "mail.samskrtam.ru",
+        "ip": "193.232.229.95",
+        "asn": "AS198070",
+        "as_name": "LLC «Pudlink»",
+        "country": "RU"
+      }
+    ],
+    "web": [
+      {
+        "ip": "193.232.229.95",
+        "asn": "AS198070",
+        "as_name": "LLC «Pudlink»",
+        "country": "RU"
+      }
+    ],
+    "registrar": "REGRU-RU",
+    "tls_issuer": "Let's Encrypt",
+    "tls_trusted": true,
+    "final_url": "https://samskrtam.ru/",
+    "page_status": 200,
+    "rendered": false,
+    "page_problem": null,
+    "extra_pages": [
+      "https://samskrtam.ru/"
+    ],
+    "unknown_domains": [
+      "gmpg.org"
+    ]
+  },
+  "notes": [
+    "Проверено страниц: 2 (главная и ещё 1). Скрипты искались в коде страниц: то, что подгружается скриптами, может не попасть в отчёт (режим --browser находит больше)."
+  ]
+}

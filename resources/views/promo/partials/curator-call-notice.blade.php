@@ -1,5 +1,7 @@
-{{-- Предупреждение о звонке куратора с белорусского номера. --}}
-{{-- Показывается на странице "Спасибо" (promo/thankyou.blade.php) в обеих ветках. --}}
+{{-- Канал до живого человека. Самообслуживание: заявки/ссылки/доступы
+     приходят автоматически; куратор — только для экстренных случаев
+     (рулинг MG 04-10-2026). Имя/телефон куратора убраны после увольнения
+     Насти 01-10-2026: обещание звонка было уже невыполнимым. --}}
 <div class="mt-8 mx-auto max-w-xl">
     <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-left
                 bg-white/5 border border-white/10 rounded-2xl px-5 py-4
@@ -14,18 +16,13 @@
         </div>
         <div class="flex-1 text-center sm:text-left">
             <p class="text-base font-semibold text-white mb-1">
-                В течение 24 часов с вами свяжется наш куратор Настя
+                Всё автоматически: ссылки и материалы приходят вам сразу
             </p>
             <p class="text-sm text-gray-300 leading-relaxed">
-                Ожидайте звонок с номера
-                <a href="tel:+375295412119"
-                   class="font-mono font-bold text-emerald-300 hover:text-emerald-200 whitespace-nowrap">
-                    +3(7529)&#8209;541&#8209;21&#8209;19
-                </a>
-                (Беларусь).
-            </p>
-            <p class="text-sm text-gray-300 leading-relaxed mt-2">
-                Если вдруг не получится ответить, просто перезвоните нам по тому же номеру&nbsp;— и мы обсудим все возникшие вопросы.
+                Нужен живой человек — куратор подключается только в экстренных случаях:
+                Telegram
+                <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener noreferrer"
+                   class="font-bold text-emerald-300 hover:text-emerald-200 whitespace-nowrap">@rusamskrtam</a>.
             </p>
         </div>
     </div>

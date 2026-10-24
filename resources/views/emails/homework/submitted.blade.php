@@ -27,7 +27,7 @@
 
         @if(!empty($hasImagesPdfAttachment))
             <p style="font-size: 14px; color: #5d564f; text-align: center; margin-top: 0;">
-                Все картинки работы — одним PDF во вложении.
+                Картинки последней отправки — одним PDF во вложении.
             </p>
         @endif
 

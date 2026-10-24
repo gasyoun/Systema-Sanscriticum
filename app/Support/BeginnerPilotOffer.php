@@ -27,7 +27,7 @@ class BeginnerPilotOffer
         $videoId = (string) config('beginner_pilot.preview_youtube_id');
         $clipUrl = $lesson && preg_match('/^[A-Za-z0-9_-]{11}$/', $videoId)
             && $lesson->youtube_url === 'https://www.youtube.com/embed/'.$videoId
-            ? 'https://www.youtube.com/embed/'.$videoId.'?start='.(int) config('beginner_pilot.preview_start_seconds').'&end='.(int) config('beginner_pilot.preview_end_seconds').'&rel=0'
+            ? 'https://www.youtube-nocookie.com/embed/'.$videoId.'?start='.(int) config('beginner_pilot.preview_start_seconds').'&end='.(int) config('beginner_pilot.preview_end_seconds').'&rel=0'
             : null;
 
         $available = self::registrationAvailable();

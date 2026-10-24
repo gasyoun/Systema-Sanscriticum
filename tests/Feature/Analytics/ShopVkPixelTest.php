@@ -4,6 +4,7 @@ namespace Tests\Feature\Analytics;
 
 use App\Models\Course;
 use App\Models\Payment;
+use App\Models\Tariff;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -14,6 +15,8 @@ use Tests\TestCase;
  * витрины через обёртку window.shopReachGoal и не дублирует payment_success
  * с пикселем промо-воронки из сессии. payment_success в ВК — только для
  * подтверждённой оплаты, один раз на платёж (ключ в localStorage), с суммой.
+ * Кампанийные пиксели (campaign_pixels) — отдельные счётчики рекламных
+ * кампаний: pageView и перечисленные forward_goals только на их путях.
  */
 class ShopVkPixelTest extends TestCase
 {
@@ -67,6 +70,86 @@ class ShopVkPixelTest extends TestCase
             ->assertOk()
             ->assertDontSee('top-fwz1.mail.ru', false)
             ->assertDontSee('alert(1)', false);
+    }
+
+    public function test_campaign_pixel_pageview_forward_and_click_goal_only_on_its_paths(): void
+    {
+        config()->set('analytics.vk_pixel.shop_pixel_id', '3512345');
+        config()->set('analytics.vk_pixel.campaign_pixels', [
+            'test' => [
+                'id' => '9876543',
+                'enabled' => true,
+                'paths' => ['k/vk-pixel-test'],
+                'forward_goals' => ['enroll_click'],
+                'click_goals' => ['enroll_click' => 'a[href*="/checkout/"]'],
+            ],
+        ]);
+
+        $html = $this->get(route('shop.course.show', $this->course->slug))->assertOk()->getContent();
+
+        // pageView кампанийного пикселя — ровно один, на его пути
+        $this->assertSame(1, substr_count($html, '_tmr.push({id: "9876543", type: "pageView"'));
+        // форвард цели витрины в кампанийный пиксель + делегированный клик-слушатель
+        $this->assertStringContainsString('var campaignId = "9876543"', $html);
+        // Blade @json: кавычки → \u0022 (JSON_HEX_QUOT), слэши → \/ (json_encode)
+        $this->assertStringContainsString('a[href*=\u0022\/checkout\/\u0022]', $html);
+        $this->assertStringContainsString('"enroll_click"', $html);
+
+        // тот же layout, чужой путь: кампанийного пикселя нет, основной на месте
+        $otherCourse = Course::factory()->create(['is_visible' => true, 'slug' => 'no-campaign-pixel']);
+        $other = $this->get(route('shop.course.show', $otherCourse->slug))->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('9876543', $other);
+        $this->assertSame(1, substr_count($other, '_tmr.push({id: "3512345", type: "pageView"'));
+    }
+
+    public function test_campaign_pixel_disabled_or_non_numeric_id_is_not_injected(): void
+    {
+        config()->set('analytics.vk_pixel.shop_pixel_id', '3512345');
+        config()->set('analytics.vk_pixel.campaign_pixels', [
+            'off' => ['id' => '9876543', 'enabled' => false, 'paths' => ['k/vk-pixel-test']],
+            'evil' => ['id' => '9"});alert(3);//', 'enabled' => true, 'paths' => ['k/vk-pixel-test']],
+            'noid' => ['enabled' => true, 'paths' => ['k/vk-pixel-test']],
+        ]);
+
+        $html = $this->get(route('shop.course.show', $this->course->slug))->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('9876543', $html);
+        $this->assertStringNotContainsString('alert(3)', $html);
+        // основной пиксель кампанийными настройками не тронут
+        $this->assertSame(1, substr_count($html, '_tmr.push({id: "3512345", type: "pageView"'));
+    }
+
+    public function test_campaign_pixel_pageview_on_checkout_but_no_click_goal(): void
+    {
+        $tariff = Tariff::factory()->for($this->course)->create([
+            'type' => 'block',
+            'block_number' => 1,
+            'price' => 0,
+            'is_active' => true,
+        ]);
+
+        config()->set('analytics.vk_pixel.shop_pixel_id', '3512345');
+        config()->set('analytics.vk_pixel.campaign_pixels', [
+            'test' => [
+                'id' => '9876543',
+                'enabled' => true,
+                'paths' => ['k/vk-pixel-test', 'checkout/'.$tariff->id],
+                // клик-цель — только на лендинге: на чекауте свои ссылки
+                // на /checkout/* («Подарить» и пр.), это не «Записаться»
+                'click_paths' => ['k/vk-pixel-test'],
+                'forward_goals' => ['enroll_click'],
+                'click_goals' => ['enroll_click' => 'a[href*="/checkout/"]'],
+            ],
+        ]);
+
+        $html = $this->get(route('checkout.show', $tariff))->assertOk()->getContent();
+
+        // pageView кампанийного пикселя на чекауте есть, форвард целей — есть
+        $this->assertSame(1, substr_count($html, '_tmr.push({id: "9876543", type: "pageView"'));
+        $this->assertStringContainsString('var campaignId = "9876543"', $html);
+        // делегированного клик-слушателя на чекауте нет
+        $this->assertStringNotContainsString('a[href*=\u0022', $html);
     }
 
     public function test_confirmed_payment_fires_shop_vk_goal_once_with_amount_and_once_key(): void

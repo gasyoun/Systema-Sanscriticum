@@ -1,6 +1,6 @@
 # Anons publishing v2 — operator manual
 
-_Created: 17-09-2026 · Last updated: 17-09-2026_
+_Created: 17-09-2026 · Last updated: 13-10-2026
 
 H5049 delivery: declarative announcement/Story publishing with visible CTA plaques burned into pixels, idempotent reruns, per-destination retries, explicit-missingness analytics, archive catalog and a safe test contour. Companion of the canonical [`/anons` skill](https://github.com/gasyoun/claude-config/blob/main/commands/anons.md).
 
@@ -57,6 +57,7 @@ Validation is fail-closed: relative asset paths, UTM inside `cta_url`, a caption
 | `php artisan anons:ops history --key=…` | All persisted observations |
 | `php artisan anons:ops archive-index --account=rusamskrtam` | Index the live story archive into the catalog (hash/phash/text/tags) |
 | `php artisan anons:ops archive-search --query="осенний"` | Find evergreen assets without rescanning Telegram |
+| `php artisan anons:plan-occasions [--kind=…] [--json]` | Шаг 0 минта кампании: отбор поводов анонса по виду занятия — `обзорное \| разовое \| обычное`, без флага все виды (H6329) |
 
 HTTP API (auth:sanctum personal token): `POST /api/anons` (draft/validate), `POST /api/anons/preview`, `POST /api/anons/publish`, `GET /api/anons/{key}`, `POST /api/anons/{key}/metrics`, `POST /api/anons/{key}/rollback`.
 
@@ -80,10 +81,80 @@ Production promotion reuses the accepted manifest hash — no asset regeneration
 - Tables: `anons_publications`, `anons_destination_runs`, `anons_metrics`, `anons_archive_items`, `anons_link_clicks`.
 - Tests: `tests/Feature/Anons/` (15 tests, incl. the no-plaque regression pin).
 
+## Senler manual lane (H5935)
+
+**Decision (04-10-2026): Senler ships as a documented manual lane, not an adapter.** Access probes found no Senler API credential anywhere in the estate: the prod `.env` has only site-callback `VK_*` keys (bot token, confirm code, group id — not Senler), and the Mac has no `~/.claude/secrets/vk_poll.env` (that file is the H5079 VK *wall* tool anyway). A Senler API token can only be minted by hand in MG's Senler UI, and until MG's explicit decision every Senler API call and every send is off-limits. So the manifest keeps `senler` as a valid platform name, the tracked link already exists (channel key `vk` in `config/tracked_links.php` → `utm_source=vk_senler`, `utm_medium=broadcast`), and `AdapterRegistry` stays fail-closed — its refusal now points here instead of "future work".
+
+Name mapping for the future adapter author: manifest platform = `senler`; attribution source = `vk_senler` (the `/ga/…-vk-…` links).
+
+### Broadcast checklist (UI Senler)
+
+1. Take copy + the rendered creative from the campaign's `anons:preview` artifacts — the CTA plaque is already in the pixels; do not rebuild it in Senler.
+2. Tracked link: `https://samskrte.ru/ga/m26-vk-s` (creative variants `-v/-c/-t/-h` live in `config/tracked_links.php`). The link goes AFTER the copy — never the first line (anons publication rule).
+3. senler.ru → samskrte community → «Рассылки» → create: paste copy, link, attach the image.
+4. Test send to MG's own subscription first: link opens, redirect lands on the clean page, copy + image render on the phone.
+5. Send to the full subscriber segment (~3000) — real sending is MG's explicit decision, every time.
+6. Post-send smoke (one probe click per link; it lands in `anons_link_clicks` like any reader click): `curl -sI https://samskrte.ru/ga/m26-vk-s` must return `HTTP/2 302` with `location: https://samskrte.ru/online/kursy/grammatika-gasuns-2026` — clean URL, UTM stays in the session. Live-probed PASS 04-10-2026.
+7. Journal row per the [campaign-record-template](https://github.com/gasyoun/claude-config/blob/main/commands/anons.md) in the `/anons` skill: campaign/creative, `vk_senler`, the `/ga/` link, segment size, delivered count, 24h/72h clicks (via `php artisan anons:ops metrics` / `anons_link_clicks` — slug + UTM + time only). **152-ФЗ: aggregates only, no PII in the journal.**
+
+### Why there is no adapter — the API cannot send (H5944, 04-10-2026)
+
+The H5935 upgrade path ("MG mints a token → mint the adapter") is dead on the PLATFORM, not on access: **the Senler API has no broadcast-send method at all.** Verified 04-10-2026 (github-first prior-art, H5032) against the [official methods index](https://help.senler.ru/senler/dev/api/methods) — `Deliveries` exposes only read-only `deliveries/get`, `deliveries/stat`, `deliveries/statCount` — and both user SDKs ([SenlerPy](https://github.com/tezmen/SenlerPy), [senler-sdk](https://github.com/Alexey-zaliznuak/senler-sdk)) agree: no send/create for рассылки, from any token, ever (until Senler ships one). Sending is UI-only — the checklist above is not a stopgap, it is THE send path.
+
+What a token WOULD buy (candidate `SenlerStatsService`, awaiting MG's product call): `deliveries/stat` + `deliveries/statCount` + `utms/statCount` pull per-broadcast delivered/opened/clicked stats into the placements journal and reconcile them against `anons_link_clicks`. If Senler ever ships a send method, the adapter follows the H5079 design (`publication_key` idempotency, a `VK_PUBLISH_AUTHORIZED`-style gate with empty list = refuse, persistent ledger, test-mode contour; first real send = MG's explicit go). Until then `anons:validate`/`anons:publish` accept the schema but refuse at the adapter check with a pointer to this section — that refusal is the designed behavior, not a bug.
+
+## Placements journal — anons:ops journal (H6095)
+
+Машинный журнал размещений: хвост публикации (permalink, время, 24h/72h клики) пишется командой в таблицу `anons_placements` вместо ручного PR по md-документу. Ключи, UTM-кортеж и destination выводятся из [config/tracked_links.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/tracked_links.php) — ничего не набирается руками; PII-правило то же, что у `anons_link_clicks` (только агрегаты).
+
+Вид кампании (`обзорное | разовое | обычное`, словарь канона [SCHEDULE_KINDS_CANON_ANONS_SITE_09-10-2026](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SCHEDULE_KINDS_CANON_ANONS_SITE_09-10-2026.md)) входит в цикл минта с шага 0 — отбор поводов (H6329, PR [#3132](https://github.com/gasyoun/Systema-Sanscriticum/pull/3132)):
+
+```bash
+# шаг 0 минта кампании — отбор поводов по виду (без --kind — все виды; --json — машинный вывод)
+php artisan anons:plan-occasions --kind=разовое
+# после минта кампании — строки размещений из конфига + вид в журнал (одна команда на кампанию)
+php artisan anons:ops journal-add --campaign=up26 --kind=разовое        # или --link=up26-ors-c
+# после выхода поста — хвост: permalink + время (МСК), клики за 24/72h из anons_link_clicks
+php artisan anons:ops journal-fill --link=up26-ors-c --permalink=https://t.me/samskrte/633 --published-at="2026-10-04 22:43:00"
+# сводка (вид каждой строки виден как [вид]; фильтр — по --campaign)
+php artisan anons:ops journal-list --campaign=up26
+```
+
+Правила `--kind` (H6329):
+
+- Словарь fail-closed: `обзорное | разовое | обычное`; неизвестный вид — отказ с подсказкой словаря, а не молчаливое «пусто/всё».
+- Повторный `journal-add` без `--kind` вид не стирает (merge по `/ga/` ключу); смена вида — только явным `--kind=`. Строки, заведённые до H6329, живут без вида.
+- `--kind` — опция `journal-add`; фильтра `journal-list` по виду нет (только `--campaign`), вид строки виден в выводе как `[вид]`.
+- Пробные занятия полем `kind` не дублируются — в фиде они уже видны по `bookable`/`book_token` (канон); напоминания по обычным занятиям остаются в чатах групп (`classes:remind-upcoming`), анонс-кампания их не заменяет.
+- Живой пример отбора (прод 10-10-2026): `anons:plan-occasions --kind=разовое` → 3 повода «Открытые занятия и вебинары» (#1594–#1596); журнал на ту же дату — 37 строк, из них up26 [разовое] ×2 (бэкфилл).
+
+Идемпотентность — по `/ga/` ключу (повторный `journal-add` обновляет строку). Story-ключи (`st-`) команда отказывается принимать — они живут в `story_campaigns`-формате. Живой пример первого заполнения: up26, пост 633 (PR [#3008](https://github.com/gasyoun/Systema-Sanscriticum/pull/3008) — до команды хвост был ручным PR; после H6095 — одна команда). Читаемый md-журнал кампании (campaign-record-template) остаётся человеком-артефактом, команда его не патчит.
+
+## Video-anons lane (H6546)
+
+Учебные чаты: video от белого списка ([`config/video-anons.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/video-anons.php): MG, @ivanmolochko, лектор; ids каноничны, username — fallback, пер-курсовые преподаватели — `course_authors`) в чате из канонической карты курс→чаты автоматически копируется `copyMessage` от @zapisi_ORSbot (без плашки Forwarded from, подпись сохраняется) во все остальные чаты курса, админам уходит черновик (ops-канал [`TelegramAdminNotifier`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Access/TelegramAdminNotifier.php): доставлено N/M с message_id копий, ссылка t.me/c, причины отказов). Триггер — [ProcessTelegramZapisiUpdate](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Jobs/ProcessTelegramZapisiUpdate.php) → [VideoAnonsService](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Anons/VideoAnons/VideoAnonsService.php) (фильтр: флаг / карта / автор; кружки `video_note` сознательно не триггерят — личное адресное сообщение) → [DistributeVideoAnonsJob](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Jobs/DistributeVideoAnonsJob.php). Идемпотентность — TelegramSendGuard-клеймы на чат-цель и на черновик («на время полёта» 5 мин, после успеха продление на неделю); отказ Telegram на одном чате не блокирует остальные; транспортный обрыв ключ не отпускает (ретрай подавлен — дешевле дубля). Публичные поверхности (канал «Оповещения санскритян») в скоуп лейна не входят.
+
+Карта курс→чаты канонична в конфиге. Источник (12-10-2026): `groups.telegram_chat_id` прода, сверено с карточками Uprava `tools/welcome_post/cards/` — все шесть чатов одной команды курса (лектор Эдгар Лейтан), в строках Systema они относятся к пяти разным курсам, поэтому ключ карты — «команда курса». Сентябрьская строка «dead chat» из SERVER_SOFT_ALERT_PLAYBOOK (H4846) для `-1002917231272` устарела: `getChat` токеном Почтальона 12-10 отвечает `ok:true` (бот читает и постит; остальные .env-боты этот чат не видят — отправитель копий только Почтальон).
+
+Сторис по заголовку MG — за флагом `VIDEO_ANONS_STORIES_ENABLED` (по умолчанию off до первой поставки заголовка; решение грилла MG 12-10). Подсистема готова: video-сторис поддержаны ([`StoryPublisher::sendVideoStory`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Stories/StoryPublisher.php), `inputMediaUploadedDocument` + `documentAttributeVideo`, TL layer 225; github-first проверка 12-10: официальный danog/MadelineProto отдаёт `stories.sendStory` в IPC-клиенте, генерируемые namespace-форки подтверждают сигнатуру `sendStory(peer, media, caption, privacy_rules, period)`). Публикация по заголовку пойдёт по правилам сторис-раздела скилла anons (plaque, короткий `/ga/`-ключ, верификация `getStoriesByID`) — проводка reply-обработчика в основной вебхук отдельным шагом при включении флага (edit scope H6546 — Services/Jobs/config/tests/docs, без контроллеров).
+
+Офлайн-канарейка: `php artisan video-anons:replay --payload=<json с message>` ([`VideoAnonsReplayCommand`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/VideoAnonsReplayCommand.php)) — тот же путь, что live-вебхук (VideoAnonsService → очередь → DistributeVideoAnonsJob); дедуп лейна действует и на replay.
+
+Обновление 12-10-2026 (вечер, вердикт MG по живой пробе): авто-копии по чатам выключены (`copies_enabled=false`, `VIDEO_ANONS_COPIES_ENABLED`) — «главное не в чаты, а в сторисы разных платформ»; сторис вооружены (`stories_enabled=true`): черновик шлётся прямой отправкой бюджетом очередей и вешает pending-ключ с координатами видео, ответ MG заголовком на черновик ([VideoAnonsStoriesService](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Anons/VideoAnons/VideoAnonsStoriesService.php), хук в главном вебхуке) создаёт approved-строку `StoryPost` (lane=persona, kind=video) — публикация существующим планировщиком `stories:publish-story` (тик ежечасно, madeline-лок). `/ga/`-ключ — вечнозелёный `vanons-tg-v1` (извлекается издателем из подписи). Идемпотентность по `source_key=harvest:md5(путь)`; повторный reply возвращает номер строки.
+
+## Video-anons public surfaces: YouTube Shorts + VK (H6574)
+
+Та же виза MG (заголовок-ответ на черновик) разворачивается в до трёх поверхностей — коммутатор в [VideoAnonsStoriesService](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Anons/VideoAnons/VideoAnonsStoriesService.php), каждый сёрфейс за своим флагом [`config/video-anons.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/video-anons.php), атрибуция раздельная: `vanons-tg-v1` (сторис), `vanons-yt-v1` (Shorts), `vanons-vk-v1` (VK) в [`config/tracked_links.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/tracked_links.php). Нет визы (заголовка MG) — не уходит ничего: джобы диспатчатся только из обработчика заголовка.
+
+- **YouTube Shorts** (`yt_shorts_enabled`, env `VIDEO_ANONS_YT_SHORTS_ENABLED`, default off): [UploadVideoAnonsShortJob](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Jobs/UploadVideoAnonsShortJob.php) льёт видео из харвест-стора в канал записей через YouTube Data API resumable upload (OAuth refresh-token flow, креды `GOOGLE_YT_CLIENT_ID` / `GOOGLE_YT_CLIENT_SECRET` / `GOOGLE_YT_REFRESH_TOKEN`, scope youtube.upload; заголовок ≤100 симв., описание = заголовок + `/ga/vanons-yt-v1`, категория 27 Education, privacy `VIDEO_ANONS_YT_PRIVACY_STATUS`). Shorts-форма определяется самим YouTube (вертикальное видео ≤3 мин) — отдельного параметра API нет. Идемпотентность — клейм `video-anons:yt:{chat}:{msg}` («на время полёта», продление на неделю); транспортный обрыв после отправки байтов клейм держит и ретрай подавляет (анти-дубль, статус ролика проверяется руками на канале).
+- **VK-стена** (`vk_wall_enabled`, env `VIDEO_ANONS_VK_WALL_ENABLED`, default off): [PublishVideoAnonsVkWallJob](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Jobs/PublishVideoAnonsVkWallJob.php) постит на стену группы конвенцией vk-wall эстейта (community-token `wall.post` с `from_group=1`, API 5.199 — паттерн vk_mirror.py H6153). Механический гейт: `VK_PUBLISH_AUTHORIZED_GROUPS` (comma-separated id групп) — пустой список = публикация отказывается; цель `VK_WALL_TARGET_GROUP_ID` обязана входить в список; токен — отдельный `VK_WALL_ACCESS_TOKEN` с правом wall (НЕ `VK_BOT_TOKEN` callback-бота). Вложение: `video.save` → multipart-загрузка → `attachments=video{oid}_{id}`; любой отказ вложения = честная деградация в текст-пост (заголовок + `/ga/vanons-vk-v1`), названная в логе и уведомлении. Идемпотентность — клейм `video-anons:vk:{chat}:{msg}`; жёсткий отказ VK (err 15/214/250–253) не ретраится.
+
+Оба сёрфейса fail-closed и в прод-дефолте: флаги off, креды/гейт пусты — джобы отказывают ЯВНО (лог + уведомление админам «НЕ опубликован: причина»), ничего не постится. Вооружение = флаг env + креды (MG: Google Cloud OAuth-клиент + refresh token канала записей; VK: ключ сообщества с правом wall + тестовая группа в гейте для проб — продовая samskrtamru в гейт не включать без отдельного слова MG на каждый пост). CI: `vendor/bin/phpunit --filter=VideoAnons` (48 тестов / 158 assertions, включая fail-closed-пробы обоих джобов).
+
 ## Known limits
 
-- VK/Senler destinations are fail-closed until their adapters are written (platform list validates, registry refuses).
+- `senler` destinations are a documented manual lane (§ above) — the registry refuses them with a pointer there; the Senler API has no send method at all (H5944), so no adapter is possible until upstream ships one; `vk` (wall) destinations remain fail-closed future work.
 - Archive indexer requires a live session (probe-gated) and runs one bounded `getStoriesArchive` page per invocation.
 - Font: freetype TTF resolved from `services.anons.cta_font` / `ANONS_CTA_FONT` / DejaVu(Linux)/Arial(macOS) paths; without any TTF the plaque falls back to GD's ASCII-only bitmap font — acceptable for ASCII CTA, Cyrillic needs the TTF (DejaVu present on the prod box).
 
-_Гасунс_
+_Dr. Mārcis Gasūns_

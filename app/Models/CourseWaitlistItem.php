@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -192,6 +193,17 @@ class CourseWaitlistItem extends Model
         return $this->belongsTo(Course::class);
     }
 
+    /**
+     * Позиции, которые сейчас стоят на витрине /online/zhdun: в списке и ещё
+     * не закрыты / не запланированы. Тот же отбор, что у витрины и у
+     * ждун-строки на странице курса.
+     */
+    public function scopeOnShowcase(Builder $query): Builder
+    {
+        return $query->where('is_listed', true)
+            ->whereNotIn('status', [self::STATUS_CLOSED, self::STATUS_SCHEDULED]);
+    }
+
     public function votes(): HasMany
     {
         return $this->hasMany(WaitlistVote::class, 'course_waitlist_item_id');
@@ -238,7 +250,7 @@ class CourseWaitlistItem extends Model
         return CourseFavorite::query()->where('waitlist_slug', $this->slug)->count();
     }
 
-    /** Порог достигнут — можно открывать оплату (после проверки куратором/прогноза). */
+    /** Порог достигнут: привязанный курс открывает оплату автоматически (OpenWaitlistPayment), непривязанный — через прогноз в waitlist:process. */
     public function hasThreshold(): bool
     {
         return $this->votesCount() >= $this->min_payers;
