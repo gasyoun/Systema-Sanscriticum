@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\ServerGuards;
 
+use App\Services\LessonPackRepository;
 use RuntimeException;
 
 /**
@@ -39,12 +40,31 @@ final class ServerGuardsAuditor
             $this->auditRequiredUnits(),
             $this->auditEarlyoomArgs(),
             $this->auditSwap(),
-            $this->auditCronCgroupPressure(),
+            $this->auditCgroupBudget(),
             $this->auditSchedulerStamp(),
             $this->auditTmpfsCap(),
             $this->auditFailedUnits(),
             $this->auditBackupFreshness(),
+            $this->auditCertificateExpiry(),
+            $this->auditLywPacks(),
         ));
+    }
+
+    /**
+     * H7069: паки уроков LYW — контент, а не код.
+     *
+     * `storage/` не в git, поэтому паки приезжают деплоем из пина
+     * (scripts/server_guards/sbin/lesson-packs-sync.sh). Если мастер-выключатель
+     * поднят, а пака включённой группы нет, фича не падает — она отдаёт 404 на
+     * каждом уроке. Это ровно та тихая деградация, ради которой существует
+     * verify: находка blocking (critical), поэтому guards:verify и
+     * cabinet:probe говорят о ней, а не молчат до первого студента.
+     *
+     * @return list<GuardFinding>
+     */
+    private function auditLywPacks(): array
+    {
+        return (new LywPacksGuard(app(LessonPackRepository::class)))->findings();
     }
 
     /**
@@ -623,7 +643,8 @@ final class ServerGuardsAuditor
     }
 
     /**
-     * Группа cron.service ЖИВЁТ над своим memory.high (H3121).
+     * cgroup-budget (H3121, расширено H7059): каждая настроенная группа живёт
+     * ВНУТРИ своего memory.high, а не только «потолок где-то записан».
      *
      * Чего эта проверка стоит. 19-08-2026 прод стоял семь часов при
      * MemAvailable 8.5 ГиБ: хостовой памяти было сколько угодно, кончился
@@ -646,37 +667,67 @@ final class ServerGuardsAuditor
      * поведение без гейта: fail-open к прежней чувствительности, числа молча
      * не подняты.
      *
-     * Fail-open: нет cgroup v2, не читается memory.current, у cron нет потолка
+     * Fail-open: нет cgroup v2, не читается memory.current, у юнита нет high
      * — молчим. Проверка обязана быть бесплатной на любой машине, включая CI.
      *
      * @return list<GuardFinding>
      */
-    private function auditCronCgroupPressure(): array
+    private function auditCgroupBudget(): array
     {
-        $current = $this->sys->fileContents('/sys/fs/cgroup/system.slice/cron.service/memory.current');
+        $units = $this->spec->has('CGROUP_BUDGET_UNITS')
+            ? $this->spec->csv('CGROUP_BUDGET_UNITS')
+            : ['cron'];
+
+        $findings = [];
+        foreach ($units as $unit) {
+            array_push($findings, ...$this->auditOneCgroupBudget($unit));
+        }
+
+        return $findings;
+    }
+
+    /**
+     * @return list<GuardFinding>
+     */
+    private function auditOneCgroupBudget(string $unit): array
+    {
+        $service = str_ends_with($unit, '.service') ? $unit : $unit.'.service';
+        $base = '/sys/fs/cgroup/system.slice/'.$service;
+        $current = $this->sys->fileContents($base.'/memory.current');
         if ($current === null || preg_match('/^\d+$/', trim($current)) !== 1) {
             return [];
         }
-        $high = $this->sys->unitProperty('cron', 'MemoryHigh');
+        $high = $this->sys->unitProperty($unit, 'MemoryHigh');
         if ($high === null || preg_match('/^\d+$/', trim($high)) !== 1 || (int) $high === 0) {
             return [];
         }
+
+        $max = $this->sys->unitProperty($unit, 'MemoryMax');
+        $maxBytes = $max !== null && preg_match('/^\d+$/', trim($max)) === 1 ? (int) trim($max) : 0;
 
         $cur = (int) trim($current);
         $lim = (int) trim($high);
         $curMib = intdiv($cur, 1024 ** 2);
         $limMib = intdiv($lim, 1024 ** 2);
 
+        if ($maxBytes > 0 && $cur >= $maxBytes) {
+            return [GuardFinding::critical(
+                'cgroup-budget',
+                "{$service} занял {$curMib} МиБ при memory.max ".intdiv($maxBytes, 1024 ** 2).' МиБ — '
+                .'ядро уже убивает процессы в этой группе (OOM внутри cgroup): искать долгоживущий процесс '
+                ."(`systemd-cgls /system.slice/{$service}`), а НЕ поднимать потолок",
+            )];
+        }
         if ($cur >= $lim) {
             return [GuardFinding::critical(
-                'cgroup',
-                "cron.service занял {$curMib} МиБ при memory.high {$limMib} МиБ — ядро ТОРМОЗИТ всю группу: "
-                .'планировщик, сторожа и авто-деплой идут в разы дольше. Искать долгоживущий процесс в этой группе '
-                .'(`systemd-cgls /system.slice/cron.service`), а НЕ поднимать потолок',
+                'cgroup-budget',
+                "{$service} занял {$curMib} МиБ при memory.high {$limMib} МиБ — ядро ТОРМОЗИТ всю группу: "
+                .'её задачи идут в разы дольше. Искать долгоживущий процесс в этой группе '
+                ."(`systemd-cgls /system.slice/{$service}`), а НЕ поднимать потолок",
             )];
         }
         if ($cur * 5 >= $lim * 4) { // ≥80 %
-            [$psiSomePct, $psiReadable] = $this->cronCgroupPressureStallPct();
+            [$psiSomePct, $psiReadable] = $this->cgroupPressureStallPct($base);
             if ($psiReadable && $psiSomePct < $this->psiThresholdPct()) {
                 return []; // заполненность без давления: чистый page cache, ядро вытесняет сам.
             }
@@ -685,8 +736,8 @@ final class ServerGuardsAuditor
                 : 'PSI недоступен — гейт не применён';
 
             return [GuardFinding::warning(
-                'cgroup',
-                "cron.service занял {$curMib} из {$limMib} МиБ (≥80 %), {$evidence} — до троттлинга близко",
+                'cgroup-budget',
+                "{$service} занял {$curMib} из {$limMib} МиБ (≥80 %), {$evidence} — до троттлинга близко",
             )];
         }
 
@@ -694,15 +745,15 @@ final class ServerGuardsAuditor
     }
 
     /**
-     * [some avg10 в процентах, читается ли PSI] для cron.service.
+     * [some avg10 в процентах, читается ли PSI] для cgroup.
      *
      * Формат memory.pressure: «some avg10=0.00 avg60=… total=…» / «full …».
      *
      * @return array{0: float, 1: bool}
      */
-    private function cronCgroupPressureStallPct(): array
+    private function cgroupPressureStallPct(string $base): array
     {
-        $raw = $this->sys->fileContents('/sys/fs/cgroup/system.slice/cron.service/memory.pressure');
+        $raw = $this->sys->fileContents($base.'/memory.pressure');
         if ($raw === null || preg_match('/^some\s+avg10=([\d.]+)/m', $raw, $m) !== 1) {
             return [0.0, false];
         }
@@ -881,6 +932,70 @@ final class ServerGuardsAuditor
                 "{$unit} в состоянии failed — `systemctl status {$unit}` и `journalctl -u {$unit} -n 50`. "
                 .'Осознанно терпимый провал вносить в FAILED_UNITS_ALLOWLIST с причиной, а не удалять проверку',
             );
+        }
+
+        return $findings;
+    }
+
+    /**
+     * cert-expiry (H7059): у каждого настроенного TLS-сертификата есть запас
+     * дней до конца, и «не прочитался» — это находка, а не тишина.
+     *
+     * Зачем в guards:verify, если есть tamper-watch и Better Stack. Оба
+     * смотрят на публичный маршрут и один сертификат: внутренний узел, новый
+     * хост или сертификат за тем же SNI они не видят. verify уже ходит каждые
+     * 15 минут на .92 и ежечасно на .91 — проверка едет на этом такте, без
+     * нового демона.
+     *
+     * Fail-closed в главном: дни считаются от validTo_time_t, а не от текста;
+     * не прочитался — warning с именем узла, чтобы «не спросили» не выглядело
+     * как «всё хорошо». Critical — только когда запас реально ниже порога.
+     *
+     * @return list<GuardFinding>
+     */
+    private function auditCertificateExpiry(): array
+    {
+        if (! $this->spec->has('CERT_EXPIRY_MIN_DAYS')) {
+            return [];
+        }
+        $minDays = (int) $this->spec->get('CERT_EXPIRY_MIN_DAYS');
+        if ($minDays <= 0) {
+            return [];
+        }
+        $targets = $this->spec->has('CERT_EXPIRY_HOSTS') ? $this->spec->csv('CERT_EXPIRY_HOSTS') : [];
+        if ($targets === []) {
+            return [];
+        }
+
+        $findings = [];
+        foreach ($targets as $target) {
+            $parts = explode(':', $target, 2);
+            $host = trim($parts[0]);
+            $port = isset($parts[1]) ? (int) trim($parts[1]) : 443;
+            if ($host === '' || $port <= 0) {
+                $findings[] = GuardFinding::warning('cert-expiry', "некорректный адрес сертификата в CERT_EXPIRY_HOSTS: {$target}");
+
+                continue;
+            }
+
+            $days = $this->sys->certificateDaysLeft($host, $port);
+            if ($days === null) {
+                $findings[] = GuardFinding::warning(
+                    'cert-expiry',
+                    "сертификат {$host}:{$port} не прочитался — дни до конца неизвестны (нет сети, SNI или openssl). "
+                    .'Это не «всё хорошо»: проверить `openssl s_client -servername '.$host.' -connect '.$host.':'.$port.'`',
+                );
+
+                continue;
+            }
+
+            if ($days < $minDays) {
+                $findings[] = GuardFinding::critical(
+                    'cert-expiry',
+                    "сертификату {$host}:{$port} осталось {$days} дн (порог {$minDays}) — продление не сделано; "
+                    .'после нуля клиенты получат ошибку TLS, а не «медленный сайт»',
+                );
+            }
         }
 
         return $findings;

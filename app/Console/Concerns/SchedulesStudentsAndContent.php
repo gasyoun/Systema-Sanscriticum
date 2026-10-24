@@ -21,13 +21,17 @@ trait SchedulesStudentsAndContent
         // Карточки открытых занятий в @samskrte_bot (галочка bot_card_enabled):
         // анонс за 2–3 дня, утро в день занятия (ранние — накануне в 19:00),
         // ссылка Zoom нажавшим «Я иду». Флаг и дедуп — внутри команды.
+        // Анонс и утро — каждые 5 минут в своём часе, а не в одну минуту:
+        // при медленном telegram-support:sync schedule:run пропускает каждую
+        // вторую минуту (flock), и рассылка на ровное 09:00 не уходила
+        // (22-10-2026). Повтор безопасен — получившие отсеиваются в команде.
         $schedule->command('open-lessons:cards --stage=announce')
-            ->dailyAt('12:00')
+            ->cron('*/5 12 * * *')
             ->withoutOverlapping(30)
             ->onOneServer()
             ->name('open-lesson-cards-announce');
         $schedule->command('open-lessons:cards --stage=morning')
-            ->twiceDaily(9, 19)
+            ->cron('*/5 9,19 * * *')
             ->withoutOverlapping(30)
             ->onOneServer()
             ->name('open-lesson-cards-morning');
@@ -129,6 +133,16 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('trial-auto-advance');
 
+        // Донабор закрывается сам: enrolling-курс, у которого прошло последнее
+        // занятие, уходит в «В записи» (MG 18-10-2026 — не ждать ручного
+        // переключения админом). Проверка дешёвая: enrolling-курсов десятки,
+        // CourseCadence::forMany() — два запроса на весь прогон. Час, а не
+        // сутки, чтобы бейдж не врал «Идет набор» уже на следующий день.
+        $schedule->command('courses:close-finished-enrolling')
+            ->hourly()
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('close-finished-enrolling');
     }
 
     /** Season 1 open/notify/close cron + leaderboard refresh. */

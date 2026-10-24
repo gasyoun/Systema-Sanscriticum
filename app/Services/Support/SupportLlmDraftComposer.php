@@ -63,7 +63,7 @@ class SupportLlmDraftComposer
             return null;
         }
 
-        [$promptText, $piiMasked] = $this->maskedPromptText($questionText, $sourceType);
+        [$promptText, $piiMasked] = $this->maskedPromptText($questionText, $sourceType, $user);
 
         $result = $this->ai->chatWithUsage([
             ['role' => 'system', 'content' => $this->systemPrompt($category)],
@@ -222,9 +222,13 @@ class SupportLlmDraftComposer
      * недоступен, текст исключается из промпта целиком — LLM формулирует
      * из одних фактов (чистоту доказать нельзя → текста нет).
      *
+     * H6918-2: словарь беседы засевается профилем студента (имя, username) и
+     * чистится на каждый вопрос — иначе имя из прошлого чата переехало бы в
+     * этот. Bare-фамилия и ник без @ из текста закрываются тем же словарём.
+     *
      * @return array{0: string, 1: int} текст для промпта и число маскировок
      */
-    private function maskedPromptText(string $questionText, string $sourceType): array
+    private function maskedPromptText(string $questionText, string $sourceType, ?User $user = null): array
     {
         $includeText = $sourceType !== SupportAnswerSuggestion::SOURCE_TELEGRAM_SUPPORT_MESSAGE
             || (bool) config('features.support_ai_include_telegram');
@@ -234,6 +238,14 @@ class SupportLlmDraftComposer
         }
 
         try {
+            $this->masker->newConversation();
+            if ($user !== null) {
+                $this->masker->seedConversation(
+                    [(string) $user->name],
+                    [(string) ($user->telegram_username ?? '')],
+                );
+            }
+
             return $this->masker->maskOrFail($questionText);
         } catch (\Throwable $e) {
             Log::warning('SupportLlmDraftComposer: pii-guard fail-closed, текст исключён из промпта', [
