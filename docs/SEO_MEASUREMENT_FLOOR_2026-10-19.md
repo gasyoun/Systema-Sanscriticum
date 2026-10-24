@@ -118,5 +118,36 @@ Google IndexNow не поддерживает — сигнал идёт в Ян�
 
 - Доступ к Яндекс.Вебмастеру (запросы, ИКС, ошибки индексации) и GSC — без них замеры остаются лабораторными.
 - PSI-квота: keyless 429; либо ключ Google API, либо оставить Lighthouse как рабочий инструмент.
+## 7. После конвейера картинок (19-10-2026, тот же прогон 49 маршрутов)
+
+Конвейер: [#3394](https://github.com/gasyoun/Systema-Sanscriticum/pull/3394) (варианты WebP + `srcset`),
+[#3395](https://github.com/gasyoun/Systema-Sanscriticum/pull/3395) (нативные ширины в `srcset`).
+Backfill на проде: 187 исходников → 438 вариантов, 107,13 МБ → 22,40 МБ производных.
+Сырьё после: [docs/seo/lighthouse-2026-10-19-after.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/seo/lighthouse-2026-10-19-after.json).
+
+| Маршрут | Вес, МБ | LCP, с | perf |
+|---|---|---|---|
+| `/sans` | 7,06 → **1,36** | 30,8 → **6,5** | 0,63 → 0,67 |
+| `/online` | 5,46 → **1,59** | 21,3 → **6,5** | 0,73 → 0,70 |
+| `/hindi` | 7,44 → **5,49** | 33,1 → **10,0** | 0,55 → 0,60 |
+| `/geography` | 4,81 → **2,86** | 15,6 → **9,0** | 0,57 → 0,70 |
+| `/hanuman` | 4,30 → **2,40** | 11,6 → **6,3** | 0,58 → 0,66 |
+| `/philosophy` | 3,29 → **1,35** | 11,3 → **6,2** | 0,66 → 0,69 |
+| `/webinar-osen-2026` | 0,96 → 0,42 | 5,1 → 2,6 | **0,50 → 0,96** |
+| медиана (41 общий маршрут) | 0,96 → 0,94 | 5,0 → 4,1 | 0,75 → 0,78 |
+
+**Что ещё тяжело (следующий шаг, тот же приём):**
+
+- `/online`: 0,48 МБ — аватары отзывов `storage/testimonials/*.jpg` по 110–130 КБ при показе 40 px.
+  Варианты для них уже сгенерированы, не хватает только обёртки `<x-responsive-image>` в
+  `shop/partials/{testimonials,featured-testimonials,testimonials-library}.blade.php`,
+  `auth/partials/testimonials-marquee.blade.php` и `promo/blocks/reviews_block.blade.php`.
+- `/hindi`: промо-медиа `storage/media/*.JPG` (0,38 / 0,32 / 0,18 / 0,15 МБ) из блоков отзывов/галереи +
+  внешний VK-thumbnail 0,24 МБ, который мы не контролируем.
+- Мелкие просадки (`/koloda/yazyk/hindi` 0,99 → 0,88, `/online/put` 0,96 → 0,84) — при тех же
+  ресурсах и том же весе это разброс одиночного сэмпла, а не регрессия конвейера.
+
+**Оговорка о методе:** Lighthouse тут — simulate-throttling, 1 сэмпл на маршрут; сравнение по 41 общему
+маршруту. Полевых CWV по-прежнему нет (PSI 429).
 
 _Dr. Mārcis Gasūns_
