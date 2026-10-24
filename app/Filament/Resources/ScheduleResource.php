@@ -208,6 +208,14 @@ class ScheduleResource extends Resource
                         ->maxLength(300)
                         ->rows(2)
                         ->visible(fn (Forms\Get $get): bool => (bool) $get('bot_card_enabled')),
+
+                    Forms\Components\TagsInput::make('stream_links')
+                        ->label('Ссылки на трансляции (необязательно)')
+                        ->placeholder('rutube.ru/video/… — Enter после каждой')
+                        ->helperText('Rutube, VK Видео, YouTube — уйдут кнопками вместе со ссылкой Zoom тем, кто нажал «Я иду».')
+                        ->splitKeys(['Enter', ' '])
+                        ->reorderable()
+                        ->visible(fn (Forms\Get $get): bool => (bool) $get('bot_card_enabled')),
                 ]),
         ];
     }

@@ -12,10 +12,14 @@ use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 /**
  * H3521 — Learn Your Way serving: default-OFF флаг, пак-роут, вкладка урока.
+ *
+ * H6888 — групповые флаги по голосованию 14-10-2026: включённые 5 групп
+ * (base + ноль×4) обслуживаются, отклонённые 4 («продолжающий») остаются 404.
  */
 class LessonPackTest extends TestCase
 {
@@ -91,6 +95,128 @@ class LessonPackTest extends TestCase
             ->assertSee('data-lyw-profile="base/base"', false);
     }
 
+    public function test_vote_approved_nol_groups_serve_their_own_packs(): void
+    {
+        // Одобренные 14-10-2026 группы «ноль» обслуживаются собственными паками,
+        // а не подменяются базовым.
+        config(['lyw.enabled' => true]);
+        $this->installFixturePacks();
+        [$user, $course, $lesson] = $this->seedSanskritLesson();
+
+        foreach (['yoga' => 'Ваш интерес — йога.', 'ayurveda' => 'Ваш интерес — аюрведа.'] as $interest => $marker) {
+            $this->actingAs($user)
+                ->get(route('student.lesson.lessonpack', [$course->slug, $lesson->id,
+                    'level' => 'nol', 'interest' => $interest]))
+                ->assertOk()
+                ->assertSee('data-lyw-profile="nol/'.$interest.'"', false)
+                ->assertSee($marker, false);
+        }
+    }
+
+    public function test_vote_rejected_groups_stay_404_even_with_a_pack_on_disk(): void
+    {
+        // Голосование 14-10-2026 отклонило 4 «продолжающих» группы (перегруз
+        // терминологией для занятия 1). Пак prodolzhayushchiy/kino лежит в
+        // фикстурах намеренно: 404 обязан давать групповой гейт, а не
+        // отсутствие файла, и отката в базовый пак быть не должно.
+        config(['lyw.enabled' => true]);
+        $this->installFixturePacks();
+        $this->assertFileExists($this->packsRoot().'/zan1/prodolzhayushchiy/kino/manifest.json');
+        [$user, $course, $lesson] = $this->seedSanskritLesson();
+
+        foreach (['ayurveda', 'kino', 'palomnichestvo', 'yoga'] as $interest) {
+            $this->actingAs($user)
+                ->get(route('student.lesson.lessonpack', [$course->slug, $lesson->id,
+                    'level' => 'prodolzhayushchiy', 'interest' => $interest]))
+                ->assertNotFound();
+        }
+    }
+
+    public function test_group_without_flag_is_off_even_when_pack_exists(): void
+    {
+        // Отсутствие ключа = OFF: пак nol/yoga лежит в дереве, но флага нет.
+        config(['lyw.enabled' => true, 'lyw.enabled_groups' => ['base' => true]]);
+        Log::spy();
+        $this->installFixturePacks();
+        [$user, $course, $lesson] = $this->seedSanskritLesson();
+
+        $this->actingAs($user)
+            ->get(route('student.lesson.lessonpack', [$course->slug, $lesson->id,
+                'level' => 'nol', 'interest' => 'yoga']))
+            ->assertNotFound();
+
+        // 404 именно по групповому гейту, а не из-за отсутствующего пака.
+        Log::shouldHaveReceived('warning')
+            ->with('lyw.group.disabled', \Mockery::on(
+                fn ($context) => ($context['group'] ?? null) === 'nol-yoga'
+            ))
+            ->once();
+    }
+
+    public function test_master_switch_off_beats_enabled_groups(): void
+    {
+        // Пять одобренных групп стоят true, но мастер OFF — прод-поведение
+        // не меняется (default-OFF гарантия).
+        config([
+            'lyw.enabled' => false,
+            'lyw.enabled_groups' => ['base' => true, 'nol-yoga' => true],
+        ]);
+        $this->installFixturePacks();
+        [$user, $course, $lesson] = $this->seedSanskritLesson();
+
+        $this->actingAs($user)
+            ->get(route('student.lesson.lessonpack', [$course->slug, $lesson->id,
+                'level' => 'nol', 'interest' => 'yoga']))
+            ->assertNotFound();
+
+        $html = $this->actingAs($user)
+            ->get(route('student.lesson', [$course->slug, $lesson->id]))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('data-testid="lyw-lesson-tab"', $html);
+    }
+
+    public function test_lesson_tab_follows_the_default_profile_group_flag(): void
+    {
+        // Вкладка открывает дефолтный профиль (base/base -> группа `base`),
+        // поэтому при выключенной группе base вкладки быть не должно.
+        config(['lyw.enabled' => true, 'lyw.enabled_groups' => ['nol-yoga' => true]]);
+        $this->installFixturePacks();
+        [$user, $course, $lesson] = $this->seedSanskritLesson();
+
+        $html = $this->actingAs($user)
+            ->get(route('student.lesson', [$course->slug, $lesson->id]))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('data-testid="lyw-lesson-tab"', $html);
+
+        $this->actingAs($user)
+            ->get(route('student.lesson.lessonpack', [$course->slug, $lesson->id]))
+            ->assertNotFound();
+    }
+
+    public function test_base_collapse_uses_the_base_group_flag(): void
+    {
+        // `nol/base` — это базовый пак (packDir сворачивает), значит и группа
+        // у него `base`, а не выдуманная `nol-base`.
+        config(['lyw.enabled' => true, 'lyw.enabled_groups' => ['base' => true]]);
+        $this->installFixturePacks();
+        [$user, $course, $lesson] = $this->seedSanskritLesson();
+
+        $this->actingAs($user)
+            ->get(route('student.lesson.lessonpack', [$course->slug, $lesson->id,
+                'level' => 'nol', 'interest' => 'base']))
+            ->assertOk()
+            ->assertSee('data-lyw-profile="nol/base"', false);
+
+        // Без флага base тот же запрос — 404.
+        config(['lyw.enabled_groups' => ['nol-yoga' => true]]);
+        $this->actingAs($user)
+            ->get(route('student.lesson.lessonpack', [$course->slug, $lesson->id,
+                'level' => 'nol', 'interest' => 'base']))
+            ->assertNotFound();
+    }
+
     public function test_malformed_manifest_returns_clean_404(): void
     {
         config(['lyw.enabled' => true]);
@@ -127,7 +253,10 @@ class LessonPackTest extends TestCase
     {
         $src = base_path('tests/fixtures/lesson_packs');
         $root = sys_get_temp_dir().'/lyw-packs-'.uniqid('', true);
-        foreach (['zan1/base', 'zan1/nol/yoga'] as $rel) {
+        // zan1/nol/ayurveda и zan1/prodolzhayushchiy/kino — фикстуры группового
+        // гейта H6888: первая группа одобрена, вторая отклонена голосованием,
+        // обе лежат на диске, чтобы 200/404 решал флаг, а не наличие файла.
+        foreach (['zan1/base', 'zan1/nol/yoga', 'zan1/nol/ayurveda', 'zan1/prodolzhayushchiy/kino'] as $rel) {
             $dest = $root.'/'.$rel;
             if (! is_dir($dest)) {
                 mkdir($dest, 0777, true);

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\ExitSurveyAutoTrigger;
+use App\Support\CourseCadence;
 use App\Support\RichHtml;
 use App\Support\VideoEmbed;
 use Carbon\Carbon;
@@ -180,7 +181,7 @@ class Course extends Model
     /** Значения FORMATS с эмодзи-лейблами для radio в админке. */
     public const FORMAT_LABELS = [
         'live' => '🔴 Идёт сейчас (live-поток)',
-        'enrolling' => '🟡 Идёт набор (группа ещё не стартовала)',
+        'enrolling' => '🟡 Идёт набор / донабор (живой курс, ещё можно присоединиться)',
         'recorded' => '📼 В записи (доступен в любое время)',
     ];
 
@@ -197,6 +198,41 @@ class Course extends Model
             'recorded' => 'В записи',
             default => null,
         };
+    }
+
+    /**
+     * Донабор (MG 18-10-2026): курс в формате enrolling, у которого поток уже
+     * начался, но занятия ещё не кончились. Пока идут занятия, набор не
+     * закрывается — курс продаётся по блокам, а в «В записи» уходит только
+     * после последнего занятия. Состояние выводится из расписания, а не из
+     * ручного поля: переключать формат в админке на старте не нужно.
+     */
+    public function isLateEnrollment(?CourseCadence $cadence = null): bool
+    {
+        if (! $this->isEnrolling()) {
+            return false;
+        }
+
+        $cadence ??= CourseCadence::for($this);
+
+        // Старт потока — по началу первого занятия, конец — по его последнему
+        // занятию: в первый вечер «донабор» уже идёт, хотя ни одно занятие ещё
+        // не закончилось.
+        return $cadence->hasStarted() && ! $cadence->isFinished();
+    }
+
+    /**
+     * Бейдж набора для витрины: до первого занятия — «Идет набор», после —
+     * «Продолжается донабор». Для остальных форматов — обычный formatLabel().
+     * Принимает уже посчитанный CourseCadence, чтобы каталог не делал N+1.
+     */
+    public function recruitmentLabel(?CourseCadence $cadence = null): ?string
+    {
+        if (! $this->isEnrolling()) {
+            return $this->formatLabel();
+        }
+
+        return $this->isLateEnrollment($cadence) ? 'Продолжается донабор' : 'Идет набор';
     }
 
     /**
@@ -841,6 +877,25 @@ class Course extends Model
     public function designAssets(): HasMany
     {
         return $this->hasMany(CourseDesignAsset::class);
+    }
+
+    /** Позиции «Списка ожидания» (ждуна), привязанные к курсу. */
+    public function waitlistItems(): HasMany
+    {
+        return $this->hasMany(CourseWaitlistItem::class);
+    }
+
+    /**
+     * Охват «Дизайна курсов»: активные курсы И курсы с открытой позицией
+     * ждуна. Курс из ждуна ещё не запущен (обычно is_active=false), но его
+     * карточка на /online/zhdun уже показывает обложку курса — дизайнеру он
+     * нужен в матрице раньше старта, а не после.
+     */
+    public function scopeInDesignScope(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->where('is_active', true)
+            ->orWhereHas('waitlistItems', fn (Builder $w) => $w->onShowcase()));
     }
 
     /**

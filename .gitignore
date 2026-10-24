@@ -80,3 +80,7 @@ review/
 # H5135 V4: MG-pasted ops-bot token, never commit
 .env.ops_bot
 .env.testing
+
+# H6306: реальный секрет шифрования spatie-архива — только шаблон
+# ops/backup/archive-encryption.env.example в git
+/ops/backup/archive-encryption.env

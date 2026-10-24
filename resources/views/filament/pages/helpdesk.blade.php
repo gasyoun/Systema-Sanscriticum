@@ -11,7 +11,8 @@
             border: 1px solid #e5e7eb;
         }
         .chat-sidebar {
-            width: 320px;
+            width: 344px;
+            flex-shrink: 0;
             border-right: 1px solid #e5e7eb;
             background: #f9fafb;
             display: flex;
@@ -19,6 +20,10 @@
         }
         .chat-main {
             flex: 1;
+            /* Без min-width:0 flex-элемент растёт по ширине содержимого (кнопки
+               шапки, длинные строки) и контейнер с overflow:hidden срезает правый
+               край: «Взять диалог», «Отправить», сами сообщения. */
+            min-width: 0;
             display: flex;
             flex-direction: column;
             background: #ffffff;
@@ -30,19 +35,24 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
         }
-        /* Вкладки статусов над списком диалогов */
+        /* Вкладки статусов над списком диалогов. Все четыре вкладки обязаны быть видны в одну строку: компактные отступы, а
+           если счётчики разрастутся — перенос на вторую строку, не обрезка. */
         .chat-tabs {
             display: flex;
-            gap: 4px;
-            padding: 8px 8px 0;
+            flex-wrap: wrap;
+            gap: 2px;
+            padding: 8px 6px 0;
             border-bottom: 1px solid #e5e7eb;
             background: #f9fafb;
         }
         .chat-tab {
-            flex: 1;
-            padding: 8px 6px;
-            font-size: 12px;
+            flex: 1 0 auto;
+            padding: 8px 3px;
+            white-space: nowrap;
+            font-size: 11.5px;
             font-weight: 600;
             color: #6b7280;
             background: transparent;
@@ -52,7 +62,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 5px;
+            gap: 3px;
             transition: color 0.15s, border-color 0.15s;
         }
         .chat-tab:hover { color: #ea580c; }
@@ -65,9 +75,11 @@
             color: #4b5563;
             font-size: 10px;
             font-weight: 700;
-            padding: 1px 6px;
+            padding: 1px 5px;
             border-radius: 99px;
             min-width: 18px;
+            box-sizing: border-box;
+            text-align: center;
         }
         .chat-tab.active .chat-tab-count { background: #ffedd5; color: #c2410c; }
 
@@ -288,6 +300,7 @@
             line-height: 1.5;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             word-wrap: break-word;
+            overflow-wrap: anywhere; /* длинные ссылки не распирают ленту */
         }
 
         /* Пузырь студента (серый/белый) */
@@ -364,6 +377,7 @@
         }
         .chat-textarea {
             flex: 1;
+            min-width: 0;
             padding: 12px 16px;
             border: 1px solid #d1d5db;
             border-radius: 8px;

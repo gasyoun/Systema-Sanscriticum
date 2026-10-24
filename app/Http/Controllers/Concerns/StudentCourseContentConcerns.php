@@ -25,6 +25,7 @@ use App\Services\Membership\ClubEntitlement;
 use App\Services\Membership\RecordingAccessPolicy;
 use App\Services\Prana\PranaService;
 use App\Support\KinescopePilot;
+use App\Support\LywProfiles;
 use App\Support\MiniCourseDrip;
 use App\Support\TranscriptParser;
 use Illuminate\Http\Request;
@@ -473,8 +474,11 @@ trait StudentCourseContentConcerns
 
         // H3521: вкладка «Learn Your Way» — только при включённом LYW_ENABLED
         // (default OFF: переменная остаётся null, разметки в шаблоне нет).
+        // H6888: и только если одобрена группа того профиля, который вкладка
+        // открывает. Своих параметров у вкладки нет, поэтому это дефолтная
+        // пара (волна 1: base/base, группа `base`).
         $lywUrl = null;
-        if (config('lyw.enabled')) {
+        if (LywProfiles::defaultEnabled()) {
             $lywUrl = route('student.lesson.lessonpack', [$course->slug, $lesson->id]);
         }
 
