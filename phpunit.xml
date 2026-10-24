@@ -45,6 +45,15 @@
         <!-- Outbound payment-TLS probe: tests must never hit the real acquiring API
              (each test enables it explicitly with Http::fake). -->
         <env name="CABINET_PROBE_CHECK_PAYMENT_TLS" value="false"/>
+        <!-- Soft-alert webhook → n8n → GitHub issue (H2148). Http::fake со списком
+             паттернов пропускает несовпавший URL в сеть, поэтому реальный
+             SOFT_ALERT_WEBHOOK_URL из локального .env превращал фикстуры
+             CabinetProbeTest («hybrid /library: маршрут не зарегистрирован»,
+             «earlyoom не active», мёртвый ollama-туннель) в настоящие иссуи
+             ops-soft-alert: 21 штука за 4 минуты 17-10-2026 (#3331–#3353).
+             Тесты вебхука задают URL конфигом явно. -->
+        <env name="SOFT_ALERT_WEBHOOK_URL" value=""/>
+        <env name="SOFT_ALERT_WEBHOOK_SECRET" value=""/>
         <!-- H5065 knowledge/RAG: набор обязан быть герметичным к локальному .env.
              FAQ_HYBRID_RETRIEVAL=true у разработчика иначе включал плотную ногу
              ВНУТРИ тестов: retriever ходил в Ollama по Http и в knowledge_chunks
