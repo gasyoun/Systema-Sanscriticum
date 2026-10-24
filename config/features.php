@@ -375,6 +375,15 @@ return [
     'support_webchat_live_faq' => (bool) env('SUPPORT_WEBCHAT_LIVE_FAQ', false),
 
     /*
+     | 0YW (RAG grill card 9): F-only citation in the cabinet bot (@samskrtamru_bot,
+     | CuratorAi). Category F above the shared F floor answers with the FAQ
+     | section verbatim instead of calling the LLM; D/E are banned in code.
+     | OFF by default — the live flip stays a human decision (R9/R10).
+     | Rollback: false + config:cache.
+     */
+    'bot_faq_live_f' => (bool) env('BOT_FAQ_LIVE_F', false),
+
+    /*
      | H3765 A3 (рулинг R9 плана PLAN_SYSTEMA_TELEGRAM_RAG_SUPPORT_2026H2):
      | ТЕНЕВОЙ режим расширенного автоответа. Пока флаг ВКЛ, на каждой
      | подсказке куратору, которую бот МОГ БЫ отправить студенту сам
@@ -1131,6 +1140,14 @@ return [
     'waitlist_voting' => (bool) env('WAITLIST_VOTING', false),
 
     /*
+     | Карточки открытых занятий в @samskrte_bot: фото + «✅ Я иду» + нижнее
+     | меню, анонс / утро / ссылка Zoom (open-lessons:cards). В бот идут только
+     | занятия с галочкой schedules.bot_card_enabled. OFF по умолчанию;
+     | обкатка — OPEN_LESSON_CARDS_TEST_CHAT_IDS (config/open_lesson_cards.php).
+     */
+    'open_lesson_cards' => (bool) env('OPEN_LESSON_CARDS_ENABLED', false),
+
+    /*
      | Ждун: автооткрытие оплаты при кворуме (votes >= min_payers) для
      | строки, привязанной к курсу: статус payment_open + включение тарифов
      | курса + сигнал куратору (OpenWaitlistPayment). Срабатывает сразу на
@@ -1139,6 +1156,15 @@ return [
      | прежний путь: ручное открытие/ежедневный прогнозный прогон.
      */
     'waitlist_auto_payment' => (bool) env('WAITLIST_AUTO_PAYMENT', true),
+
+    /*
+     | Ждун: при автооткрытии оплаты (OpenWaitlistPayment) написать самим
+     | голосовавшим «оплата открыта» в привязанные TG/VK кабинета
+     | (ZhdunVoterNotifier), раз на строку. OFF — сигнал только куратору;
+     | ручная кнопка «Сообщить голосовавшим» в админке работает при любом
+     | значении. Default false — включается человеком на проде.
+     */
+    'waitlist_notify_voters' => (bool) env('WAITLIST_NOTIFY_VOTERS', false),
 
     /*
      | H5134 — «Избранное» (сердечки, MG 17-09-2026): личный список курсов +
@@ -2002,4 +2028,72 @@ return [
      | deploy-шаг человека.
      */
     'hermes_human_send' => (bool) env('HERMES_HUMAN_SEND', false),
+
+    /*
+     | Быстрая запись на бесплатный мини-курс «Подготовительная группа» для
+     | рекламного трафика из VK-бота: /k/{mini_courses.slug}/start — имя + email
+     | + согласие ПДн → кабинет, платёж 0 ₽ по штатному пути Payment (доступ,
+     | course_user = старт дрипа), автовход и сразу в курс. Существующий email
+     | не логинится — ему уходит одноразовая ссылка. Под флагом попап рассылки
+     | на лендинге мини-курса скрыт, а кнопка бесплатного тарифа ведёт на /start.
+     | ВЫКЛ по умолчанию (money-контур): MINI_COURSE_QUICK_ENROLL=true +
+     | config:cache — deploy-шаг человека.
+     */
+    'mini_course_quick_enroll' => (bool) env('MINI_COURSE_QUICK_ENROLL', false),
+
+    /*
+     | Запись в группу из лички (20-10-2026). Студент пишет «запишите меня на
+     | субботу 11» / «готова оплатить» — EnrollmentGroupResolver по номеру
+     | группы или дню+часу находит ОДНУ группу, автоответ отдаёт чекаут блока
+     | этой группы с подписанным ?group=. Неоднозначно → подсказка куратору со
+     | списком кандидатов. Сумма — только из Tariff (kind 'facts').
+     | ВЫКЛ по умолчанию (денежный контур): SUPPORT_ENROLL_PAY_LINK=true.
+     */
+    'support_enroll_pay_link' => (bool) env('SUPPORT_ENROLL_PAY_LINK', false),
+
+    /*
+     | 22-10-2026: «как оплатить? / не могу оплатить через кабинет» в личке →
+     | бот спрашивает, что именно и какой блок (варианты с ценой из Tariff),
+     | по ответу — ссылка на чекаут; неразборчивый ответ — подсказка куратору.
+     | Пилотный список enroll_pilot_telegram_ids действует и здесь.
+     | ВЫКЛ по умолчанию (денежный контур): SUPPORT_PAY_CLARIFY=true.
+     */
+    'support_pay_clarify' => (bool) env('SUPPORT_PAY_CLARIFY', false),
+
+    /*
+     | 22-10-2026: разговор об оплате/записи понимает локальная LLM (Ollama),
+     | читая весь диалог (студент, бот, куратор). off — нет; shadow — модель
+     | решает, решение пишется событием dm_pay_llm_shadow, отвечают регулярки;
+     | live — отвечает решение модели (суммы и ссылки — всё равно из Tariff).
+     */
+    'support_pay_dialog_llm' => in_array(env('SUPPORT_PAY_DIALOG_LLM', 'off'), ['shadow', 'live'], true)
+        ? (string) env('SUPPORT_PAY_DIALOG_LLM')
+        : 'off',
+
+    /*
+     | Выбранная группа в платеже: чекаут пишет payments.group_id из
+     | подписанной ссылки, grantAccess() на курсе с НЕСКОЛЬКИМИ группами
+     | выдаёт только её. Курс с одной группой — поведение прежнее.
+     | ВЫКЛ по умолчанию (money-контур): GRANT_CHOSEN_GROUP=true.
+     */
+    'grant_chosen_group' => (bool) env('GRANT_CHOSEN_GROUP', false),
+
+    /*
+     | После оплаты студенту уходит ссылка-заявка в Telegram-чат его группы
+     | (creates_join_request, бот @zapisi_ORSbot). Заявку бот одобряет сам,
+     | только если у Telegram-аккаунта есть оплаченное активное членство в
+     | этой группе и нет снятия за долг; иначе заявка висит, кураторам алерт.
+     | Требует: бот — админ с can_invite_users, вебхук с chat_join_request
+     | (php artisan zapisi:set-webhook). ВЫКЛ по умолчанию: PAID_CHAT_JOIN_REQUEST=true.
+     */
+    'paid_chat_join_request' => (bool) env('PAID_CHAT_JOIN_REQUEST', false),
+
+    /*
+     | Пилот записи через личку (21-10-2026): Telegram ID через запятую.
+     | Непусто — ссылка на оплату группы, ссылка-заявка после оплаты и
+     | автоодобрение работают ТОЛЬКО для этих аккаунтов, остальным — как при
+     | выключенных флагах (без ответов и алертов). Пусто — для всех.
+     | Пример: ENROLL_PILOT_TELEGRAM_IDS=123456789
+     */
+    'enroll_pilot_telegram_ids' => array_values(array_filter(array_map('trim', explode(',', (string) env('ENROLL_PILOT_TELEGRAM_IDS', ''))))),
 ];

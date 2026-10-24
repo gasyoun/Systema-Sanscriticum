@@ -69,11 +69,13 @@ foreach ($up26Destinations as $creative => $up26Destination) {
 }
 
 /*
- * san26 — волна набора «Философия санкхьи» (курс 459, старт по кворуму
- * ждуна 8 голосов, слот пн 18:00): один читательский маршрут — намерение
- * на карточке курса, поэтому слот -p осознанно выброшен (оплаты до
- * кворума нет). Креативы = гипотезы поста: c — программа, t —
- * преподаватель, h — время/слот.
+ * san26 — волна набора «Философия санкхьи» (курс 459). С 18-10-2026 кампания
+ * переведена из кворума в rolling: кворум 8 намерений снят как условие старта
+ * (остался исторической записью ждуна — карточка 19 в статусе scheduled),
+ * группа 154 стартует 19-10 в 18:00, оплата открыта по блокам (тарифы
+ * 5126–5129, 6 000 ₽ за блок) и остаётся открытой после старта — в режиме
+ * донабора, пока идут занятия. Креативы = гипотезы поста: c — программа,
+ * t — преподаватель, h — время/слот; платёжного креатива -p пока нет.
  */
 $san26Campaign = 'sankhya_kurs_oct_2026';
 
@@ -86,6 +88,102 @@ foreach (['c', 't', 'h'] as $creative) {
             'utm_campaign' => $san26Campaign,
             'utm_content' => "san26_{$creative}",
             'utm_term' => 'philosophy',
+        ],
+    ];
+}
+
+/*
+ * Креатив r — рекап открытой лекции 19-10 (старт группы 154): маршрут ведет
+ * на WP-статью записи лекции на samskrtam.ru (rutube/vk/youtube + стенограмма),
+ * а не на карточку курса. Внешний destination — как у t.me-хопов ниже:
+ * флеш-цель Метрики на нем не ставится, клик пишется в anons_link_clicks.
+ */
+$links['san26-ors-r'] = [
+    'destination' => 'https://samskrtam.ru/kurs-filosofiya-sankhi/',
+    'utm' => [
+        'utm_source' => $channels['ors']['source'],
+        'utm_medium' => $channels['ors']['medium'],
+        'utm_campaign' => $san26Campaign,
+        'utm_content' => 'san26_r',
+        'utm_term' => 'philosophy',
+    ],
+];
+
+/*
+ * bi26 — бесплатное самостоятельное знакомство с санскритом: отдельный
+ * текстовый анонс @samskrte 13-10-2026. Проверка за 500 ₽ закрыта;
+ * единственный читательский маршрут ведет на страницу с честными условиями.
+ */
+$links['bi26-ors-c'] = [
+    'destination' => '/online/poprobovat',
+    'utm' => [
+        'utm_source' => $channels['ors']['source'],
+        'utm_medium' => $channels['ors']['medium'],
+        'utm_campaign' => 'beginner_intro_oct_2026',
+        'utm_content' => 'bi26_c',
+        'utm_term' => 'beginner',
+    ],
+];
+
+/*
+ * vas26 — открытый урок «Медленного чтения Йога-васиштхи» (курс 334, занятие
+ * #49 22-10-2026 12:00 МСК; чт 12:00, блоки по 4 занятия 4 800 ₽): маршрут
+ * попадания на занятие — куратор (@rusamskrtam), /ga/-ключи ведут на карточку
+ * курса. Креативы = гипотезы поста: c — программа, t — преподаватель/формат
+ * занятия, h — время/слот; p — отдельный слот «условия/оплата» для поста,
+ * где рядом стоит второй ключ (каноническая пара c+p, правило up26).
+ */
+$vas26Campaign = 'vasishtha_open_oct_2026';
+
+foreach (['c', 't', 'h', 'p'] as $creative) {
+    $links["vas26-ors-{$creative}"] = [
+        'destination' => '/k/yoga-vasistha',
+        'utm' => [
+            'utm_source' => $channels['ors']['source'],
+            'utm_medium' => $channels['ors']['medium'],
+            'utm_campaign' => $vas26Campaign,
+            'utm_content' => "vas26_{$creative}",
+            'utm_term' => 'slow_reading',
+        ],
+    ];
+}
+
+/*
+ * Креатив r — рекап открытого урока 22-10 (как у san26-ors-r): маршрут ведет
+ * на WP-статью записи урока на samskrtam.ru (rutube/vk/youtube + стенограмма),
+ * а не на карточку курса. Внешний destination — как у t.me-хопов ниже:
+ * флеш-цель Метрики на нем не ставится, клик пишется в anons_link_clicks.
+ */
+$links['vas26-ors-r'] = [
+    'destination' => 'https://samskrtam.ru/kurs-joga-vasishtha/',
+    'utm' => [
+        'utm_source' => $channels['ors']['source'],
+        'utm_medium' => $channels['ors']['medium'],
+        'utm_campaign' => $vas26Campaign,
+        'utm_content' => 'vas26_r',
+        'utm_term' => 'slow_reading',
+    ],
+];
+
+/*
+ * syn26 — открытое занятие «Синтаксиса санскрита» (курс 266, занятие #268
+ * 25-10-2026 17:00 МСК; вс 17:00, блоки по 4 занятия 4 800 ₽, аудитория с
+ * базой санскрита): маршрут попадания — куратор, /ga/-ключи ведут на карточку
+ * курса. Креативы = гипотезы поста: c — программа, t — преподаватель/формат
+ * занятия, h — время/слот; p — отдельный слот «условия/оплата» для поста,
+ * где рядом стоит второй ключ (каноническая пара c+p, правило up26).
+ */
+$syn26Campaign = 'syntax_open_oct_2026';
+
+foreach (['c', 't', 'h', 'p'] as $creative) {
+    $links["syn26-ors-{$creative}"] = [
+        'destination' => '/k/sintaksis-sanskrita',
+        'utm' => [
+            'utm_source' => $channels['ors']['source'],
+            'utm_medium' => $channels['ors']['medium'],
+            'utm_campaign' => $syn26Campaign,
+            'utm_content' => "syn26_{$creative}",
+            'utm_term' => 'advanced',
         ],
     ];
 }
@@ -166,10 +264,98 @@ foreach ($zhdunCourses as $zhdunSlug) {
     ];
 }
 
+/*
+ * vanons — вечнозелёный ключ видео-анонса (H6547): сторис персоны с видео из
+ * учебных чатов (лейн H6546) ведут сюда. Один стоящий ключ, не кампания —
+ * пер-видео креативы только если MG попросит разбивку атрибуции.
+ */
+$links['vanons-tg-v1'] = [
+    'destination' => '/online',
+    'utm' => [
+        'utm_source' => 'telegram_story_rusamskrtam',
+        'utm_medium' => 'persona_story',
+        'utm_campaign' => 'video_anons_evergreen',
+        'utm_content' => 'vanons_v1',
+        'utm_term' => 'video',
+    ],
+];
+
+/*
+ * H6574: видео-анонс на YouTube Shorts (канал записей) — раздельная
+ * атрибуция сёрфейса, тот же вечнозелёный паттерн, что vanons-tg-v1.
+ */
+$links['vanons-yt-v1'] = [
+    'destination' => '/online',
+    'utm' => [
+        'utm_source' => 'youtube_shorts',
+        'utm_medium' => 'shorts_description',
+        'utm_campaign' => 'video_anons_evergreen',
+        'utm_content' => 'vanons_yt_v1',
+        'utm_term' => 'video',
+    ],
+];
+
+/*
+ * H6574: видео-анонс на VK-стене — раздельная атрибуция сёрфейса.
+ */
+$links['vanons-vk-v1'] = [
+    'destination' => '/online',
+    'utm' => [
+        'utm_source' => 'vk_wall',
+        'utm_medium' => 'wall_post',
+        'utm_campaign' => 'video_anons_evergreen',
+        'utm_content' => 'vanons_vk_v1',
+        'utm_term' => 'video',
+    ],
+];
+
+/*
+ * H6566 (MG 12-10-2026): «Стать добровольцем» — разметка санскритских
+ * словарей Кёльна, вход через закрытую TG-группу. Кнопка ждун-бота ведёт
+ * на прослойку /ga/volunteer, чтобы клик считался даже без входа в группу
+ * (паттерн H6466/H6489); utm_source помечен zhdun_ — не сайт-атрибуция.
+ */
+$links['volunteer'] = [
+    'destination' => 'https://t.me/+zl3hUJ632t03OGY6',
+    'utm' => [
+        'utm_source' => 'zhdun_share',
+        'utm_medium' => 'bot_deeplink',
+        'utm_campaign' => 'zhdun_volunteer_evergreen',
+        'utm_content' => 'volunteer',
+        'utm_term' => 'volunteer',
+    ],
+];
+
+/*
+ * vol — набор научных добровольцев (H6594; рулинг MG 13-10-2026: слаг
+ * dobrovolec): анонс в «Оповещениях санскритян» ведёт в закрытую TG-группу
+ * «Корпус: подготовка текстов» через пер-площадочный ключ — канон атрибуции
+ * anons, каждая площадка свой источник (standing volunteer выше остаётся за
+ * ждун-ботом). Ключ переименован из vol-ors-a до публикации — ленд по
+ * рулингу MG 13-10-2026 «ленди без минта» (минт-клейм 9 отказов в утренней
+ * волне Uprava); H### дополнить пост-минтом. Креатив — пост T1-стиля
+ * (обновка 👻-поста 367 от 29-01-2025).
+ */
+$links['dobrovolec'] = [
+    'destination' => 'https://t.me/+zl3hUJ632t03OGY6',
+    'utm' => [
+        'utm_source' => 'telegram_samskrte',
+        'utm_medium' => 'owned_channel',
+        'utm_campaign' => 'sanskrit_volunteer_evergreen',
+        'utm_content' => 'volunteers_t1',
+        'utm_term' => 'volunteer',
+    ],
+];
+
 return [
     'session_key' => 'tracked_link_attribution',
     'links' => $links,
     'story_campaigns' => [
+        'vanons' => [
+            'destination' => '/online',
+            'utm_campaign' => 'video_anons_evergreen',
+            'utm_term' => 'video',
+        ],
         'm26' => [
             'destination' => '/online/kursy/grammatika-gasuns-2026',
             'utm_campaign' => $campaign,

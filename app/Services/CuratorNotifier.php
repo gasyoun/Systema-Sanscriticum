@@ -93,9 +93,75 @@ class CuratorNotifier
         if (! empty($payment->proof_path)) {
             $lines[] = '📎 Приложен файл подтверждения';
         }
+        // H6534: мульти-блочный клейм — один перевод, N строк учёта; карточка
+        // показывает разбивку по блокам, чтобы куратор подтверждал строки с
+        // полной картиной.
+        if ($payment->claimMeta('multi_block')) {
+            $lines[] = '';
+            $lines = array_merge($lines, $this->multiBlockBreakdownLines($payment));
+        }
         $lines[] = $this->adminLink($payment->user);
 
         $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Разбивка мульти-блочного клейма (H6534). Список блоков — общий для всех
+     * строк заявки, живёт в claim_meta.block_tariffs; итог — переведённая
+     * сумма одним переводом (claim_meta.foreign_total) и вердикт сверки.
+     * H6554: в кросс-курсовой заявке (claim_meta.cross_course) каждая строка
+     * помечена курсом блока — куратор подтверждает с разбивкой по курсам.
+     *
+     * @return array<int, string>
+     */
+    private function multiBlockBreakdownLines(Payment $payment): array
+    {
+        $currency = (string) ($payment->foreign_currency ?: 'EUR');
+        $isCrossCourse = (bool) $payment->claimMeta('cross_course');
+        $blocks = array_values(array_filter(
+            (array) $payment->claimMeta('block_tariffs', []),
+            fn ($block): bool => is_array($block),
+        ));
+
+        $lines = [$isCrossCourse
+            ? '<b>Один перевод на блоки разных курсов:</b>'
+            : '<b>Один перевод на несколько блоков:</b>'];
+        foreach ($blocks as $block) {
+            $line = '· ';
+            if ($isCrossCourse && ! empty($block['course_title'])) {
+                $line .= e((string) $block['course_title']).' · ';
+            }
+            $line .= e((string) ($block['label'] ?? 'блок')).' — '.$this->money((float) ($block['amount'] ?? 0));
+            if (! empty($block['foreign_amount'])) {
+                $line .= ' ('.$this->foreignMoney((float) $block['foreign_amount'], $currency).')';
+            }
+            $lines[] = $line;
+        }
+
+        $totalRub = array_sum(array_map(fn (array $block): float => (float) ($block['amount'] ?? 0), $blocks));
+        $totalForeign = (float) ($payment->claimMeta('foreign_total') ?: array_sum(array_map(
+            fn (array $block): float => (float) ($block['foreign_amount'] ?? 0),
+            $blocks,
+        )));
+
+        $lines[] = 'Итого по учёту: <b>'.$this->money($totalRub).'</b> · заявлено одним переводом: <b>'
+            .$this->foreignMoney($totalForeign, $currency).'</b>';
+        $verdict = $payment->claimMeta('amount_check')['verdict'] ?? null;
+        if ($verdict !== null) {
+            $lines[] = 'Сверка по общей сумме: <b>'.e((string) $verdict).'</b>';
+        }
+
+        return $lines;
+    }
+
+    private function foreignMoney(float $amount, string $currency): string
+    {
+        $symbol = match ($currency) {
+            'USD' => '$',
+            default => '€',
+        };
+
+        return number_format($amount, 2, '.', ' ').' '.$symbol;
     }
 
     /**
@@ -866,9 +932,12 @@ class CuratorNotifier
      * Ждун: кворум голосов набран, оплата по привязанному курсу открыта
      * автоматически (OpenWaitlistPayment: статус payment_open + включение
      * тарифов). Сигнал куратору на выборочную проверку — состав и цены
-     * тарифов включила машина.
+     * тарифов включила машина. $voters — итог авто-рассылки голосовавшим
+     * (ZhdunVoterNotifier), null — рассылка выключена флагом или уже была.
+     *
+     * @param  array{messengers: int, emails: int, no_channel: int}|null  $voters
      */
-    public function waitlistPaymentOpened(CourseWaitlistItem $item, int $activatedTariffs): void
+    public function waitlistPaymentOpened(CourseWaitlistItem $item, int $activatedTariffs, ?array $voters = null): void
     {
         $lines = [
             '🟢 <b>Ждун: кворум набран — оплата открыта</b>',
@@ -881,6 +950,10 @@ class CuratorNotifier
         }
         $lines[] = 'Голоса: <b>'.$item->votesCount().' из '.$item->min_payers.'</b>';
         $lines[] = 'Включено тарифов: <b>'.$activatedTariffs.'</b>';
+        $lines[] = $voters === null
+            ? 'Голосовавшим: <b>не рассылалось</b> — кнопка «Сообщить голосовавшим» в админке'
+            : 'Голосовавшим разослано: мессенджеры <b>'.$voters['messengers'].'</b>, email <b>'.$voters['emails'].'</b>'
+                .($voters['no_channel'] > 0 ? ' · не охвачено (вручную): <b>'.$voters['no_channel'].'</b>' : '');
         $lines[] = '';
         $lines[] = '👉 <a href="'.$this->waitlistAdminLink().'">Список ожидания в админке</a>';
 

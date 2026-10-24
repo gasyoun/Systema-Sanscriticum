@@ -137,20 +137,22 @@
                                     @if($titleUrl)
                                         <a href="{{ $titleUrl }}" tabindex="-1" aria-hidden="true"
                                            class="relative block w-full aspect-[4/3] bg-gradient-to-br from-slate-800 to-[#0A0D14] border-b border-[#1F2636] overflow-hidden">
-                                            <img src="{{ $itemCoverUrl }}" alt=""
-                                                 width="533" height="400"
+                                            <x-responsive-image :src="$itemCoverUrl" alt=""
+                                                 :width="533" :height="400"
                                                  loading="lazy" decoding="async"
                                                  data-waitlist-cover="{{ $item->slug }}"
-                                                 class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80">
+                                                 sizes="(min-width: 1024px) 30vw, 92vw"
+                                                 class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80" />
                                             <div class="absolute inset-0 bg-gradient-to-t from-[#111622] via-transparent to-transparent opacity-80"></div>
                                         </a>
                                     @else
                                         <div class="relative w-full aspect-[4/3] bg-gradient-to-br from-slate-800 to-[#0A0D14] border-b border-[#1F2636] overflow-hidden">
-                                            <img src="{{ $itemCoverUrl }}" alt=""
-                                                 width="533" height="400"
+                                            <x-responsive-image :src="$itemCoverUrl" alt=""
+                                                 :width="533" :height="400"
                                                  loading="lazy" decoding="async"
                                                  data-waitlist-cover="{{ $item->slug }}"
-                                                 class="absolute inset-0 w-full h-full object-cover opacity-80">
+                                                 sizes="(min-width: 1024px) 30vw, 92vw"
+                                                 class="absolute inset-0 w-full h-full object-cover opacity-80" />
                                             <div class="absolute inset-0 bg-gradient-to-t from-[#111622] via-transparent to-transparent opacity-80"></div>
                                         </div>
                                     @endif

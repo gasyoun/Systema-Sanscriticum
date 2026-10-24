@@ -12,7 +12,7 @@
 @if(! empty($metrikaFirstCabinetAction))<span data-metrika-goal="first_cabinet_action" hidden></span>@endif
 
 {{-- activeTab: #prana / #debts с fail-redirect оплаты долга (DebtPaymentController → #debts) --}}
-<div x-data="{ activeTab: (window.location.hash === '#prana' ? 'prana' : (window.location.hash === '#debts' ? 'debts' : 'courses')) }" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 font-nunito">
+<div x-data="{ activeTab: (window.location.hash === '#prana' ? 'prana' : (window.location.hash === '#debts' ? 'debts' : (window.location.hash === '#chat' ? 'chat' : 'courses'))) }" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 font-nunito">
 
     <div class="mb-6 mt-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>

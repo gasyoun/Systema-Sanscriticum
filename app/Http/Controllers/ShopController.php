@@ -19,6 +19,8 @@ use App\Services\Activity\StorefrontAnalytics;
 use App\Services\Membership\PrivateArchiveEligibility;
 use App\Services\Schedule\FullSchedulePost;
 use App\Support\CourseCadence;
+use App\Support\CourseHeroSchedule;
+use App\Support\CoursePageContent;
 use App\Support\FlagshipExperiments;
 use App\Support\FlagshipLanding;
 use App\Support\ProductLadderAnchors;
@@ -50,6 +52,7 @@ class ShopController extends Controller
         ];
         $categorySlugs = [];
         $indexable = true;
+        $category = null;
 
         if ($facets !== null) {
             $parsed = ShopCatalogUrl::parse($facets);
@@ -90,6 +93,12 @@ class ShopController extends Controller
             $indexable = array_keys($parsed) === ['kategoriya'] && count($categorySlugs) === 1;
         }
 
+        // SEO-META-1: a single-category facet is a real landing page (self-canonical),
+        // so the view needs its name for a unique title/H1/description.
+        if ($indexable && count($categorySlugs) === 1) {
+            $category = Category::where('slug', $categorySlugs[0])->first(['name', 'slug']);
+        }
+
         $canonicalPath = ShopCatalogUrl::build($indexable ? $categorySlugs : array_slice($categorySlugs, 0, 1));
 
         $deposit = MarketingSetting::cached();
@@ -107,7 +116,7 @@ class ShopController extends Controller
         $ladder = ProductLadderAnchors::resolve();
 
         return view('shop.index', array_merge($initial, compact(
-            'deposit', 'featuredTestimonials', 'ladder', 'canonicalPath', 'indexable'
+            'deposit', 'featuredTestimonials', 'ladder', 'canonicalPath', 'indexable', 'category'
         )) + [
             // H5134 — мои сердечки в каталоге (Livewire-проп, flag OFF / гость — []).
             'favoriteCourseIds' => CourseFavorite::favoritedCourseIdsForCurrentViewer(),
@@ -557,7 +566,15 @@ class ShopController extends Controller
             }
         }
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb', 'canonicalUrl', 'recordingOffers', 'fullSchedulePosts', 'waitlistItem', 'waitlistVoted', 'waitlistPref') + [
+        // H6570: ручное расписание не стартовавшего курса (контент-JSON по
+        // slug) для свёрнутого блока в хиро; null — курсу не заведено.
+        $heroSchedule = CourseHeroSchedule::for($course->slug);
+
+        // H6580: контент страницы из T1-анонса (контент-JSON по slug):
+        // описание/буллеты/видео-ссылки/FAQ; null — курсу не заведено.
+        $pageContent = CoursePageContent::for($course->slug);
+
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb', 'canonicalUrl', 'recordingOffers', 'fullSchedulePosts', 'waitlistItem', 'waitlistVoted', 'waitlistPref', 'heroSchedule', 'pageContent') + [
             // H5134 — сердечко на /k/{slug}: отмечен ли этот курс зрителем.
             'favoriteKeys' => CourseFavorite::heartKeysForCurrentViewer(),
         ]);

@@ -1,0 +1,33 @@
+{
+  "schema": "lyw-pack-v1",
+  "zan": 1,
+  "profile": {
+    "level": "nol",
+    "interest": "ayurveda"
+  },
+  "source": {
+    "claims_yml_sha256": "67254676c2e0b2ccfc9b5aa245d38b11bbaffec40b750c52a7bc55a5a58b7079",
+    "lesson_marker": "Занятие I"
+  },
+  "sections": [
+    {
+      "id": "devanagari-script",
+      "title": "Письмо devanāgarī",
+      "source_concepts": [
+        "devanāgarī"
+      ],
+      "embedded_questions": [
+        "zan1-nol-ayurveda-01"
+      ]
+    }
+  ],
+  "views": {
+    "mindmap": "views/mindmap.mmd"
+  },
+  "quizzes": "quizzes.json",
+  "mnemonics": [],
+  "generated": {
+    "date": "18-10-2026",
+    "session": "H6888-group-gate-fixture"
+  }
+}

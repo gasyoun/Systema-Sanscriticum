@@ -40,6 +40,7 @@ class CabinetDocsFreshnessTest extends TestCase
         'student.access' => ['оплата и доступ', 'мои оплаты', 'мои долги'],
         'student.open-lessons' => ['открытые уроки'],
         'student.help' => ['как пользоваться'],
+        'student.faq' => ['вопросы и ответы'],
         'student.programme.hindi' => ['мой хинди'],
         'student.srs' => ['карточки'],
         'student.srs.decks' => ['мои колоды', 'колода'],

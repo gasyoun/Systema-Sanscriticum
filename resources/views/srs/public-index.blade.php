@@ -1,18 +1,42 @@
 @extends('layouts.shop')
 
-@section('title', 'Колоды для запоминания санскрита — открытая галерея')
+@php
+    // SEO-META-1: three language hubs shared one title/description. Give each its
+    // own; the /koloda/yazyk/sanskrit alias canonicalises to the default hub.
+    $langSubject = match ($lang ?? 'sa') {
+        'hi' => 'хинди',
+        'all' => 'санскриту и хинди',
+        default => 'санскриту',
+    };
+    $langH1 = match ($lang ?? 'sa') {
+        'hi' => 'Карточки по хинди',
+        'all' => 'Карточки по санскриту и хинди',
+        default => 'Карточки по санскриту',
+    };
+    $canonicalPath = in_array($langWord, [null, '', 'sanskrit'], true)
+        ? '/koloda'
+        : '/koloda/yazyk/'.$langWord;
+@endphp
+
+@section('title', 'Колоды карточек по '.$langSubject)
+{{-- H5184 N14: ключевые слова в description («колоды», «санскрит», «хинди»). --}}
+@section('meta_description', 'Открытая галерея колод карточек по '.$langSubject.': интервальное повторение, пробный режим без регистрации — прогресс сохранится после входа.')
 
 @push('head')
-    <link rel="canonical" href="{{ url($langWord ? '/koloda/yazyk/'.$langWord : '/koloda') }}">
+    <link rel="canonical" href="{{ url($canonicalPath) }}">
     <meta name="robots" content="index, follow">
-    {{-- H5184 N14: ключевые слова в description («колоды», «санскрит», «хинди»). --}}
-    <meta name="description" content="Открытая галерея колод для интервального запоминания санскрита и хинди. Попробуйте бесплатно без регистрации — прогресс сохранится после входа.">
+
+    @include('partials.schema-breadcrumbs', ['crumbs' => array_values(array_filter([
+        ['name' => 'Главная', 'url' => url('/')],
+        ['name' => 'Колоды', 'url' => url('/koloda')],
+        in_array($langWord, [null, '', 'sanskrit'], true) ? null : ['name' => $langH1],
+    ]))])
 @endpush
 
 @section('content')
 <div class="container mx-auto px-4 py-10 max-w-3xl">
     <div class="mb-8">
-        <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight">Карточки</h1>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight">{{ $langH1 }}</h1>
         <p class="text-slate-400 mt-2">
             Попробуйте колоду без регистрации — прогресс сохранится после входа.
         </p>

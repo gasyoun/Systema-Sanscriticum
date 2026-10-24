@@ -6,6 +6,7 @@ namespace Tests\Feature\Anons;
 
 use App\Models\AnonsLinkClick;
 use App\Models\AnonsPlacement;
+use App\Models\Lead;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -151,5 +152,28 @@ final class AnonsOpsJournalTest extends TestCase
 
         $this->assertIsArray($real['links']['up26-ors-c'] ?? null);
         $this->assertIsArray($real['links']['up26-ors-p'] ?? null);
+    }
+
+    /**
+     * H6531: anons:ops hdyhau — агрегат самоотчётов «откуда узнали» по
+     * leads.reported_source (четвёртая нога атрибуции). Канонический ключ
+     * выводится подписью, «Другое» — словами человека; null-ответы не
+     * считаются; окно --days отрезает старые заявки.
+     */
+    public function test_hdyhau_aggregates_reported_source_counts(): void
+    {
+        Lead::create(['contact' => '+79990000001', 'reported_source' => 'friends']);
+        Lead::create(['contact' => '+79990000002', 'reported_source' => 'friends']);
+        Lead::create(['contact' => '+79990000003', 'reported_source' => 'Увидел плакат в библиотеке']);
+        Lead::create(['contact' => '+79990000004']); // без ответа — не считается
+        // вне окна (40 дней назад) — создан сейчас, created_at отодвинут напрямую
+        $stale = Lead::create(['contact' => '+79990000005', 'reported_source' => 'tg_school']);
+        $stale->forceFill(['created_at' => Carbon::now()->subDays(40)])->saveQuietly();
+
+        $this->artisan('anons:ops', ['op' => 'hdyhau'])
+            ->expectsOutputToContain('HDYHAU reported_source last 30d: 3 answer(s)')
+            ->expectsOutputToContain('2  Посоветовали друзья или знакомые')
+            ->expectsOutputToContain('1  Увидел плакат в библиотеке')
+            ->assertSuccessful();
     }
 }

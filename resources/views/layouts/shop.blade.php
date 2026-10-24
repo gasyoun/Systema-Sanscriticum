@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'Магазин курсов') | Общество ревнителей санскрита</title>
+    <title>{{ \App\Support\SeoTitle::render($__env->yieldContent('title', 'Магазин курсов')) }}</title>
+    {{-- SEO-META-1: fallback description for every shop page; child views override via @section('meta_description') --}}
+    <meta name="description" content="{{ \Illuminate\Support\Str::limit(trim(strip_tags($__env->yieldContent('meta_description', 'Общество ревнителей санскрита: курсы санскрита и хинди, преподаватели, статьи и материалы.'))), 160) }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
     {{-- H6211 Low-1: PNG 512 + apple-touch + публичный манифест (иконка в мобильной выдаче) --}}
     <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('images/icon-512.png') }}">
@@ -266,6 +268,9 @@
     @livewireScripts
 
     @include('partials.cookie-consent')
-    @include('partials.newsletter-subscribe-popup')
+    {{-- На пути записи в мини-курс попап рассылки не конкурирует с записью. --}}
+    @unless(config('features.mini_course_quick_enroll') && (request()->routeIs('mini-course.*') || request()->is('k/'.config('mini_courses.slug'))))
+        @include('partials.newsletter-subscribe-popup')
+    @endunless
 </body>
 </html>

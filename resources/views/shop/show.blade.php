@@ -2,6 +2,23 @@
 @section('title', $course->meta_title ?: $course->title)
 
 @php
+    // SEO-META-1: meta_description was empty on courses without a description —
+    // Yandex then builds the snippet itself. Fall back to the body, then to a
+    // composed sentence, so every money page ships a description.
+    $courseMetaDescription = trim((string) ($course->meta_description ?? ''));
+    if ($courseMetaDescription === '') {
+        $courseMetaDescription = \Illuminate\Support\Str::limit(
+            trim(strip_tags((string) ($course->description ?? ''))),
+            160
+        );
+    }
+    if ($courseMetaDescription === '') {
+        $courseMetaDescription = 'Курс санскрита «'.$course->title.'» в Обществе ревнителей санскрита: программа, преподаватель, формат и стоимость.';
+    }
+@endphp
+@section('meta_description', $courseMetaDescription)
+
+@php
     // Ритм курса, выведенный из `schedules` (App\Support\CourseCadence).
     // Ручной бейдж формата отвечает «идет / в записи», но не «когда» и не
     // «сколько осталось» — эти три строки закрывают именно это.
@@ -52,8 +69,6 @@ document.addEventListener('DOMContentLoaded', function () {
 @endpush
 
 @push('head')
-    <meta name="description" content="{{ $course->meta_description ?: \Illuminate\Support\Str::limit(trim(strip_tags($course->description)), 160) }}">
-
     {{-- H3807: канон программы — живой курс. Для записи прошедшего потока это
          ЧУЖОЙ адрес: страница остается покупаемой, но в выдаче программу
          представляет одна карточка, а не две конкурирующие. --}}
@@ -65,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
     @php
         $courseUrl = route('shop.course.show', $course->slug);
         $courseDescription = $course->meta_description
-            ?: \Illuminate\Support\Str::limit(trim(strip_tags((string) $course->description)), 300);
+            ?: \Illuminate\Support\Str::limit($courseMetaDescription, 300);
 
         // Активные тарифы = покупаемые варианты участия. Каждый → отдельный Offer.
         $offerTariffs = $course->tariffs->where('is_active', true);
@@ -170,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         @elseif($course->isEnrolling())
                             <span class="inline-flex items-center gap-1.5 bg-amber-500 text-white text-[11px] font-black uppercase px-3 py-1.5 rounded-full tracking-wider shadow-[0_4px_12px_rgba(245,158,11,0.35)]">
                                 <i class="fas fa-bullhorn text-[10px]"></i>
-                                Идет набор
+                                {{ $course->recruitmentLabel($cadence) }}
                             </span>
                         @elseif($course->format === 'recorded')
                             <span class="inline-flex items-center gap-1.5 bg-indigo-500/90 text-white text-[11px] font-black uppercase px-3 py-1.5 rounded-full tracking-wider">
@@ -242,7 +257,54 @@ document.addEventListener('DOMContentLoaded', function () {
                         </p>
                     @endif
                     
-                    {{-- One primary CTA (tariff) + optional secondary (sample) --}}
+                    {{-- H6570: расписание ещё не стартовавшего курса — слева
+                         сверху, свёрнутый блок (полный список дат по клику,
+                         канон формата «Расписание курса …»). Контент —
+                         resources/data/course-hero-schedules.json (ключ = slug);
+                         даты считает App\Support\CourseHeroSchedule. У курса с
+                         живым расписанием из БД блок гасим — cadence-строка
+                         выше не должна задваиваться. --}}
+                    @if(isset($heroSchedule) && $heroSchedule && ! $cadenceSlot && ! $cadenceNext)
+                        <div class="mb-8 max-w-xl" data-testid="course-hero-schedule">
+                            <details class="group bg-[#111622] border border-[#1F2636] rounded-xl px-5 py-4">
+                                <summary class="cursor-pointer list-none flex items-start gap-2 text-sm text-slate-300 hover:text-white transition-colors">
+                                    <i class="far fa-calendar-alt text-[#38BDF8] mt-0.5"></i>
+                                    <span>
+                                        Расписание курса — {{ $heroSchedule['summary'] }},
+                                        начало {{ \App\Support\CourseHeroSchedule::ruDate($heroSchedule['start']) }}.
+                                        <span class="text-[#38BDF8] group-open:hidden">Все {{ count($heroSchedule['rows']) }} дат ▸</span>
+                                    </span>
+                                </summary>
+                                <div class="mt-4 border-t border-[#1F2636] pt-4 text-sm text-slate-300 leading-relaxed">
+                                    <p class="font-bold text-white">{{ $course->title }}</p>
+                                    <p class="mb-3">{{ $heroSchedule['cadence'] }}</p>
+                                    @foreach($heroSchedule['rows'] as $row)
+                                        @if($row['n'] > 1 && ($row['n'] - 1) % 4 === 0)
+                                            <div class="h-3"></div>
+                                        @endif
+                                        <p>{{ $row['n'] }}-е занятие: {{ \App\Support\CourseHeroSchedule::ruDate($row['date']) }}, {{ $row['time'] }}</p>
+                                    @endforeach
+                                </div>
+                            </details>
+                        </div>
+                    @endif
+
+                    {{-- One primary CTA (tariff) + optional secondary (sample).
+                         H6559: курс, ещё не стартовавший и собирающий голоса
+                         ждун-строки, на первом экране вместо этой пары показывает
+                         кнопку «Намерен участвовать» — голос решает, откроется ли
+                         оплата. Крупный variant того же шаред-партиала, что и в
+                         блоке «Сбор голосов» ниже (состояния voted/оплата — те же). --}}
+                    @if(isset($waitlistItem) && $waitlistItem)
+                        <div class="w-full max-w-xs" data-testid="course-hero-waitlist">
+                            @include('shop.partials.waitlist-join-actions', [
+                                'item' => $waitlistItem,
+                                'voted' => $waitlistVoted,
+                                'myPref' => $waitlistPref,
+                                'variant' => 'hero',
+                            ])
+                        </div>
+                    @else
                     <div class="flex flex-wrap gap-3">
                         <a href="#tariffs" class="inline-flex justify-center items-center px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-brand hover:bg-brand-hover transition-all hover:-translate-y-1 shadow-[0_0_20px_rgba(232,92,36,0.3)]">
                             Выбрать тариф
@@ -273,6 +335,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             </a>
                         @endif
                     </div>
+                    @endif
 
                     {{-- Кликабельный бейдж преподавателя — visual continuity with card teacher line.
                          Есть публичная страница /prepodavately — ведём на неё (студент ждёт анкету,
@@ -335,7 +398,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <div class="absolute top-5 right-5 z-10">
                                 <span class="inline-flex items-center gap-1.5 bg-amber-500 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md tracking-wider">
                                     <i class="fas fa-bullhorn text-[9px]"></i>
-                                    Идет набор
+                                    {{ $course->recruitmentLabel($cadence) }}
                                 </span>
                             </div>
                         @elseif($course->format === 'recorded')
@@ -412,8 +475,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 $course->teacher
                     ? ['icon' => 'fas fa-user', 'label' => 'Преподаватель', 'value' => $course->teacher->name]
                     : null,
-                $course->formatLabel()
-                    ? ['icon' => 'fas fa-broadcast-tower', 'label' => 'Формат', 'value' => $course->formatLabel()]
+                $course->recruitmentLabel($cadence)
+                    ? ['icon' => 'fas fa-broadcast-tower', 'label' => 'Формат', 'value' => $course->recruitmentLabel($cadence)]
                     : null,
                 $course->lessons_count
                     ? ['icon' => 'fas fa-play-circle', 'label' => 'Занятий', 'value' => $course->lessons_count.' '.\App\Support\Plural::ru((int) $course->lessons_count, 'онлайн-занятие', 'онлайн-занятия', 'онлайн-занятий')]
@@ -445,9 +508,27 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
                 {{-- Левая колонка: текстовое описание --}}
                 <div class="prose prose-invert prose-lg prose-slate max-w-none lg:flex-1">
+                    {{-- H6580: видеоанонс из T1-поста (3 платформы) — строка над
+                         описанием, как в посте; рендерится только с живыми URL
+                         из контент-JSON (resources/data/course-page-content.json). --}}
+                    @if(($pageContent['video_links'] ?? []) !== [])
+                        <p class="text-sm text-slate-400 mb-2" data-testid="course-anons-video">
+                            Видеоанонс:
+                            @foreach($pageContent['video_links'] as $platform => $url)
+                                <a href="{{ $url }}" target="_blank" rel="noopener" class="text-indigo-400 hover:text-indigo-300 underline">{{ $platform }}</a>@if(! $loop->last) <span class="text-slate-500">·</span> @endif
+                            @endforeach
+                        </p>
+                    @endif
                     @if($course->description)
                         <div class="text-slate-300 leading-relaxed space-y-6 [&_a]:text-indigo-400 [&_a:hover]:text-indigo-300 [&_a]:underline">
                             {!! $course->description_html !!}
+                        </div>
+                    @elseif($pageContent['description_html'] ?? null)
+                        {{-- H6580: идейный хук T1-анонса → описание, пока у курса
+                             нет своего description в БД (БД — канон, пост —
+                             зеркало: пустое поле БД заполняется из поста). --}}
+                        <div class="text-slate-300 leading-relaxed space-y-6 [&_a]:text-indigo-400 [&_a:hover]:text-indigo-300 [&_a]:underline" data-testid="course-anons-description">
+                            {!! $pageContent['description_html'] !!}
                         </div>
                     @else
                         <p class="text-slate-500 italic">Подробное описание курса скоро появится.</p>
@@ -567,6 +648,30 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 @endforeach
             </div>
+            </div>
+        </section>
+        @elseif(($pageContent['program_bullets'] ?? []) !== [])
+            {{-- H6580: буллеты «Что вас ждет» из T1-анонса → программа курса,
+                 пока у курса нет своих блоков с содержимым (число занятий и
+                 расписание — канон страницы, буллеты поста их не заменяют). --}}
+        <section id="program" class="mb-16 lg:mb-20" x-data="{ open: false }" data-collapse-section>
+            @include('shop.partials.collapse-header', ['title' => 'Программа курса', 'bodyId' => 'program-body'])
+
+            <div id="program-body" x-show="open" x-cloak
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 -translate-y-3"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 translate-y-3">
+            <ul class="space-y-3 max-w-3xl" data-testid="course-anons-program">
+                @foreach($pageContent['program_bullets'] as $bullet)
+                    <li class="flex gap-3 text-slate-300 leading-relaxed">
+                        <i class="fas fa-check text-indigo-400 mt-1 text-sm shrink-0"></i>
+                        <span>{{ $bullet }}</span>
+                    </li>
+                @endforeach
+            </ul>
             </div>
         </section>
         @endif
@@ -962,7 +1067,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i class="fas fa-arrow-right mr-2"></i> Перейти к обучению
                                 </a>
                             @else
-                                <a href="{{ route('checkout.show', $tariff->id) }}"
+                                {{-- Бесплатный тариф мини-курса под флагом ведёт на короткую запись (имя + email). --}}
+                                <a href="{{ config('features.mini_course_quick_enroll') && (float) $tariff->price === 0.0 && $course->slug === config('mini_courses.slug') ? route('mini-course.quick') : route('checkout.show', $tariff->id) }}"
                                    class="w-full flex justify-center items-center py-4 px-4 bg-brand text-white text-base font-bold rounded-xl hover:bg-brand-hover hover:shadow-[0_0_20px_rgba(232,92,36,0.4)] transition-all">
                                     {{ $sellsRecordings ? 'Купить запись курса' : 'Записаться на курс' }}
                                 </a>

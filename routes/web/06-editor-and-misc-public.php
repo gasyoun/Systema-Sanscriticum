@@ -9,6 +9,7 @@ use App\Http\Controllers\Editor\LectureDraftController;
 use App\Http\Controllers\GiftCertificateController;
 use App\Http\Controllers\JoinClassController;
 use App\Http\Controllers\LlmsTxtController;
+use App\Http\Controllers\MilestoneCertificatePreviewController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PublicChatController;
 use App\Http\Controllers\PublicPresenceController;
@@ -42,6 +43,13 @@ Route::get('/llms.txt', [LlmsTxtController::class, 'index'])->name('llms.txt');
 // ВАЖНО: до catch-all /{slug}, публичный без auth.
 Route::get('/verify/{number}', [CertificateVerificationController::class, 'show'])
     ->name('certificate.verify');
+
+// --- ЖИВОЙ ПРЕДПРОСМОТР ДОКУМЕНТА ВЕХИ (iframe в форме вех в курсе) ---
+// Рендерит certificates.default — тот же блейд, что dompdf печатает в PDF.
+// auth + гейт ADMIN/TEACHER внутри контроллера.
+Route::get('/certificates/milestone-preview', [MilestoneCertificatePreviewController::class, 'show'])
+    ->middleware('auth')
+    ->name('certificates.milestone-preview');
 
 // --- ПУБЛИЧНЫЙ РЕЕСТР ВЫДАННЫХ СЕРТИФИКАТОВ/СПРАВОК ---
 // ВАЖНО: до catch-all /{slug}, публичный без auth. Полные ФИО — решение MG.

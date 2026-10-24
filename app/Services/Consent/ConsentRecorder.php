@@ -33,15 +33,23 @@ class ConsentRecorder
      * пришла, и согласие/отказ на рекламу по галочке $promoField (если
      * $promoField передан — отсутствие галочки фиксируется только при
      * $recordPromoRefusal, чтобы не плодить «отзывы» у тех, кто ничего не давал).
+     *
+     * Возвращает строку согласия на ПДн или null, если галочки не было либо
+     * запись не удалась (сбой журнала проглатывается — см. write()). Это нужно
+     * вызывающему, который обязан отличить «согласие записано» от «приняли на
+     * слово»: гость чата прячет галочку только по подтверждению записи
+     * (H6487, 152-ФЗ ст. 9 ч. 3).
      */
-    public function fromForm(Request $request, string $source, ?User $user = null, ?string $email = null, ?int $leadId = null, ?string $promoField = null, bool $recordPromoRefusal = false): void
+    public function fromForm(Request $request, string $source, ?User $user = null, ?string $email = null, ?int $leadId = null, ?string $promoField = null, bool $recordPromoRefusal = false): ?Consent
     {
+        $pd = null;
+
         if ($request->boolean('pd_consent')) {
-            $this->given(Consent::TYPE_PD, $source, $request, $user, $email, $leadId);
+            $pd = $this->given(Consent::TYPE_PD, $source, $request, $user, $email, $leadId);
         }
 
         if ($promoField === null) {
-            return;
+            return $pd;
         }
 
         if ($request->boolean($promoField) || $request->input($promoField) === 'on') {
@@ -49,6 +57,8 @@ class ConsentRecorder
         } elseif ($recordPromoRefusal) {
             $this->withdrawn(Consent::TYPE_PROMO, $source, $request, $user, $email, $leadId);
         }
+
+        return $pd;
     }
 
     public static function docVersion(string $type): ?string
