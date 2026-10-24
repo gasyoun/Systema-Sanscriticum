@@ -2040,4 +2040,60 @@ return [
      | config:cache — deploy-шаг человека.
      */
     'mini_course_quick_enroll' => (bool) env('MINI_COURSE_QUICK_ENROLL', false),
+
+    /*
+     | Запись в группу из лички (20-10-2026). Студент пишет «запишите меня на
+     | субботу 11» / «готова оплатить» — EnrollmentGroupResolver по номеру
+     | группы или дню+часу находит ОДНУ группу, автоответ отдаёт чекаут блока
+     | этой группы с подписанным ?group=. Неоднозначно → подсказка куратору со
+     | списком кандидатов. Сумма — только из Tariff (kind 'facts').
+     | ВЫКЛ по умолчанию (денежный контур): SUPPORT_ENROLL_PAY_LINK=true.
+     */
+    'support_enroll_pay_link' => (bool) env('SUPPORT_ENROLL_PAY_LINK', false),
+
+    /*
+     | 22-10-2026: «как оплатить? / не могу оплатить через кабинет» в личке →
+     | бот спрашивает, что именно и какой блок (варианты с ценой из Tariff),
+     | по ответу — ссылка на чекаут; неразборчивый ответ — подсказка куратору.
+     | Пилотный список enroll_pilot_telegram_ids действует и здесь.
+     | ВЫКЛ по умолчанию (денежный контур): SUPPORT_PAY_CLARIFY=true.
+     */
+    'support_pay_clarify' => (bool) env('SUPPORT_PAY_CLARIFY', false),
+
+    /*
+     | 22-10-2026: разговор об оплате/записи понимает локальная LLM (Ollama),
+     | читая весь диалог (студент, бот, куратор). off — нет; shadow — модель
+     | решает, решение пишется событием dm_pay_llm_shadow, отвечают регулярки;
+     | live — отвечает решение модели (суммы и ссылки — всё равно из Tariff).
+     */
+    'support_pay_dialog_llm' => in_array(env('SUPPORT_PAY_DIALOG_LLM', 'off'), ['shadow', 'live'], true)
+        ? (string) env('SUPPORT_PAY_DIALOG_LLM')
+        : 'off',
+
+    /*
+     | Выбранная группа в платеже: чекаут пишет payments.group_id из
+     | подписанной ссылки, grantAccess() на курсе с НЕСКОЛЬКИМИ группами
+     | выдаёт только её. Курс с одной группой — поведение прежнее.
+     | ВЫКЛ по умолчанию (money-контур): GRANT_CHOSEN_GROUP=true.
+     */
+    'grant_chosen_group' => (bool) env('GRANT_CHOSEN_GROUP', false),
+
+    /*
+     | После оплаты студенту уходит ссылка-заявка в Telegram-чат его группы
+     | (creates_join_request, бот @zapisi_ORSbot). Заявку бот одобряет сам,
+     | только если у Telegram-аккаунта есть оплаченное активное членство в
+     | этой группе и нет снятия за долг; иначе заявка висит, кураторам алерт.
+     | Требует: бот — админ с can_invite_users, вебхук с chat_join_request
+     | (php artisan zapisi:set-webhook). ВЫКЛ по умолчанию: PAID_CHAT_JOIN_REQUEST=true.
+     */
+    'paid_chat_join_request' => (bool) env('PAID_CHAT_JOIN_REQUEST', false),
+
+    /*
+     | Пилот записи через личку (21-10-2026): Telegram ID через запятую.
+     | Непусто — ссылка на оплату группы, ссылка-заявка после оплаты и
+     | автоодобрение работают ТОЛЬКО для этих аккаунтов, остальным — как при
+     | выключенных флагах (без ответов и алертов). Пусто — для всех.
+     | Пример: ENROLL_PILOT_TELEGRAM_IDS=123456789
+     */
+    'enroll_pilot_telegram_ids' => array_values(array_filter(array_map('trim', explode(',', (string) env('ENROLL_PILOT_TELEGRAM_IDS', ''))))),
 ];

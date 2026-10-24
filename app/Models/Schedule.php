@@ -50,6 +50,7 @@ class Schedule extends Model
         'bot_card_enabled',
         'card_image_path',
         'card_note',
+        'stream_links',
         'reminded_at',
         'group_link_posted_at',
         'zapisi_reminded_at',
@@ -64,6 +65,7 @@ class Schedule extends Model
 
     protected $casts = [
         'bot_card_enabled' => 'boolean',
+        'stream_links' => 'array',
         'start' => 'datetime',
         'end' => 'datetime',
         'reminded_at' => 'datetime',

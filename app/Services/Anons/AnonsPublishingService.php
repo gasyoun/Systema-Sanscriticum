@@ -71,7 +71,7 @@ final class AnonsPublishingService
         $dir = storage_path('app/anons/preview/'.$manifest->hash());
         foreach ($manifest->effectiveDestinations() as $dest) {
             foreach ($manifest->frames() as $i => $frame) {
-                $artifact = $this->renderFrame($frame, "{$dir}/f{$i}-{$dest['account']}.jpg");
+                $artifact = $this->frameArtifact($frame, "{$dir}/f{$i}-{$dest['account']}.jpg");
                 $plan[] = $this->framePlan($manifest, $dest, $i, $frame, $artifact);
             }
         }
@@ -192,11 +192,13 @@ final class AnonsPublishingService
                 }
 
                 try {
-                    $artifact = $this->renderFrame($frame, "{$dir}/f{$i}-{$dest['account']}.jpg");
+                    $artifact = $this->frameArtifact($frame, "{$dir}/f{$i}-{$dest['account']}.jpg");
                     $run->forceFill(['state' => AnonsDestinationRun::STATE_RUNNING, 'artifact_path' => $artifact])->save();
 
                     $plan = $this->framePlan($manifest, $dest, $i, $frame, $artifact);
                     $result = $adapter->publishFrame([
+                        'kind' => $frame['kind'] ?? 'photo',
+                        'asset_path' => $artifact, // H6915: адаптеры читают asset_path — ключ был не передан (латентный разрыв photo-лейна)
                         'artifact_path' => $artifact,
                         'caption' => $plan['caption'],
                         'link' => $plan['short_link'],
@@ -305,6 +307,19 @@ final class AnonsPublishingService
     }
 
     /**
+     * H6915: артефакт кадра — фото рендерится с плашкой, видео уходит
+     * КАК ЕСТЬ (медиа неизменяемо, CTA живёт в подписи), путь оригинала.
+     */
+    private function frameArtifact(array $frame, string $outPath): string
+    {
+        if (($frame['kind'] ?? PublicationManifest::KIND_PHOTO) === PublicationManifest::KIND_VIDEO) {
+            return (string) $frame['media_path'];
+        }
+
+        return $this->renderFrame($frame, $outPath);
+    }
+
+    /**
      * Нормализованный план кадра: подпись (URL не первым элементом),
      * короткая /ga/-ссылка с полным UTM-кортежем (R12: свой utm_content
      * на кадр), измеренный прямоугольник media-зоны.
@@ -373,7 +388,7 @@ final class AnonsPublishingService
     /** Постоянные ошибки валидации не ретраятся (fail-closed R8). */
     private function isPermanent(Throwable $e): bool
     {
-        return (bool) preg_match('/missing|unreadable|validation|not configured|No platform adapter|must not START/i', $e->getMessage());
+        return (bool) preg_match('/missing|unreadable|validation|not configured|No platform adapter|must not START|50 ?MB|exceeds the Bot API/i', $e->getMessage());
     }
 
     private function markAll(AnonsPublication $publication, string $reason): void

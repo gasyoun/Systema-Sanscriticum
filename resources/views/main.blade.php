@@ -65,6 +65,15 @@
                         'https://t.me/rusamskrtam',
                         'https://www.youtube.com/@samskrtamru',
                     ],
+                    // Аудит 05-10-2026: у Organization не было contactPoint, хотя
+                    // телефон и почта стоят в шапке каждой страницы.
+                    'contactPoint' => [
+                        '@type' => 'ContactPoint',
+                        'contactType' => 'customer service',
+                        'telephone' => '+7-918-192-50-84',
+                        'email' => 'rusamskrtam@yandex.ru',
+                        'availableLanguage' => ['ru'],
+                    ],
                 ],
                 [
                     '@type' => 'WebSite',

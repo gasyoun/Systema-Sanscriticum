@@ -230,6 +230,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `ECON_RETENTION_HORIZON` | optional | `12` | config/unit_economics.php:24 |
 | `ECON_USN_PCT` | optional | `6.0` | config/economics.php:16 |
 | `EMAIL_CAMPAIGNS` | optional | `false` | config/features.php:956 |
+| `ENROLL_PILOT_TELEGRAM_IDS` | optional | `''` | config/features.php:2098 |
 | `EXCHANGERATE_HOST_KEY` | required | `—` | config/services.php:93 |
 | `EXIT_SURVEY_AUTO_TRIGGER` | optional | `false` | config/features.php:1772 |
 | `FAQ_HYBRID_RETRIEVAL` | optional | `false` | config/features.php:194 |
@@ -262,6 +263,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `GRAMMAR_LAB_SEMANTIC` | optional | `false` | config/features.php:1574 |
 | `GRAMMAR_LAB_SUBSCRIPTION_COURSE_SLUG` | optional | `''` | config/grammar_lab.php:53 |
 | `GRANT_ACCESS_FAIL_CLOSED` | optional | `false` | config/features.php:851 |
+| `GRANT_CHOSEN_GROUP` | optional | `false` | config/features.php:2079 |
 | `GUARD_PACK_LOAD1_PER_CORE_CRITICAL` | optional | `2.0` | config/guard_pack.php:26 |
 | `GUARD_PACK_MEM_AVAILABLE_RATIO_CRITICAL` | optional | `0.15` | config/guard_pack.php:28 |
 | `GUARD_PACK_QUEUE_OLDEST_MAX_MINUTES` | optional | `30` | config/guard_pack.php:33 |
@@ -579,6 +581,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `OPENROUTER_TOPUP_ROUND_TO` | optional | `10` | config/openrouter.php:26 |
 | `OPEN_LESSON_CARDS_ENABLED` | feature-flag | `false` | config/features.php:1148 |
 | `OPEN_LESSON_CARDS_TEST_CHAT_IDS` | optional | `''` | config/open_lesson_cards.php:17 |
+| `PAID_CHAT_JOIN_REQUEST` | optional | `false` | config/features.php:2089 |
 | `PAPERTRAIL_PORT` | required | `—` | config/logging.php:102<br>config/logging.php:103 |
 | `PAPERTRAIL_URL` | required | `—` | config/logging.php:101<br>config/logging.php:103 |
 | `PARTNER_BOT_SECRET` | secret | `''` | config/partner.php:33 |
@@ -810,6 +813,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_DM_LLM_DRAFTS_LIVE` | optional | `false` | config/features.php:304 |
 | `SUPPORT_DM_LLM_DRAFTS_LOCAL` | optional | `false` | config/features.php:317 |
 | `SUPPORT_DRAFT_QUEUE` | optional | `false` | config/features.php:427 |
+| `SUPPORT_ENROLL_PAY_LINK` | optional | `false` | config/features.php:2052 |
 | `SUPPORT_FACT_LIVE_TYPES` | optional | `'zoom,schedule,recording'` | config/support.php:100 |
 | `SUPPORT_FAQ_RAG_ANSWER_MAX_CHARS` | optional | `12000` | config/support.php:194 |
 | `SUPPORT_FAQ_RAG_ANSWER_TOP_K` | optional | `6` | config/support.php:186 |
@@ -842,6 +846,11 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_LEAD_CAPTURE` | optional | `false` | config/features.php:665 |
 | `SUPPORT_LLM_REPLIES_MIN_SCORE` | optional | `8.0` | config/support.php:288 |
 | `SUPPORT_OBSERVABILITY` | optional | `false` | config/features.php:622 |
+| `SUPPORT_PAY_CLARIFY` | optional | `false` | config/features.php:2061 |
+| `SUPPORT_PAY_DIALOG_LLM` | optional | `'off'` | config/features.php:2069<br>config/features.php:2070 |
+| `SUPPORT_PAY_LLM_HISTORY` | optional | `20` | config/support.php:325 |
+| `SUPPORT_PAY_LLM_MIN_CONFIDENCE` | optional | `0.7` | config/support.php:323 |
+| `SUPPORT_PAY_LLM_TIMEOUT` | optional | `60` | config/support.php:324 |
 | `SUPPORT_PRESENCE_BEACON_SECONDS` | optional | `20` | config/support_presence.php:25 |
 | `SUPPORT_PRESENCE_ONLINE_SECONDS` | optional | `75` | config/support_presence.php:33 |
 | `SUPPORT_PRESENCE_PRUNE_MINUTES` | optional | `15` | config/support_presence.php:41 |
