@@ -309,7 +309,7 @@
                 @if(!empty($data['form_minimal']))
                     {{-- ─── УПРОЩЕННАЯ ФОРМА: один контакт + согласие по клику + опц. Telegram ─── --}}
                     @php
-                        $consentRaw = $data['min_consent_note'] ?? 'Нажимая кнопку, вы соглашаетесь с {link}. Ссылку пришлем в Telegram — спросим контакт после.';
+                        $consentRaw = $data['min_consent_note'] ?? 'Данные обрабатываются в соответствии с {link}. Ссылку пришлем в Telegram — спросим контакт после.';
                         // {link} → кликабельная «политика конфиденциальности». e() экранирует
                         // пользовательский текст ДО подстановки служебного span — XSS-safe.
                         $privacyLink = '<span @click.prevent.stop="viewDocument(\'Политика конфиденциальности\', \'/docs/privacy.pdf\')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>';
@@ -325,6 +325,11 @@
                                value="{{ old('email') }}"
                                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
                     </div>
+
+                    {{-- 152-ФЗ: «нажимая кнопку — соглашаетесь» согласием не считается;
+                         явная галочка ПДн + необязательная галочка рассылки. --}}
+                    <x-consent.pd class="px-1" />
+                    <x-consent.promo class="px-1" />
 
                     <button type="submit"
                             class="w-full font-extrabold py-3.5 rounded-xl bg-brand hover:bg-brand-hover text-white transform hover:-translate-y-0.5 shadow-lg shadow-orange-900/20 transition-all duration-300 text-sm uppercase tracking-wider">
@@ -378,7 +383,7 @@
                 <div class="space-y-2 pt-0">
                     <label class="flex items-start gap-3 text-left p-2.5 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                         <div class="flex items-center h-5 mt-px shrink-0">
-                            <input type="checkbox" x-model="agreedForm" class="w-4 h-4 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
+                            <input type="checkbox" name="pd_consent" value="1" required x-model="agreedForm" class="w-4 h-4 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
                         </div>
                         <div class="text-xs text-gray-500 leading-relaxed select-none group-hover:text-gray-800 transition">
                             Я даю <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие</span> на обработку моих персональных данных в соответствии с <span @click.prevent.stop="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>
@@ -386,7 +391,7 @@
                     </label>
                     <label class="flex items-start gap-3 text-left p-2.5 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                         <div class="flex items-center h-5 mt-px shrink-0">
-                            <input type="checkbox" name="is_promo_agreed" x-model="agreedPromo" class="w-4 h-4 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
+                            <input type="checkbox" name="is_promo_agreed" value="1" x-model="agreedPromo" class="w-4 h-4 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
                         </div>
                         <div class="text-xs text-gray-500 leading-relaxed select-none group-hover:text-gray-800 transition">
                             Я даю <span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие</span> на получение рассылки

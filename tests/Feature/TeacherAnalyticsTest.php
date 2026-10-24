@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Filament\Pages\TeacherAnalytics as TeacherAnalyticsPage;
+use App\Filament\Widgets\DisciplineByGroupWidget;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\LessonView;
@@ -160,5 +161,29 @@ class TeacherAnalyticsTest extends TestCase
             ->assertOk()
             ->assertSee('Аналитика студентов')
             ->assertSee('Аруна');
+    }
+
+    /** H6212: teacher без карточки (teacher_id = null) не видит аналитику; скоуп пуст, а не вся школа. */
+    public function test_teacher_without_teacher_card_is_denied_and_scope_empty(): void
+    {
+        $orphan = User::factory()->create(['role' => Roles::TEACHER, 'teacher_id' => null]);
+
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs($orphan);
+
+        $this->assertFalse(TeacherAnalyticsPage::canAccess());
+
+        $this->get(TeacherAnalyticsPage::getUrl())
+            ->assertForbidden();
+
+        // Виджет на странице тоже fail-closed для teacher без карточки.
+        $this->assertFalse(DisciplineByGroupWidget::canView());
+
+        // Ремень поверх подтяжек: даже если гейт обойдён, скоуп пуст, а не «всё»
+        $page = app(TeacherAnalyticsPage::class);
+        $reflection = new \ReflectionMethod($page, 'scopeTeacherId');
+        $reflection->setAccessible(true);
+
+        $this->assertSame(-1, $reflection->invoke($page));
     }
 }

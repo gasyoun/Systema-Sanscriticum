@@ -36,7 +36,18 @@ final class AdapterRegistry
     {
         $adapter = $this->adapters[$platform] ?? null;
         if ($adapter === null) {
-            throw new RuntimeException("No platform adapter registered for '{$platform}' (fail-closed; vk/senler adapters are future work).");
+            // H5935: senler — задокументированный manual lane, не «будущая работа»;
+            // отказ остаётся fail-closed, но ведёт оператора в процедуру.
+            if ($platform === 'senler') {
+                throw new RuntimeException(
+                    "No platform adapter registered for 'senler' (fail-closed by design). "
+                    .'Senler ships as a documented manual lane — follow '
+                    .'docs/ANONS_PUBLISHING_V2.md § "Senler manual lane (H5935)" (UI checklist, /ga/…-vk-… link smoke, journal row). '
+                    .'An adapter needs a Senler API token and MG\'s explicit decision.'
+                );
+            }
+
+            throw new RuntimeException("No platform adapter registered for '{$platform}' (fail-closed; vk adapters are future work).");
         }
 
         return $adapter;

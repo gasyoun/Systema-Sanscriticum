@@ -120,7 +120,7 @@ class TariffsLateBuyerTest extends TestCase
         $this->assertStringContainsString('Купить записи блока', $html);
         // Идущий блок остаётся живым — его кнопка не должна стать «записями».
         $this->assertStringContainsString('СЕЙЧАС ИДЕТ', $html);
-        $this->assertStringContainsString('Оплатить модуль', $html);
+        $this->assertStringContainsString('Оплатить блок', $html);
     }
 
     /** @test */

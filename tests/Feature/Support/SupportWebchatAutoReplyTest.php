@@ -159,6 +159,31 @@ class SupportWebchatAutoReplyTest extends TestCase
         $this->assertNotSame('', (string) $event->meta['chunk_id']);
     }
 
+    /**
+     * Свежий ответ куратора в треде — FAQ-цитата его не перебивает (класс
+     * инцидента 01-10-2026 в TG-полосе): человек уже в диалоге, бот молчит.
+     */
+    public function test_faq_answer_yields_to_a_recent_curator_reply(): void
+    {
+        config(['features.support_webchat_live_faq' => true]);
+
+        $this->postJson('/chat/message', ['text' => 'Здравствуйте']);
+        $thread = SupportConversation::query()->firstOrFail();
+        ChatMessage::create([
+            'support_conversation_id' => $thread->id,
+            'user_id' => User::factory()->create()->id,
+            'role' => 'curator',
+            'text' => 'Здравствуйте! Уточните, пожалуйста, какой курс.',
+            'is_read' => true,
+        ]);
+
+        $response = $this->postJson('/chat/message', ['text' => self::MATERIALS_QUESTION]);
+
+        $response->assertOk();
+        $this->assertNull($response->json('auto_replies.0'), 'FAQ-ответ не уходит следом за живым ответом куратора');
+        $this->assertSame(0, ChatMessage::query()->where('role', 'bot')->count(), 'свежее исходящее в треде снимает и FAQ-автоответ');
+    }
+
     /** Ниже порога FAQ молчит; при включённом ack посетителю уходит ack. */
     public function test_score_below_the_floor_falls_back_to_ack_only(): void
     {

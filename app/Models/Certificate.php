@@ -81,21 +81,26 @@ class Certificate extends Model
     }
 
     /**
-     * Абсолютный путь к фону для выбранного шаблона. Справка использует свой
-     * фон, если файл существует; дальше фолбэки: обычный фон шаблона →
-     * нейтральный, чтобы генерация не падала.
+     * Кандидаты фона по приоритету: у справки свой фон, если файл существует;
+     * дальше обычный фон шаблона. Единый источник для backgroundPath() (PDF,
+     * абсолютный путь) и backgroundUrl() (браузерные превью).
+     *
+     * @return list<string>
      */
-    public function backgroundPath(): string
+    private function backgroundCandidates(): array
     {
         $template = self::TEMPLATES[$this->template ?? 'gasuns'] ?? self::TEMPLATES['gasuns'];
 
-        $candidates = [];
-        if ($this->isSpravka() && ! empty($template['spravka_background'])) {
-            $candidates[] = $template['spravka_background'];
-        }
-        $candidates[] = $template['background'];
+        return array_values(array_filter([
+            $this->isSpravka() ? ($template['spravka_background'] ?? null) : null,
+            $template['background'],
+        ]));
+    }
 
-        foreach ($candidates as $rel) {
+    /** Абсолютный путь к фону; нейтральный фолбэк, чтобы генерация не падала. */
+    public function backgroundPath(): string
+    {
+        foreach ($this->backgroundCandidates() as $rel) {
             $abs = public_path($rel);
             if (is_file($abs)) {
                 return $abs;
@@ -103,6 +108,18 @@ class Certificate extends Model
         }
 
         return public_path('images/ganesha_clean.jpg');
+    }
+
+    /** URL фона для браузерных превью — та же цепочка, что backgroundPath(). */
+    public function backgroundUrl(): string
+    {
+        foreach ($this->backgroundCandidates() as $rel) {
+            if (is_file(public_path($rel))) {
+                return asset($rel);
+            }
+        }
+
+        return asset('images/ganesha_clean.jpg');
     }
 
     protected static function booted()

@@ -1,4 +1,4 @@
-@props(['course', 'purchasedByCourse' => [], 'deposit' => null, 'categoryIds' => [], 'nextStep' => [], 'cadence' => null, 'favoriteKeys' => [], 'eager' => false])
+@props(['course', 'purchasedByCourse' => [], 'deposit' => null, 'categoryIds' => [], 'nextStep' => [], 'cadence' => null, 'favoriteKeys' => [], 'eager' => false, 'waitlist' => null, 'votedWaitlistIds' => []])
 
 @php
     $courseKeys = $purchasedByCourse[$course->id] ?? [];
@@ -23,6 +23,12 @@
     // Плашка курса: дизайнерский баннер 4:3 из course_design_assets, если сдан
     // куратору, иначе обложка витрины (image_path) — прежнее поведение.
     $catalogBadgeUrl = $course->catalogBadgeUrl();
+    // Ждун на карточке: CourseWaitlistItem с withCount('votes') или null.
+    // Пусто у страниц, которые не прокинули ждун (страница преподавателя), у
+    // флага OFF и у курсов вне списка ожидания — тогда низ карточки прежний.
+    $waitlistVoted = $waitlist !== null && in_array($waitlist->getKey(), $votedWaitlistIds, true);
+    $waitlistMet = $waitlist !== null && (int) $waitlist->votes_count >= $waitlist->min_payers;
+    $waitlistRemaining = $waitlist === null ? 0 : max(0, $waitlist->min_payers - (int) $waitlist->votes_count);
 @endphp
 
 <div class="relative flex flex-col bg-[#111622] rounded-2xl border border-[#1F2636] hover:border-brand/50 hover:shadow-[0_0_30px_rgba(232,92,36,0.05)] transition-all duration-300 group">
@@ -36,14 +42,18 @@
         @if($catalogBadgeUrl)
             {{-- H-perf: каталог отдается целиком (~90 карточек). Без lazy это ~28 МБ
                  обложек в первом же запросе. Первый ряд (до 4 карточек в сетке)
-                 грузим eager — это LCP; остальное по мере прокрутки. --}}
-            <img src="{{ $catalogBadgeUrl }}"
-                 alt="{{ $course->title }}"
-                 width="533" height="400"
-                 loading="{{ $eager ? 'eager' : 'lazy' }}"
-                 @if($eager) fetchpriority="high" @endif
+                 грузим eager — это LCP; остальное по мере прокрутки.
+                 srcset: баннер 4:3 из course_design_assets — исходник 1448×1086,
+                 при показе 533×400 это 3,8× лишних пикселей (замер 19-10-2026). --}}
+            <x-responsive-image :src="$catalogBadgeUrl"
+                 :alt="$course->title"
+                 :width="533" :height="400"
+                 :loading="$eager ? 'eager' : 'lazy'"
+                 :fetchpriority="$eager ? 'high' : null"
                  decoding="async"
-                 class="absolute inset-0 w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-700 opacity-80">
+                 sizes="(min-width: 1536px) 420px, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw"
+                 class="absolute inset-0 w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-700 opacity-80" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#111622] via-transparent to-transparent opacity-80"></div>
             <div class="absolute inset-0 bg-gradient-to-t from-[#111622] via-transparent to-transparent opacity-80"></div>
         @else
             {{-- Типографская обложка-фолбэк: градиент по цвету категории + имя преподавателя + название --}}
@@ -76,12 +86,17 @@
             </div>
         @endif
 
-        {{-- Бейджи формата (live / recorded) и уровня --}}
+        {{-- Бейджи формата (live / enrolling / recorded) и уровня --}}
         <div class="absolute top-3 right-3 z-20 flex flex-col items-end gap-1.5">
             @if($course->isLive())
                 <span class="inline-flex items-center gap-1.5 bg-rose-500 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md shadow-[0_4px_12px_rgba(244,63,94,0.5)] tracking-wider">
                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                     Идет сейчас
+                </span>
+            @elseif($course->isEnrolling())
+                <span class="inline-flex items-center gap-1.5 bg-amber-500 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md shadow-[0_4px_12px_rgba(245,158,11,0.5)] tracking-wider">
+                    <i class="fas fa-bullhorn text-[9px]"></i>
+                    {{ $course->recruitmentLabel($cadence) }}
                 </span>
             @else
                 <span class="inline-flex items-center gap-1.5 bg-indigo-500/90 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md tracking-wider">
@@ -254,7 +269,7 @@
                         </div>
                     @endif
 
-                    {{-- Тариф: по модулям --}}
+                    {{-- Тариф: по блокам --}}
                     @if($blockTariff)
                         @php
                             $blockFinalPrice = auth()->check() ? $blockTariff->calculateFinalPriceForUser(auth()->user()) : $blockTariff->price;
@@ -262,7 +277,7 @@
                         @endphp
 
                         <div class="flex justify-between items-center">
-                            <span class="text-slate-400 text-xs font-medium">По модулям</span>
+                            <span class="text-slate-400 text-xs font-medium">По блокам</span>
                             <div class="text-right flex items-center justify-end flex-wrap gap-x-1.5">
                                 @if($blockFinalPrice < $blockTariff->price)
                                     <span class="text-slate-500 line-through text-[10px] decoration-slate-600/50">{{ number_format($blockTariff->price, 0, '.', ' ') }}</span>
@@ -313,6 +328,38 @@
                     </button>
                 @endif
 
+            @elseif($waitlist)
+                {{--  — курс в списке ожидания: вместо мёртвого замка —
+                     прогресс голосов и кнопка «Намерен участвовать». Словарь и
+                     состояния — как на /online/zhdun; форма — обычный POST
+                     (шаред-partial с ожидаемой страницей курса). --}}
+                <div class="bg-[#1F2636]/30 rounded-xl py-4 px-4 mt-2 border border-[#1F2636]/50" data-testid="course-card-waitlist">
+                    <div class="flex items-center justify-between gap-2 text-xs mb-2">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-amber-400">
+                            <i class="fas fa-bullhorn mr-1"></i>{{ $waitlist->statusLabel() }}
+                        </span>
+                        <span class="font-bold {{ $waitlistMet ? 'text-emerald-400' : 'text-slate-300' }}"
+                              data-testid="course-card-waitlist-progress"
+                              @if(! $waitlistMet) title="Голосов до открытия оплаты: {{ $waitlistRemaining }}" @endif>
+                            @if($waitlistMet)
+                                <i class="fas fa-check-circle mr-1"></i>Кворум набран
+                            @elseif($waitlistRemaining <= 4)
+                                Осталось: {{ $waitlistRemaining }}
+                            @else
+                                {{ $waitlist->votes_count }} из {{ $waitlist->min_payers }} {{ \App\Support\Plural::ru((int) $waitlist->votes_count, 'голоса', 'голосов', 'голосов') }}
+                            @endif
+                        </span>
+                    </div>
+                    @if($waitlist->earliest_start_at)
+                        <p class="text-[11px] text-slate-500 leading-snug mb-3">
+                            Старт не раньше {{ $waitlist->earliest_start_at->format('d.m.Y') }}.
+                        </p>
+                    @endif
+                    @include('shop.partials.waitlist-join-actions', [
+                        'item' => $waitlist,
+                        'voted' => $waitlistVoted,
+                    ])
+                </div>
             @else
                 <div class="text-center bg-[#1F2636]/30 rounded-xl py-4 mt-2 border border-[#1F2636]/50">
                     <i class="fas fa-lock text-slate-500 mb-1"></i>

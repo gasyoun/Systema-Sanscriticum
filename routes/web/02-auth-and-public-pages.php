@@ -67,6 +67,11 @@ Route::get('/cabinet', fn () => redirect()->route('student.dashboard', [], 301))
 Route::get('/dokumenty/{slug}', [DocController::class, 'show'])
     ->name('docs.show');
 
+// H6373 — публичная страница политики конфиденциальности /privacy (152-ФЗ +
+// раскрытие OAuth-данных Google). Пререквизит верификации sensitive scope
+// calendar — docs/GOOGLE_CALENDAR_VERIFICATION_PACK_H4434.md шаг 2. До catch-all /{slug}.
+Route::view('/privacy', 'pages.privacy')->name('privacy');
+
 // Условия возврата (H1288) — порядок отказа из оферты (приложение №1),
 // изложенный по-русски; сами условия задает только PDF оферты.
 Route::view('/vozvrat', 'docs.vozvrat')->name('refund.show');
@@ -191,7 +196,7 @@ Route::get('/maintenance-bypass/{secret}', function (string $secret) {
 // всё платное контроллер закрывает 404 сам. До catch-all /{slug}.
 Route::get('/c/{slug}/u/{lessonId}/video/{player}', [RecordingGateController::class, 'show'])
     ->middleware('course.canonical')
-    ->whereIn('player', ['youtube', 'rutube', 'kinescope', 'video'])
+    ->whereIn('player', ['youtube', 'rutube', 'kinescope', 'vk', 'video'])
     ->name('student.recording.gate');
 
 Route::get('/otzyvy', [ShopController::class, 'testimonialsLibrary'])

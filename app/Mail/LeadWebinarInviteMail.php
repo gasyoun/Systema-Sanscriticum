@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Mail\Concerns\Unsubscribable;
 use App\Models\LandingPage;
 use App\Models\Lead;
 use Illuminate\Bus\Queueable;
@@ -21,6 +22,7 @@ use Illuminate\Queue\SerializesModels;
 class LeadWebinarInviteMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+    use Unsubscribable;
 
     public function __construct(
         public Lead $lead,

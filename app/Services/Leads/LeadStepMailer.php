@@ -71,10 +71,10 @@ class LeadStepMailer
         $landing = $lead->landingPage;
 
         return match ($step) {
-            'webinar_invite' => ($landing && ! empty($landing->webinar_url))
+            'webinar_invite' => ($landing && $landing->canSendWebinarInvite())
                 ? new LeadWebinarInviteMail($lead, $landing)
                 : null,
-            'webinar_recording' => ($landing && ! empty($landing->webinar_recording_url))
+            'webinar_recording' => ($landing && $landing->canSendWebinarRecording())
                 ? new LeadWebinarRecordingMail($lead, $landing)
                 : null,
             default => null,

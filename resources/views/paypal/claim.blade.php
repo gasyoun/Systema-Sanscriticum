@@ -141,6 +141,66 @@
                     </div>
                 </div>
 
+                {{-- H6534: один перевод может покрывать несколько блоков курса.
+                     H6554: и блоки ДРУГИХ курсов (кросс-курсовый клейм). --}}
+                @if(! $isSupplement && ($blockOptions->count() >= 2 || $crossCourseGroups->isNotEmpty()))
+                    <div id="paypal-multi-blocks" class="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 sm:p-5 space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-800 mb-1">Какие блоки покрывает перевод</label>
+                            <p class="text-xs text-gray-600 leading-relaxed">
+                                @if($crossCourseGroups->isNotEmpty())
+                                    Отмечены все блоки курса — типовой перевод идет сразу за год. Ниже — блоки других курсов: отметьте их, если один перевод покрывает и их (в том числе будущие потоки); ожидаемая сумма пересчитается ниже, сверка пойдет по общей сумме перевода.
+                                @else
+                                    Отмечены все блоки курса — типовой перевод идет сразу за год.
+                                    Снимите те, что перевод не покрывает; ожидаемая сумма пересчитается ниже,
+                                    сверка пойдет по общей сумме перевода.
+                                @endif
+                            </p>
+                        </div>
+                        <div class="space-y-2">
+                            @if($crossCourseGroups->isNotEmpty())
+                                <p class="px-1 text-xs font-semibold uppercase tracking-wide text-gray-500">{{ $course->title }}</p>
+                            @endif
+                            @foreach($blockOptions as $option)
+                                <label class="flex items-center gap-3 rounded-xl bg-white border border-gray-200 px-4 py-3 text-sm cursor-pointer hover:border-indigo-300 transition">
+                                    <input type="checkbox" name="blocks[]" value="{{ $option['tariff']->id }}"
+                                           data-eur="{{ $option['eur'] ?? '' }}" data-usd="{{ $option['usd'] ?? '' }}"
+                                           {{-- H6544: дефолт — все блоки (типовой перевод за год); old() на редиректе сохраняет фактический выбор. --}}
+                                           @checked(in_array($option['tariff']->id, array_map('intval', (array) old('blocks', $blockOptions->pluck('tariff.id')->all()))))
+                                           class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 multi-block-checkbox">
+                                    <span class="font-medium text-gray-900">{{ $option['tariff']->title ?? $option['tariff']->accessKey() }}</span>
+                                    <span class="ml-auto text-xs text-gray-500 whitespace-nowrap">
+                                        @if($option['eur']){{ $option['eur'] }} €@endif
+                                        @if($option['eur'] && $option['usd']) · @endif
+                                        @if($option['usd']){{ $option['usd'] }} $@endif
+                                        @if(! $option['eur'] && ! $option['usd'])—@endif
+                                    </span>
+                                </label>
+                            @endforeach
+                            {{-- H6554: блоки других курсов — по умолчанию не отмечены. --}}
+                            @foreach($crossCourseGroups as $group)
+                                <p class="px-1 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-500">{{ $group['course']->title }}</p>
+                                @foreach($group['options'] as $option)
+                                    <label class="flex items-center gap-3 rounded-xl bg-white border border-gray-200 px-4 py-3 text-sm cursor-pointer hover:border-indigo-300 transition">
+                                        <input type="checkbox" name="blocks[]" value="{{ $option['tariff']->id }}"
+                                               data-eur="{{ $option['eur'] ?? '' }}" data-usd="{{ $option['usd'] ?? '' }}"
+                                               @checked(in_array($option['tariff']->id, array_map('intval', (array) old('blocks', []))))
+                                               class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 multi-block-checkbox">
+                                        <span class="font-medium text-gray-900">{{ $option['tariff']->title ?? $option['tariff']->accessKey() }}</span>
+                                        <span class="ml-auto text-xs text-gray-500 whitespace-nowrap">
+                                            @if($option['eur']){{ $option['eur'] }} €@endif
+                                            @if($option['eur'] && $option['usd']) · @endif
+                                            @if($option['usd']){{ $option['usd'] }} $@endif
+                                            @if(! $option['eur'] && ! $option['usd'])—@endif
+                                        </span>
+                                    </label>
+                                @endforeach
+                            @endforeach
+                        </div>
+                        <p class="text-sm font-semibold text-gray-900">Ожидаемая сумма: <span id="multi-block-total">—</span></p>
+                    </div>
+                @endif
+
                 {{-- H2017: personal PayPal has no API — admin reconciles by from + date + amount. --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">С какого PayPal платили <span class="text-red-500">*</span></label>
@@ -194,6 +254,9 @@
                               placeholder="Что-то важное для нас (необязательно)"
                               class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">{{ old('comment') }}</textarea>
                 </div>
+
+                {{-- 152-ФЗ: путь оплаты — обязательность по флагу money-контура. --}}
+                <x-consent.pd :required="(bool) config('features.checkout_pd_consent_enforce')" />
 
                 <button type="submit"
                         class="w-full flex justify-center items-center py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-base font-bold rounded-xl transition-all shadow-lg shadow-indigo-200">
@@ -272,4 +335,57 @@
 
 @push('scripts')
     <script src="{{ asset('js/paypal-claim-paste.js') }}?v={{ filemtime(public_path('js/paypal-claim-paste.js')) }}" defer></script>
+    @if(! $isSupplement && ($blockOptions->count() >= 2 || $crossCourseGroups->isNotEmpty()))
+        {{-- H6534: живой пересчёт ожидаемой суммы по отмеченным блокам и валюте.
+             H6554: чекбоксы других курсов несут тот же класс — сумма считается по всем. --}}
+        <script>
+            (function () {
+                var boxes = document.querySelectorAll('.multi-block-checkbox');
+                if (!boxes.length) {
+                    return;
+                }
+                var currency = document.querySelector('select[name="foreign_currency"]');
+                var total = document.getElementById('multi-block-total');
+
+                function symbol() {
+                    return currency && currency.value === 'USD' ? '$' : '€';
+                }
+
+                function update() {
+                    if (!total) {
+                        return;
+                    }
+                    var sum = 0;
+                    var any = false;
+                    var unknown = false;
+                    boxes.forEach(function (box) {
+                        if (!box.checked) {
+                            return;
+                        }
+                        any = true;
+                        var price = parseFloat(box.getAttribute(currency && currency.value === 'USD' ? 'data-usd' : 'data-eur'));
+                        if (!isFinite(price)) {
+                            unknown = true;
+                            return;
+                        }
+                        sum += price;
+                    });
+                    if (!any) {
+                        total.textContent = 'отметьте блоки';
+                        return;
+                    }
+                    var value = unknown ? '≈ ' + sum.toFixed(2) : sum.toFixed(2);
+                    total.textContent = value + ' ' + symbol() + (unknown ? ' (часть блоков без прайса — сверим вручную)' : '');
+                }
+
+                boxes.forEach(function (box) {
+                    box.addEventListener('change', update);
+                });
+                if (currency) {
+                    currency.addEventListener('change', update);
+                }
+                update();
+            })();
+        </script>
+    @endif
 @endpush

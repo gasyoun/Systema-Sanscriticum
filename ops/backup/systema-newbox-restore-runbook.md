@@ -5,7 +5,7 @@ _Created: 23-08-2026 · Last updated: 05-09-2026_
 # Аварийный переезд Systema на новый VPS — механический runbook
 
 _Created: 23-08-2026 · Контекст: null-route публичного IP `.92` у ООО «Пудлинк», Артём в отпуске
-до конца сентября. Данные верифицированы ([BACKUPS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/BACKUPS.md)):
+до конца сентября. Данные верифицированы ([SERVER_SOFT_ALERT_PLAYBOOK.md (строки факт-инвентаря бэкапов 22-08; сам BACKUPS.md в репо не существует — ссылка билась в 404, чинено H6091)](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/SERVER_SOFT_ALERT_PLAYBOOK.md (строки факт-инвентаря бэкапов 22-08; сам BACKUPS.md в репо не существует — ссылка билась в 404, чинено H6091))):
 restic на `.91` (`/srv/restic/systema`, SFTP по LAN `192.168.200.91`), снапшоты почасовые,
 restore-проверка 19-08 прошла побайтово._
 

@@ -259,7 +259,9 @@ PEM;
     /** @test */
     public function falls_back_to_e164_phone_when_email_is_unusable(): void
     {
-        $payment = $this->dkPayment(['status' => 'paid'], ['email' => 'no-email', 'phone' => '8 (916) 123-45-67']);
+        // Пост-гвард (users_email_valid, MG 04-10) «unusable email» = NULL:
+        // мусор в поле больше недостижим, возврат на e164-телефон сохраняется.
+        $payment = $this->dkPayment(['status' => 'paid'], ['email' => '', 'phone' => '8 (916) 123-45-67']);
         Http::fake([self::DK => Http::response($this->okPayload(), 201)]);
 
         $this->runJob($payment);
