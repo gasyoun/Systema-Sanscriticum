@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Services\LessonPackRepository;
+use App\Support\LywProfiles;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
@@ -19,6 +20,11 @@ use Illuminate\View\View;
  * доступ не расширяет: гейт — тот же логин; контент-пак читается с диска.
  * Флаг выключен => 404 до любых чтений; пак отсутствует/сломан =>
  * 404 с логом. Ответы квиза студенту не отдаются никогда.
+ *
+ * H6888: второй слой — групповая карта голосования 14-10-2026. Мастер-флаг
+ * включает функцию, но профиль обслуживается только если его группа
+ * одобрена (config('lyw.enabled_groups')); отклонённый профиль остаётся
+ * 404 и НЕ откатывается молча в базовый пак.
  */
 class LessonPackController extends Controller
 {
@@ -30,12 +36,21 @@ class LessonPackController extends Controller
         abort_unless($user !== null, 403);
         abort_unless((bool) config('lyw.enabled', false), 404);
 
+        [$level, $interest] = $this->resolveProfile($request);
+        if (! LywProfiles::groupEnabled($level, $interest)) {
+            Log::warning('lyw.group.disabled', [
+                'level' => $level,
+                'interest' => $interest,
+                'group' => LywProfiles::groupKey($level, $interest),
+            ]);
+            abort(404);
+        }
+
         $course = Course::resolveBySlugOrFail($slug);
         $lesson = Lesson::query()
             ->where('course_id', $course->id)
             ->findOrFail($lessonId);
 
-        [$level, $interest] = $this->resolveProfile($request);
         $zan = (int) config('lyw.default_zan', 1);
 
         $pack = $this->packs->load($zan, $level, $interest);

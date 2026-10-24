@@ -2,11 +2,10 @@
 
 @section('title', 'Отзывы учеников — Общество ревнителей санскрита')
 
+@section('meta_description', 'Честные отзывы учеников курсов санскрита и хинди: грамматика с М. Гасунсом, продленка с Е. Трефиловой, хинди с Е. Костиной. У каждого автора — сколько лет занимается.')
+
 @push('head')
-    <meta name="description" content="Честные отзывы учеников курсов санскрита и хинди: грамматика с М. Гасунсом, продленка с Е. Трефиловой, хинди с Е. Костиной. У каждого автора — сколько лет занимается.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    @vite('resources/css/fonts.css')
 @endpush
 
 {{--

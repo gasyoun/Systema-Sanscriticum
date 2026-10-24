@@ -28,7 +28,13 @@ document.addEventListener('alpine:init', () => {
             return Math.floor((this.prana || 0) / this.rate);
         },
         get total() {
-            return Math.max(1, this.basePrice - this.pranaRubles);
+            // Бесплатный тариф (цена 0) честно показывает 0 ₽; платный —
+            // минимум 1 ₽ в отображении (историческое поведение для полного
+            // покрытия праной). Сервер при 0 всё равно проводит оплату как
+            // бесплатную (zero-price ветка PaymentController).
+            const floor = this.listPrice > 0 ? 1 : 0;
+
+            return Math.max(floor, this.basePrice - this.pranaRubles);
         },
         get totalSavings() {
             return this.loyaltyDiscount + this.promoDiscount + this.pranaRubles;
@@ -277,7 +283,7 @@ document.addEventListener('alpine:init', () => {
             </div>
         @endguest
 
-        @if($finalPrice == 0 && auth()->check())
+        @if($finalPrice == 0 && auth()->check() && $alreadyOwned)
             <div class="bg-white p-8 rounded-3xl shadow-xl shadow-gray-100/30 border border-gray-100 text-center flex flex-col items-center">
                 <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 border border-green-100">
                     <i class="fas fa-check text-4xl text-green-500"></i>
@@ -337,6 +343,17 @@ document.addEventListener('alpine:init', () => {
                              lose it, which used to charge full price silently. Re-resolved
                              authoritatively server-side (it is client-supplied). --}}
                         <input type="hidden" name="promo_code" value="{{ $appliedPromo?->code }}">
+                        {{-- 20-10-2026: группа из ссылки бота лички (подписана). Сервер
+                             перепроверяет подпись и курс; флаг features.grant_chosen_group. --}}
+                        @if(!empty($chosenGroup))
+                            <input type="hidden" name="group_id" value="{{ $chosenGroup->id }}">
+                            <input type="hidden" name="gsig" value="{{ request()->query('gsig') }}">
+                            @if(!empty($chosenContact))
+                                <input type="hidden" name="tgc" value="{{ $chosenContact->id }}">
+                                <input type="hidden" name="csig" value="{{ request()->query('csig') }}">
+                            @endif
+                            <p class="text-sm text-gray-600">Группа: <strong>{{ $chosenGroup->name }}</strong></p>
+                        @endif
 
                         @auth
                             {{-- H1396 §2 — mark that this form was rendered for a logged-in
@@ -414,12 +431,12 @@ document.addEventListener('alpine:init', () => {
                                         </label>
                                         @include('partials.signup-source-select')
                                     </div>
-                                    <div class="sm:col-span-2">
-                                        <label class="flex items-start gap-3 cursor-pointer">
-                                            <input type="checkbox" name="wants_announcements" value="1" {{ old('wants_announcements', true) ? 'checked' : '' }}
-                                                   class="mt-0.5 h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition">
-                                            <span class="text-sm text-gray-600">Получать анонсы, новости и расписание на email</span>
-                                        </label>
+                                    {{-- 152-ФЗ: город и год рождения для договора не нужны — на них
+                                         нужно согласие (галочка ПДн). Рассылка — только по явной
+                                         галочке, по умолчанию НЕ отмечена (38-ФЗ ст. 18). --}}
+                                    <div class="sm:col-span-2 space-y-2">
+                                        <x-consent.pd class="text-sm" :required="(bool) config('features.checkout_pd_consent_enforce')" />
+                                        <x-consent.promo name="wants_announcements" class="text-sm" />
                                     </div>
                                 </div>
                             </div>
@@ -583,9 +600,10 @@ document.addEventListener('alpine:init', () => {
                         </button>
 
                         <p class="text-center text-xs text-gray-400 mt-4 leading-relaxed">
-                            Нажимая на кнопку, вы соглашаетесь с
-                            <a href="/docs/oferta.pdf" target="_blank" class="underline hover:text-gray-600">офертой</a> и
-                            <a href="/docs/privacy.pdf" target="_blank" class="underline hover:text-gray-600">политикой конфиденциальности</a>.
+                            Нажимая на кнопку, вы принимаете
+                            <a href="{{ route('docs.show', 'oferta') }}" target="_blank" class="underline hover:text-gray-600">публичную оферту</a>
+                            и подтверждаете, что ознакомлены с
+                            <a href="{{ route('docs.show', 'privacy') }}" target="_blank" class="underline hover:text-gray-600">политикой конфиденциальности</a>.
                         </p>
                     </div>
 

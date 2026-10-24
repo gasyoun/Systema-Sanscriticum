@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\ClassAttendanceService;
 use App\Services\CuratorNotifier;
 use App\Services\GroupRecruitmentNotifier;
+use App\Services\VacationResumeService;
 use App\Services\WaitlistNotifier;
 use App\Support\Roles;
 use Filament\Forms;
@@ -263,6 +264,32 @@ class GroupResource extends Resource
                 // момент и видит текст перед отправкой; доставку ведут мессенджер-алерты,
                 // аудит каждой отправки — в waitlist_outreaches. Админ подстраховывает:
                 // экран доступен только админам (AdminOnly).
+                // H6343: кнопка куратора «Анонс возобновления» — ручная волна
+                // каскада после каникул (ЛС + чат группы + email): диапазон
+                // дат + число занятий + календарь + ICS-подписка. Дедуп —
+                // vacation_resume_notices (одна волна на строку возобновления).
+                Tables\Actions\Action::make('announce_resume')
+                    ->label('Анонс возобновления')
+                    ->icon('heroicon-o-megaphone')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalDescription('Разослать анонс возобновления занятий (личные ЛС + чат группы + email): диапазон дат, количество занятий, ссылка на календарь и ICS-подписка.')
+                    ->action(function (Group $record, Notification $notification): void {
+                        $result = app(VacationResumeService::class)->announceManual($record);
+
+                        $messages = [
+                            VacationResumeService::STATUS_SENT => 'Анонс разослан (ЛС + чат группы + email): получателей '.$result['recipients'].'.',
+                            VacationResumeService::STATUS_DEDUP => 'Анонс по этому занятию уже уходил — дедуп.',
+                            VacationResumeService::STATUS_NO_RESUME => 'Будущих занятий в расписании нет — анонсировать нечего.',
+                            VacationResumeService::STATUS_NO_AUDIENCE => 'Нет аудитории: ни ростера группы, ни TG-чата.',
+                        ];
+
+                        $notification->title('Анонс возобновления')
+                            ->body($messages[$result['status']] ?? 'Готово.')
+                            ->status($result['status'] === VacationResumeService::STATUS_SENT ? 'success' : 'warning')
+                            ->send();
+                    }),
+
                 Tables\Actions\Action::make('notify_waitlist')
                     ->label('Сообщить листу ожидания')
                     ->icon('heroicon-m-megaphone')

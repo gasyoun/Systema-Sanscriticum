@@ -449,7 +449,7 @@ class ServerGuardsAuditorTest extends TestCase
         $findings = $this->auditor($sys)->audit();
 
         $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
-        $this->assertStringContainsString('[critical] cgroup: cron.service занял', $this->lines($findings));
+        $this->assertStringContainsString('[critical] cgroup-budget: cron.service занял', $this->lines($findings));
         $this->assertStringContainsString('ТОРМОЗИТ всю группу', $this->lines($findings));
     }
 
@@ -461,8 +461,8 @@ class ServerGuardsAuditorTest extends TestCase
 
         $findings = $this->auditor($sys)->audit();
 
-        $this->assertStringContainsString('[warning] cgroup:', $this->lines($findings));
-        $this->assertStringNotContainsString('[critical] cgroup:', $this->lines($findings));
+        $this->assertStringContainsString('[warning] cgroup-budget:', $this->lines($findings));
+        $this->assertStringNotContainsString('[critical] cgroup-budget:', $this->lines($findings));
     }
 
     public function test_unreadable_cgroup_is_not_a_finding(): void
@@ -472,7 +472,7 @@ class ServerGuardsAuditorTest extends TestCase
         $sys = $this->healthy();
         unset($sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.current']);
 
-        $this->assertStringNotContainsString('cgroup:', $this->lines($this->auditor($sys)->audit()));
+        $this->assertStringNotContainsString('cgroup-budget:', $this->lines($this->auditor($sys)->audit()));
     }
 
     // ── PSI-гейт предупреждения cgroup (25-08-2026) ─────────────────────────
@@ -493,7 +493,7 @@ class ServerGuardsAuditorTest extends TestCase
         $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.pressure'] =
             $this->pressureFile('0.00');
 
-        $this->assertStringNotContainsString('cgroup:', $this->lines($this->auditor($sys)->audit()));
+        $this->assertStringNotContainsString('cgroup-budget:', $this->lines($this->auditor($sys)->audit()));
     }
 
     public function test_cgroup_warning_with_real_psi_stall_fires_and_names_the_evidence(): void
@@ -506,7 +506,7 @@ class ServerGuardsAuditorTest extends TestCase
 
         $lines = $this->lines($this->auditor($sys)->audit());
 
-        $this->assertStringContainsString('[warning] cgroup:', $lines);
+        $this->assertStringContainsString('[warning] cgroup-budget:', $lines);
         $this->assertStringContainsString('PSI some avg10=2.50', $lines);
     }
 
@@ -520,7 +520,7 @@ class ServerGuardsAuditorTest extends TestCase
 
         $lines = $this->lines($this->auditor($sys)->audit());
 
-        $this->assertStringContainsString('[warning] cgroup:', $lines);
+        $this->assertStringContainsString('[warning] cgroup-budget:', $lines);
         $this->assertStringContainsString('PSI недоступен', $lines);
     }
 
@@ -537,7 +537,107 @@ class ServerGuardsAuditorTest extends TestCase
         $findings = $this->auditor($sys)->audit();
 
         $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
-        $this->assertStringContainsString('[critical] cgroup:', $this->lines($findings));
+        $this->assertStringContainsString('[critical] cgroup-budget:', $this->lines($findings));
+    }
+
+    // ── H7059: cgroup-budget — не только cron ───────────────────────────────
+
+    public function test_any_configured_unit_over_memory_high_is_critical(): void
+    {
+        // Класс L10: «бюджет одной группы» — не свойство крона. Supervisor и
+        // yandex-resume имеют собственные потолки и обязаны проверяться тем же
+        // правилом; иначе следующий долгоживущий ребёнок снова уйдёт в тень.
+        $sys = $this->healthy();
+        $sys->files['/sys/fs/cgroup/system.slice/supervisor.service/memory.current'] =
+            (string) ($this->spec->bytes('SUPERVISOR_MEMORY_HIGH') + 1);
+
+        $lines = $this->lines($this->auditor($sys)->audit());
+
+        $this->assertStringContainsString('[critical] cgroup-budget: supervisor.service занял', $lines);
+        $this->assertStringContainsString('ТОРМОЗИТ всю группу', $lines);
+    }
+
+    public function test_a_unit_at_memory_max_names_the_oom_kill_not_just_throttling(): void
+    {
+        $sys = $this->healthy();
+        $sys->files['/sys/fs/cgroup/system.slice/systema-yandex-resume.service/memory.current'] =
+            (string) $this->spec->bytes('YANDEX_RESUME_MEMORY_MAX');
+
+        $lines = $this->lines($this->auditor($sys)->audit());
+
+        $this->assertStringContainsString(
+            '[critical] cgroup-budget: systema-yandex-resume.service занял',
+            $lines,
+        );
+        $this->assertStringContainsString('memory.max', $lines);
+        $this->assertStringContainsString('OOM внутри cgroup', $lines);
+    }
+
+    public function test_a_unit_without_a_readable_budget_is_not_a_finding(): void
+    {
+        // Fail-open для CI/чужой машины: нет memory.current — нечего сравнивать.
+        $sys = $this->healthy();
+        unset($sys->files['/sys/fs/cgroup/system.slice/supervisor.service/memory.current']);
+
+        $this->assertStringNotContainsString('supervisor.service', $this->lines($this->auditor($sys)->audit()));
+    }
+
+    // ── H7059: cert-expiry ──────────────────────────────────────────────────
+
+    public function test_a_certificate_below_the_threshold_is_critical(): void
+    {
+        // Ровно то, что сегодня замечает только внешний монитор: срок вышел
+        // или почти вышел, а сайт ещё отвечает 200 — до первого TLS-клиента.
+        $sys = $this->healthy();
+        $sys->certificateDaysLeft['samskrte.ru:443'] = (int) $this->spec->get('CERT_EXPIRY_MIN_DAYS') - 1;
+
+        $findings = $this->auditor($sys)->audit();
+        $lines = $this->lines($findings);
+
+        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+        $this->assertStringContainsString('[critical] cert-expiry: сертификату samskrte.ru:443 осталось', $lines);
+        $this->assertStringContainsString('продление не сделано', $lines);
+    }
+
+    public function test_an_expired_certificate_is_reported_with_a_negative_day_count(): void
+    {
+        $sys = $this->healthy();
+        $sys->certificateDaysLeft['context-ai.ru:443'] = -2;
+
+        $lines = $this->lines($this->auditor($sys)->audit());
+
+        $this->assertStringContainsString('осталось -2 дн', $lines);
+    }
+
+    public function test_an_unreadable_certificate_is_a_warning_not_silence(): void
+    {
+        // «Не спросили» — не «хорошо»: warning тоже блокирует verify (severity
+        // model: только INFO проходит), поэтому непрочитанный сертификат не
+        // может молча оставить проверку зелёной.
+        $sys = $this->healthy();
+        $sys->certificateDaysLeft['samskrte.ru:443'] = null;
+
+        $findings = $this->auditor($sys)->audit();
+        $lines = $this->lines($findings);
+
+        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+        $this->assertStringContainsString('[warning] cert-expiry: сертификат samskrte.ru:443 не прочитался', $lines);
+    }
+
+    public function test_certificate_checks_are_silent_when_not_configured(): void
+    {
+        $sys = $this->healthy();
+        unset($sys->certificateDaysLeft['samskrte.ru:443'], $sys->certificateDaysLeft['context-ai.ru:443']);
+        $spec = GuardSpec::fromString(
+            implode("\n", array_filter(
+                explode("\n", (string) file_get_contents(base_path('scripts/server_guards.conf'))),
+                static fn (string $line): bool => preg_match('/^CERT_EXPIRY_/', $line) !== 1,
+            )),
+        );
+
+        $lines = $this->lines((new ServerGuardsAuditor($spec, $sys, $this->templateRoot))->audit());
+
+        $this->assertStringNotContainsString('cert-expiry', $lines);
     }
 
     public function test_stale_scheduler_stamp_is_critical(): void
@@ -777,7 +877,8 @@ class ServerGuardsAuditorTest extends TestCase
         $sys = $this->healthy();
         $sys->backupDestinations = [
             ['disk' => 'local', 'reachable' => true, 'newestAt' => $old, 'newestBytes' => $plausible],
-            ['disk' => 'yandex_disk', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => $plausible],
+            // H6905: живой off-site — restic_sftp; yandex_disk best-effort.
+            ['disk' => 'restic_sftp', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => null],
         ];
         $lines = $this->lines($this->auditor($sys)->audit());
         $this->assertStringContainsString('[warning] backup-fresh: новейший архив на локальный диске local старше', $lines);
@@ -785,31 +886,38 @@ class ServerGuardsAuditorTest extends TestCase
         $sys = $this->healthy();
         $sys->backupDestinations = [
             ['disk' => 'local', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => $plausible],
-            ['disk' => 'yandex_disk', 'reachable' => true, 'newestAt' => $old, 'newestBytes' => $plausible],
+            ['disk' => 'restic_sftp', 'reachable' => true, 'newestAt' => $old, 'newestBytes' => null],
         ];
         $lines = $this->lines($this->auditor($sys)->audit());
-        $this->assertStringContainsString('[critical] backup-fresh: новейший архив на off-site диске yandex_disk старше', $lines);
+        $this->assertStringContainsString('[critical] backup-fresh: новейший архив на off-site диске restic_sftp старше', $lines);
     }
 
     /**
      * Ровно замер 19-08-2026: два обрезка по 11.7 МиБ со свежей датой, и
      * backup:monitor называет назначение здоровым. Без порога размера эта
      * проверка была бы такой же зелёной лампочкой над пустым сейфом.
+     *
+     * H6905: обрезок теперь возможен только на best-effort линии (yandex_disk) —
+     * restic-снапшот атомарен. Поэтому находка остаётся ВИДНОЙ, но идёт INFO и
+     * не блокирует probe: иначе каждые 15 минут краснело бы из-за линии,
+     * структурно неспособной доставить 4-ГБ архив (H3371).
      */
-    public function test_a_fresh_but_truncated_offsite_archive_is_critical(): void
+    public function test_a_fresh_but_truncated_best_effort_archive_is_reported_but_not_blocking(): void
     {
         $sys = $this->healthy();
         $sys->backupDestinations = [
             ['disk' => 'local', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => 1425272697],
             ['disk' => 'yandex_disk', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => 11757968],
+            ['disk' => 'restic_sftp', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => null],
         ];
 
         $findings = $this->auditor($sys)->audit();
         $lines = $this->lines($findings);
 
-        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+        $this->assertFalse(ServerGuardsAuditor::hasBlocking($findings), 'best-effort линия не имеет права блокировать probe');
+        $this->assertStringContainsString('[info] backup-fresh: новейший архив на off-site (best-effort) диске yandex_disk', $lines);
         $this->assertStringContainsString('ОБРЕЗОК оборвавшейся загрузки', $lines);
-        $this->assertStringContainsString('нет ни одного живого off-site назначения', $lines);
+        $this->assertStringNotContainsString('нет ни одного живого off-site назначения', $lines);
     }
 
     public function test_an_unreachable_offsite_destination_is_critical(): void
@@ -817,13 +925,81 @@ class ServerGuardsAuditorTest extends TestCase
         $sys = $this->healthy();
         $sys->backupDestinations = [
             ['disk' => 'local', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => 1425272697],
-            ['disk' => 'yandex_disk', 'reachable' => false, 'newestAt' => null, 'newestBytes' => null],
+            ['disk' => 'restic_sftp', 'reachable' => false, 'newestAt' => null, 'newestBytes' => null],
         ];
 
         $this->assertStringContainsString(
-            '[critical] backup-fresh: off-site диск yandex_disk недостижим',
+            '[critical] backup-fresh: off-site диск restic_sftp недостижим',
             $this->lines($this->auditor($sys)->audit()),
         );
+    }
+
+    /**
+     * H6905, главный ассерт: пока рестик везёт дамп БД на другой хост, старая
+     * (best-effort) линия не имеет права объявлять «нет ни одного живого
+     * off-site назначения» — именно этот ложный critical 12 суток подряд
+     * висел на проде, хотя живая off-site копия была.
+     */
+    public function test_a_live_restic_sftp_leg_clears_the_no_offsite_finding_while_yandex_is_stale(): void
+    {
+        $old = time() - (((int) $this->spec->get('BACKUP_MAX_AGE_DAYS') + 4) * 86400);
+        $plausible = ((int) $this->spec->get('BACKUP_MIN_ARCHIVE_MB') + 1) * 1024 ** 2;
+
+        $sys = $this->healthy();
+        $sys->backupDestinations = [
+            ['disk' => 'local', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => $plausible],
+            ['disk' => 'yandex_disk', 'reachable' => true, 'newestAt' => $old, 'newestBytes' => $plausible],
+            ['disk' => 'restic_sftp', 'reachable' => true, 'newestAt' => time() - 3600, 'newestBytes' => null],
+        ];
+
+        $findings = $this->auditor($sys)->audit();
+        $lines = $this->lines($findings);
+
+        $this->assertStringNotContainsString('нет ни одного живого off-site назначения', $lines);
+        $this->assertStringContainsString('[info] backup-fresh: новейший архив на off-site (best-effort) диске yandex_disk старше', $lines);
+        $this->assertFalse(ServerGuardsAuditor::hasBlocking($findings));
+    }
+
+    /**
+     * Обратная сторона: best-effort линия НИКОГДА не закрывает вопрос о живой
+     * off-site копии. Свежий yandex_disk без restic — по-прежнему critical.
+     */
+    public function test_a_fresh_best_effort_lane_never_clears_the_offsite_question(): void
+    {
+        $plausible = ((int) $this->spec->get('BACKUP_MIN_ARCHIVE_MB') + 1) * 1024 ** 2;
+
+        $sys = $this->healthy();
+        $sys->backupDestinations = [
+            ['disk' => 'local', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => $plausible],
+            ['disk' => 'yandex_disk', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => $plausible],
+        ];
+
+        $findings = $this->auditor($sys)->audit();
+        $lines = $this->lines($findings);
+
+        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+        $this->assertStringContainsString('нет ни одного живого off-site назначения', $lines);
+    }
+
+    /**
+     * H7059, прямой ассерт строки L3: свежий ЛОКАЛЬНЫЙ архив — ещё не backup.
+     * Проверка обязана отказать, когда копия есть только на диске, который
+     * делит судьбу с контейнером («false-green offsite» 10-08-2026).
+     */
+    public function test_a_fresh_local_archive_does_not_satisfy_the_destination_check(): void
+    {
+        $plausible = ((int) $this->spec->get('BACKUP_MIN_ARCHIVE_MB') + 1) * 1024 ** 2;
+
+        $sys = $this->healthy();
+        $sys->backupDestinations = [
+            ['disk' => 'local', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => $plausible],
+        ];
+
+        $findings = $this->auditor($sys)->audit();
+        $lines = $this->lines($findings);
+
+        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+        $this->assertStringContainsString('[critical] backup-fresh: нет ни одного живого off-site назначения', $lines);
     }
 
     public function test_backup_destinations_that_cannot_be_read_are_not_a_finding(): void

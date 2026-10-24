@@ -1,0 +1,8 @@
+# H6326 — copy to connection.yaml (gitignored) with REAL values.
+# The real file lives only on vps92:/opt/evidence-money (root, 0600).
+name: systema
+type: mysql
+host: 127.0.0.1
+database: laravel
+user: evidence_ro
+password: CHANGE_ME

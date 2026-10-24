@@ -7,6 +7,7 @@ namespace App\Filament\Pages;
 use App\Filament\Pages\CourseDesignAssets\CourseDesignStatsWidget;
 use App\Models\Course;
 use App\Models\CourseDesignAsset;
+use App\Models\CourseWaitlistItem;
 use App\Services\Design\CourseDesignAssetService;
 use App\Services\Design\CoverImportOutcome;
 use App\Services\Design\CoverToBannerImporter;
@@ -15,13 +16,16 @@ use App\Support\Roles;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
@@ -96,6 +100,22 @@ class CourseDesignAssets extends Page implements HasTable
         return 'warning';
     }
 
+    /**
+     * Позиции ждуна на витрине БЕЗ привязанного курса. В матрицу они попасть
+     * не могут: баннеры живут на курсе. Показываем списком над таблицей, чтобы
+     * их не теряли — сначала привязать курс в «Списке ожидания».
+     *
+     * @return Collection<int, CourseWaitlistItem>
+     */
+    public function getUnlinkedWaitlistItemsProperty(): Collection
+    {
+        return CourseWaitlistItem::query()
+            ->onShowcase()
+            ->whereNull('course_id')
+            ->orderBy('course_title')
+            ->get(['id', 'course_title', 'teacher_name']);
+    }
+
     protected function getHeaderWidgets(): array
     {
         return [CourseDesignStatsWidget::class];
@@ -109,10 +129,12 @@ class CourseDesignAssets extends Page implements HasTable
                 // Суммы считает БД, а не PHP по загруженной связи: так колонка
                 // «Объём» ещё и сортируется, и это не ломается на большом списке.
                 ->withSum('designAssets as design_image_bytes', 'size')
-                ->withSum('designAssets as design_psd_bytes', 'psd_size'))
+                ->withSum('designAssets as design_psd_bytes', 'psd_size')
+                ->withExists(['waitlistItems as in_zhdun' => fn (Builder $w) => $w->onShowcase()]))
             ->defaultSort('title')
             ->columns([
-                TextColumn::make('title')->label('Курс')->searchable()->wrap()->limit(70),
+                TextColumn::make('title')->label('Курс')->searchable()->wrap()->limit(70)
+                    ->description(fn (Course $record): ?string => $record->in_zhdun ? '⏳ Ждун — курс ещё не запущен' : null),
 
                 ...$this->formatColumns(),
 
@@ -151,10 +173,25 @@ class CourseDesignAssets extends Page implements HasTable
                     ->placeholder('—'),
             ])
             ->filters([
-                TernaryFilter::make('is_active')->label('Активность курса')
-                    ->placeholder('Все')->trueLabel('Активные')->falseLabel('Неактивные')
-                    ->default(true),
-
+                // По умолчанию — курсы в работе: активные + стоящие в ждуне
+                // (Course::scopeInDesignScope). Курс из ждуна ещё неактивен,
+                // но его обложка уже на /online/zhdun.
+                SelectFilter::make('scope')->label('Курсы')
+                    ->options([
+                        'design' => 'Активные и из ждуна',
+                        'zhdun' => 'Только из ждуна',
+                        'active' => 'Только активные',
+                        'inactive' => 'Неактивные',
+                    ])
+                    ->placeholder('Все')
+                    ->default('design')
+                    ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
+                        'design' => $query->inDesignScope(),
+                        'zhdun' => $query->whereHas('waitlistItems', fn (Builder $w) => $w->onShowcase()),
+                        'active' => $query->where('is_active', true),
+                        'inactive' => $query->where('is_active', false),
+                        default => $query,
+                    }),
                 TernaryFilter::make('incomplete')
                     ->label('Комплектность')
                     ->placeholder('Все')
@@ -178,6 +215,7 @@ class CourseDesignAssets extends Page implements HasTable
                     ),
             ])
             ->actions([
+                $this->previewAction(),
                 $this->uploadAction(),
                 $this->downloadZipAction(),
                 Tables\Actions\ActionGroup::make([
@@ -190,6 +228,9 @@ class CourseDesignAssets extends Page implements HasTable
             ->bulkActions([
                 $this->importCoversBulkAction(),
             ])
+            // Клик по строке (не по кнопке) открывает превью загруженных картинок:
+            // заказать просмотр — самое частое действие на этой матрице.
+            ->recordAction('preview')
             ->defaultPaginationPageOption(50)
             ->paginated([25, 50, 100, 'all']);
     }
@@ -260,6 +301,27 @@ class CourseDesignAssets extends Page implements HasTable
         $parts[] = $asset->hasPsd() ? 'исходник учтён' : 'исходник НЕ учтён';
 
         return implode(' · ', array_filter($parts));
+    }
+
+    /**
+     * Просмотр загруженных картинок курса: по карточке на каждый требуемый
+     * формат — превью, метаданные и ссылки на исходники. Пустые слоты показываем
+     * заглушкой: «что уже есть, а чего не хватает» — и есть вопрос этой модалки.
+     * Открывается и кнопкой в строке, и кликом по самой строке (recordAction).
+     */
+    private function previewAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('preview')
+            ->label('Картинки')
+            ->icon('heroicon-o-eye')
+            ->color('gray')
+            ->modalHeading(fn (Course $record): string => 'Картинки курса «'.$record->title.'»')
+            ->modalWidth(MaxWidth::FourExtraLarge)
+            ->modalSubmitAction(false)
+            ->modalContent(fn (Course $record): View => view(
+                'filament.pages.course-design-preview',
+                ['course' => $record, 'formats' => self::formats()],
+            ));
     }
 
     private function uploadAction(): Tables\Actions\Action

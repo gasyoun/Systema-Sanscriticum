@@ -50,7 +50,7 @@ final class ZapisiSetWebhook extends Command
         // через zapisi_welcome_n8n_url (роутинг в ProcessTelegramZapisiUpdate).
         $telegram
             ->usingCredentials($token, $username)
-            ->setWebhook($url, $secret, ['message', 'channel_post', 'my_chat_member'], TelegramWebhooks::certificateContents());
+            ->setWebhook($url, $secret, ['message', 'channel_post', 'my_chat_member', 'chat_join_request'], TelegramWebhooks::certificateContents());
 
         $this->info('✓ Webhook @zapisi_ORSbot установлен.');
 

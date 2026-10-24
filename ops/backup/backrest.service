@@ -1,0 +1,23 @@
+# /etc/systemd/system/backrest.service
+# Backrest — web UI over restic (H6320, deployed 09-10-2026 on vps92/samskrtam150).
+# Runs as root: it must read /root/.ssh config (sftp identity to the .91 repo)
+# and /root/.restic-pass via repo env. Listener is 127.0.0.1:9898 (backrest
+# default); vps92's userspace tailscaled forwards tailnet traffic to it.
+
+[Unit]
+Description=Backrest — web UI over restic (H6320)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Environment=HOME=/root
+Environment=BACKREST_RESTIC_COMMAND=/usr/bin/restic
+ExecStart=/usr/local/bin/backrest
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

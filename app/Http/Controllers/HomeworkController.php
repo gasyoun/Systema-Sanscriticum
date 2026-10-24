@@ -192,8 +192,9 @@ class HomeworkController extends Controller
     }
 
     /**
-     * Один PDF со всеми студенческими картинками сдачи (H2455).
-     * Штат и владелец-студент. Нет PDF — 404 (нет картинок или сборка не удалась).
+     * Один PDF со студенческими картинками последней отправки сдачи (H2455).
+     * Штат и владелец-студент. Нет PDF — 404 (нет картинок или сборка ещё
+     * не прошла).
      *
      * По умолчанию inline (встроенный просмотр в админке без «скачать»).
      * ?download=1 — принудительное вложение.
@@ -210,9 +211,15 @@ class HomeworkController extends Controller
         $pdf = app(HomeworkImagePdfService::class);
         if (! $pdf->exists($submission)) {
             // Ленивая досборка: старые сдачи до деплоя или сбой при submit.
-            $pdf->rebuildQuietly($submission);
+            // ТОЛЬКО джобой на воркер (768M): синхронная пересборка на пути
+            // запроса держала воркер php-fpm (128M) минутами и умирала —
+            // карточка проверки отдавала 502 (инцидент 08-10-2026, сдача
+            // 3129: раунд из 12 фото = ~140 секунд даже на CLI).
+            if ($pdf->studentImageFiles($submission)->isNotEmpty()) {
+                $this->service->queueImagesPdfRebuild($submission);
+            }
         }
-        abort_unless($pdf->exists($submission), 404, 'PDF с картинками пока нет.');
+        abort_unless($pdf->exists($submission), 404, 'PDF с картинками ещё собирается — обновите страницу через минуту.');
 
         $disk = HomeworkImagePdfService::DISK;
         $path = $pdf->pathFor($submission);

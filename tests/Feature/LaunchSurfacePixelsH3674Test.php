@@ -39,11 +39,13 @@ class LaunchSurfacePixelsH3674Test extends TestCase
     {
         $html = $this->get('/')->assertOk()->getContent();
 
-        $this->assertStringContainsString('cookie_consent_v1', $html);
-        $this->assertStringContainsString('z-[10050]', $html);
-        $this->assertStringContainsString('Принять все', $html);
-        $this->assertStringContainsString('cookie_consent_v1', $html);
-        $this->assertStringContainsString("localStorage.getItem('cookie_consent_v1')", $html);
+        // 152-ФЗ (09-10-2026): баннер с выбором вместо «Принять все»; ключ v2 в шлюзе.
+        $this->assertStringContainsString("var KEY = 'cookie_consent_v2'", $html);
+        $this->assertStringContainsString('z-index:10050', $html);
+        $this->assertStringContainsString('Только необходимые', $html);
+        $this->assertStringContainsString('Принять аналитику', $html);
+        $this->assertStringNotContainsString('Продолжая им пользоваться', $html);
+        $this->assertStringContainsString('document.body.style.paddingBottom = open ? banner.offsetHeight', $html);
     }
 
     public function test_newsletter_popup_waits_for_cookie_consent(): void
@@ -53,7 +55,7 @@ class LaunchSurfacePixelsH3674Test extends TestCase
         $html = $this->get('/')->assertOk()->getContent();
 
         $this->assertStringContainsString('Новости санскрита', $html);
-        $this->assertStringContainsString("if (! localStorage.getItem('cookie_consent_v1'))", $html);
+        $this->assertStringContainsString('if (! (window.ssConsent && window.ssConsent.decided()))', $html);
     }
 
     public function test_filament_admin_login_is_branded_ru_not_laravel_sign_in(): void

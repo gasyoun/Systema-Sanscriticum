@@ -140,6 +140,30 @@ class AttributionTest extends TestCase
     }
 
     /** @test */
+    public function apply_to_new_user_does_not_guess_when_email_has_multiple_leads(): void
+    {
+        $landing = $this->landing();
+        Lead::create([
+            'landing_page_id' => $landing->id,
+            'name' => 'First', 'contact' => '+1', 'email' => 'repeat@example.com',
+            'utm_source' => 'vk',
+        ]);
+        Lead::create([
+            'landing_page_id' => $landing->id,
+            'name' => 'Second', 'contact' => '+2', 'email' => 'repeat@example.com',
+            'utm_source' => 'telegram',
+        ]);
+        session([CaptureAttribution::SESSION_KEY => ['utm_source' => 'youtube']]);
+
+        $user = User::factory()->create(['email' => 'repeat@example.com']);
+        app(AttributionService::class)->applyToNewUser($user);
+
+        $user->refresh();
+        $this->assertNull($user->lead_id);
+        $this->assertSame('youtube', $user->utm_source);
+    }
+
+    /** @test */
     public function apply_birth_year_validates_range_and_is_non_blocking(): void
     {
         $user = User::factory()->create();

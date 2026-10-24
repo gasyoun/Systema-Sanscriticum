@@ -1,6 +1,6 @@
 # money-access-core-manual.meta.md — metadoc for `money-access-core-manual`
 
-_Created: 25-07-2026 · Last updated: 18-08-2026_
+_Created: 25-07-2026 · Last updated: 04-10-2026_
 
 Companion record for
 [money-access-core-manual.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/money-access-core-manual.md) —
@@ -8,17 +8,8 @@ purpose, provenance, verification evidence, backlog and limitations, without
 restating the manual's content.
 
 ## Staleness block
-LAST_VERIFIED: 18-08-2026
-VERIFIED_BY: Sonnet 5 (claude-sonnet-5) — re-ran all 3 recorded verification commands
-(TochkaWebhookTest, HalfBlockPurchaseTest+DepositPartialConsumptionTest, the
-access-key/unlockingKeys/isUnlockedBy tinker script) fresh against a full
-`composer install` in the canonical checkout (unshallowed; no separate worktree
-needed), and read every commit since 01-08-2026 touching the manual's "Sources of
-truth" files. Corrected the manual where code had moved (see revision history);
-where the diffs were feature work outside the manual's scope (gamification prana
-decay, membership tier storefront internals beyond the access-key surface), left
-them undocumented on purpose — this manual is the money/access core, not every
-file it lists in full.
+LAST_VERIFIED: 04-10-2026
+VERIFIED_BY: GLM 5.3 Flash (zai-start-plan/GLM-5.3-Flash), H5991
 COMMANDS_SPOT_RUN: 3
 
 > **History: LAST_VERIFIED deliberately NOT bumped on 16-08-2026 (H2886).** That pass
@@ -32,6 +23,21 @@ COMMANDS_SPOT_RUN: 3
 > records, where a repair is recorded as done because a neighbouring gate went
 > quiet. This 18-08-2026 pass is the first since then to re-run the full recorded
 > command suite, so the bump above is earned, not inherited.
+
+**H5991 refresh 04-10-2026 (GLM 5.3 Flash).** Re-ran the recorded command suite fresh in
+a worktree off `origin/main` (6577ff2e; `composer install` + copied `.env`; worktree-only —
+watcher-afflicted repo, main tree untouched): `TochkaWebhookTest` **31 passed (116
+assertions)** — up one test from 30/112 (manual count corrected); `HalfBlockPurchaseTest|DepositPartialConsumptionTest`
+**24 passed (80 assertions)**, byte-identical; access-key/unlockingKeys/isUnlockedBy
+script re-run (framework-boot equivalent of the tinker script, PHP 8.5.9) — output
+byte-identical to the §1 tables. Commit sweep over the sources-of-truth file set since
+18-08-2026 + §8 flag-default cross-check: all 14 documented flag defaults match
+`config/features.php`. Drift found and fixed: §5.2 ledger `decision` table was missing
+`breaker_refused` (H4930 `sentinel_breaker` / `features.money_mutation_breaker`, default
+OFF — row added); §5.3 stale test count 30/112 → 31/116. The H5442/H5443/H5445 money-core
+wave (PAYMENT_FIX_WAVE1, reconciliation ledger) landed after this manual's scope and stays
+undocumented here (feature work beyond the access-core surface, consistent with the 18-08
+pass's scope ruling).
 
 ## Subject
 
@@ -262,6 +268,7 @@ out of scope:
 
 | Date | Event | Model |
 |---|---|---|
+| 04-10-2026 | H5991 monthly refresh: recorded suite re-run in a worktree (TochkaWebhookTest 31/116, up from 30/112; HalfBlock+Deposit 24/80 byte-identical; access-key script byte-identical), flag-default cross-check clean. Manual fixed in 2 places: §5.2 `breaker_refused` ledger decision added (H4930, dark), §5.3 test count updated | GLM 5.3 Flash (`zai-start-plan/GLM-5.3-Flash`) |
 | 18-08-2026 | Scheduled staleness refresh (484 commits vs ~300 threshold). Unshallowed the clone, `composer install`'d fresh, re-ran all 3 recorded verification commands (TochkaWebhookTest 30/112, up from 13/47; HalfBlockPurchaseTest+DepositPartialConsumptionTest 24/80, byte-identical; access-key tinker script, byte-identical output) and read every commit since 01-08-2026 touching the manual's sources of truth. Corrected 7 places where shipped code had drifted from the text: §5.2 ledger decisions (`hold_not_captured`, `rejected_charge`), §5.3's stale "guard defaults OFF" header + the webhook's own unconditional missing-groups fail-closed check, §3.4's unconditional pre-checkout groups guard, §8's `grant_access_fail_closed`/`paypal_subscriptions` flag rows and two non-flag knobs, §1.1's membership-tariff bookkeeping-key footnote, and §11.1's matching runbook step. §2/§6/§9's claims and `BlockAccessMaterializer.php` were re-checked and found unchanged (zero touching commits or unchanged code) — not silently re-stamped, verified. See metadoc Verification block for the full list and what was deliberately left out of scope (prana Season decay, membership storefront internals) | Sonnet 5 (`claude-sonnet-5`) |
 | 16-08-2026 | H2886: new §1.7 — club membership is a **second source of access keys**, virtual and never a `Payment` row, which the manual did not mention at all while claiming to be the money/access-core reference. Records the deliberate visibility/unlocking asymmetry (`coversCourse()` vs the key) and the per-course `club_access_key` that makes a shelf entry one `block_N` instead of the whole course. Staleness at the time: 371 commits vs a 293 threshold | Opus 5 (`claude-opus-5`) |
 | 01-08-2026 | H2078: COMMANDS_SPOT_RUN forced to integer (was free-text UNPARSEABLE); LAST_VERIFIED refresh; path+php presence spots | Grok 4.5 (grok-4.5) |

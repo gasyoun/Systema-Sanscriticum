@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Laravel\Sanctum\HasApiTokens;
 
 // --- УКАЗЫВАЕМ, ЧТО ЮЗЕР ИСПОЛЬЗУЕТ ИНТЕРФЕЙС FILAMENT ---
@@ -157,6 +158,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'unreliable_marked_at' => 'datetime',
         'discipline_improved_since' => 'date',
         'tz_override_until' => 'date',
+        // H6352-r5: второй фактор админ-ролей — секрет и резервные коды
+        // шифруются at-rest, метка подтверждения читается как datetime.
+        'two_factor_secret' => 'encrypted',
+        'two_factor_recovery_codes' => 'encrypted:array',
+        'two_factor_confirmed_at' => 'datetime',
     ];
 
     /**
@@ -219,9 +225,30 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $email === '' ? '' : mb_strtolower($email);
     }
 
+    /**
+     * Защитный паттерн users.email (MG 04-10-2026: мусор вида «имя фамилия»,
+     * телефон или @хэндл не должен попадать в поле впредь — импорт 22-04).
+     * MariaDB-трансляция с [:space:] живёт в миграции users_email_valid —
+     * править парой. PHP-regex: @see self::setEmailAttribute().
+     */
+    public const EMAIL_PATTERN = '^[^@\s]+@[^@\s]+\.[^@\s]+$';
+
     public function setEmailAttribute(?string $value): void
     {
-        $this->attributes['email'] = self::normalizeEmail($value);
+        $email = self::normalizeEmail($value);
+
+        // Громкий отказ на непустой не-адрес: формы и Filament отсекает
+        // валидация `email`, этот барьер для скриптов/импортов через Eloquent.
+        // Сырые SQL-вставки ловит CHECK users_email_valid (уровень БД).
+        if ($email !== null && $email !== ''
+            && preg_match('/'.self::EMAIL_PATTERN.'/i', $email) !== 1) {
+            throw new InvalidArgumentException(sprintf(
+                'users.email: "%s" — не валидный email. Для заведомо без-email-учеников используйте плейсхолдер slug-<id>@no-email.com и SuppressedEmail::suppress().',
+                $email
+            ));
+        }
+
+        $this->attributes['email'] = $email;
     }
 
     /**
@@ -489,6 +516,22 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function isAdminLike(): bool
     {
         return in_array($this->role, Roles::adminLike(), true);
+    }
+
+    /**
+     * H6352-r5: обязателен ли второму фактору этот пользователь — по роли;
+     * выключатель контура (config security.two_factor_enforced) проверяет
+     * middleware, не модель.
+     */
+    public function requiresTwoFactor(): bool
+    {
+        return in_array($this->role, Roles::twoFactorRequired(), true);
+    }
+
+    /** H6352-r5: 2FA реально включён (секрет подтверждён кодом). */
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->two_factor_confirmed_at !== null && filled($this->two_factor_secret);
     }
 
     /**
