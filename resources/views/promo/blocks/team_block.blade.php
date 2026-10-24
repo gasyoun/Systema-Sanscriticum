@@ -44,7 +44,9 @@
                             {{-- Обновленный блок картинки: добавили rounded-full и стильную двойную рамку --}}
                             <div class="relative w-full h-full rounded-full p-1 bg-gradient-to-br from-[var(--accent)] to-orange-200 shadow-lg group-hover:shadow-[0_0_20px_rgba(232,92,36,0.3)] transition-all duration-300 group-hover:scale-105">
                                 <div class="w-full h-full rounded-full overflow-hidden bg-white p-0.5">
-                                    <img src="{{ $media->url }}" alt="{{ $item['name'] ?? 'Преподаватель' }}" class="w-full h-full object-cover rounded-full">
+                                    <x-responsive-image :src="$media->url" :alt="$item['name'] ?? 'Преподаватель'"
+                                         :widths="[200, 400]" sizes="96px"
+                                         class="w-full h-full object-cover rounded-full" />
                                 </div>
                             </div>
                         @else

@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Services\Payments\StatementReceiptMapper;
 use App\Support\FinanceCockpitReport;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
 /**
  * H5554 gap [1]: единый тройной отчёт «Нескучных финансов» по циклам выплат.
- * Один вывод = один цикл (месяц) с секциями ДДС (касса) и ОПиУ (начисление),
- * плюс снимок Баланса на сейчас (обязательства, авансы). Сборочный слой поверх
- * FinanceCockpitReport — данных не создаёт и денежную семантику не трогает.
+ * Один вывод = один цикл (месяц) с секциями ДДС (касса) и ОПиУ (начисление).
+ * Сборочный слой поверх FinanceCockpitReport — данных не создаёт и денежную
+ * семантику не трогает.
  *
- * Ограничение среза: Баланс у канонического ядра точечный (на сейчас), поэтому
- * он выводится одним снимком, а не внутри каждого цикла; строки «неразобранные
- * поступления» (маппинг выписки Точки) в этом срезе нет — это отдельный кусок.
+ * H6705 (finish): Баланс внутри каждого цикла — back-computation обязательств
+ * на конец цикла (FinanceCockpitReport::obligationsAsOf: «к выплате»
+ * преподавателям + непогашенные авансы); полный шестистрочный снимок остаётся
+ * одним, на сейчас. Строка «неразобранные поступления» — строки выписки Точки
+ * без связи с оплатой LMS (StatementReceiptMapper; числа только при полном
+ * покрытии цикла импортами выписки).
  */
 final class PayrollTripleReportCommand extends Command
 {
@@ -24,9 +28,9 @@ final class PayrollTripleReportCommand extends Command
         {--periods= : Comma-separated YYYY-MM payout cycles; defaults to the 3 most recent months}
         {--format= : text (default) or json}';
 
-    protected $description = 'Per payout cycle: DDS (kassa) + OPiU (accrual) sections and a Balance obligations snapshot (read-only)';
+    protected $description = 'Per payout cycle: DDS (kassa) + OPiU (accrual) + Balance as of cycle end + unmapped receipts; plus a point-in-time Balance snapshot (read-only)';
 
-    public function handle(FinanceCockpitReport $report): int
+    public function handle(FinanceCockpitReport $report, StatementReceiptMapper $mapper): int
     {
         $periods = $this->periods();
         if ($periods === null) {
@@ -55,6 +59,8 @@ final class PayrollTripleReportCommand extends Command
                 'salary_fund' => ['rate' => $fundRate, 'amount' => round($dds['inflow'] * $fundRate, 2)],
                 'opiu_accrual' => $report->opiuAccrual($period),
                 'deferred_revenue' => $report->deferredRevenue($period),
+                'balance_as_of' => $report->obligationsAsOf(Carbon::parse($period.'-01')->endOfMonth()),
+                'unmapped_receipts' => $mapper->cycle($period),
             ];
         }
 
@@ -102,10 +108,30 @@ final class PayrollTripleReportCommand extends Command
             $this->line('deferred revenue: cash '.$this->money($deferred['cashReceived'])
                 .' / recognized '.$this->money($deferred['recognized'])
                 .' / deferred '.$this->money($deferred['deferred']));
+
+            // H6705: обязательства на конец цикла (back-computation) + строка
+            // «неразобранные поступления» из маппинга выписки Точки.
+            $asOf = $cycle['balance_as_of'];
+            $this->info('=== Cycle '.$cycle['period'].' — Balance (as of cycle end) ===');
+            $this->table(['line', 'RUB'], [
+                ['remaining_obligation (teachers payable)', $this->money($asOf['teacherPayable'])],
+                ['outstanding_advances', $this->money($asOf['advances'])],
+            ]);
+
+            $unmapped = $cycle['unmapped_receipts'];
+            if (($unmapped['status'] ?? '') === 'ok') {
+                $u = $unmapped['unmapped'];
+                $this->line('unmapped receipts: '.$this->money($u['amount'])
+                    .' ('.$u['rows'].' row(s): transfer without paid order '.$u['transfer_rows']
+                    .', unclassified '.$u['other_rows'].')');
+            } else {
+                $this->line('unmapped receipts: not rendered — '.$unmapped['status']
+                    .' ('.(string) ($unmapped['note'] ?? 'statement mapping unavailable').')');
+            }
             $this->line('');
         }
 
-        $this->info('=== Balance snapshot (as of now) ===');
+        $this->info('=== Balance snapshot (as of now; point-in-time canonical core) ===');
         $balance = $payload['balance_snapshot'];
         $this->table(['line', 'RUB'], [
             ['remaining_obligation (teachers payable)', $this->money($balance['teacherPayable'])],

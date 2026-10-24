@@ -23,7 +23,9 @@
             @endphp
             
             @if($instructorImageUrl)
-                <img src="{{ $instructorImageUrl }}" alt="{{ $data['name'] ?? '' }}" class="w-full h-full object-cover object-top">
+                <x-responsive-image :src="$instructorImageUrl" :alt="$data['name'] ?? ''"
+                     sizes="(min-width: 1024px) 480px, 100vw"
+                     class="w-full h-full object-cover object-top" />
             @else
                 <div class="w-full h-full flex items-center justify-center text-gray-300">
                     <i class="fas fa-user text-6xl"></i>

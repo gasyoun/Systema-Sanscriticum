@@ -20,6 +20,15 @@ trait SchedulesOvernightAndCrm
             ->onOneServer()
             ->name('media-covers-to-webp');
 
+        // Responsive-варианты для srcset (19-10-2026): карточки каталога и медиа
+        // Куратора. У медиа нет наблюдателя на загрузку, поэтому ежедневный
+        // добор — единственный рубеж; новые файлы сутки живут исходником.
+        $schedule->command('media:responsive-variants')
+            ->dailyAt('02:50')
+            ->withoutOverlapping(20)
+            ->onOneServer()
+            ->name('media-responsive-variants');
+
         $schedule->command('archives:cleanup --hours=24')
             ->dailyAt('03:00')
             ->withoutOverlapping(10)
@@ -36,10 +45,11 @@ trait SchedulesOvernightAndCrm
             ->onOneServer()
             ->name('sanctum-token-prune');
 
-        // H3445: еженедельное обновление GeoLite2-City для SUPPORT_GEO_DRIVER=maxmind.
-        // Команда сама выходит, если учётные данные MaxMind не заданы.
+        // H3445/H6602: ежемесячное обновление DB-IP City Lite (формат MaxMind DB)
+        // для SUPPORT_GEO_DRIVER=maxmind. Файл выходит ~1-го числа; в первые дни
+        // месяца команда сама откатывается на предыдущий месяц.
         $schedule->command('support:geo-update-maxmind')
-            ->weeklyOn(0, '4:40')
+            ->monthlyOn(2, '4:40')
             ->withoutOverlapping(30)
             ->onOneServer()
             ->name('support-geo-maxmind-update');

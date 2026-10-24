@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\DetectsFormBots;
 use App\Models\MagicLinkToken;
 use App\Rules\HouseEmail;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\NewsletterSubscriptionService;
+use App\Support\Consent\ConsentRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +21,8 @@ use Illuminate\Support\Facades\RateLimiter;
  */
 class NewsletterSubscribeController extends Controller
 {
+    use DetectsFormBots;
+
     private function abortIfDisabled(): void
     {
         abort_unless(config('features.newsletter_subscribe'), 404);
@@ -39,7 +44,8 @@ class NewsletterSubscribeController extends Controller
             'email' => ['required', 'string', 'max:255', new HouseEmail],
             // Явное согласие на рассылку — как чекбокс промо на лендинге.
             'is_promo_agreed' => ['accepted'],
-        ]);
+            'pd_consent' => ConsentRules::pd(),
+        ], ConsentRules::messages());
 
         // Анти-бот: honeypot + time-trap + одноразовые домены. При срабатывании
         // возвращаем ТОТ ЖЕ «успешный» ответ, что и в норме (анти-enumeration),
@@ -61,6 +67,7 @@ class NewsletterSubscribeController extends Controller
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);
+        app(ConsentRecorder::class)->fromForm($request, 'newsletter:'.($request->input('utm_source') ?: 'form'), null, $validated['email'], null, 'is_promo_agreed');
 
         // Единый ответ независимо от того, новый это аккаунт или нет (анти-enumeration).
         return back()->with('newsletter_subscribed', true);
@@ -89,60 +96,5 @@ class NewsletterSubscribeController extends Controller
 
         return redirect()->route('student.dashboard')
             ->with('status', 'Добро пожаловать! Ваши бонусы — на полке подписчика ниже.');
-    }
-
-    /**
-     * Похоже ли на бота. Три чисто серверных сигнала (без внешних сервисов):
-     *  1) honeypot-поле заполнено (человек его не видит);
-     *  2) не прошёл time-trap (мгновенный сабмит или прямой POST без метки);
-     *  3) одноразовый/спам-домен из блок-листа.
-     */
-    private function looksLikeBot(Request $request, string $email): bool
-    {
-        if (filled($request->input('website'))) {
-            return true;
-        }
-
-        if (! $this->passedTimeTrap($request->input('ff_ts'))) {
-            return true;
-        }
-
-        return $this->isBlockedDomain($email);
-    }
-
-    /**
-     * Проверяет метку времени рендера формы. Отклоняет:
-     *  - отсутствующую/битую/чужую метку (прямой POST без рендера формы);
-     *  - слишком быстрый сабмит (< min_fill_seconds);
-     *  - протухшую метку (> max_form_age_seconds).
-     */
-    private function passedTimeTrap(mixed $token): bool
-    {
-        if (! is_string($token) || $token === '') {
-            return false;
-        }
-
-        try {
-            $renderedAt = (int) decrypt($token);
-        } catch (\Throwable) {
-            return false; // не наш ключ / повреждена
-        }
-
-        $elapsed = now()->timestamp - $renderedAt;
-
-        return $elapsed >= (int) config('newsletter.antibot.min_fill_seconds')
-            && $elapsed <= (int) config('newsletter.antibot.max_form_age_seconds');
-    }
-
-    private function isBlockedDomain(string $email): bool
-    {
-        $domain = strtolower(trim((string) substr((string) strrchr($email, '@'), 1)));
-        if ($domain === '') {
-            return false;
-        }
-
-        $blocked = array_map('strtolower', (array) config('newsletter.antibot.blocked_email_domains', []));
-
-        return in_array($domain, $blocked, true);
     }
 }

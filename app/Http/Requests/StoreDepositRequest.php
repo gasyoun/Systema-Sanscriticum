@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Rules\HouseEmail;
+use App\Support\Consent\ConsentRules;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class StoreDepositRequest extends FormRequest
@@ -26,6 +27,13 @@ final class StoreDepositRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'max:255', new HouseEmail],
+            // 152-ФЗ: путь оплаты брони — обязательность по флагу money-контура.
+            'pd_consent' => ConsentRules::pd(checkout: true),
         ];
+    }
+
+    public function messages(): array
+    {
+        return ConsentRules::messages();
     }
 }

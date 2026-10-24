@@ -158,6 +158,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'unreliable_marked_at' => 'datetime',
         'discipline_improved_since' => 'date',
         'tz_override_until' => 'date',
+        // H6352-r5: второй фактор админ-ролей — секрет и резервные коды
+        // шифруются at-rest, метка подтверждения читается как datetime.
+        'two_factor_secret' => 'encrypted',
+        'two_factor_recovery_codes' => 'encrypted:array',
+        'two_factor_confirmed_at' => 'datetime',
     ];
 
     /**
@@ -511,6 +516,22 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function isAdminLike(): bool
     {
         return in_array($this->role, Roles::adminLike(), true);
+    }
+
+    /**
+     * H6352-r5: обязателен ли второму фактору этот пользователь — по роли;
+     * выключатель контура (config security.two_factor_enforced) проверяет
+     * middleware, не модель.
+     */
+    public function requiresTwoFactor(): bool
+    {
+        return in_array($this->role, Roles::twoFactorRequired(), true);
+    }
+
+    /** H6352-r5: 2FA реально включён (секрет подтверждён кодом). */
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->two_factor_confirmed_at !== null && filled($this->two_factor_secret);
     }
 
     /**

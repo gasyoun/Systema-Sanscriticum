@@ -19,6 +19,8 @@ use App\Services\Activity\StorefrontAnalytics;
 use App\Services\Membership\PrivateArchiveEligibility;
 use App\Services\Schedule\FullSchedulePost;
 use App\Support\CourseCadence;
+use App\Support\CourseHeroSchedule;
+use App\Support\CoursePageContent;
 use App\Support\FlagshipExperiments;
 use App\Support\FlagshipLanding;
 use App\Support\ProductLadderAnchors;
@@ -50,6 +52,7 @@ class ShopController extends Controller
         ];
         $categorySlugs = [];
         $indexable = true;
+        $category = null;
 
         if ($facets !== null) {
             $parsed = ShopCatalogUrl::parse($facets);
@@ -63,7 +66,7 @@ class ShopController extends Controller
             }
 
             if (isset($parsed['format'])) {
-                abort_unless(in_array($parsed['format'], ['live', 'recorded'], true), 404);
+                abort_unless(in_array($parsed['format'], Course::FORMATS, true), 404);
                 $initial['initialFormat'] = $parsed['format'];
             }
 
@@ -90,6 +93,12 @@ class ShopController extends Controller
             $indexable = array_keys($parsed) === ['kategoriya'] && count($categorySlugs) === 1;
         }
 
+        // SEO-META-1: a single-category facet is a real landing page (self-canonical),
+        // so the view needs its name for a unique title/H1/description.
+        if ($indexable && count($categorySlugs) === 1) {
+            $category = Category::where('slug', $categorySlugs[0])->first(['name', 'slug']);
+        }
+
         $canonicalPath = ShopCatalogUrl::build($indexable ? $categorySlugs : array_slice($categorySlugs, 0, 1));
 
         $deposit = MarketingSetting::cached();
@@ -107,7 +116,7 @@ class ShopController extends Controller
         $ladder = ProductLadderAnchors::resolve();
 
         return view('shop.index', array_merge($initial, compact(
-            'deposit', 'featuredTestimonials', 'ladder', 'canonicalPath', 'indexable'
+            'deposit', 'featuredTestimonials', 'ladder', 'canonicalPath', 'indexable', 'category'
         )) + [
             // H5134 — мои сердечки в каталоге (Livewire-проп, flag OFF / гость — []).
             'favoriteCourseIds' => CourseFavorite::favoritedCourseIdsForCurrentViewer(),
@@ -293,7 +302,13 @@ class ShopController extends Controller
                 CourseWaitlistItem::STATUS_SCHEDULED,
             ])
             ->withCount('votes')
-            ->with('course:id,slug,is_visible')
+            ->with([
+                // Обложка карточки ждуна — витринная плашка курса
+                // (Course::catalogBadgeUrl()): ассет 4:3, фолбэк image_path.
+                // Другие форматы баннеров здесь не нужны.
+                'course:id,slug,is_visible,image_path',
+                'course.designAssets' => fn ($q) => $q->where('format', '4:3'),
+            ])
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
@@ -523,7 +538,43 @@ class ShopController extends Controller
             ->orderBy('id')
             ->get(['id', 'title', 'slug']);
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb', 'canonicalUrl', 'recordingOffers', 'fullSchedulePosts') + [
+        // Ждун-строка курса: если курс в списке ожидания, замок
+        // «Набор закрыт» на странице превращается в голосование. Тот же скоуп,
+        // что на /online/zhdun (is_listed, без closed/scheduled). Флаг OFF —
+        // null'ы, страница живёт по-старому.
+        $waitlistItem = null;
+        $waitlistVoted = false;
+        $waitlistPref = null;
+        if ((bool) config('features.waitlist_voting', false)) {
+            $waitlistItem = CourseWaitlistItem::query()
+                ->where('course_id', $course->id)
+                ->where('is_listed', true)
+                ->whereNotIn('status', [
+                    CourseWaitlistItem::STATUS_CLOSED,
+                    CourseWaitlistItem::STATUS_SCHEDULED,
+                ])
+                ->withCount('votes')
+                ->first();
+
+            if ($waitlistItem !== null && Auth::check()) {
+                $myVote = WaitlistVote::query()
+                    ->where('user_id', Auth::id())
+                    ->where('course_waitlist_item_id', $waitlistItem->getKey())
+                    ->first(['slot_preference']);
+                $waitlistVoted = $myVote !== null;
+                $waitlistPref = $myVote?->slot_preference;
+            }
+        }
+
+        // H6570: ручное расписание не стартовавшего курса (контент-JSON по
+        // slug) для свёрнутого блока в хиро; null — курсу не заведено.
+        $heroSchedule = CourseHeroSchedule::for($course->slug);
+
+        // H6580: контент страницы из T1-анонса (контент-JSON по slug):
+        // описание/буллеты/видео-ссылки/FAQ; null — курсу не заведено.
+        $pageContent = CoursePageContent::for($course->slug);
+
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb', 'canonicalUrl', 'recordingOffers', 'fullSchedulePosts', 'waitlistItem', 'waitlistVoted', 'waitlistPref', 'heroSchedule', 'pageContent') + [
             // H5134 — сердечко на /k/{slug}: отмечен ли этот курс зрителем.
             'favoriteKeys' => CourseFavorite::heartKeysForCurrentViewer(),
         ]);

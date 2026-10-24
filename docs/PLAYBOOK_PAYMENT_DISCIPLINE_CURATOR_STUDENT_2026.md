@@ -4,7 +4,7 @@ _Created: 02-08-2026 · Last updated: 05-10-2026_
 
 **Где в админке:** Filament → Пользователи → **Должники** (`/admin/debtors`)  
 **Кабинет ученика:** https://samskrte.ru/dvaram → вкладка **«Мои долги»**  
-**Поддержка в TG:** https://t.me/rusamskrtam (`@rusamskrtam`, userbot; не Bot API)
+**Поддержка в TG:** https://t.me/rusamskrtam (`@rusamskrtam`, userbot; не Bot API); лестница эскалации ИИ-куратор → Иван → MG: [RUNBOOK_SUPPORT_ESCALATION](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_SUPPORT_ESCALATION.md)
 
 Полная механика кнопок: [debtors-manual.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/debtors-manual.md).  
 Публичные посты в канал/учебный чат: [marketing/payment-blocks-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/payment-blocks-telegram-posts.md).  

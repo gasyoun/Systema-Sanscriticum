@@ -37,6 +37,10 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # → P1 в awake-окне (иначе — в утренний бриф), дедуп раз в час.
 @@IB_BALANCE_WATCH_SCHEDULE@@ /usr/local/sbin/systema-ib-balance-watch.sh >> /var/log/systema-ib-balance-watch-cron.log 2>&1
 
+# H6326 (10-10-2026) — evidence-money витрина: ночной rebuild статического
+# дашборда /opt/evidence-money (evidence.dev, read-only MySQL evidence_ro).
+40 4 * * * /opt/evidence-money/bin/build.sh >> /var/log/evidence-money-build.cron.log 2>&1
+
 # H4929 (16-09-2026, E002 layer 2) — внешний свидетель .91's deadman_check.py:
 # метку /var/lib/systema-guards/deadman91_hub.last пушит КАЖДЫЙ прогон
 # deadman_check.py на .91 (forced-command ключ deadman-witness). Тишина

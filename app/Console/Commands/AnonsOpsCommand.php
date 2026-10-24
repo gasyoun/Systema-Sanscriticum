@@ -6,8 +6,10 @@ namespace App\Console\Commands;
 
 use App\Models\AnonsLinkClick;
 use App\Models\AnonsPlacement;
+use App\Models\Lead;
 use App\Services\Anons\AnonsArchiveIndexer;
 use App\Services\Anons\AnonsMetricsService;
+use App\Services\Anons\AnonsOccasionSelector;
 use App\Services\Anons\PublicationKey;
 use App\Services\Anons\PublicationManifest;
 use Carbon\Exceptions\InvalidFormatException;
@@ -35,7 +37,9 @@ final class AnonsOpsCommand extends Command
         {--link= : /ga/ ключ (journal-*)}
         {--campaign= : слаг кампании (journal-add — массово, journal-list — фильтр)}
         {--permalink= : ссылка поста (journal-fill)}
-        {--published-at= : время публикации, parseable date (journal-fill)}';
+        {--published-at= : время публикации, parseable date (journal-fill)}
+        {--kind= : вид кампании — обзорное | разовое | обычное (journal-add, H6329)}
+        {--days= : окно агрегата hdyhau в днях, по умолчанию 30 (H6531)}';
 
     protected $description = 'Anons operations: metrics, archive indexing/search, placements journal (H5049, H6095)';
 
@@ -51,7 +55,8 @@ final class AnonsOpsCommand extends Command
             'journal-add' => $this->runJournalAdd(),
             'journal-fill' => $this->runJournalFill(),
             'journal-list' => $this->runJournalList(),
-            default => throw new RuntimeException("Unknown op '{$op}' (metrics|history|archive-index|archive-search|journal-add|journal-fill|journal-list)."),
+            'hdyhau' => $this->runHdyhau(),
+            default => throw new RuntimeException("Unknown op '{$op}' (metrics|history|archive-index|archive-search|journal-add|journal-fill|journal-list|hdyhau)."),
         };
     }
 
@@ -141,6 +146,16 @@ final class AnonsOpsCommand extends Command
             return self::FAILURE;
         }
 
+        // H6329: вид кампании («по разовым»/«по обзорным»/«по обычным») —
+        // fail-closed к словарю канона; пусто = вид не задан (строки до
+        // H6329). Повторный journal-add без --kind вид не стирает.
+        $kind = trim((string) $this->option('kind'));
+        if ($kind !== '' && ! in_array($kind, AnonsOccasionSelector::KINDS, true)) {
+            $this->error('Unknown --kind "'.$kind.'"; known kinds: '.implode(', ', AnonsOccasionSelector::KINDS).'.');
+
+            return self::FAILURE;
+        }
+
         $links = (array) config('tracked_links.links', []);
         $keys = $link !== '' ? [$link] : array_values(array_filter(
             array_keys($links),
@@ -160,17 +175,22 @@ final class AnonsOpsCommand extends Command
                 return self::FAILURE;
             }
             $entry = $links[$key] ?? [];
+            $attributes = [
+                'campaign' => $parsed['campaign'],
+                'creative' => $parsed['creative'],
+                'channel' => $parsed['channel'],
+                'destination' => $entry['destination'] ?? null,
+                'utm' => $entry['utm'] ?? null,
+            ];
+            if ($kind !== '') {
+                $attributes['kind'] = $kind;
+            }
             $placement = AnonsPlacement::updateOrCreate(
                 ['link' => $key],
-                [
-                    'campaign' => $parsed['campaign'],
-                    'creative' => $parsed['creative'],
-                    'channel' => $parsed['channel'],
-                    'destination' => $entry['destination'] ?? null,
-                    'utm' => $entry['utm'] ?? null,
-                ],
+                $attributes,
             );
-            $this->line("placement #{$placement->id} {$placement->link} ({$placement->campaign}/{$placement->creative}@{$placement->channel})");
+            $kindSuffix = $placement->kind !== null ? ' ['.$placement->kind.']' : '';
+            $this->line("placement #{$placement->id} {$placement->link} ({$placement->campaign}/{$placement->creative}@{$placement->channel}){$kindSuffix}");
         }
 
         return self::SUCCESS;
@@ -236,13 +256,45 @@ final class AnonsOpsCommand extends Command
             return self::SUCCESS;
         }
         foreach ($rows as $row) {
+            $kindSuffix = $row->kind !== null ? ' ['.$row->kind.']' : '';
             $this->line(sprintf(
-                '#%d %s %s/%s@%s pub=%s 24h=%s 72h=%s %s',
+                '#%d %s %s/%s@%s%s pub=%s 24h=%s 72h=%s %s',
                 $row->id, $row->link, $row->campaign, $row->creative, $row->channel,
+                $kindSuffix,
                 $row->published_at?->format('d-m-Y H:i') ?? '—',
                 $row->clicks_24h ?? '—', $row->clicks_72h ?? '—',
                 $row->permalink ?? '',
             ));
+        }
+
+        return self::SUCCESS;
+    }
+
+    /**
+     * H6531 — агрегат самоотчётов «откуда узнали» (HDYHAU): counts по
+     * leads.reported_source за окно (--days, по умолчанию 30). Четвёртая
+     * нога атрибуции журнала рядом с UTM-разрезами: канонические ключи
+     * рендерятся подписью, ветка «Другое» — слова человека как есть.
+     * Только агрегаты, без персональных данных (правило anons-журнала).
+     */
+    private function runHdyhau(): int
+    {
+        $days = max(1, (int) ($this->option('days') ?: 30));
+        $since = Carbon::now()->subDays($days);
+
+        $rows = Lead::query()
+            ->whereNotNull('reported_source')
+            ->where('created_at', '>=', $since)
+            ->selectRaw('reported_source, count(*) as total')
+            ->groupBy('reported_source')
+            ->orderByDesc('total')
+            ->get();
+
+        $options = Lead::hdyhauOptions();
+        $this->line(sprintf('HDYHAU reported_source last %dd: %d answer(s)', $days, $rows->sum('total')));
+        foreach ($rows as $row) {
+            $label = $options[$row->reported_source] ?? $row->reported_source;
+            $this->line(sprintf('%4d  %s', $row->total, $label));
         }
 
         return self::SUCCESS;

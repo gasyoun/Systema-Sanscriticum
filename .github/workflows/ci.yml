@@ -30,7 +30,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: ${{ matrix.php }}
           extensions: mbstring, xml, pdo, sqlite, pdo_sqlite, redis, curl, zip, pcntl, posix
@@ -74,20 +74,46 @@ jobs:
           cat > public/build/manifest.json << 'JSON'
           {
             "resources/css/app.css": { "file": "assets/app.css", "src": "resources/css/app.css", "isEntry": true },
-            "resources/js/app.js":  { "file": "assets/app.js",  "src": "resources/js/app.js",  "isEntry": true }
+            "resources/js/app.js":  { "file": "assets/app.js",  "src": "resources/js/app.js",  "isEntry": true },
+            "resources/css/fonts.css": { "file": "assets/fonts.css", "src": "resources/css/fonts.css", "isEntry": true },
+            "resources/js/alpine-standalone.js": { "file": "assets/alpine-standalone.js", "src": "resources/js/alpine-standalone.js", "isEntry": true }
           }
           JSON
-          touch public/build/assets/app.css public/build/assets/app.js
+          touch public/build/assets/app.css public/build/assets/app.js public/build/assets/fonts.css public/build/assets/alpine-standalone.js
 
       - name: Laravel Pint format check
+        # Scope = the commits THIS change adds, not everything that differs from
+        # the base tip. `pull_request.base.sha` is the base branch as it stood when
+        # the PR was opened and never advances, while the checkout this runs on is
+        # the synthetic test-merge of PR head into the CURRENT base: on #3157 the
+        # frozen base was 15 commits behind, so --diff also handed Pint main's
+        # pre-existing debt (tests/Feature/Support/SupportRollupGroupBotFilterTest.php,
+        # fully_qualified_strict_types) and a PR that touched neither went red.
+        # merge-base(HEAD, origin/<base_ref>) is the base commit the merge ref was
+        # built on, so the diff is exactly the PR's own changes.
         env:
-          PINT_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          BASE_REF: ${{ github.base_ref }}
+          EVENT_BEFORE: ${{ github.event.before }}
         run: |
           # Check every PHP file changed by this PR/push. Existing formatting
           # debt in unrelated files must not block the current change.
+          if [ -n "$BASE_REF" ]; then
+            # fetch-depth: 0 above already carries this history; the explicit
+            # fetch keeps the step correct if the checkout ever goes shallow.
+            git fetch --no-tags --quiet origin "+refs/heads/$BASE_REF:refs/remotes/origin/$BASE_REF" || true
+            PINT_BASE_SHA=$(git merge-base HEAD "origin/$BASE_REF" 2>/dev/null || true)
+          else
+            # push: the previous tip of the pushed branch is the exact scope.
+            PINT_BASE_SHA="$EVENT_BEFORE"
+          fi
           if [ -z "$PINT_BASE_SHA" ] || ! git cat-file -e "$PINT_BASE_SHA^{commit}"; then
             PINT_BASE_SHA=HEAD^
           fi
+          # Announce the scope: a gate that suddenly checks hundreds of files is
+          # the signal that the base resolution broke, and it must be visible in
+          # the log, not inferred from a wall of style errors.
+          echo "Pint scope base: $PINT_BASE_SHA"
+          echo "Files in scope: $(git diff --name-only "$PINT_BASE_SHA" | wc -l)"
           ./vendor/bin/pint --test --diff="$PINT_BASE_SHA"
 
       - name: PHPUnit tests
@@ -115,7 +141,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: "8.3"
           extensions: mbstring, xml, pdo, sqlite, pdo_sqlite, redis, curl, zip, pcntl, posix
@@ -154,7 +180,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v6
         with:
           node-version: "20.19"
           cache: npm
@@ -174,7 +200,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v6
         with:
           node-version: "20.19"
 
@@ -192,7 +218,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v6
         with:
           node-version: "20.19"
           cache: npm
@@ -232,7 +258,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: "8.3"
           extensions: mbstring, xml, pdo, pdo_mysql, redis, curl, zip, pcntl, posix
@@ -259,7 +285,7 @@ jobs:
       - name: MySQL finance and webhook transaction tests
         run: >-
           php artisan test
-          --filter='TochkaWebhookTest|MutualSettlementTest|FinanceIdempotencyTest|FinanceLockingMySqlTest|LedgerCoreTest|LedgerVerifierFindingsTest|LedgerBackfillReportTest|DailyReconciliationTest|RefundAccessPolicyTest'
+          --filter='TochkaWebhookTest|MutualSettlementTest|FinanceIdempotencyTest|FinanceLockingMySqlTest|LedgerCoreTest|LedgerVerifierFindingsTest|LedgerBackfillReportTest|DailyReconciliationTest|RefundAccessPolicyTest|BankStatementCreditsTest|PayoutPackageTest|PayoutRefundAndDirectReceiptTest|MoneySchemaAcceptanceMatrixTest'
 
   changelog-lint:
     name: Changelog — no duplicated bullets
@@ -448,3 +474,28 @@ jobs:
           else
             python tools/check_mic_vendor_drift.py --self-only
           fi
+
+  faq-corpus-drift:
+    name: FAQ corpus — citation-key drift gate
+    runs-on: ubuntu-latest
+    # H6917: faq.md is generated by ORS-FAQ and every re-export may rename
+    # headings while the bodies (and the answers) stay identical. chunk_id is
+    # the heading-path slug, so a rename silently kills every citation: on
+    # 17-10-2026 commit 9aea235d renamed all 81 ### headings and 26 of the 29
+    # distinct ids the eval fixture cites went dead while its test still
+    # asserted their presence. This gate compares the chunk-id SET with the
+    # fixture's citation keys — key drift, not byte drift — and refuses on
+    # duplicate chunk ids too (the second body overwrites the first in
+    # knowledge_chunks, where faq_chunk_id is unique). Contract:
+    # resources/knowledge/CORPUS.md.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      - name: Citation-key drift check
+        # Both fixtures cite chunk_ids: the 100-question ratchet set and the
+        # 20-question fresh set (H4001 live runs). Both must resolve.
+        run: |
+          python scripts/check_faq_corpus_drift.py --check
+          python scripts/check_faq_corpus_drift.py --check --fixture tests/fixtures/faq_rag_eval_fresh.json

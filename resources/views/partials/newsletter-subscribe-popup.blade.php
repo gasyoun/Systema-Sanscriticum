@@ -16,7 +16,7 @@
 @if (config('features.newsletter_subscribe'))
     @php
         $justSubscribed = (bool) session('newsletter_subscribed');
-        $hasFormErrors = $errors->has('email') || $errors->has('is_promo_agreed');
+        $hasFormErrors = $errors->has('email') || $errors->has('is_promo_agreed') || $errors->has('pd_consent');
         $isSubscriber = auth()->check() && method_exists(auth()->user(), 'isNewsletterSubscriber')
             && auth()->user()->isNewsletterSubscriber();
     @endphp
@@ -160,7 +160,9 @@
                         this.open = false;
                         return;
                     }
-                    if (! localStorage.getItem('cookie_consent_v1')) {
+                    // Не перекрываем баннер cookie: попап — только после выбора в нём
+                    // (любого — согласие на аналитику для подписки не нужно).
+                    if (! (window.ssConsent && window.ssConsent.decided())) {
                         this.open = false;
                         return;
                     }
@@ -203,6 +205,9 @@
                     @error('is_promo_agreed')
                         <p class="nsp-error">Нужно согласие на рассылку.</p>
                     @enderror
+                    @error('pd_consent')
+                        <p class="nsp-error">{{ $message }}</p>
+                    @enderror
 
                     <form method="POST" action="{{ route('newsletter.subscribe') }}">
                         @csrf
@@ -230,6 +235,12 @@
                             <button class="nsp-btn" type="submit">Подписаться</button>
                         </div>
 
+                        {{-- 152-ФЗ: согласие на обработку ПДн (email) — отдельно от согласия на рассылку. --}}
+                        <label class="nsp-consent">
+                            <input type="checkbox" name="pd_consent" value="1" required style="margin-top:2px;">
+                            <span>Даю <a href="/dokumenty/soglasie-pd">согласие на обработку персональных данных</a>
+                                и ознакомлен(а) с <a href="/dokumenty/privacy">политикой конфиденциальности</a>.</span>
+                        </label>
                         <label class="nsp-consent">
                             <input type="checkbox" name="is_promo_agreed" value="1" required style="margin-top:2px;">
                             <span>Я согласен(на) получать письма и принимаю

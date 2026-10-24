@@ -18,7 +18,11 @@
     $metrikaId = config('analytics.metrika.shop_counter_id');
 @endphp
 @if($metrikaEnabled && $metrikaId)
+{{-- 152-ФЗ: счётчик — только после «Принять аналитику» (partials/analytics-gate);
+     вебвизор гостя не пишет ввод в поля (ym-disable-keys ставит шлюз). --}}
+@include('partials.analytics-gate')
 <script type="text/javascript">
+   ssConsent.onAnalytics(function () {
    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
    m[i].l=1*new Date();
    for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
@@ -31,12 +35,34 @@
         accurateTrackBounce:true,
         webvisor: {{ auth()->check() ? 'false' : 'true' }}
    });
+   });
 
    window.SHOP_METRIKA_ID = {{ $metrikaId }};
    window.shopReachGoal = function (goalName) {
         if (!goalName || typeof ym === 'undefined') return;
         try { ym(window.SHOP_METRIKA_ID, 'reachGoal', goalName); } catch (e) { /* never break shop */ }
    };
+
+   // Маркеры серверных событий (H6521): [data-metrika-goal] → reachGoal один раз на загрузке.
+   function __shopMetrikaFireMarkers() {
+        Array.prototype.forEach.call(
+            document.querySelectorAll('[data-metrika-goal]'),
+            function (el) { window.shopReachGoal(el.getAttribute('data-metrika-goal')); }
+        );
+   }
+   ssConsent.onAnalytics(function () {
+       if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', __shopMetrikaFireMarkers);
+       } else {
+            __shopMetrikaFireMarkers();
+       }
+   });
 </script>
-<noscript><div><img src="https://mc.yandex.ru/watch/{{ $metrikaId }}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+@endif
+{{-- Flash-маркер (H6521: ga_interstitial_view после /ga/-хопа, waitlist_join
+     после голоса ждуна): контроллер делает session()->flash('metrika_goal', <цель>)
+     — цель стреляет ровно один раз, на следующей загрузке. Тот же канал,
+     что в cabinet-metrika.blade.php. --}}
+@if(session('metrika_goal'))
+<span data-metrika-goal="{{ session('metrika_goal') }}" hidden></span>
 @endif

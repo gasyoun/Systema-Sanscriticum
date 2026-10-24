@@ -73,6 +73,13 @@
 
         <textarea name="comment" maxlength="1000" rows="2" placeholder="Комментарий (необязательно)">{{ old('comment') }}</textarea>
 
+        {{-- 152-ФЗ: согласие на обработку ПДн (iframe без Tailwind — своя вёрстка). --}}
+        <label style="display:flex; gap:8px; align-items:flex-start; font-size:12px; color:#6b7280; line-height:1.45; cursor:pointer;">
+            <input type="checkbox" name="pd_consent" value="1" required style="margin-top:2px;">
+            <span>Даю <a href="{{ route('docs.show', 'soglasie-pd') }}" target="_blank" style="color:#6366f1;">согласие на обработку персональных данных</a>
+                и ознакомлен(а) с <a href="{{ route('docs.show', 'privacy') }}" target="_blank" style="color:#6366f1;">политикой конфиденциальности</a>.</span>
+        </label>
+
         <button type="submit">Оставить заявку</button>
     </form>
 </body>

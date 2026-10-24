@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-_Created: 07-05-2026 · Last updated: 04-10-2026 (H5885 SLA trim; H5176 slim before)_
+_Created: 07-05-2026 · Last updated: 10-10-2026 (H5885 SLA trim; H5176 slim before)_
 
 **Systema-Sanscriticum** is the Laravel LMS for [samskrte.ru](https://samskrte.ru).
 Org spine applies; repo-local always-on only — open the matching section,
@@ -8,7 +8,7 @@ don't read end-to-end.
 
 ## Stack
 
-Laravel 12/PHP 8.3 · Vite 8+Tailwind 4 · Filament v3 ·
+Laravel 13/PHP 8.3 · Vite 8+Tailwind 4 · Filament v3 ·
 Horizon/Redis · MySQL prod, SQLite tests · Sail.
 
 ## Watcher (always-on)
@@ -35,7 +35,7 @@ deactivate/hide/retire/delete on that inference. Audits:
 `CatalogShellAudit::isCuratorGatedSale()`; pin:
 [`CuratorGatedHiddenSaleTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Catalog/CuratorGatedHiddenSaleTest.php).
 
-There is **no manual group assignment** — `PaymentObserver` →
+There is **no manual group assignment** — `Payment::processSuccessfulPayment()` →
 `Payment::grantAccess()` adds the user to the course `Group`. Tariff keys:
 `full`, `block_N`, `block_N_hH`; `Tariff::accessKey()` / `Lesson::unlockingKeys()`
 / `Lesson::isUnlockedBy()` are the single source of truth. Thresholds live in
@@ -121,12 +121,12 @@ Iterate with `--filter`; full suite (~11 min) before the PR. Pin time via
 |---|---|---|
 | Filament | `AdminPanelProvider`(`is_admin`) vs `LectureEditorPanelProvider`(`is_lecture_editor`); `Filament/Resources/`+`Editor/`. | — |
 | Access | Payment-driven groups; tariff keys above | Money |
-| Finance screens | `RoleGate::finance()` pages; never hardcode thresholds. Scoreboard/forecast flags OFF, **separate** pages. | [RHYTHM](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FINANCE_REVIEW_RHYTHM.md) · [FORECAST](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CRM_SALES_FORECAST_METHODOLOGY_2026.md) |
+| Finance screens | `RoleGate::finance()` pages; never hardcode thresholds. Scoreboard/forecast flags OFF, separate pages. | [RHYTHM](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FINANCE_REVIEW_RHYTHM.md) · [FORECAST](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CRM_SALES_FORECAST_METHODOLOGY_2026.md) |
 | Groups | `forming`/`active`/`archived`; curator flips status; `groups:notify-forming-shortfall`. | — |
 | Reviewers | `group_reviewer` ≠ `course_teacher`; settlement before payout | Money above |
 | Витрина курса (`CourseCadence`) | groups multi-stream courses by `schedules.group_id`. **Never sum streams:** `total()`/`hours()` take longest; `progressLabel()` `null` with >1 stream. Pin: [CourseCadenceMultiStreamTest](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Shop/CourseCadenceMultiStreamTest.php). | — |
 | Reading packs | Frozen under `resources/data/` — never hand-edit; re-vendor via [vendor_cohort](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/vendor_cohort_start_chteniya_packs.py)/[vendor_nala](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/vendor_nala_subhashita_packs.py). «Старт чтения»=`kosha_reader` **AND** `hasEntitlement`; per-course route=`CourseCohortEntitlement` alone, OFF. | — |
-| Queues | Nothing heavy on the request path — builds run as jobs (`imports`, `redis-long`). A `ShouldQueue`-Mailable's **constructor runs IN the request** — only `handle()`/`attachments()` defer. `sync` runs inline → `try/catch`; test on `sync`. | [DECISION_HOMEWORK_PDF_OFF_PATH](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DECISION_HOMEWORK_IMAGES_PDF_OFF_REQUEST_PATH_2026.md) |
+| Queues | Nothing heavy on the request path — builds run as jobs (`imports`/`redis-long`). `ShouldQueue`-Mailable's **constructor runs IN the request** — only `handle()`/`attachments()` defer; `sync` runs inline → try/catch; test there. | [DECISION_HOMEWORK_PDF_OFF_PATH](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DECISION_HOMEWORK_IMAGES_PDF_OFF_REQUEST_PATH_2026.md) |
 | Other | Marathon `/online/konsultaciya`: `MARATHON_LANDING_VISUAL_VARIANT`≠copy, `?skin=` QA-only. `LandingPage` catch-all `/{slug}`. Activity = middleware+heartbeat. | — |
 
 Schema derives from migrations; Money above carries the invariants.

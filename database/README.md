@@ -1,4 +1,4 @@
-_Created: 07-05-2026 · Last updated: 05-09-2026_
+_Created: 07-05-2026 · Last updated: 10-10-2026_
 
 # database
 
@@ -8,8 +8,8 @@ _Created: 07-05-2026 · Last updated: 05-09-2026_
 
 ```
 database/
-├── migrations/   # 99 миграций — полная история схемы
-├── seeders/      # DatabaseSeeder — создание тестового администратора
+├── migrations/   # 493 миграции — полная история схемы
+├── seeders/      # DatabaseSeeder (тестовый администратор) + тематические сидеры (категории, шаблоны сообщений и др.)
 └── factories/    # Eloquent-фабрики для тестов
 ```
 

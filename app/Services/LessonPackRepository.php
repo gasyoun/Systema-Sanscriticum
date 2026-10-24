@@ -84,7 +84,16 @@ class LessonPackRepository
         return $dir !== null && is_file($dir.'/manifest.json');
     }
 
-    private function packDir(int $zan, string $level, string $interest): ?string
+    /**
+     * Ожидаемый каталог пака для пары level×interest — БЕЗ проверки, что он
+     * существует.
+     *
+     * Публичный, потому что стража деплоя (H7069) обязана назвать путь,
+     * которого нет: packDir() на отсутствующем паке возвращает null, а null в
+     * тревоге человеку ничего не говорит. Правило свёртки «любая сторона
+     * base → общий base-пак» живёт здесь одно — второго словаря нет.
+     */
+    public function expectedDir(int $zan, string $level, string $interest): ?string
     {
         $levels = (array) config('lyw.levels', []);
         $interests = (array) config('lyw.interests', []);
@@ -92,13 +101,18 @@ class LessonPackRepository
             return null;
         }
 
-        $base = (string) config('lyw.packs_path');
-        $root = $base.'/zan'.$zan;
-        if ($level === 'base' || $interest === 'base') {
-            return is_dir($root.'/base') ? $root.'/base' : null;
-        }
+        $root = (string) config('lyw.packs_path').'/zan'.$zan;
 
-        return is_dir($root.'/'.$level.'/'.$interest) ? $root.'/'.$level.'/'.$interest : null;
+        return ($level === 'base' || $interest === 'base')
+            ? $root.'/base'
+            : $root.'/'.$level.'/'.$interest;
+    }
+
+    private function packDir(int $zan, string $level, string $interest): ?string
+    {
+        $dir = $this->expectedDir($zan, $level, $interest);
+
+        return $dir !== null && is_dir($dir) ? $dir : null;
     }
 
     /**
