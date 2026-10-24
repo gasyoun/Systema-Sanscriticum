@@ -20,7 +20,8 @@
             <input type="hidden" name="form_name" value="grammar_gasuns_autumn_2026">
             <label class="block text-sm text-slate-200" for="contact">Контакт</label>
             <input id="contact" name="contact" required autocomplete="email" class="w-full rounded-lg bg-slate-900 border border-slate-700 text-white p-3" placeholder="@telegram, телефон или почта">
-            <label class="flex gap-2 text-sm text-slate-400"><input type="checkbox" name="is_promo_agreed" value="1"> Можно написать мне о наборе</label>
+            <x-consent.pd theme="dark" />
+            <x-consent.promo theme="dark" label="на сообщения о наборе и анонсах" />
             <button class="w-full rounded-lg bg-brand hover:bg-brand-hover text-white font-bold p-3" type="submit">Встать в список ожидания</button>
         </form>
     </section>

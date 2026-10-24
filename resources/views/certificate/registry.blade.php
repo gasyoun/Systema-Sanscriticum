@@ -2,9 +2,15 @@
 
 @section('title', 'Реестр выданных сертификатов')
 
+@section('meta_description', 'Публичный реестр сертификатов и справок Общества ревнителей санскрита: кому, за какой курс и когда выдан документ. Проверка подлинности по номеру.')
+
 @push('head')
     <link rel="canonical" href="{{ route('certificate.registry') }}">
-    <meta name="description" content="Публичный реестр сертификатов и справок Общества ревнителей санскрита: кому, за какой курс и когда выдан документ. Проверка подлинности по номеру.">
+
+    @include('partials.schema-breadcrumbs', ['crumbs' => [
+        ['name' => 'Главная', 'url' => url('/')],
+        ['name' => 'Сертификаты'],
+    ]])
 @endpush
 
 @section('content')

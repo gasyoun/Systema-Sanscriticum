@@ -15,16 +15,21 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
- * Собирает все студенческие картинки одной сдачи в один PDF для проверки.
+ * Собирает студенческие картинки ПОСЛЕДНЕЙ отправки в один PDF для проверки.
  *
  * Студент по-прежнему шлёт фото с телефона; для куратора (и письма)
- * появляется один combined-images.pdf. Оригиналы на диске не трогаем.
+ * появляется один combined-images PDF. Оригиналы на диске не трогаем.
  */
 class HomeworkImagePdfService
 {
     public const DISK = 'local';
 
-    public const FILENAME = 'combined-images.pdf';
+    // v2 (08-10-2026): сборка стала «последняя отправка» вместо «вся история
+    // сдачи». Уже лежащие на проде combined-images.pdf собраны по старой
+    // логике, и без смены имени они продолжили бы показываться до ближайшей
+    // новой сдачи. Смена имени включает ленивую пересборку при первом
+    // открытии карточки (thread/download), старые файлы просто игнорируются.
+    public const FILENAME = 'combined-images-v2.pdf';
 
     /** Потолок вложения в письмо проверяющему (байты). Больше — только ссылка. */
     public const MAIL_ATTACH_MAX_BYTES = 12 * 1024 * 1024;
@@ -78,8 +83,24 @@ class HomeworkImagePdfService
     }
 
     /**
-     * Все студенческие image-файлы сдачи (все submission-комментарии),
-     * в хронологическом порядке комментария, затем id файла.
+     * Студенческие image-файлы ПОСЛЕДНЕЙ отправки — всё, что присланно после
+     * последнего вердикта проверяющего (review), в хронологическом порядке
+     * комментария, затем id файла. Верджикта не было — вся сдача целиком.
+     *
+     * Репорт куратора 08-10-2026: в PDF склеивались файлы ВСЕХ писем сдачи —
+     * сентябрьские (уже проверенные и отправленные на доработку) вместе с
+     * октябрьскими.
+     *
+     * Граница раунда — именно вердикт, а не последнее письмо: внутри раунда
+     * письма СКЛАДЫВАЮТСЯ в одну работу, и «только последнее письмо» теряло
+     * бы файлы из сценариев, которые сама форма предлагает студенту:
+     *   - «Отправьте работу в две части» (size-gate) — проверяющему нужны
+     *     обе части;
+     *   - «Работа уже на проверке — можно дополнить текст или файлы» —
+     *     дополнение присоединяется к работе, а не заменяет её;
+     *   - черновик + досдача файлов тем же раундом.
+     * Если новая версия заменяет старую, студент удаляет лишние файлы сам
+     * (deleteStudentFile) — они исчезают и из сборки.
      *
      * @return Collection<int, HomeworkFile>
      */
@@ -87,10 +108,23 @@ class HomeworkImagePdfService
     {
         $submission->loadMissing('comments.files');
 
-        return $submission->comments
+        $comments = $submission->comments
+            ->sortBy(['created_at', 'id'])
+            ->values();
+
+        // Позиция сразу после последнего вердикта: всё левее уже проверено.
+        $cut = 0;
+        foreach ($comments as $index => $comment) {
+            if ($comment->type === HomeworkComment::TYPE_REVIEW
+                && $comment->author_role !== HomeworkComment::ROLE_STUDENT) {
+                $cut = $index + 1;
+            }
+        }
+
+        return $comments
+            ->slice($cut)
             ->filter(fn (HomeworkComment $c) => $c->author_role === HomeworkComment::ROLE_STUDENT
                 && $c->type === HomeworkComment::TYPE_SUBMISSION)
-            ->sortBy(['created_at', 'id'])
             ->flatMap(fn (HomeworkComment $c) => $c->files
                 ->filter(fn (HomeworkFile $f) => $this->isRasterImage($f))
                 ->sortBy('id')

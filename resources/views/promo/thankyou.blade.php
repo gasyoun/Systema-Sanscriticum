@@ -6,7 +6,7 @@
     <title>Спасибо за заявку!</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕉️</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet">
+    @vite('resources/css/fonts.css')
     
     {{-- Подключаем стили Tailwind --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -19,7 +19,8 @@
     {{-- 1. ДИНАМИЧЕСКИЙ ЯНДЕКС (Берет ID из сессии) --}}
     {{-- =========================================== --}}
     @if(session('yandex_id'))
-        <script type="text/javascript" >
+        @include('partials.analytics-gate')
+<script type="text/javascript">ssConsent.onAnalytics(function () {
            (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
            m[i].l=1*new Date();
            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
@@ -33,15 +34,16 @@
                 accurateTrackBounce:true,
                 webvisor:true
            });
+});
         </script>
-        <noscript><div><img src="https://mc.yandex.ru/watch/{{ session('yandex_id') }}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     @endif
 
     {{-- =========================================== --}}
     {{-- 2. ДИНАМИЧЕСКИЙ VK (Берет ID из сессии)     --}}
     {{-- =========================================== --}}
     @if(session('vk_id'))
-        <script type="text/javascript">
+        @include('partials.analytics-gate')
+<script type="text/javascript">ssConsent.onAnalytics(function () {
             var _tmr = window._tmr || (window._tmr = []);
             _tmr.push({id: "{{ session('vk_id') }}", type: "pageView", start: (new Date()).getTime()});
             (function (d, w, id) {
@@ -51,8 +53,8 @@
                 var f = function () {var s = d.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ts, s);};
                 if (w.opera == "[object Opera]") { d.addEventListener("DOMContentLoaded", f, false); } else { f(); }
             })(document, window, "tmr-code");
+});
         </script>
-        <noscript><div><img src="https://top-fwz1.mail.ru/counter?id={{ session('vk_id') }};js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru" /></div></noscript>
     @endif
     
 </head>
@@ -79,7 +81,7 @@
 
         <p class="text-xl text-gray-300 mb-12 leading-relaxed">
             С адреса <span class="text-white font-semibold">{{ session('duplicate_email') }}</span> заявка на этот курс уже принята.<br>
-            Наш менеджер обязательно свяжется с вами.
+            Повторно отправлять ничего не нужно — всё приходит автоматически.
         </p>
 
         @include('promo.partials.curator-call-notice')
@@ -168,7 +170,7 @@
                     @if($meta)
                         <a href="{{ $url }}" target="_blank" rel="noopener noreferrer"
                            @if(session('yandex_id'))
-                               onclick="ym(@intval(session('yandex_id')), 'reachGoal', 'magnet_{{ $channel }}_click'); return true;"
+                               onclick="if (typeof ym === 'function') ym(@intval(session('yandex_id')), 'reachGoal', 'magnet_{{ $channel }}_click'); return true;"
                            @endif
                            class="group inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-lg text-white
                                   bg-gradient-to-r {{ $meta['gradient'] }} hover:brightness-110
@@ -201,7 +203,7 @@
             @php $tgUrl = session('redirect_url') ?: 'https://t.me/rusamskrtam'; @endphp
             <a href="{{ $tgUrl }}" target="_blank" rel="noopener noreferrer"
                @if(session('yandex_id'))
-                   onclick="ym(@intval(session('yandex_id')), 'reachGoal', 'telegram_click'); return true;"
+                   onclick="if (typeof ym === 'function') ym(@intval(session('yandex_id')), 'reachGoal', 'telegram_click'); return true;"
                @endif
                class="group inline-flex items-center justify-center px-6 py-3 text-base font-bold text-white rounded-xl transition-all duration-300 hover:scale-105
                       bg-gradient-to-r from-[#2AABEE] to-[#0088cc] hover:brightness-110
@@ -288,6 +290,12 @@
                 );
                 console.log('Yandex Goal sent: {{ session('conversion_event', 'lead') }} for ID: {{ session('yandex_id') }}');
             }
+            @if(session('redirect_url'))
+            else {
+                // 152-ФЗ: без согласия на аналитику Метрики нет — не ждём 6 с страховки.
+                fireRedirectWithMinDelay();
+            }
+            @endif
         @endif
 
         // ====================================================
@@ -308,5 +316,7 @@
         @endif
     });
 </script>
+    {{-- 152-ФЗ: баннер cookie — без него здесь нельзя дать/отозвать согласие на аналитику. --}}
+    @include('partials.cookie-consent')
 </body>
 </html>

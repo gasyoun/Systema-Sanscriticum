@@ -19,9 +19,14 @@
     $linkClass = $linkClass ?? 'text-gray-500 hover:text-brand transition-colors';
 @endphp
 
+{{-- H6373: веб-страница политики — живой URL /privacy нужен Google-верификации
+     (consent screen, sensitive scope calendar); PDF остаётся ниже по списку. --}}
+<a href="{{ route('privacy') }}" class="{{ $linkClass }}">Политика конфиденциальности</a>
 @foreach ($files as $slug)
     <a href="{{ route('docs.show', $slug) }}" class="{{ $linkClass }}">
         {{ $labels[$slug] ?? \Illuminate\Support\Str::headline($slug) }}
     </a>
 @endforeach
 <a href="{{ route('refund.show') }}" class="{{ $linkClass }}">Условия возврата</a>
+{{-- 152-ФЗ: согласие на аналитику можно отозвать в любой момент — переоткрывает баннер cookie. --}}
+<a href="#" onclick="if (window.ssConsent) { window.ssConsent.reopen(); } return false;" class="{{ $linkClass }}" data-cookie-settings>Настройки cookie</a>

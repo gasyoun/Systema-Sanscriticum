@@ -68,6 +68,33 @@ class CatalogPrettyUrlsTest extends TestCase
             ->assertStatus(301);
     }
 
+    public function test_legacy_teacher_query_redirects_to_percent_encoded_pretty_path(): void
+    {
+        $teacher = Teacher::factory()->create(['name' => 'Толчельников Иван Евгеньевич']);
+
+        // Location обязан быть percent-encoded: сырая кириллица в Location не
+        // матчится facets-роутом (прод 02-10-2026: клик «?teacher=N» → 301 на
+        // сырой путь → 404), закодированный путь резолвится в 200.
+        $expected = '/online/prepodavatel/'.rawurlencode('Толчельников-Иван-Евгеньевич');
+
+        $this->get('/online?teacher='.$teacher->id)
+            ->assertRedirect($expected)
+            ->assertStatus(301);
+    }
+
+    public function test_encoded_teacher_pretty_path_resolves_teacher_catalog(): void
+    {
+        Teacher::factory()->create(['name' => 'Толчельников Иван Евгеньевич']);
+
+        // Тот же путь, что уходит в Location редиректа, должен открывать каталог.
+        $encoded = implode('/', array_map(
+            'rawurlencode',
+            explode('/', '/online/prepodavatel/Толчельников-Иван-Евгеньевич'),
+        ));
+
+        $this->get($encoded)->assertOk();
+    }
+
     public function test_format_only_facet_is_not_indexable_and_folds_canonical_to_bare_catalog(): void
     {
         $html = $this->get('/online/format/live')->assertOk()->getContent();

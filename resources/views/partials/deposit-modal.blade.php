@@ -82,6 +82,8 @@
                     <p class="text-[11px] text-slate-500 leading-relaxed">
                         После оплаты мы пришлем пароль на email — войдете в личный кабинет и сможете смотреть открытые уроки.
                     </p>
+                    {{-- 152-ФЗ: путь оплаты — обязательность по флагу money-контура. --}}
+                    <x-consent.pd theme="dark" class="text-[12px]" :required="(bool) config('features.checkout_pd_consent_enforce')" />
                 @endguest
 
                 <button type="submit"

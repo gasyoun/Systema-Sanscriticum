@@ -6,24 +6,30 @@
     @php
         $siteName    = 'Общество ревнителей санскрита';
         $pageTitle   = 'Курсы санскрита с нуля — Общество ревнителей санскрита';
+        $seoTitle    = \App\Support\SeoTitle::render($pageTitle);
         $description = 'Курсы санскрита с нуля для взрослых: открытое занятие, первые задания и выбор маршрута обучения. Бесплатные материалы и участие с проверкой.';
         $keywords    = 'санскрит, курсы санскрита, изучение санскрита онлайн, индийская философия, веды, упанишады, бхагавадгита, индология, деванагари';
         $ogImage     = asset('images/og-main-preview.jpg');
         $canonical   = url('/');
     @endphp
-    <title>{{ $pageTitle }}</title>
+    <title>{{ $seoTitle }}</title>
     <meta name="description" content="{{ $description }}">
     <meta name="keywords" content="{{ $keywords }}">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{{ $canonical }}">
 
+    {{-- H6211 Low-1: PNG-иконка 512 + apple-touch + публичный манифест — Google показывает
+         иконку в мобильной выдаче; .ico остаётся легаси-фолбэком. --}}
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('images/icon-512.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/icon-180.png') }}">
+    <link rel="manifest" href="{{ asset('manifest-site.webmanifest') }}">
 
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="{{ $siteName }}">
     <meta property="og:locale" content="ru_RU">
     <meta property="og:url" content="{{ $canonical }}">
-    <meta property="og:title" content="{{ $pageTitle }}">
+    <meta property="og:title" content="{{ $seoTitle }}">
     <meta property="og:description" content="{{ $description }}">
     <meta property="og:image" content="{{ $ogImage }}">
     <meta property="og:image:width" content="1200">
@@ -31,7 +37,7 @@
     <meta property="og:image:alt" content="{{ $siteName }}">
 
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ $pageTitle }}">
+    <meta name="twitter:title" content="{{ $seoTitle }}">
     <meta name="twitter:description" content="{{ $description }}">
     <meta name="twitter:image" content="{{ $ogImage }}">
 
@@ -59,6 +65,15 @@
                         'https://t.me/rusamskrtam',
                         'https://www.youtube.com/@samskrtamru',
                     ],
+                    // Аудит 05-10-2026: у Organization не было contactPoint, хотя
+                    // телефон и почта стоят в шапке каждой страницы.
+                    'contactPoint' => [
+                        '@type' => 'ContactPoint',
+                        'contactType' => 'customer service',
+                        'telephone' => '+7-918-192-50-84',
+                        'email' => 'rusamskrtam@yandex.ru',
+                        'availableLanguage' => ['ru'],
+                    ],
                 ],
                 [
                     '@type' => 'WebSite',
@@ -71,7 +86,10 @@
                         '@type' => 'SearchAction',
                         'target' => [
                             '@type' => 'EntryPoint',
-                            'urlTemplate' => $orgSiteUrl.'/online?search={search_term_string}',
+                            // H6211 Low-3: канонический path-URL /online/poisk/{слова}
+                            // вместо /online?search=…, который 301-редиректится —
+                            // один хоп меньше для sitelinks searchbox.
+                            'urlTemplate' => $orgSiteUrl.'/online/poisk/{search_term_string}',
                         ],
                         'query-input' => 'required name=search_term_string',
                     ],
@@ -83,10 +101,9 @@
 {!! json_encode($orgSchema) !!}
     </script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    @vite('resources/css/fonts.css')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @vite('resources/js/alpine-standalone.js')
 
     <style>
         body { font-family: 'Montserrat', sans-serif; }

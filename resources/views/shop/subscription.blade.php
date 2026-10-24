@@ -14,9 +14,10 @@
 
 @section('title', 'Подписка «в записи» — весь архив факультативов')
 
-@push('head')
-    <meta name="description" content="Годовая подписка на архив факультативов «в записи»: {{ $archiveCount }} записей — все курсы архива и все пополнение. Стандарт {{ number_format((float) $standard->where('membership_months', 12)->first()?->price ?? 0, 0, '.', ' ') }} ₽/год, Профессионал {{ number_format((float) $professional->first()?->price ?? 0, 0, '.', ' ') }} ₽/год, пробный квартал {{ number_format((float) $standard->where('membership_months', 3)->first()?->price ?? 0, 0, '.', ' ') }} ₽.">
-@endpush
+@php
+    $metaDescription = 'Годовая подписка на архив факультативов «в записи»: '.$archiveCount.' записей — все курсы архива и все пополнение. Стандарт '.number_format((float) $standard->where('membership_months', 12)->first()?->price ?? 0, 0, '.', ' ').' ₽/год, Профессионал '.number_format((float) $professional->first()?->price ?? 0, 0, '.', ' ').' ₽/год, пробный квартал '.number_format((float) $standard->where('membership_months', 3)->first()?->price ?? 0, 0, '.', ' ').' ₽.';
+@endphp
+@section('meta_description', $metaDescription)
 
 @section('content')
 <main class="max-w-5xl mx-auto px-4 py-10">

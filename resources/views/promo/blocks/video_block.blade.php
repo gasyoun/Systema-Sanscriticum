@@ -3,14 +3,14 @@
 
     // --- Парсим каждый источник в готовый embed-URL ---
 
-    // YouTube → https://www.youtube.com/embed/{id}
+    // YouTube → https://www.youtube-nocookie.com/embed/{id}
     $ytEmbed = null;
     $rawYt = $d['youtube_url'] ?? null;
     if (!empty($rawYt)) {
         if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $rawYt, $m)) {
-            $ytEmbed = 'https://www.youtube.com/embed/'.$m[1];
+            $ytEmbed = 'https://www.youtube-nocookie.com/embed/'.$m[1];
         } elseif (preg_match('/^[a-zA-Z0-9_-]{11}$/', trim($rawYt))) {
-            $ytEmbed = 'https://www.youtube.com/embed/'.trim($rawYt);
+            $ytEmbed = 'https://www.youtube-nocookie.com/embed/'.trim($rawYt);
         } else {
             $ytEmbed = $rawYt; // вдруг уже готовый embed
         }

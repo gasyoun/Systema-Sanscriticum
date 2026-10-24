@@ -9,12 +9,15 @@ use App\Models\Lead;
 use App\Models\MarathonEnrollment;
 use App\Models\Payment;
 use App\Models\User;
+use App\Rules\HouseEmail;
 use App\Services\AttributionService;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Messaging\TelegramDeliveryChannel;
 use App\Services\Payments\TochkaPaymentService;
 use App\Support\AcquisitionAttribution;
 use App\Support\BeginnerPilotOffer;
+use App\Support\Consent\ConsentRules;
 use App\Support\MarathonLandingCopy;
 use App\Support\MarathonLandingCopySplit;
 use App\Support\MarathonVisual;
@@ -134,12 +137,14 @@ class MarathonController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|min:2|max:255',
             'contact' => 'required|string',
-            'email' => 'nullable|email',
+            'email' => ['nullable', 'string', 'max:255', new HouseEmail],
             'social' => 'nullable|string|max:255',
             'track' => 'required|in:'.MarathonEnrollment::TRACK_FREE.','.MarathonEnrollment::TRACK_PAID,
             'quiz_goal' => 'required|in:'.implode(',', array_keys(self::QUIZ_GOALS)),
             'is_promo_agreed' => 'nullable',
-        ]);
+            'pd_consent' => ConsentRules::pd(),
+        ], ConsentRules::messages());
+        app(ConsentRecorder::class)->fromForm($request, 'marathon:register', $request->user(), $validated['email'] ?? (filter_var($validated['contact'], FILTER_VALIDATE_EMAIL) ? $validated['contact'] : null), null, 'is_promo_agreed');
 
         if ($validated['track'] === MarathonEnrollment::TRACK_PAID && ! BeginnerPilotOffer::registrationAvailable()) {
             throw ValidationException::withMessages([
@@ -256,7 +261,7 @@ class MarathonController extends Controller
 
         $validated = $request->validate([
             'contact' => 'required|string',
-            'email' => 'required|email',
+            'email' => ['required', 'string', 'max:255', new HouseEmail],
         ]);
 
         $landing = LandingPage::where('slug', config('marathon.landing_slug'))->first();
@@ -394,12 +399,14 @@ class MarathonController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|min:2|max:255',
             'contact' => 'required|string',
-            'email' => 'nullable|email',
+            'email' => ['nullable', 'string', 'max:255', new HouseEmail],
             'social' => 'nullable|string|max:255',
             'track' => 'required|in:'.MarathonEnrollment::TRACK_FREE.','.MarathonEnrollment::TRACK_PAID,
             'quiz_goal' => 'required|in:'.implode(',', array_keys(self::QUIZ_GOALS)),
             'is_promo_agreed' => 'nullable',
-        ]);
+            'pd_consent' => ConsentRules::pd(),
+        ], ConsentRules::messages());
+        app(ConsentRecorder::class)->fromForm($request, 'marathon:register', $request->user(), $validated['email'] ?? (filter_var($validated['contact'], FILTER_VALIDATE_EMAIL) ? $validated['contact'] : null), null, 'is_promo_agreed');
 
         $landing = LandingPage::where('slug', config('marathon.january_landing_slug'))->first();
 
@@ -482,7 +489,7 @@ class MarathonController extends Controller
 
         $validated = $request->validate([
             'contact' => 'required|string',
-            'email' => 'required|email',
+            'email' => ['required', 'string', 'max:255', new HouseEmail],
         ]);
 
         $landing = LandingPage::where('slug', config('marathon.january_landing_slug'))->first();
@@ -762,6 +769,10 @@ class MarathonController extends Controller
             'email' => $email,
             'name' => $lead->name ?: 'Участник марафона',
             'password' => Hash::make(Str::random(12)),
+            // Рассылка — только если на регистрации марафона дали согласие
+            // (дефолт колонки теперь false, 152-ФЗ / 38-ФЗ).
+            'wants_email_announcements' => (bool) $lead->is_promo_agreed,
+            'wants_messenger_announcements' => (bool) $lead->is_promo_agreed,
         ]);
 
         app(AttributionService::class)->applyToNewUser($user);
