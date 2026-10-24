@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Восстановление пароля | ОРС LMS</title>
     @include('partials.tailwind-cdn')
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    @vite('resources/css/fonts.css')
 </head>
 <body class="bg-gray-50 min-h-screen flex items-center justify-center p-4 font-sans text-[#101010]">
 

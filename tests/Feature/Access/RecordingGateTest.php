@@ -91,7 +91,7 @@ class RecordingGateTest extends TestCase
         $this->paidLesson->update(['is_free' => true]);
 
         $this->get($this->gateUrl($this->paidLesson->fresh()))
-            ->assertRedirect('https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1&rel=0');
+            ->assertRedirect('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?enablejsapi=1&rel=0');
     }
 
     /** @test */
@@ -101,7 +101,7 @@ class RecordingGateTest extends TestCase
         $this->paidLesson->update(['is_preview' => true]);
 
         $this->get($this->gateUrl($this->paidLesson->fresh()))
-            ->assertRedirect('https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1&rel=0');
+            ->assertRedirect('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?enablejsapi=1&rel=0');
     }
 
     /** @test */
@@ -117,7 +117,7 @@ class RecordingGateTest extends TestCase
 
         $this->actingAs($this->buyer)
             ->get($this->gateUrl($this->paidLesson))
-            ->assertRedirect('https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1&rel=0');
+            ->assertRedirect('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?enablejsapi=1&rel=0');
     }
 
     /** @test */
@@ -187,7 +187,7 @@ class RecordingGateTest extends TestCase
 
         $this->actingAs($this->buyer)
             ->get($this->gateUrl($this->paidLesson))
-            ->assertRedirect('https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1&rel=0');
+            ->assertRedirect('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?enablejsapi=1&rel=0');
     }
 
     /** @test */
@@ -199,7 +199,7 @@ class RecordingGateTest extends TestCase
             ->get(route('student.lesson', [$this->course->slug, $this->paidLesson->id]))
             ->assertOk()
             ->assertDontSee('dQw4w9WgXcQ', false)
-            ->assertDontSee('youtube.com/embed', false)
+            ->assertDontSee('youtube-nocookie.com/embed', false)
             ->assertSee('/video/youtube', false);
     }
 
@@ -231,7 +231,7 @@ class RecordingGateTest extends TestCase
 
         $this->actingAs($this->buyer->fresh())
             ->get($this->gateUrl($this->paidLesson))
-            ->assertRedirect('https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1&rel=0');
+            ->assertRedirect('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?enablejsapi=1&rel=0');
     }
 
     /** @test */
@@ -274,7 +274,7 @@ class RecordingGateTest extends TestCase
         $this->get(route('shop.course.preview', $this->course->slug))
             ->assertOk()
             ->assertDontSee('dQw4w9WgXcQ', false)
-            ->assertDontSee('youtube.com/embed', false)
+            ->assertDontSee('youtube-nocookie.com/embed', false)
             ->assertSee('/video/youtube', false);
     }
 }

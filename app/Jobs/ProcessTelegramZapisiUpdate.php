@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\MarketingSetting;
+use App\Services\Anons\VideoAnons\VideoAnonsService;
 use App\Services\HomeworkTelegramTagService;
 use App\Services\Telegram\AnnounceCancelCallbackService;
 use App\Services\Telegram\AnnounceCancelService;
 use App\Services\Telegram\CancelClassCommandService;
 use App\Services\Telegram\CancelUsageHint;
+use App\Services\Telegram\ChatJoinRequestApprover;
 use App\Services\Telegram\DateAwareCancelService;
 use App\Services\Telegram\VacationCommandService;
 use App\Services\TelegramHarvest\HarvestStoreWriter;
@@ -70,6 +72,18 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
 
         // #ДЗ / кнопки выбора урока: @zapisi_ORSbot сидит в чатах групп
         // (в отличие от student-bot). Callback и входящий тег обрабатываем здесь.
+        // 20-10-2026: заявка в чат группы по ссылке после оплаты — одобряем
+        // оплативших (features.paid_chat_join_request; флаг OFF → skip).
+        if (isset($this->update['chat_join_request']) && is_array($this->update['chat_join_request'])) {
+            try {
+                app(ChatJoinRequestApprover::class)->handle($this->update['chat_join_request']);
+            } catch (Throwable $e) {
+                Log::warning('ChatJoinRequestApprover: handler failed', ['error' => $e->getMessage()]);
+            }
+
+            return;
+        }
+
         $homeworkTag = app(HomeworkTelegramTagService::class);
         if (isset($this->update['callback_query']) && is_array($this->update['callback_query'])) {
             // H4519: кнопки предложения отмены — свои префиксы acx:/acxn.
@@ -142,6 +156,15 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
             app(AnnounceCancelService::class)->handle($message);
         } catch (Throwable $e) {
             Log::warning('AnnounceCancel: handler failed', ['error' => $e->getMessage()]);
+        }
+
+        // H6546: видео-анонс — копия video от белого списка во все остальные
+        // чаты курса (карта config/video-anons.php) + черновик админам.
+        // Сам фильтрует (флаг / карта / автор / video); отказ — только в лог.
+        try {
+            app(VideoAnonsService::class)->handle($message);
+        } catch (Throwable $e) {
+            Log::warning('VideoAnons: handler failed', ['error' => $e->getMessage()]);
         }
 
         $chat = $message['chat'];

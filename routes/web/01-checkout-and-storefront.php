@@ -11,12 +11,14 @@ use App\Http\Controllers\MarathonController;
 use App\Http\Controllers\MaterialsController;
 use App\Http\Controllers\MembershipCommerceController;
 use App\Http\Controllers\MembershipController;
+use App\Http\Controllers\MiniCourseQuickEnrollController;
 use App\Http\Controllers\PublicSchedulePageController;
 use App\Http\Controllers\PublicWidgetController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SrsController;
 use App\Http\Controllers\StorefrontAnalyticsController;
 use App\Http\Controllers\SubscriptionLandingController;
+use App\Http\Controllers\TeacherPublicPageController;
 use App\Http\Controllers\TrackedLinkController;
 use App\Models\Course;
 use App\Models\LandingPage;
@@ -94,6 +96,17 @@ Route::get('/', function () {
 
 // Витрина магазина курсов
 Route::get('/online', [ShopController::class, 'index'])->name('shop.index');
+
+// --- ПРЕПОДАВАТЕЛИ ОРС (публичные страницы) ---
+// Список карточек + страница каждого преподавателя. Контроллер сам отдаёт 404
+// на выключенные/несуществующие слаги (page_enabled в Filament). Роуты живут
+// здесь, а не после catch-all /{slug}: слаг включённого препода не должен
+// уезжать в PromoController (лендинги без префикса).
+Route::get('/prepodavately', [TeacherPublicPageController::class, 'index'])
+    ->name('teachers.index');
+Route::get('/prepodavately/{slug}', [TeacherPublicPageController::class, 'show'])
+    ->where('slug', '[A-Za-z0-9\-]+')
+    ->name('teachers.show');
 
 // Короткие ссылки кампаний: UTM сохраняются в сессии, а каталог открывается
 // без query string. Внешний текст и адресная строка не раскрывают разметку.
@@ -223,6 +236,17 @@ Route::get('/online/konsultaciya/level-quiz/{token}/result', [MarathonController
 Route::get('/online/Janvar-27', [MarathonController::class, 'showJanuary'])->name('marathon.january.show');
 Route::post('/online/Janvar-27', [MarathonController::class, 'registerJanuary'])->name('marathon.january.register');
 Route::post('/online/Janvar-27/pay', [MarathonController::class, 'payJanuary'])->name('marathon.january.pay');
+
+// Быстрая запись на бесплатный мини-курс (ссылка VK-бота). Флаг
+// features.mini_course_quick_enroll; OFF → 404 из контроллера.
+Route::get('/k/podgotovitelnaya-gruppa-sanskrita/start', [MiniCourseQuickEnrollController::class, 'show'])
+    ->name('mini-course.quick');
+Route::post('/k/podgotovitelnaya-gruppa-sanskrita/start', [MiniCourseQuickEnrollController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('mini-course.quick.store');
+Route::get('/k/podgotovitelnaya-gruppa-sanskrita/vhod/{token}', [MiniCourseQuickEnrollController::class, 'magic'])
+    ->middleware('throttle:10,1')
+    ->name('mini-course.quick.magic');
 
 // Страница одного курса (короткий path /k/{slug}; legacy /online/kursy/* → 301 ниже)
 Route::get('/k/{course:slug}', [ShopController::class, 'show'])

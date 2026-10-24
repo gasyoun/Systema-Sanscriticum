@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Tests\Feature\Support;
 
 use App\Models\KnowledgeChunk;
+use App\Models\SupportAnswerSuggestion;
 use App\Services\Support\Faq\Bm25FaqRetriever;
 use App\Services\Support\Faq\EmbeddingProvider;
 use App\Services\Support\Faq\FaqCorpusParser;
 use App\Services\Support\Faq\HybridRetriever;
 use App\Services\Support\Faq\NullEmbeddingProvider;
+use App\Services\Support\SupportAnswerSuggester;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -76,6 +78,42 @@ class FaqRagEvalTest extends TestCase
         if (filter_var(env('FAQ_RAG_EVAL_WRITE', false), FILTER_VALIDATE_BOOLEAN)) {
             $this->writeReport($metrics);
         }
+    }
+
+    /**
+     * 0YS (18-10-2026): отказные карточки — единственная метрика, защищающая
+     * автоотправку. Карточка считается отклонённой, если живая F-полоса не
+     * может ответить: категория вне {F} ИЛИ BM25-скор ниже F-порога. Требование
+     * — 100 % отказов; один ответ на not-answerable карточку = провал гейта.
+     */
+    public function test_refusal_cards_never_cross_the_live_f_floor(): void
+    {
+        $fixturePath = base_path('tests/fixtures/faq_rag_eval.json');
+        $fixture = json_decode((string) file_get_contents($fixturePath), true, 512, JSON_THROW_ON_ERROR);
+        $cards = array_values(array_filter(
+            $fixture['items'] ?? [],
+            static fn (array $i): bool => ! empty($i['must_refuse']),
+        ));
+
+        $this->assertGreaterThanOrEqual(30, count($cards), 'refusal set must carry ≥30 cards (0YS)');
+
+        $suggester = app(SupportAnswerSuggester::class);
+        $retriever = app(Bm25FaqRetriever::class);
+        $floorF = (float) config('support.faq_rag.shadow_min_score_by_category.'.SupportAnswerSuggestion::CATEGORY_MATERIALS, 15.7);
+
+        $wouldAnswer = [];
+        foreach ($cards as $card) {
+            $this->assertSame([], $card['expected_chunk_ids'] ?? [], "refusal card {$card['id']} must not cite a chunk");
+            $category = $suggester->categorize((string) $card['question']);
+            $hits = $retriever->retrieve((string) $card['question'], 1);
+            $score = $hits === [] ? 0.0 : HybridRetriever::bm25Score($hits[0]);
+
+            if ($category === SupportAnswerSuggestion::CATEGORY_MATERIALS && $score >= $floorF) {
+                $wouldAnswer[] = sprintf('%s (%.1f ≥ %.1f)', $card['id'], $score, $floorF);
+            }
+        }
+
+        $this->assertSame([], $wouldAnswer, 'refusal accuracy below 100 %: the live F lane would answer '.implode(', ', $wouldAnswer));
     }
 
     /**
@@ -215,12 +253,23 @@ class FaqRagEvalTest extends TestCase
         $byCategory = [];
         $latencies = [];
 
+        $scored = 0;
+
         foreach ($items as $item) {
             /** @var list<string> $expected */
             $expected = $item['expected_chunk_ids'] ?? [];
+
+            // Refusal cards (0YS) carry no expected chunk: they are measured by
+            // refusal accuracy in test_refusal_cards_never_cross_the_live_f_floor,
+            // not by recall. Counting them here would silently halve the ratchet.
+            if ($expected === [] && ! empty($item['must_refuse'])) {
+                continue;
+            }
+
             foreach ($expected as $eid) {
                 $this->assertArrayHasKey($eid, $knownIds, "expected chunk_id missing from corpus: {$eid}");
             }
+            $scored++;
 
             $startedAt = microtime(true);
             $top = $retriever->retrieve((string) $item['question'], 5);
@@ -263,13 +312,13 @@ class FaqRagEvalTest extends TestCase
             ];
         }
 
-        $n = max(1, count($items));
+        $n = max(1, $scored);
         ksort($byCategory);
         sort($latencies);
         $p95Index = (int) floor(0.95 * max(0, count($latencies) - 1));
 
         return [
-            'n' => count($items),
+            'n' => $scored,
             'top3' => $top3Hits / $n,
             'recall5' => $recall5Hits / $n,
             'mrr' => $rrSum / $n,

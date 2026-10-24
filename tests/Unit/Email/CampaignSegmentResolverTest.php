@@ -6,6 +6,7 @@ namespace Tests\Unit\Email;
 
 use App\Models\Course;
 use App\Models\Lead;
+use App\Models\Payment;
 use App\Models\User;
 use App\Services\Email\CampaignSegmentResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -85,5 +86,32 @@ class CampaignSegmentResolverTest extends TestCase
         $result = (new CampaignSegmentResolver)->resolve(['type' => 'course']);
 
         $this->assertCount(0, $result);
+    }
+
+    public function test_tg_unbound_payers_includes_paid_without_telegram_only(): void
+    {
+        // P3 fix (independent review): 'success' — второй платный статус
+        // (Payment::PAID_STATUSES), '' и 0 — небound-варианты telegram_id.
+        $paidNoTg = User::factory()->create(['wants_email_announcements' => true]);
+        Payment::create(['user_id' => $paidNoTg->id, 'amount' => 4800, 'tariff' => 'block', 'status' => 'paid']);
+        $successEmptyTg = User::factory()->create(['wants_email_announcements' => true, 'telegram_id' => '']);
+        Payment::create(['user_id' => $successEmptyTg->id, 'amount' => 4800, 'tariff' => 'block', 'status' => 'success']);
+        $successZeroTg = User::factory()->create(['wants_email_announcements' => true, 'telegram_id' => 0]);
+        Payment::create(['user_id' => $successZeroTg->id, 'amount' => 4800, 'tariff' => 'block', 'status' => 'success']);
+        $paidWithTg = User::factory()->create(['wants_email_announcements' => true, 'telegram_id' => 555]);
+        Payment::create(['user_id' => $paidWithTg->id, 'amount' => 4800, 'tariff' => 'block', 'status' => 'paid']);
+        $pendingPayer = User::factory()->create(['wants_email_announcements' => true]);
+        Payment::create(['user_id' => $pendingPayer->id, 'amount' => 4800, 'tariff' => 'block', 'status' => 'pending']);
+        $paidNoConsent = User::factory()->create(['wants_email_announcements' => false]);
+        Payment::create(['user_id' => $paidNoConsent->id, 'amount' => 4800, 'tariff' => 'block', 'status' => 'paid']);
+        User::factory()->create(['wants_email_announcements' => true]); // плативших нет
+
+        $result = (new CampaignSegmentResolver)->resolve(['type' => 'tg_unbound_payers']);
+
+        $this->assertCount(3, $result);
+        $this->assertEqualsCanonicalizing(
+            [$paidNoTg->id, $successEmptyTg->id, $successZeroTg->id],
+            $result->pluck('id')->all()
+        );
     }
 }

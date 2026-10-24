@@ -5,10 +5,13 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CourseWaitlistItemResource\Pages;
 use App\Filament\Resources\CourseWaitlistItemResource\RelationManagers\VotesRelationManager;
 use App\Models\CourseWaitlistItem;
+use App\Models\MarketingSetting;
+use App\Services\Waitlist\ZhdunVoterNotifier;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -182,6 +185,17 @@ class CourseWaitlistItemResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                // H6466 — прямая ссылка «проголосовать за этот курс» в боте
+                // (?start=wl_<slug> → карточка одного курса без списка).
+                Tables\Columns\TextColumn::make('bot_deep_link')
+                    ->label('Ссылка в боте')
+                    ->getStateUsing(fn (CourseWaitlistItem $record): string => 'https://t.me/'
+                        .(MarketingSetting::cached()?->tg_bot_username ?: 'samskrte_bot')
+                        .'?start=wl_'.$record->slug)
+                    ->copyable()
+                    ->copyMessage('Ссылка скопирована')
+                    ->extraAttributes(['class' => 'text-xs']),
+
                 Tables\Columns\TextColumn::make('teacher_name')
                     ->label('Преподаватель')
                     ->searchable(),
@@ -268,6 +282,28 @@ class CourseWaitlistItemResource extends Resource
                     ]),
             ])
             ->actions([
+                Tables\Actions\Action::make('notify_voters')
+                    ->label('Сообщить голосовавшим')
+                    ->icon('heroicon-m-megaphone')
+                    ->color('info')
+                    ->visible(fn (CourseWaitlistItem $record): bool => $record->status === CourseWaitlistItem::STATUS_PAYMENT_OPEN
+                        && $record->votesCount() > 0)
+                    ->form([
+                        Forms\Components\Textarea::make('text')
+                            ->label('Текст сообщения')
+                            ->rows(5)
+                            ->default(fn (CourseWaitlistItem $record): string => ZhdunVoterNotifier::paymentOpenText($record))
+                            ->required(),
+                    ])
+                    ->action(function (CourseWaitlistItem $record, array $data): void {
+                        $result = app(ZhdunVoterNotifier::class)->notify($record, $data['text']);
+
+                        Notification::make()
+                            ->title('Голосовавшие уведомлены')
+                            ->body("Мессенджеры: {$result['messengers']}. Email: {$result['emails']}. Не охвачено (вручную): {$result['no_channel']}.")
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

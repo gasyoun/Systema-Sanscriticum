@@ -36,6 +36,14 @@ final class PublicationManifest
 
     public const PLATFORMS = ['telegram_story', 'telegram_post', 'vk', 'senler'];
 
+    /** H6915: кадр-видео (sendVideo) вместо фото-кадра с выжженной плашкой. */
+    public const KIND_VIDEO = 'video';
+
+    public const KIND_PHOTO = 'photo';
+
+    /** Bot API multipart-лимит для видео (см. TelegramPostAdapter). */
+    public const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+
     /** @param array<string, mixed> $data */
     private function __construct(public readonly array $data) {}
 
@@ -112,13 +120,30 @@ final class PublicationManifest
 
                     continue;
                 }
-                $asset = $frame['asset'] ?? null;
-                if (! is_string($asset) || $asset === '') {
-                    $errors[] = "frames[{$i}].asset is required.";
-                } elseif (! str_starts_with($asset, '/')) {
-                    $errors[] = "frames[{$i}].asset must be an ABSOLUTE path (ambiguity guard).";
-                } elseif (! is_file($asset) || ! is_readable($asset)) {
-                    $errors[] = "frames[{$i}].asset is missing/unreadable: {$asset}.";
+
+                // H6915: kind=video → media_path вместо asset, CTA-плашка
+                // не выжигается (видео неизменяемо), подпись несёт ссылку.
+                $kind = $frame['kind'] ?? self::KIND_PHOTO;
+                if (! in_array($kind, [self::KIND_PHOTO, self::KIND_VIDEO], true)) {
+                    $errors[] = "frames[{$i}].kind must be 'photo' or 'video' (got: ".json_encode($kind).').';
+
+                    continue;
+                }
+
+                $mediaField = $kind === self::KIND_VIDEO ? 'media_path' : 'asset';
+                $media = $frame[$mediaField] ?? null;
+                if (! is_string($media) || $media === '') {
+                    $errors[] = "frames[{$i}].{$mediaField} is required (kind={$kind}).";
+                } elseif (! str_starts_with($media, '/')) {
+                    $errors[] = "frames[{$i}].{$mediaField} must be an ABSOLUTE path (ambiguity guard).";
+                } elseif (! is_file($media) || ! is_readable($media)) {
+                    $errors[] = "frames[{$i}].{$mediaField} is missing/unreadable: {$media}.";
+                } elseif ($kind === self::KIND_VIDEO && (int) filesize($media) > self::MAX_VIDEO_BYTES) {
+                    $errors[] = sprintf(
+                        "frames[{$i}].media_path exceeds the Bot API 50MB video limit (%.1f MB): %s — re-encode or trim the fragment.",
+                        filesize($media) / 1024 / 1024,
+                        $media
+                    );
                 }
 
                 $caption = $frame['caption'] ?? null;
@@ -144,7 +169,8 @@ final class PublicationManifest
                     $errors[] = "frames[{$i}].cta_url must be the clean /ga/ short link — UTM lives server-side (presentation-safety, anons skill).";
                 }
 
-                if (! is_string($frame['cta_text'] ?? null) || trim((string) $frame['cta_text']) === '') {
+                if ($kind === self::KIND_PHOTO
+                    && (! is_string($frame['cta_text'] ?? null) || trim((string) $frame['cta_text']) === '')) {
                     $errors[] = "frames[{$i}].cta_text is required — the visible plaque is burned into the image.";
                 }
             }

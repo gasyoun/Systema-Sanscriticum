@@ -126,6 +126,35 @@
         </div>
     @endif
 
+    {{-- «Продление» (MG 12-10-2026): курсы без долга, где следующий блок
+         уже можно оплатить самому — тариф block_N, цена как в чекауте. --}}
+    @if (($renewals ?? collect())->isNotEmpty())
+        <div class="mb-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">Продление</div>
+        <div class="space-y-3 mb-8" data-testid="next-block-renewals">
+            @foreach ($renewals as $renewal)
+                <article class="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                    <div class="min-w-0">
+                        <h3 class="font-extrabold text-[#101010]">{{ $renewal->courseTitle }}</h3>
+                        <p class="text-sm text-gray-600 mt-1">
+                            Оплачено до: блок №{{ $renewal->paidBlock->number }}
+                            @if ($renewal->paidBlock->ends_at)
+                                (до {{ $renewal->paidBlock->ends_at->format('d.m.Y') }})
+                            @endif
+                            @if ($renewal->deadline)
+                                · следующий платеж до {{ $renewal->deadline->format('d.m.Y') }}
+                            @endif
+                        </p>
+                    </div>
+                    <a href="{{ $renewal->pay['url'] }}"
+                       data-track-event="access.renewal.start" data-track-kind="block" data-track-surface="access-page"
+                       class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold">
+                        Оплатить блок №{{ $renewal->pay['number'] }}@if($renewal->pay['amount'] > 0) — {{ number_format((float) $renewal->pay['amount'], 0, ',', ' ') }} ₽@endif
+                    </a>
+                </article>
+            @endforeach
+        </div>
+    @endif
+
     <p class="text-xs text-gray-400">
         Промо и офферы на этой странице не показываются — сначала доступ, потом предложения (R2).
     </p>

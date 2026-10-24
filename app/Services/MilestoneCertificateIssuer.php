@@ -11,6 +11,7 @@ use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\User;
+use App\Support\GreetingName;
 use Carbon\CarbonInterface;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
@@ -424,8 +425,10 @@ class MilestoneCertificateIssuer
     /** Идемпотентная выдача одному студенту; null — документ уже был. */
     private function issueTo(CertificateMilestone $milestone, User $user, ?Group $group, int $occurrence): ?Certificate
     {
+        // Снимок имени — «Фамилия Имя» без отчества/города/пометок: именно он
+        // печатается в PDF и верификации, а поле профиля свободной формы.
         $attributes = [
-            'student_name' => $user->name,
+            'student_name' => GreetingName::shortOf($user->name),
             'course_title' => $milestone->snapshotTitleFor($occurrence),
             'template' => $milestone->template,
             'document_type' => $milestone->document_type,

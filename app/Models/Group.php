@@ -26,7 +26,7 @@ class Group extends Model
     protected $fillable = [
         'name', 'slug', 'intake_id', 'telegram_chat_id',
         'status', 'min_size', 'planned_start_date', 'start_date_override', 'recruitment_notified_at',
-        'is_on_vacation', 'vacation_resume_date',
+        'is_on_vacation', 'vacation_resume_date', 'vacation_cleared_at',
     ];
 
     protected $casts = [
@@ -35,6 +35,7 @@ class Group extends Model
         'recruitment_notified_at' => 'datetime',
         'is_on_vacation' => 'boolean',
         'vacation_resume_date' => 'date',
+        'vacation_cleared_at' => 'datetime',
     ];
 
     protected $attributes = [
@@ -87,6 +88,15 @@ class Group extends Model
         static::updating(function (self $group): void {
             if ($group->isDirty('start_date_override')) {
                 $group->recruitment_notified_at = null;
+            }
+
+            // H6343: снятие флага каникул (true→false) — фиксируем момент, чтобы
+            // гибридный гейт анонса возобновления («флаг снят на этой неделе»)
+            // не приходилось выводить из общего updated_at.
+            if ($group->isDirty('is_on_vacation')
+                && ! $group->is_on_vacation
+                && (bool) $group->getOriginal('is_on_vacation')) {
+                $group->vacation_cleared_at = now();
             }
         });
     }

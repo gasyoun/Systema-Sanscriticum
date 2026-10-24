@@ -216,7 +216,11 @@ composer check-platform-reqs --no-dev
 # (инцидент 11:00Z: docs-only PR → timeout 1500s → rollback снова vite → 124 →
 # critical breaker при живом HTTP). Собираем фронт только если изменились
 # asset-пути, нет FORCE_NPM=1, и (для skip) на диске есть manifest.
-# Пути: package* / vite / postcss / tailwind / resources/{js,css,css/**}.
+# Пути: package* / vite / postcss / tailwind / resources/{js,css} / resources/views.
+# resources/views обязателен в списке (фикс 02-10-2026, «сплошной текст» на
+# /prepodavately): Tailwind v4 сканирует blade-вьюхи (@source "../views"),
+# PR только с вьюхами меняет CSS-бандл, и skip npm оставлял на проде старый
+# бандл — новые классы не стилизованы.
 need_npm_build() {
   if [ "${FORCE_NPM:-0}" = "1" ]; then
     echo "FORCE_NPM=1 — принудительная пересборка фронта"
@@ -237,6 +241,7 @@ need_npm_build() {
       postcss.config.js postcss.config.cjs postcss.config.mjs \
       tailwind.config.js tailwind.config.ts tailwind.config.cjs \
       resources/js resources/css \
+      resources/views \
     | grep -q .; then
     echo "изменились asset-пути — npm ci + build"
     return 0
@@ -318,9 +323,51 @@ systemctl reload "php${PHP_VER}-fpm" || fail "Не удалось перезаг
 # horizon:terminate на этом проде воркеры НЕ циклит (PID-ы не меняются — они
 # продолжают крутить старый код/кеш); работает только supervisorctl restart.
 # Фолбэк на terminate — для окружений без supervisor (dev-бокс).
+#
+# Рестарт ограничен по времени: `supervisorctl restart` ждёт stopwaitsecs
+# (3600 с), а простаивающий воркер redis-long порой не выходит на SIGTERM —
+# деплой висел, Horizon стоял в STOPPING, бот и рассылки молчали
+# (19-10 и 22-10-2026, оба раза — ручной kill). Ждём, пока идёт хоть одна
+# зарезервированная задача (до HORIZON_STOP_MAX_SECONDS — потолок задачи
+# timeout=600 + запас), без задач — HORIZON_STOP_IDLE_SECONDS; потом добиваем
+# процессы Horizon (вместе с осиротевшими воркерами) и стартуем заново.
+HORIZON_STOP_IDLE_SECONDS=${HORIZON_STOP_IDLE_SECONDS:-30}
+HORIZON_STOP_MAX_SECONDS=${HORIZON_STOP_MAX_SECONDS:-660}
+# Только сами php-процессы Horizon — не shell/ssh, где «artisan horizon» в тексте команды.
+HORIZON_PROC_RE='^[^ ]*php[0-9.]* [^ ]*artisan horizon'
+
+horizon_reserved_jobs() {
+  command -v redis-cli >/dev/null 2>&1 || { echo 1; return; }
+  local total=0 key n
+  for key in $(redis-cli --scan --pattern '*queues:*:reserved' 2>/dev/null); do
+    n=$(redis-cli zcard "$key" 2>/dev/null || echo 0)
+    total=$((total + ${n:-0}))
+  done
+  echo "$total"
+}
+
+restart_horizon_bounded() {
+  supervisorctl stop horizon >/dev/null 2>&1 &
+  local stopper=$! waited=0
+  while pgrep -f "$HORIZON_PROC_RE" >/dev/null 2>&1; do
+    if [ "$waited" -ge "$HORIZON_STOP_MAX_SECONDS" ] \
+      || { [ "$waited" -ge "$HORIZON_STOP_IDLE_SECONDS" ] && [ "$(horizon_reserved_jobs)" -eq 0 ]; }; then
+      warn "Horizon не остановился за ${waited} с — добиваю процессы"
+      pkill -TERM -f "$HORIZON_PROC_RE" || true
+      sleep 5
+      pkill -KILL -f "$HORIZON_PROC_RE" || true
+      break
+    fi
+    sleep 5
+    waited=$((waited + 5))
+  done
+  wait "$stopper" 2>/dev/null || true
+  supervisorctl start horizon || fail "supervisorctl start horizon провалился — очереди стоят!"
+}
+
 say "Рестарт Horizon"
 if command -v supervisorctl >/dev/null 2>&1; then
-  supervisorctl restart horizon || fail "supervisorctl restart horizon провалился — очереди крутят старый код!"
+  restart_horizon_bounded
   sleep 2
   supervisorctl status horizon || true
 else
@@ -399,11 +446,38 @@ probe_rc=$?
 chown_compiled_views
 [ "$probe_rc" = 0 ] || fail "cabinet:probe: critical после деплоя — кабинет нездоров"
 
-# ── 7b. Ресурсные предохранители ОС (H1914) ─────────────────────────────────
-# Только ПРОВЕРКА, никогда не apply: выкладка кода не должна молча менять
-# системный конфиг. Предохранители 29-07-2026 живут вне репозитория, и пересборка
-# LXC/восстановление из бэкапа сносят их беззвучно — деплой самый частый момент,
-# когда об этом можно узнать вовремя.
+# ── 7b. Контент уроков LYW: паки из пина (H7069) ────────────────────────────
+# `storage/` не в git: девять паков зан1 залиты на .92 18-10-2026 руками, и
+# первое же восстановление storage, пересборка бокса или второй сервер
+# оставляют конфиг с LYW_ENABLED=true без содержимого — вкладка живёт, уроки
+# отдают 404. Шаг идемпотентен (второй прогон — no-op по itemize-changes),
+# офлайновый (git archive по тегу из локального зеркала, без сети) и объявляет
+# расхождения unified diff'ом ДО записи.
+#
+# Почему сбой шага не `fail`: exit 1 завернул бы хороший код в откат (#1143,
+# та же причина, что у баннера managed-дрейфа). Громкий рот — guards:verify:
+# пропажу пака включённой группы он называет critical (lyw-packs, H7069), а
+# его и зовёт следующий раздел.
+say "Контент LYW: паки зан1 из пина"
+LYW_PACKS_RC=0
+set +e
+bash "$APP_DIR/scripts/server_guards/sbin/lesson-packs-sync.sh" 2>&1 | tee -a "$DEPLOY_LOG"
+LYW_PACKS_RC=${PIPESTATUS[0]}
+set -e
+if [ "$LYW_PACKS_RC" != 0 ]; then
+  echo "$(date '+%Y-%m-%d %H:%M:%S') LYW PACKS rc=${LYW_PACKS_RC} после ${NEW_COMMIT} — паки не выложены из пина" >> "$DEPLOY_LOG"
+  printf '\n\033[1;31m%s\033[0m\n' "✖ ПАКИ LYW НЕ ВЫЛОЖЕНЫ (код $LYW_PACKS_RC) — см. строки выше"
+  printf '\033[1;31m%s\033[0m\n' "  Код жив; пропажу паков у включённой группы назовёт guards:verify ниже (critical lyw-packs)"
+fi
+
+# ── 7c. Ресурсные предохранители ОС (H1914) ─────────────────────────────────
+# Проверка, затем ОБЪЯВЛЕННЫЙ apply (H7060): выкладка кода не должна молча менять
+# системный конфиг, поэтому сначала печатается unified diff расходящихся файлов,
+# и только потом идёт идемпотентный server_guards_apply.sh (см. 7c). До H7060
+# здесь была только проверка, и дрейф от легитимного коммита жил вечно.
+# Предохранители 29-07-2026 живут вне репозитория, и пересборка LXC/восстановление
+# из бэкапа сносят их беззвучно — деплой самый частый момент, когда об этом можно
+# узнать вовремя (и единственный, который случается без человека).
 #
 # Зеркало root-crontab (644): cabinet:probe крутится от www-data и не читает
 # /var/spool/cron/crontabs/root; без снимка guards:verify под www-data врёт
@@ -428,6 +502,35 @@ chown_compiled_views
 # скомпилированный view, — ПРОВАЛЬНЫЙ деплой, а не предупреждение в логе,
 # которое никто не читает. Стоит ПОСЛЕ последнего chown (H3194: `fail` = exit 1).
 assert_no_root_views
+# ── 7d. Drift managed-файлов: объявить (dry-run diff) → применить → перепроверить
+# H7060, инцидентная строка 9 (18-10-2026): легитимный коммит правил managed-файл,
+# verify честно ловил расхождение, apply не звался НИКОГДА — баннер «Вернуть:
+# sudo bash ...» висел, пока человек не прочтёт; 26 алертов за 36 часов ничего не
+# починили, а авто-деплой-обёртка крутила повторы вокруг неподвижного дрейфа.
+# Здесь расхождение закрывается тем же деплоем, но не молча: сначала печатается
+# unified diff всех расходящихся файлов (деплой обязан объявлять каждое системное
+# изменение), затем идёт санкционированный идемпотентный server_guards_apply.sh —
+# второй прогон подряд ничего не меняет. Не root / apply упал / drift остался →
+# баннер ниже срабатывает как раньше, exit-семантика #1143 не тронута.
+if [ "$GUARDS_DRIFT" = 1 ]; then
+  MANAGED_APPLY="$APP_DIR/scripts/server_guards/sbin/managed-guards-apply-on-deploy.sh"
+  if [ -f "$MANAGED_APPLY" ]; then
+    say "Managed guards: dry-run diff → apply (H7060)"
+    set +e
+    bash "$MANAGED_APPLY" 2>&1 | tee -a "$DEPLOY_LOG"
+    MANAGED_RC=${PIPESTATUS[0]}
+    set -e
+    if [ "$MANAGED_RC" = 0 ]; then
+      GUARDS_DRIFT=0
+      echo "$(date '+%Y-%m-%d %H:%M:%S') MANAGED APPLY OK после ${NEW_COMMIT} — drift закрыт этим деплоем" >> "$DEPLOY_LOG"
+    else
+      echo "$(date '+%Y-%m-%d %H:%M:%S') MANAGED APPLY rc=${MANAGED_RC} после ${NEW_COMMIT} — drift остался" >> "$DEPLOY_LOG"
+    fi
+  else
+    warn "нет $MANAGED_APPLY — apply внутри деплоя недоступен, drift остаётся видимым (H7060)"
+  fi
+fi
+
 if [ "$GUARDS_DRIFT" = 1 ]; then
   printf '\n\033[1;31m%s\033[0m\n' "✖ ПРЕДОХРАНИТЕЛИ ПРОДА РАСХОДЯТСЯ С РЕПОЗИТОРИЕМ (см. список выше)"
   printf '\033[1;31m%s\033[0m\n' "  Вернуть: sudo bash scripts/server_guards_apply.sh"

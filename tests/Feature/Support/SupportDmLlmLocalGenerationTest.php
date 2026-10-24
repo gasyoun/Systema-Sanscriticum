@@ -7,6 +7,7 @@ namespace Tests\Feature\Support;
 use App\Services\Support\Faq\FaqCorpusParser;
 use App\Services\Support\Faq\KnowledgeContext;
 use App\Services\Support\SupportDmLlmReplyComposer;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -22,6 +23,10 @@ use Tests\TestCase;
  */
 class SupportDmLlmLocalGenerationTest extends TestCase
 {
+    // H6144: композер теперь зависит от SupportStudentPiiMasker, которому нужен
+    // живой сет users — в тестах это мигрированная (пустая) схема.
+    use RefreshDatabase;
+
     private const QUESTION = 'куда загружать домашнее задание и в каком формате';
 
     private const ANSWER = 'Домашнее задание загружается в личном кабинете на странице урока.';

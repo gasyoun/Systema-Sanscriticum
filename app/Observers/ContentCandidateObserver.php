@@ -7,7 +7,6 @@ namespace App\Observers;
 use App\Jobs\PublishSocialPostJob;
 use App\Jobs\SendContentOneShotMailJob;
 use App\Models\ContentCandidate;
-use App\Services\Content\KnowledgeFaqPublisher;
 use App\Services\Content\SocialDraftGenerator;
 
 /**
@@ -21,9 +20,6 @@ use App\Services\Content\SocialDraftGenerator;
  *   dispatch PublishSocialPostJob.
  * - email_blast candidate accepted (staff reviewed the weekly digest) →
  *   dispatch SendContentOneShotMailJob.
- * - faq_draft candidate accepted → KnowledgeFaqPublisher appends to the
- *   cabinet knowledge file (Accept IS the knowledge publish; no public
- *   auto-publish, no extra flag — H1549 Wave 3 / D3).
  * - study_artifact / article: Accept is editorial only — no dispatch
  *   (H1550/H1551; VERIFICATION E2: study never on pilot publish).
  *
@@ -35,7 +31,6 @@ class ContentCandidateObserver
 {
     public function __construct(
         private readonly SocialDraftGenerator $socialDraftGenerator,
-        private readonly KnowledgeFaqPublisher $knowledgeFaqPublisher,
     ) {}
 
     public function updated(ContentCandidate $candidate): void
@@ -75,10 +70,9 @@ class ContentCandidateObserver
             return;
         }
 
-        if ($candidate->type === ContentCandidate::TYPE_FAQ_DRAFT) {
-            $this->knowledgeFaqPublisher->publish($candidate);
-        }
-
-        // TYPE_STUDY_ARTIFACT / TYPE_ARTICLE: intentional no-op (staff review only).
+        // TYPE_FAQ_DRAFT / TYPE_STUDY_ARTIFACT / TYPE_ARTICLE: intentional
+        // no-op (staff review only). The lecture FAQ band was retired 18-10-2026
+        // (RAG grill card 6): lecture material enters as lesson chunks, never as
+        // hand-published FAQ prose.
     }
 }

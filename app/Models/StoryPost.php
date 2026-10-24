@@ -53,6 +53,7 @@ class StoryPost extends Model
         'status',
         'publish_at',
         'repeat_rule',
+        'media_area',
         'posted_at',
         'repeat_count',
         'telegram_message_id',
@@ -63,6 +64,9 @@ class StoryPost extends Model
         'publish_at' => 'datetime',
         'posted_at' => 'datetime',
         'repeat_rule' => 'array',
+        // H6678: per-story клик-зона (center-семантика MediaAreaMath);
+        // NULL = легаси-зона издателя.
+        'media_area' => 'array',
         'repeat_count' => 'integer',
     ];
 
