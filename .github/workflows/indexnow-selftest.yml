@@ -1,0 +1,36 @@
+name: IndexNow submitter self-test
+
+# The SEO measurement floor (19-10-2026) documents an IndexNow step that had no
+# script in the repo. `scripts/indexnow_submit.py` is stdlib-only and dry-run by
+# default; `--apply` is the only path that touches the external API. These tests
+# pin host/key/URL validation and the request payload, with no network calls.
+#
+# Kept as its own workflow so editing it never has to touch the 23 KB ci.yml,
+# which is over the token-size gate's per-file budget.
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/indexnow_submit.py'
+      - 'scripts/test_indexnow_submit.py'
+      - '.github/workflows/indexnow-selftest.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/indexnow_submit.py'
+      - 'scripts/test_indexnow_submit.py'
+      - '.github/workflows/indexnow-selftest.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests (no network)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      - run: python -m unittest scripts/test_indexnow_submit.py -v
