@@ -231,6 +231,19 @@ class MarketingSetting extends Model
     }
 
     /**
+     * H6915: токен магнит-бота для канальных постов (FINDINGS §651 — один
+     * бот на одну поверхность). TelegramPostAdapter звал этот хелпер, но он
+     * не существовал — латентный фатал всего telegram_post-лейна; теперь
+     * он есть и возвращает null при пустом токене.
+     */
+    public static function magnetBotToken(): ?string
+    {
+        $token = self::cached()?->tg_bot_token;
+
+        return (is_string($token) && $token !== '') ? $token : null;
+    }
+
+    /**
      * Возвращает список каналов, у которых **полностью** заполнена конфигурация
      * (username/screen_name + token). Используется на thank-you, чтобы показать
      * кнопки только для тех мессенджеров, в которые юзер реально сможет получить
