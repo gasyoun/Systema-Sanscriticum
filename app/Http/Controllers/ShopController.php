@@ -52,6 +52,7 @@ class ShopController extends Controller
         ];
         $categorySlugs = [];
         $indexable = true;
+        $category = null;
 
         if ($facets !== null) {
             $parsed = ShopCatalogUrl::parse($facets);
@@ -92,6 +93,12 @@ class ShopController extends Controller
             $indexable = array_keys($parsed) === ['kategoriya'] && count($categorySlugs) === 1;
         }
 
+        // SEO-META-1: a single-category facet is a real landing page (self-canonical),
+        // so the view needs its name for a unique title/H1/description.
+        if ($indexable && count($categorySlugs) === 1) {
+            $category = Category::where('slug', $categorySlugs[0])->first(['name', 'slug']);
+        }
+
         $canonicalPath = ShopCatalogUrl::build($indexable ? $categorySlugs : array_slice($categorySlugs, 0, 1));
 
         $deposit = MarketingSetting::cached();
@@ -109,7 +116,7 @@ class ShopController extends Controller
         $ladder = ProductLadderAnchors::resolve();
 
         return view('shop.index', array_merge($initial, compact(
-            'deposit', 'featuredTestimonials', 'ladder', 'canonicalPath', 'indexable'
+            'deposit', 'featuredTestimonials', 'ladder', 'canonicalPath', 'indexable', 'category'
         )) + [
             // H5134 — мои сердечки в каталоге (Livewire-проп, flag OFF / гость — []).
             'favoriteCourseIds' => CourseFavorite::favoritedCourseIdsForCurrentViewer(),

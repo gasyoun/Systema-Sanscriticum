@@ -6,12 +6,13 @@
     @php
         $siteName    = 'Общество ревнителей санскрита';
         $pageTitle   = 'Курсы санскрита с нуля — Общество ревнителей санскрита';
+        $seoTitle    = \App\Support\SeoTitle::render($pageTitle);
         $description = 'Курсы санскрита с нуля для взрослых: открытое занятие, первые задания и выбор маршрута обучения. Бесплатные материалы и участие с проверкой.';
         $keywords    = 'санскрит, курсы санскрита, изучение санскрита онлайн, индийская философия, веды, упанишады, бхагавадгита, индология, деванагари';
         $ogImage     = asset('images/og-main-preview.jpg');
         $canonical   = url('/');
     @endphp
-    <title>{{ $pageTitle }}</title>
+    <title>{{ $seoTitle }}</title>
     <meta name="description" content="{{ $description }}">
     <meta name="keywords" content="{{ $keywords }}">
     <meta name="robots" content="index, follow">
@@ -28,7 +29,7 @@
     <meta property="og:site_name" content="{{ $siteName }}">
     <meta property="og:locale" content="ru_RU">
     <meta property="og:url" content="{{ $canonical }}">
-    <meta property="og:title" content="{{ $pageTitle }}">
+    <meta property="og:title" content="{{ $seoTitle }}">
     <meta property="og:description" content="{{ $description }}">
     <meta property="og:image" content="{{ $ogImage }}">
     <meta property="og:image:width" content="1200">
@@ -36,7 +37,7 @@
     <meta property="og:image:alt" content="{{ $siteName }}">
 
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ $pageTitle }}">
+    <meta name="twitter:title" content="{{ $seoTitle }}">
     <meta name="twitter:description" content="{{ $description }}">
     <meta name="twitter:image" content="{{ $ogImage }}">
 
@@ -63,6 +64,15 @@
                         'https://vk.com/samskrtamru',
                         'https://t.me/rusamskrtam',
                         'https://www.youtube.com/@samskrtamru',
+                    ],
+                    // Аудит 05-10-2026: у Organization не было contactPoint, хотя
+                    // телефон и почта стоят в шапке каждой страницы.
+                    'contactPoint' => [
+                        '@type' => 'ContactPoint',
+                        'contactType' => 'customer service',
+                        'telephone' => '+7-918-192-50-84',
+                        'email' => 'rusamskrtam@yandex.ru',
+                        'availableLanguage' => ['ru'],
                     ],
                 ],
                 [

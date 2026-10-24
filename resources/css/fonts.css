@@ -33,6 +33,14 @@
 @import '@fontsource/inter/400.css';
 @import '@fontsource/inter/500.css';
 
+/* H6533: Lora для article-страниц — замена @import fonts.googleapis.com
+ * (ital,wght@0,400;0,600;0,700;1,400;1,600) */
+@import '@fontsource/lora/400.css';
+@import '@fontsource/lora/600.css';
+@import '@fontsource/lora/700.css';
+@import '@fontsource/lora/400-italic.css';
+@import '@fontsource/lora/600-italic.css';
+
 @import '@fontsource/charis-sil/400.css';
 @import '@fontsource/charis-sil/400-italic.css';
 @import '@fontsource/charis-sil/700.css';
