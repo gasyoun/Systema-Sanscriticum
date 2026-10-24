@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * One planned VK (or later channel) content slot (H1564, content calendar W1).
@@ -36,6 +37,14 @@ class ContentCalendarSlot extends Model
 
     public const TYPE_STUDENT_STORY = 'student_story';
 
+    /** Слот, созданный вручную в админке. */
+    public const TYPE_MANUAL = 'manual';
+
+    /** Слот из поста, вышедшего в TG-канале-источнике (ContentCalendarTelegramIngest). */
+    public const TYPE_TG_CHANNEL = 'tg_channel';
+
+    public const SOURCE_TG_CHANNEL = 'tg_channel';
+
     public const STATUS_EMPTY = 'empty';
 
     public const STATUS_DRAFT = 'draft';
@@ -48,6 +57,18 @@ class ContentCalendarSlot extends Model
 
     public const STATUS_CANCELED = 'canceled';
 
+    public const MEDIA_DISK = 'public';
+
+    public const MEDIA_PHOTO = 'photo';
+
+    public const MEDIA_VIDEO = 'video';
+
+    /** Расширения, которые VK принимает как видео; всё остальное загруженное — фото. */
+    private const VIDEO_EXTENSIONS = ['mp4', 'mov', 'webm'];
+
+    /** Предел вложений одного wall.post. */
+    public const VK_ATTACHMENT_LIMIT = 10;
+
     protected $fillable = [
         'channel',
         'slot_date',
@@ -58,6 +79,9 @@ class ContentCalendarSlot extends Model
         'source_ref',
         'title',
         'body',
+        'media_path',
+        'vk_attachments',
+        'destinations',
         'meta',
     ];
 
@@ -65,6 +89,7 @@ class ContentCalendarSlot extends Model
         'slot_date' => 'date',
         'publish_at' => 'datetime',
         'meta' => 'array',
+        'destinations' => 'array',
     ];
 
     protected $attributes = [
@@ -76,6 +101,97 @@ class ContentCalendarSlot extends Model
     public function candidates(): HasMany
     {
         return $this->hasMany(ContentCandidate::class, 'calendar_slot_id');
+    }
+
+    public function publications(): HasMany
+    {
+        return $this->hasMany(ContentCalendarPublication::class, 'content_calendar_slot_id');
+    }
+
+    /**
+     * Площадки, включённые в config/content_calendar.php (непустой chat_id /
+     * group_id), ключ => конфиг.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public static function enabledDestinations(): array
+    {
+        return array_filter(
+            (array) config('content_calendar.destinations', []),
+            static fn (array $d): bool => ($d['platform'] ?? null) === 'telegram'
+                ? filled($d['chat_id'] ?? null)
+                : (int) ($d['group_id'] ?? 0) > 0,
+        );
+    }
+
+    /**
+     * Куда уходит этот слот: выбранные галочками площадки ∩ включённые.
+     * null в destinations = все включённые.
+     *
+     * @return list<string>
+     */
+    public function targetDestinations(): array
+    {
+        $enabled = array_keys(self::enabledDestinations());
+        if ($this->destinations === null) {
+            return $enabled;
+        }
+
+        return array_values(array_intersect($enabled, (array) $this->destinations));
+    }
+
+    /** photo|video по расширению вложения, null — пост без медиа. */
+    public function mediaType(): ?string
+    {
+        if (blank($this->media_path)) {
+            return null;
+        }
+
+        $ext = strtolower(pathinfo((string) $this->media_path, PATHINFO_EXTENSION));
+
+        return in_array($ext, self::VIDEO_EXTENSIONS, true) ? self::MEDIA_VIDEO : self::MEDIA_PHOTO;
+    }
+
+    /** Публичный абсолютный URL вложения (og:image страницы-карточки). */
+    public function mediaUrl(): ?string
+    {
+        return blank($this->media_path) ? null : Storage::disk(self::MEDIA_DISK)->url((string) $this->media_path);
+    }
+
+    /**
+     * Ссылки на медиа, уже загруженные в VK, → id вложений wall.post.
+     * Понимает vk.com/photo-1_2, vk.com/video-1_2, vk.com/clip-1_2,
+     * vkvideo.ru/video-1_2, ?z=photo-1_2%2F… и голые «photo-1_2»; клип — это
+     * видео. Хвост «_ключ» доступа к закрытому видео сохраняется.
+     *
+     * @return list<string>
+     */
+    public static function parseVkAttachments(?string $raw): array
+    {
+        preg_match_all('/(?<![a-z])(photo|video|clip)(-?\d+)_(\d+)(_[0-9a-f]{6,})?/i', (string) $raw, $matches, PREG_SET_ORDER);
+
+        $ids = array_map(static function (array $m): string {
+            $type = strtolower($m[1]) === 'photo' ? 'photo' : 'video';
+
+            return $type.$m[2].'_'.$m[3].($m[4] ?? '');
+        }, $matches);
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * Публичная страница-карточка слота: og:image = картинка вложения. VK
+     * рисует по ней превью ссылки — так картинка попадает в пост без права
+     * photos у токена. Подпись в URL: id слота не перебрать до публикации.
+     */
+    public function shareUrl(): string
+    {
+        return route('content-calendar.share', ['slot' => $this->id, 'sig' => self::shareSignature($this->id)]);
+    }
+
+    public static function shareSignature(int $slotId): string
+    {
+        return substr(hash_hmac('sha256', 'content-calendar-share:'.$slotId, (string) config('app.key')), 0, 16);
     }
 
     public function scopeForMonth(Builder $query, int $year, int $month): Builder

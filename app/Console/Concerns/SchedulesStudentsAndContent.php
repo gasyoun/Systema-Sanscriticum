@@ -211,14 +211,22 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('lesson-banners-render');
 
-        // VK/ORS content calendar auto-pilot (H1568, Wave 5): hourly tick
-        // posts every due `scheduled` slot via n8n. No-op while
+        // Content calendar auto-pilot (H1568, Wave 5): hourly tick crossposts
+        // every due `scheduled` slot to TG + VK (PublishCalendarSlotJob). No-op while
         // features.content_calendar_autopilot is OFF (default).
         $schedule->command('content:publish-due')
             ->hourly()
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('publish-due-content-calendar');
+
+        // Часовой VK ID токен кросспостинга календаря: refresh ротирует пару,
+        // владелец один — прод. No-op, пока токен не импортирован.
+        $schedule->command('vk:token-refresh')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('vk-token-refresh');
 
         // Канал @rusamskrtam: автопилот очереди story_posts (H3930, Phase 1).
         // Ежечасный, как content:publish-due: точность слота «09:00/19:00»

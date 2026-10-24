@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\PublicWaitlistController;
 use App\Http\Controllers\Api\VkBotController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\Webhooks\ContentCalendarTelegramWebhookController;
 use App\Http\Controllers\Webhooks\ExamScoresWebhookController;
 use App\Http\Controllers\Webhooks\InboundEmailWebhookController;
 use App\Http\Controllers\Webhooks\LeadStepWebhookController;
@@ -184,6 +185,12 @@ Route::post('/webhooks/telegram-zapisi', [TelegramZapisiWebhookController::class
 Route::post('/webhooks/telegram-business', [TelegramBusinessWebhookController::class, 'handle'])
     ->middleware('verify.tg.business')
     ->name('webhook.telegram-business');
+
+// === КАЛЕНДАРЬ КОНТЕНТА: пост из TG-канала → слот (22-10-2026) ===
+// Отдельный бот (CONTENT_CAL_TG_BOT_TOKEN), только channel_post. Флаг
+// CONTENT_CAL_TG_INGEST OFF → 404, секрет в заголовке — проверка в контроллере.
+Route::post('/webhooks/content-calendar-tg', [ContentCalendarTelegramWebhookController::class, 'handle'])
+    ->name('webhook.content-calendar-tg');
 
 // === ВХОДЯЩИЙ EMAIL (H3462): zabota@samskrte.ru → проводник (n8n на .91) → сюда ===
 // Письмо раскладывается в chat_messages (source='email') через InboundEmailIngester:

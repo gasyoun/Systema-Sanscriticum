@@ -68,7 +68,7 @@ final class ContentAutopilotDigestCommand extends Command
     {
         $calendarOn = (bool) config('features.content_calendar_autopilot');
         $storiesOn = (bool) config('features.telegram_story_publisher');
-        $webhookSet = ! empty(config('services.n8n.calendar_post_webhook'));
+        $destinations = count(ContentCalendarSlot::enabledDestinations());
         $channel = trim((string) config('services.telegram_story.channel_username', 'rusamskrtam'), '@');
 
         $slots = ContentCalendarSlot::query()
@@ -106,7 +106,7 @@ final class ContentAutopilotDigestCommand extends Command
         $lines[] = '';
         $lines[] = '| Флаг | Значение | Примечание |';
         $lines[] = '|---|---|---|';
-        $lines[] = '| `CONTENT_CALENDAR_AUTOPILOT` | '.($calendarOn ? '✅ true' : '⛔ false').' | '.($webhookSet ? 'вебхук n8n задан' : '⚠️ `N8N_CALENDAR_POST_WEBHOOK` пуст — публикаций в VK нет, тик пропускается').' |';
+        $lines[] = '| `CONTENT_CALENDAR_AUTOPILOT` | '.($calendarOn ? '✅ true' : '⛔ false').' | '.($destinations > 0 ? 'площадок кросспостинга: '.$destinations : '⚠️ площадки `CONTENT_CAL_*` не заданы — слоты не публикуются').' |';
         $lines[] = '| `TELEGRAM_STORY_PUBLISHER` | '.($storiesOn ? '✅ true' : '⛔ false').' | канал @'.$channel.' |';
         $lines[] = '';
         $lines[] = '## Опубликовано автопилотом — '.($slots->count() + $stories->count()).' пост(ов)';
