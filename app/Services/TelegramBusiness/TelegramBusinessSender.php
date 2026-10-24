@@ -6,6 +6,7 @@ namespace App\Services\TelegramBusiness;
 
 use App\Support\TelegramSendGuard;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -40,7 +41,7 @@ final class TelegramBusinessSender
     }
 
     /**
-     * @return array{status: string, message_id: ?int, error: ?string} status: ok|suppressed|error
+     * @return array{status: string, message_id: ?int, error: ?string, telegram_error: ?string} status: ok|suppressed|error
      */
     public function send(
         string $businessConnectionId,
@@ -49,17 +50,17 @@ final class TelegramBusinessSender
         ?int $replyToMessageId = null,
     ): array {
         if (! $this->isConfigured()) {
-            return ['status' => 'error', 'message_id' => null, 'error' => 'TELEGRAM_BUSINESS_BOT_TOKEN не задан'];
+            return ['status' => 'error', 'message_id' => null, 'error' => 'TELEGRAM_BUSINESS_BOT_TOKEN не задан', 'telegram_error' => null];
         }
 
         if (trim($text) === '') {
-            return ['status' => 'error', 'message_id' => null, 'error' => 'пустой текст'];
+            return ['status' => 'error', 'message_id' => null, 'error' => 'пустой текст', 'telegram_error' => null];
         }
 
         if (! TelegramSendGuard::claim((string) $chatId, $text)) {
             Log::info('TelegramBusinessSender: duplicate suppressed by send guard', ['chat_id' => $chatId]);
 
-            return ['status' => 'suppressed', 'message_id' => null, 'error' => null];
+            return ['status' => 'suppressed', 'message_id' => null, 'error' => null, 'telegram_error' => null];
         }
 
         $payload = [
@@ -83,7 +84,7 @@ final class TelegramBusinessSender
                 'error' => $e->getMessage(),
             ]);
 
-            return ['status' => 'error', 'message_id' => null, 'error' => 'transport: '.$e->getMessage()];
+            return ['status' => 'error', 'message_id' => null, 'error' => 'transport: '.$e->getMessage(), 'telegram_error' => null];
         }
 
         if ($response->failed()) {
@@ -93,6 +94,7 @@ final class TelegramBusinessSender
                 'status' => 'error',
                 'message_id' => null,
                 'error' => 'http '.$response->status().': '.mb_substr((string) $response->body(), 0, 300),
+                'telegram_error' => $this->telegramErrorName($response),
             ];
         }
 
@@ -102,7 +104,23 @@ final class TelegramBusinessSender
             'status' => 'ok',
             'message_id' => is_numeric($messageId) ? (int) $messageId : null,
             'error' => null,
+            'telegram_error' => null,
         ];
+    }
+
+    /**
+     * Имя ошибки Telegram из описания вида «Bad Request: BUSINESS_PEER_USAGE_MISSING».
+     * Дренаж разводит по нему судьбы ответа: окно бизнес-полосы («студент давно
+     * не писал») — это навсегда и лечится другой полосой, прочие 400 — повод
+     * для ретрая.
+     */
+    private function telegramErrorName(Response $response): string
+    {
+        $description = trim((string) $response->json('description', ''));
+
+        $separator = strrpos($description, ':');
+
+        return $separator === false ? $description : trim(substr($description, $separator + 1));
     }
 
     private function endpoint(): string

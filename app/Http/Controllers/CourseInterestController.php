@@ -8,8 +8,10 @@ use App\Models\Course;
 use App\Models\CourseInterestRequest;
 use App\Models\Group;
 use App\Models\User;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\CuratorNotifier;
 use App\Services\Schedule\TextbookScale;
+use App\Support\Consent\ConsentRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -104,7 +106,8 @@ class CourseInterestController extends Controller
             'telegram' => ['nullable', 'string', 'max:255', 'required_without:email'],
             'name' => ['nullable', 'string', 'max:255'],
             'comment' => ['nullable', 'string', 'max:1000'],
-        ]);
+            'pd_consent' => ConsentRules::pd(),
+        ], ConsentRules::messages());
 
         // Анти-бот: honeypot-поле должно остаться пустым + time-trap от
         // мгновенных сабмитов. При срабатывании возвращаем ТОТ ЖЕ «успешный»
@@ -139,6 +142,7 @@ class CourseInterestController extends Controller
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);
+        app(ConsentRecorder::class)->fromForm($request, 'course-interest', $request->user(), $validated['email'] ?? null);
 
         // Уведомление кураторам в общий TG-чат (no-op, если чат не настроен).
         app(CuratorNotifier::class)->courseInterestReceived($interest);

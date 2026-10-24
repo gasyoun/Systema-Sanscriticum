@@ -2,18 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Group;
 use App\Models\Lead;
 use App\Models\Payment;
 use App\Models\PromoCode;
 use App\Models\Tariff;
+use App\Models\TelegramSupportContact;
 use App\Models\User;
 use App\Services\AttributionService;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\CuratorNotifier;
 use App\Services\NearDuplicateEmailDetector;
 use App\Services\Payments\TochkaPaymentService;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use App\Services\ReferralService;
+use App\Support\Consent\ConsentRules;
+use App\Support\EnrollmentGroupLink;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -64,9 +69,11 @@ class PaymentController extends Controller
             $rules['wants_announcements'] = 'nullable|boolean';
             $rules['birth_year'] = 'nullable|integer|min:1900|max:'.now()->format('Y');
             $rules['signup_source'] = ['nullable', 'string', Rule::in(AttributionService::SIGNUP_SOURCES)];
+            // 152-ФЗ: обязательность — за флагом money-контура (дефолт OFF).
+            $rules['pd_consent'] = ConsentRules::pd(checkout: true);
         }
 
-        $request->validate($rules);
+        $request->validate($rules, ConsentRules::messages());
 
         // Авторитетная проверка активности выполняется ДО резолва гостя: прямой
         // POST с уже выключенным тарифом не должен создавать пользователя и не
@@ -84,6 +91,32 @@ class PaymentController extends Controller
         // сертификат с одноразовым кодом (см. GiftCertificateService).
         // Флаг OFF → параметр игнорируется, поведение байт-в-байт прежнее.
         $isGift = (bool) config('features.gift_certificates') && $request->boolean('gift');
+
+        // 20-10-2026: группа, выбранная в личке (ссылка бота). Поле клиентское —
+        // подпись и принадлежность курсу тарифа проверяются здесь авторитетно;
+        // неверная подпись = обычный платёж без группы. Флаг OFF → всегда null.
+        $chosenGroupId = (config('features.grant_chosen_group') && ! $isGift)
+            ? EnrollmentGroupLink::resolve($tariff, $request->input('group_id'), $request->input('gsig'))?->id
+            : null;
+
+        // 21-10-2026: контакт лички, которому бот дал ссылку (подпись — от той же
+        // группы). Гость с уже существующим email уйдёт на вход — запоминаем
+        // ссылку как intended, чтобы после входа вернуться к этой же группе.
+        $chosenGroup = $chosenGroupId !== null ? Group::query()->find($chosenGroupId) : null;
+        $chosenContactId = $chosenGroup !== null
+            ? EnrollmentGroupLink::resolveContact($tariff, $chosenGroup, $request->input('tgc'), $request->input('csig'))?->id
+            : null;
+
+        if ($chosenGroup !== null
+            && ! auth()->check()
+            && User::where('email', User::normalizeEmail($request->input('email')))->exists()
+        ) {
+            session()->put('url.intended', EnrollmentGroupLink::url(
+                $tariff,
+                $chosenGroup,
+                $chosenContactId !== null ? TelegramSupportContact::query()->find($chosenContactId) : null,
+            ));
+        }
 
         // A paid entitlement has no deliverable without a course group. Refuse the
         // checkout before creating a Payment or asking Tochka for a bank link; once
@@ -155,7 +188,7 @@ class PaymentController extends Controller
         // Только запись в БД — в транзакции. HTTP-вызов в Tochka делается ПОСЛЕ
         // commit, иначе медленный/упавший эквайринг держит row-lock на
         // promo_codes/users/payments всё время сетевого запроса (см. DepositController).
-        $result = DB::transaction(function () use ($request, $prana, $user, $tariff, $isGift) {
+        $result = DB::transaction(function () use ($request, $prana, $user, $tariff, $isGift, $chosenGroupId, $chosenContactId) {
             // Auth может держать модель User, загруженную до начала транзакции.
             // При включённом флаге перечитываем и лочим кошелёк первым действием:
             // все расчёты и списание ниже используют один DB-authoritative снимок.
@@ -225,7 +258,7 @@ class PaymentController extends Controller
 
                 $eligibleBeforeCapacity = $promo
                     && $promo->isCurrentlyActive()
-                    && $promo->appliesToCourse($tariff->course->id ?? null)
+                    && $promo->appliesToCourse($tariff->course->id ?? null, $tariff->block_number)
                     && ! $promo->redeemedByUser($user->id);
 
                 if (config('features.checkout_promo_reservations') && $eligibleBeforeCapacity) {
@@ -244,7 +277,7 @@ class PaymentController extends Controller
 
                 $applicable = $promo
                     && $promo->isValid()
-                    && $promo->appliesToCourse($tariff->course->id ?? null)
+                    && $promo->appliesToCourse($tariff->course->id ?? null, $tariff->block_number)
                     && ! $promo->redeemedByUser($user->id);
 
                 // Свежий pending с тем же кодом (гонка двух вкладок / возврат на
@@ -347,6 +380,9 @@ class PaymentController extends Controller
                 'user_id' => $user->id,
                 'lead_id' => $leadId,
                 'course_id' => $tariff->course->id ?? null,
+                // 20-10-2026: группа из подписанной ссылки бота (подарок — без группы).
+                'group_id' => $chosenGroupId,
+                'telegram_support_contact_id' => $chosenContactId,
                 'promo_code_id' => $promo?->id,
                 'amount' => $finalPrice,
                 'discount_percent' => $discount['percent'],
@@ -519,7 +555,7 @@ class PaymentController extends Controller
             return 'срок действия промокода истёк';
         }
 
-        if (! $promo->appliesToCourse($tariff->course->id ?? $tariff->course_id)) {
+        if (! $promo->appliesToCourse($tariff->course->id ?? $tariff->course_id, $tariff->block_number)) {
             return 'промокод не действует для этого курса';
         }
 
@@ -599,6 +635,7 @@ class PaymentController extends Controller
             'password' => Hash::make(Str::random(12)),
             'wants_email_announcements' => $request->boolean('wants_announcements'),
         ]);
+        app(ConsentRecorder::class)->fromForm($request, 'checkout', $user, null, null, 'wants_announcements');
 
         // Реферал: привязываем нового студента к пригласившему по коду
         // (из формы или сохранённого в сессии при переходе по ссылке).

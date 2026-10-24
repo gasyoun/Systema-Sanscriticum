@@ -18,6 +18,29 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('remind-upcoming-classes');
 
+        // Карточки открытых занятий в @samskrte_bot (галочка bot_card_enabled):
+        // анонс за 2–3 дня, утро в день занятия (ранние — накануне в 19:00),
+        // ссылка Zoom нажавшим «Я иду». Флаг и дедуп — внутри команды.
+        // Анонс и утро — каждые 5 минут в своём часе, а не в одну минуту:
+        // при медленном telegram-support:sync schedule:run пропускает каждую
+        // вторую минуту (flock), и рассылка на ровное 09:00 не уходила
+        // (22-10-2026). Повтор безопасен — получившие отсеиваются в команде.
+        $schedule->command('open-lessons:cards --stage=announce')
+            ->cron('*/5 12 * * *')
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('open-lesson-cards-announce');
+        $schedule->command('open-lessons:cards --stage=morning')
+            ->cron('*/5 9,19 * * *')
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('open-lesson-cards-morning');
+        $schedule->command('open-lessons:cards --stage=zoom')
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('open-lesson-cards-zoom');
+
         // H4434 — DST-будильник нон-МСК ученикам (T−7д, T−1д вечером, T−1ч).
         // Ежедневный скан: юзеров с явной зоной ~десятки, дедуп в tz_alerts_sent.
         $schedule->command('tz:remind-dst-shifts')
@@ -101,6 +124,25 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('trial-check-freshness');
 
+        // Пробное само переходит на следующее занятие группы, когда текущее
+        // началось (features.trial_auto_advance, по умолчанию OFF).
+        $schedule->command('trial:auto-advance')
+            ->everyFifteenMinutes()
+            ->when(fn () => (bool) config('features.trial_auto_advance'))
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('trial-auto-advance');
+
+        // Донабор закрывается сам: enrolling-курс, у которого прошло последнее
+        // занятие, уходит в «В записи» (MG 18-10-2026 — не ждать ручного
+        // переключения админом). Проверка дешёвая: enrolling-курсов десятки,
+        // CourseCadence::forMany() — два запроса на весь прогон. Час, а не
+        // сутки, чтобы бейдж не врал «Идет набор» уже на следующий день.
+        $schedule->command('courses:close-finished-enrolling')
+            ->hourly()
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('close-finished-enrolling');
     }
 
     /** Season 1 open/notify/close cron + leaderboard refresh. */

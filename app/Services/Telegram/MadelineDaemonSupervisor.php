@@ -82,9 +82,28 @@ class MadelineDaemonSupervisor
 
         foreach ($this->daemonPids() as $pid) {
             $cgroup = $this->probe->cgroupOf($pid);
-            $rss = $this->probe->rssKbOf($pid);
-            $fds = $this->probe->fdCountOf($pid);
-            $age = $this->probe->ageSecondsOf($pid);
+
+            // Чужая cgroup гасится до дорогих проб: вердикту нужен только
+            // cgroup, а нечитаемого чужака (рут-воркер из чужой SSH-сессии:
+            // 13-10-2026 scandir(/proc/PID/fd) = Permission denied валил весь
+            // тик, systemd крутил юнит каждые ~60 с) www-data не читает и не
+            // слышит. Инвариант докблока — tick() не бросает: нечитаемые
+            // пробы — fail-open, решать будет следующий заход.
+            $foreign = $this->verdict($ownCgroup, $cgroup, null, null, null);
+            if ($foreign !== null && $foreign[0] === self::REASON_FOREIGN_CGROUP) {
+                $this->reap($pid);
+                $killed[] = ['pid' => $pid, 'reason' => $foreign[0], 'detail' => $foreign[1]];
+
+                continue;
+            }
+
+            try {
+                $rss = $this->probe->rssKbOf($pid);
+                $fds = $this->probe->fdCountOf($pid);
+                $age = $this->probe->ageSecondsOf($pid);
+            } catch (\Throwable) {
+                continue;
+            }
             $seen[] = ['pid' => $pid, 'cgroup' => $cgroup, 'rss_kb' => $rss, 'fds' => $fds, 'age_s' => $age];
 
             $verdict = $this->verdict($ownCgroup, $cgroup, $rss, $fds, $age);

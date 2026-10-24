@@ -25,6 +25,37 @@ return [
     'vk_pixel' => [
         'shop_pixel_id' => env('VK_PIXEL_SHOP_ID'),
         'enabled' => filter_var(env('VK_PIXEL_SHOP_ENABLED', true), FILTER_VALIDATE_BOOL),
+
+        /*
+        | Кампанийные пиксели VK Ads: отдельные счётчики под конкретные
+        | рекламные кампании — pageView уходит только с перечисленных путей
+        | витрины (без ведущего слэша), цели из forward_goals дублируются
+        | в пиксель на тех же путях, click_goals — делегированные клик-цели
+        | (goal => CSS-селектор). Первый: «Мини-курс санскрита» (3800959,
+        | рекламный отдел 12-10-2026) — лендинг /k/podgotovitelnaya-gruppa-
+        | sanskrita и чекаут тарифа 5135, клик «Записаться на курс» =
+        | enroll_click. Конвенция репо: default OFF, включение — env в проде.
+        */
+        'campaign_pixels' => [
+            'minikurs' => [
+                'id' => env('VK_PIXEL_MINIKURS_ID', '3800959'),
+                'enabled' => filter_var(env('VK_PIXEL_MINIKURS_ENABLED', false), FILTER_VALIDATE_BOOL),
+                'paths' => [
+                    'k/podgotovitelnaya-gruppa-sanskrita',
+                    'checkout/5135',
+                    // Быстрая запись (ссылка VK-бота, флаг mini_course_quick_enroll).
+                    'k/podgotovitelnaya-gruppa-sanskrita/start',
+                ],
+                // Клик-цели — не на всех путях пикселя: на чекауте есть свои
+                // ссылки на /checkout/* («Подарить», смена режима), и клик по
+                // ним не должен считаться кликом «Записаться» с лендинга.
+                // Ключ отсутствует = все пути пикселя; [] = клик-целей нигде.
+                'click_paths' => ['k/podgotovitelnaya-gruppa-sanskrita'],
+                'forward_goals' => ['enroll_click', 'quick_enroll_submit'],
+                // Под флагом быстрой записи кнопка тарифа ведёт на …/start.
+                'click_goals' => ['enroll_click' => 'a[href*="/checkout/"], a[href$="/podgotovitelnaya-gruppa-sanskrita/start"]'],
+            ],
+        ],
     ],
 
     /*
@@ -145,6 +176,28 @@ return [
             'dedup' => 'raw preview opens',
             'metrika_goal' => 'sample_play',
             'surfaces' => ['/k/{slug}/preview on the CTA A/B flagship'],
+        ],
+        /*
+         | H6521 (MG «да ждуну» 12-10-2026): воронка Ждуна. /ga/{link} — 302,
+         | Метрика redirect не видит, поэтому цель стреляет маркером на ЦЕЛИ
+         | перехода — домашний паттерн access_renewal_complete /
+         | lesson_mark_mastered: контроллер делает session()->flash('metrika_goal', …),
+         | канал маркеров в shop-metrika.blade.php добивает на следующей
+         | загрузке. Внутренние destination только: t.me-хоп
+         * (?start=wl_<slug>, tracked_links zhdun) в веб-воронку не входит —
+         | его считает бот.
+         */
+        'ga_interstitial_view' => [
+            'name' => 'ga_interstitial_view',
+            'dedup' => 'once per tracked-link click (flash fires on the internal destination load)',
+            'metrika_goal' => 'ga_interstitial_view',
+            'surfaces' => ['destination page after /ga/{link} hop — flash marker (TrackedLinkController, internal destinations only)'],
+        ],
+        'waitlist_join' => [
+            'name' => 'waitlist_join',
+            'dedup' => 'once per successful vote flash (web vote on /online/zhdun, or pending guest vote cast at login)',
+            'metrika_goal' => 'waitlist_join',
+            'surfaces' => ['/online/zhdun reload after POST vote — flash marker (PublicWaitlistController::vote, CastPendingWaitlistVote)'],
         ],
     ],
 ];

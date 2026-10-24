@@ -143,6 +143,11 @@ final class SupportWebchatAutoReply
      * Живая FAQ-ветка. Категория F из жёсткого allowlist И конфига (конфиг
      * может только сузить; D/E запрещены кодом безусловно — тест обязан это
      * держать), денежное намерение в тексте гасит ветку при любой категории.
+     *
+     * Cooldown-инвариант — тот же, на котором стоит ack этой полосы: свежее
+     * исходящее (куратор или бот) в треде означает, что человек уже в диалоге,
+     * и FAQ-цитата его не заменяет (класс инцидента 01-10-2026 в TG-полосе,
+     * где бот добавлял своё после живого ответа куратора).
      */
     private function faqAnswer(SupportConversation $thread, ChatMessage $incoming, ?User $user, string $text): ?ChatMessage
     {
@@ -151,6 +156,10 @@ final class SupportWebchatAutoReply
         }
 
         if ($this->moneyIntent($text)) {
+            return null;
+        }
+
+        if ($this->recentOutgoingInThread($thread)) {
             return null;
         }
 

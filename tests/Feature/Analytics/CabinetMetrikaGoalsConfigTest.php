@@ -11,6 +11,10 @@ use Tests\TestCase;
  * the single source of truth for which cabinet goals exist in counter
  * 106964341 (ids 639422183–639422234 created via management API, PR #2700);
  * this pins the Tier-1 set and the first_cabinet_action flip.
+ *
+ * H6521 (MG «да ждуну» 12-10-2026) — the pair also pins the Zhdun-funnel
+ * web goals (ga_interstitial_view, waitlist_join) created in the same
+ * counter via management API.
  */
 class CabinetMetrikaGoalsConfigTest extends TestCase
 {
@@ -26,6 +30,12 @@ class CabinetMetrikaGoalsConfigTest extends TestCase
         'access_renewal_complete',
         'zoom_join_click',
         'first_cabinet_action',
+    ];
+
+    /** H6521: Zhdun-funnel web goals (flash-marker channel, shop-metrika). */
+    private const ZHDUN_FUNNEL = [
+        'ga_interstitial_view',
+        'waitlist_join',
     ];
 
     public function test_every_tier_1_cabinet_goal_is_registered_with_a_metrika_goal(): void
@@ -61,6 +71,24 @@ class CabinetMetrikaGoalsConfigTest extends TestCase
 
         foreach (['offer_impression', 'offer_click', 'cabinet_continue_click', 'course_tab_view'] as $tier2) {
             $this->assertArrayNotHasKey($tier2, $funnel, "{$tier2} must stay out of funnel_events until Tier 2");
+        }
+    }
+
+    public function test_zhdun_funnel_goals_are_registered_with_a_metrika_goal(): void
+    {
+        // H6521: both Zhdun-funnel goals ride the flash-marker channel and
+        // must exist in the shop counter before the flashes ship.
+        $funnel = config('analytics.funnel_events');
+
+        foreach (self::ZHDUN_FUNNEL as $goal) {
+            $this->assertArrayHasKey($goal, $funnel, "funnel_events must carry {$goal}");
+            $this->assertSame(
+                $goal,
+                $funnel[$goal]['metrika_goal'],
+                "{$goal}.metrika_goal must match the goal created in Metrika (counter 106964341)"
+            );
+            $this->assertArrayHasKey('dedup', $funnel[$goal], "{$goal} must declare its dedup rule");
+            $this->assertNotEmpty($funnel[$goal]['surfaces'], "{$goal} must name its surfaces");
         }
     }
 }

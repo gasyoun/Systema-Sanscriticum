@@ -227,6 +227,9 @@
                 @enderror
             </div>
 
+            {{-- 152-ФЗ: согласие на ПДн + необязательная рассылка (MarathonController читает is_promo_agreed). --}}
+            <x-consent.pd theme="light" />
+            <x-consent.promo theme="light" />
             <button type="submit" class="w-full px-6 py-3.5 bg-[#A94D1F] hover:bg-[#8B3E19] text-white font-extrabold rounded-lg transition-colors">
                 {{ $cta }}
             </button>

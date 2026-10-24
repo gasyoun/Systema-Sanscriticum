@@ -13,6 +13,7 @@ use App\Models\Group;
 use App\Models\User;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
@@ -107,8 +108,15 @@ class DebtorEmailReminderTest extends TestCase
         Mail::fake();
         Queue::fake();
 
+        if (DB::connection()->getDriverName() === 'mysql') {
+            $this->markTestSkipped('Пост-гвард (users_email_valid, MG 04-10) состояние «не-адрес в users.email» на mysql недостижимо.');
+        }
+
         // email NOT NULL в схеме → «нет почты» = невалидный адрес.
-        $debtor = $this->makeDebtor(['email' => 'no-email-placeholder', 'telegram_id' => '777']);
+        // Legacy-строка: raw-update в обход мутатора и CHECK (класс импорта 22-04).
+        $debtor = $this->makeDebtor(['email' => 'debtor-legacy@example.com', 'telegram_id' => '777']);
+        DB::table('users')->where('id', $debtor->id)->update(['email' => 'no-email-placeholder']);
+        $debtor->refresh();
 
         Livewire::actingAs($this->admin())->test(Debtors::class)
             ->callTableBulkAction('send_reminder', [$debtor->getKey()], data: [

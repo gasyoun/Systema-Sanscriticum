@@ -1,6 +1,6 @@
 # Google Calendar Integration — Roadmap
 
-_Created: 04-07-2026 · Last updated: 09-09-2026_
+_Created: 04-07-2026 · Last updated: 10-10-2026_
 
 > **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** документ честен и перепроверен. Фаза 1 (студенческая лента iCal/webcal, [CalendarFeedController](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/CalendarFeedController.php)) отгружена 04-07-2026 и в тексте уже отмечена; фазы 2–4 не начинались и по-прежнему заперты внешним гейтом — верификацией Google на чувствительный scope `calendar`. Это внешний шаг, не инженерный долг: пока его нет, документ не устаревает.
 
@@ -110,16 +110,14 @@ Google `updated`; newer side overwrites the loser; refresh `google_etag` /
 
 **Course/block date → session propagation.** Changing a `CourseBlock`
 `starts_at`/`ends_at` shifts its sessions, which then flow to both channels. This is
-the one genuinely new piece of domain logic (not plumbing) and carries an **open
-decision** — the shift rule:
+the one genuinely new piece of domain logic (not plumbing) and carried an **open
+decision** — the shift rule, **resolved 10-10-2026: (a) translate**:
 
-- **(a) Translate** — move every session by the same delta as the block boundary
+- **(a) Translate — CHOSEN** — move every session by the same delta as the block boundary
   (preserves inter-session spacing; the common case for "the course starts a week
   later").
 - **(b) Redistribute** — spread sessions evenly across the new window (changes
   cadence; needed when the window length itself changed).
-
-Resolve this at the start of Phase 4, not now.
 
 ## 7. Phased build order (each phase shippable alone)
 
@@ -128,7 +126,7 @@ Resolve this at the start of Phase 4, not now.
 | **1. iCal feed ✅ DONE 04-07-2026** | Signed per-user `.ics` feed + "Add to Google Calendar" buttons; Zoom link + course-range events embedded | nothing (no Google dependency) | A student subscribes; sessions + course ranges appear in their calendar; revoking the token kills the feed |
 | **2. OAuth connect + app→Google push** | Teachers/admin link Google; sessions + ranges written into their calendars (one-way) | Google `calendar`-scope app verification (§8) | A teacher links; app edits appear in Google within one sync cycle |
 | **3. Google→app pull (two-way)** | `events.watch` channels + sync worker + last-write-wins + the 3-step cascade (§6) | Phase 2 | A teacher's drag in Google moves the Schedule row, reschedules Zoom, and notifies the group |
-| **4. Course-date propagation** | `CourseBlock` date edits shift sessions and flow out | Phase 1 (feed) or 2/3; shift-rule decision | Editing a block's dates moves its sessions per the chosen rule and updates both channels |
+| **4. Course-date propagation — IN FLIGHT [H6369](https://github.com/gasyoun/Uprava/blob/main/handoffs/H6369-OxAlpha_Systema-Sanscriticum_course-date-translate-cascade_10.10.26.md) (minted 10-10-2026, translate rule)** | `CourseBlock` date edits shift sessions and flow out | Phase 1 (feed) or 2/3; shift rule resolved 10-10 | Editing a block's dates moves its sessions per translate and updates both channels |
 
 Phase 1 delivers student value immediately with zero Google dependency and de-risks
 the whole effort — build it first.
@@ -156,6 +154,8 @@ verification in §8 — kick that off separately, it is not part of this deliver
   submission package** — [GOOGLE_CALENDAR_VERIFICATION_PACK_H4434.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GOOGLE_CALENDAR_VERIFICATION_PACK_H4434.md)
   (ready answers, screencast plan, ~40 min console walkthrough); the actual
   Console submission is MG's manual step and has not been filed yet.
+  **Update 10-10-2026 (calendar grill): MG ruled to file it now** (GTD `@DO (MG, ~40м)`
+  in Uprava); Phase 2–3 wait on Google's review from that moment.
 - **This repo has a watcher.** [`.claude/hooks/watcher_autosave.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.claude/hooks/watcher_autosave.py)
   reverts uncommitted working-tree edits — all implementation work must land via the
   `/watcher-safe-commit` discipline (author + commit in one shot, verify survival vs
@@ -170,10 +170,13 @@ verification in §8 — kick that off separately, it is not part of this deliver
 
 ## 9. Open questions (do not guess — bring to MG)
 
-1. **Shift rule** for course-date propagation — translate (a) or redistribute (b)?
-   (§6, Phase 4.)
-2. **Admin master calendar** — one shared Google calendar the app owns via a service
-   account, or an OAuth-linked ops account? (Affects §4 token model.)
+1. ~~**Shift rule** for course-date propagation — translate (a) or redistribute (b)?~~
+   **RESOLVED 10-10-2026 (calendar grill): translate (a)** — every session moves by the
+   same delta as the block boundary. Execution: [H6369](https://github.com/gasyoun/Uprava/blob/main/handoffs/H6369-OxAlpha_Systema-Sanscriticum_course-date-translate-cascade_10.10.26.md).
+2. ~~**Admin master calendar** — service account or OAuth-linked ops account?~~
+   **RESOLVED 10-10-2026 (calendar grill): service account** — one shared calendar the
+   app owns; requires sharing the calendar to the SA email (no Workspace domain
+   dependency). Teachers keep the per-user OAuth path unchanged.
 
 ---
 

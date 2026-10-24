@@ -13,6 +13,7 @@ use App\Filament\Widgets\StuckStudentsWidget;
 use App\Filament\Widgets\StudentStatsOverview;
 use App\Filament\Widgets\UpcomingPromisesWidget;
 use App\Http\Middleware\ImpersonationGuard;
+use App\Http\Middleware\RequireTwoFactor;
 use Awcodes\Curator\CuratorPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -281,6 +282,7 @@ class AdminPanelProvider extends PanelProvider
                 // здесь отдельно (иначе под куратором не было бы ни плашки, ни
                 // fail-closed при снятом флаге).
                 ImpersonationGuard::class,
+                RequireTwoFactor::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

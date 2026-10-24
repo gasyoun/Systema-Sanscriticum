@@ -13,6 +13,7 @@ use App\Http\Middleware\ImpersonationGuard;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\RedirectToCanonicalCourseSlug;
+use App\Http\Middleware\RequireTwoFactor;
 use App\Http\Middleware\StudentMaintenance;
 use App\Http\Middleware\ThrottleLivewireUpdates;
 use App\Http\Middleware\TrackUserActivity;
@@ -99,6 +100,9 @@ class Kernel extends HttpKernel
             // H4663 (аудит периметра 14-09, п.7): CSP-Report-Only — наблюдение
             // без блокировки; ужесточение после разбора репортов (GTD H4663).
             AddCspReportOnly::class,
+            // H6352-r5: админ-роль без доказанного второго фактора не идёт дальше
+            // страницы 2FA — включая Livewire-запросы и кабинет.
+            RequireTwoFactor::class,
         ],
 
         'api' => [

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\TelegramBusinessConnection;
+use App\Services\Anons\VideoAnons\VideoAnonsStoriesService;
 use App\Services\TelegramBusiness\BusinessSupportReplyDrainer;
 use App\Services\TelegramBusiness\TelegramBusinessNormalizer;
 use App\Services\TelegramBusiness\TelegramBusinessStoryPublisher;
@@ -74,6 +75,16 @@ class ProcessTelegramBusinessUpdate implements ShouldQueue
         if (isset($this->update['channel_post']) && is_array($this->update['channel_post'])) {
             PublishTelegramBusinessStory::dispatch($this->update['channel_post']);
 
+            return;
+        }
+
+        // H6547: ответ MG заголовком на черновик видео-анонса приходит СЮДА
+        // обычным `message` — черновик уходит от основного бота
+        // (@samskrte_ops_bot), чей вебхук = этот эндпоинт. Сервис сам
+        // фильтрует (флаг / админ / reply на pending-ключ); true = апдейт
+        // наш, бизнес-ветки не трогаем.
+        if (isset($this->update['message']) && is_array($this->update['message'])
+            && app(VideoAnonsStoriesService::class)->handleAdminReply($this->update['message'])) {
             return;
         }
 

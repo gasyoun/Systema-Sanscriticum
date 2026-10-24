@@ -38,10 +38,9 @@ tests/
 
 ## Приоритеты для написания новых тестов
 
-Покрытие минимальное. Наиболее критичная логика без тестов:
-
-1. `Tariff::calculateFinalPriceForUser()` — скидки лояльности и вычет апгрейда.
-2. `Payment` + `PaymentObserver` — выдача доступа после оплаты.
-3. `PromoCode::calculateDiscountedPrice()` — оба типа промокодов.
-4. `ActivityTracker` — корректность накопления времени.
-5. `LandingPage` — рендер блоков конструктора.
+Покрытие выросло (свыше тысячи тестов); перечисленная ранее критичная логика
+покрыта: `CheckoutPriceTest` / `LoyaltyDiscountTest` (цены, лояльность, промокоды),
+`TochkaWebhookTest` (доступ после оплаты), `tests/Feature/Activity/`
+(`ActivityTracker`), `CourseLandingPageTest` (рендер лендингов). Новые тесты —
+в первую очередь для новых денежно- и доступно-критичных изменений (см.
+`CLAUDE.md`, раздел Money contour).

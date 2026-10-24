@@ -17,6 +17,7 @@ use App\Services\Discipline\ChatRemovalEligibility;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -103,8 +104,15 @@ class ManualDebtReminderSourceTest extends TestCase
 
     public function test_no_row_when_no_channel_could_deliver(): void
     {
+        if (DB::connection()->getDriverName() === 'mysql') {
+            $this->markTestSkipped('Пост-гвард (users_email_valid, MG 04-10) состояние «не-адрес в users.email» на mysql недостижимо.');
+        }
+
         // Ни одного канала: нет telegram_id/vk_id и невалидный email.
-        $debtor = $this->debtor(['telegram_id' => null, 'vk_id' => null, 'email' => 'не-почта']);
+        // Legacy-строка: raw-update в обход мутатора и CHECK (класс импорта 22-04).
+        $debtor = $this->debtor(['telegram_id' => null, 'vk_id' => null]);
+        DB::table('users')->where('id', $debtor->id)->update(['email' => 'не-почта']);
+        $debtor->refresh();
 
         $this->sendManualReminder($this->admin(), $debtor, [
             'to_telegram' => true,
