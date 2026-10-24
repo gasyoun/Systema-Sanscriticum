@@ -637,6 +637,21 @@ return [
         // Secret Token из настроек Event Subscriptions приложения. Подписывает
         // вебхуки и проверку URL. Обязателен: пустой → endpoint 503.
         'webhook_secret' => env('ZOOM_WEBHOOK_SECRET'),
+        // Доп. аккаунты Zoom школы: посещаемость забирается и с них (школа ведёт
+        // основной аккаунт + дополнительные, комнаты курсов живут в разных).
+        // На каждый аккаунт выпускается своё S2S OAuth-приложение (войти в
+        // Marketplace под логином этого аккаунта → Build App → Server-to-Server
+        // OAuth). Слот zoom2 заполняется переменными ZOOM2_ACCOUNT_ID /
+        // ZOOM2_CLIENT_ID / ZOOM2_CLIENT_SECRET; ZOOM2_WEBHOOK_SECRET — свой
+        // Secret Token Event Subscriptions этого приложения (эндпоинт тот же).
+        'extra_accounts' => array_filter([
+            'zoom2' => array_filter([
+                'account_id' => env('ZOOM2_ACCOUNT_ID'),
+                'client_id' => env('ZOOM2_CLIENT_ID'),
+                'client_secret' => env('ZOOM2_CLIENT_SECRET'),
+                'webhook_secret' => env('ZOOM2_WEBHOOK_SECRET'),
+            ]),
+        ]),
     ],
 
     // === СОЦИАЛЬНАЯ АВТОРИЗАЦИЯ (Socialite) ===
