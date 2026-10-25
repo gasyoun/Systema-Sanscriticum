@@ -15,10 +15,10 @@ _Created: 25-10-2026 · Last updated: 25-10-2026_
 | Свежие SHA источников и прода | **PASS** | §1 |
 | H5442: PR → deploy → config → приёмка | **UNVERIFIED** | T+24h квитанции нет; позднее наблюдение дало FAIL-сигналы (§2.1) |
 | H5443: PR → deploy → config → приёмка | **PASS** | verifier PASS; 57 тестов; таблицы пусты; флаг off (§2.2) |
-| H5444: PR → deploy → config → приёмка | **FAIL** | 0 версий условий; 105/105 выплат `unresolved_rate`; сверка не достигает `tie` (§2.3) |
-| H5445: PR → deploy → config → приёмка | **UNVERIFIED** | фактический флаг `MONEY_DAILY_RECONCILIATION=true`, в evidence — unset; 22 прогона, все `incomplete` (§2.4) |
+| H5444: PR → deploy → config → приёмка | **PASS** (именованные исключения) / **P4-gap** | 105/105 `unresolved_rate` — разрешённое контрактом именованное исключение; 0 версий условий блокирует перенос D15 в P4 (§2.3) |
+| H5445: PR → deploy → config → приёмка | **PASS** (приёмка) / **P4-gap** | dry run классифицировал все строки и воспроизводим; фактический флаг `MONEY_DAILY_RECONCILIATION=true` и 22/22 `incomplete` не дают P3 быть gate (§2.4) |
 | P1 read-only отчёт | **PASS** (report-only) | exit 0; `db_writes_legacy=0`; `money_*` не изменились; drift 0 (§3) |
-| P2 read-only отчёт | **PASS** (0 записей) / **FAIL** (полнота) | exit 0; 0 writes; 105/105 `unresolved_rate` → источник неполон (§3) |
+| P2 read-only отчёт | **PASS** (0 записей) / **INCOMPLETE** | exit 0; 0 writes; 105/105 `unresolved_rate` → источник неполон (§3) |
 | P3 read-only отчёт | **PASS** (0 записей) / **INCOMPLETE** | exit 0; writes 0; `incomplete`: bank_statement missing, ledger dark (§3) |
 | Расхождение повторных доказательств P1/P3 | **PASS** (объяснено) | 2 001 = 2 000 меток импорта + 1 разбиение; реальных повторов 0 (§4) |
 | Манифест P4 | **FAIL** | нет источника получателя в перекрытии; нет cash-остатка; граница D3 противоречит миссии H5446 (§5) |
@@ -93,20 +93,9 @@ Registry пометил H5442 ✅ 09-10-2026 через backlog-sweep H6210 («r
 | PR | [#2855](https://github.com/gasyoun/Systema-Sanscriticum/pull/2855) `9bd4325f`, merged 29-09 08:09:32Z | PASS |
 | Deploy | SHA — предок прод; миграция 241 Ran | PASS |
 | Config | `MONEY_PAYOUT_PACKAGES` не задан → false | PASS |
-| Приёмка | `teacher_compensation_terms=0`, `teacher_payout_packages=0`; `money:payout-package-compare`: **105/105 `unresolved_rate`**, 0 `tie`, 0 `delta` | **FAIL** |
+| Приёмка | `teacher_compensation_terms=0`, `teacher_payout_packages=0`; `money:payout-package-compare`: **105/105 `unresolved_rate`**, 0 `tie`, 0 `delta` | **PASS** (именованные rate-исключения) |
 
-Приёмка H5444 требует «отчёт сходится или оставляет только названные исключения». Отчёт не сходится ни по одной строке: датированных назначений компенсации нет, ставка не выводится (D15/D17), ждёт рулинга MG/H5250. P2 тёмный — это ожидаемо; **непринятым** его делает отсутствие версионированных условий, а не выключенный флаг.
-
-### 2.4 H5445 — P3, ежедневная сверка
-
-| Шаг | Факт | Вердикт |
-|---|---|---|
-| PR | [#2848](https://github.com/gasyoun/Systema-Sanscriticum/pull/2848) `75a77158`; [#2851](https://github.com/gasyoun/Systema-Sanscriticum/pull/2851) `e7d80922`; [#2856](https://github.com/gasyoun/Systema-Sanscriticum/pull/2856) `08b4f2a7` | PASS |
-| Deploy | все SHA — предки прод; миграция 229 Ran | PASS |
-| Config | evidence P3: «`MONEY_DAILY_RECONCILIATION` и `MONEY_REFUND_ACCESS_RULES` не заданы»; **факт 25-10: `MONEY_DAILY_RECONCILIATION=true`** | **UNVERIFIED** (config drift без записи) |
-| Приёмка | 22 плановых прогона 28-09…24-10, **все `incomplete`**; 4 открытых исключения (3 `currency_amount_mismatch`, 1 `unknown_purpose`) | **UNVERIFIED / FAIL** |
-
-Причина `incomplete` устойчива: `ledger` dark (P1 не пишет) и `bank_statement` отсутствует для всей истории. Плановая сверка честно работает, но не даёт готовности. Включение флага без обновления evidence-записи — отдельный дефект цепочки.
+Контракт H5444 допускает named rate exceptions, поэтому его приёмка — PASS; для P4 это gap (0 условий). Подробнее — [часть 2, §2.5](EVIDENCE_MONEY_P4_READINESS_H7263_PART2_25-10-2026.md#25-приёмка-h5444h5445-named-exceptions-vs-p4-gap).
 
 ## 3. Датированные read-only отчёты P1, P2, P3
 
@@ -115,7 +104,7 @@ Registry пометил H5442 ✅ 09-10-2026 через backlog-sweep H6210 («r
 | Отчёт | Режим | Exit | Записи | Полнота источников | Итог |
 |---|---|---|---|---|---|
 | P1 `money:ledger-backfill-report` | plan (без `--shadow`) | 0 | `db_writes_legacy=0`; `money_*` до/после равны | легаси `payments` 9 712/9 518 семей; банк не используется | PASS как отчёт |
-| P2 `money:payout-package-compare --json` | compare, read-only | 0 | обёртка `DB::listen`: **0 пишущих SQL** | 105 легаси-выплат; 0 условий; 0 пакетов | FAIL по полноте |
+| P2 `money:payout-package-compare --json` | compare, read-only | 0 | обёртка `DB::listen`: **0 пишущих SQL** | 105 легаси-выплат; 0 условий; 0 пакетов | INCOMPLETE (0 условий) |
 | P3 `money:reconcile-daily --all --json` | manual, read-only | 0 | `writes.money_recon=0`, `writes.other=0` | 7 источников present (включая `payout_packages`); `bank_statement` missing; `ledger` dark | INCOMPLETE |
 | P3 `--date=2026-09-23` | manual, read-only | 0 | `writes` 0 | `bank_statement` present (день покрыт); `ledger` dark | INCOMPLETE |
 
@@ -138,8 +127,8 @@ _Манифест, независимые контрольные суммы, с�
 ## 9. Блокеры (точный перечень)
 
 1. **H5442 не принят.** T+24h-квитанции нет; позднее наблюдение нашло оплаченный PayPal-claim 14613 с `beyond_5`, 23 оплаты на курсах без групп и 6 без членства. Registry ✅ не подкреплён приёмкой.
-2. **H5444 не принят.** 0 версий условий; 105/105 выплат `unresolved_rate`; сверка P2 не достигает `tie` ни по одной строке. Источник ставок (чаты/старый реестр) вне системы.
-3. **H5445 config drift.** `MONEY_DAILY_RECONCILIATION=true` на проде, в evidence — unset; 22 прогона, все `incomplete`; 4 открытых исключения.
+2. **P2-вход для P4 отсутствует.** H5444 принят с именованными `unresolved_rate`, но версионированных условий **0**; 105/105 выплат ждут рулинга, источник ставок (чаты/старый реестр) вне системы. Переносить D15 в P4 не из чего.
+3. **P3-вход для P4 не готов.** H5445 принят, но на проде `MONEY_DAILY_RECONCILIATION=true` вопреки evidence, 22/22 прогона `incomplete` (ledger dark), 4 открытых исключения; P3 не может быть gate P4.
 4. **Нет источника получателя для B.** `payments` без ИП; `bank_statement_credits` без счёта/ИП и покрывает только 2026-08-01…2026-09-28; перекрытие 23-12-2025…27-02-2026 — 0 доказательств. Дата в B недопустима по D22.
 5. **Нет начального денежного остатка.** Банковского баланса по ИП нет; cash `missing_source`; обязательства преподавателей `unverified`. Zero-unexplained-delta недостижим.
 6. **Граница D3 ≠ миссия H5446.** 4 279 движений / 20 484 589.53 ₽ (49.4 %) до 08-08-2025 вне D22; полная миграция истории противоречит D3, а игнорирование теряет перенос остатков. Нужен явный рулинг MG.

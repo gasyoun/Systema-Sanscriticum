@@ -30,7 +30,7 @@ Raw prod report JSONs are deliberately **not** committed (they contain payment i
 4. **Pre-ИП boundary.** Claim: 4 279 movements / 20 484 589.53 ₽ (49.4 % of 41 470 738.47 ₽) are before 2025-08-08 and outside D22; full-history migration would contradict D3, ignoring them loses carry-over.
 5. **Real manifest apply.** Claim: 55 selected movements; 10 in B are `recipient_unproven` (non-admissible); apply writes 45 and quarantines 10; verify FAILs with expected 85 581 694 kop. vs actual 70 468 694 kop.
 6. **Scenario tests.** Claim: 15/15 `unittest` tests pass, covering recipient substitution, mutually compensating errors, repeated evidence, input change after dry-run, new payment after snapshot, rerun replay, interruption/resume.
-7. **Predecessors.** Claim: H5443 PASS; H5442 T+24h missing (UNVERIFIED) + late observation found PayPal 14613 paid `beyond_5`, 23 paid on groupless courses, 6 paid without membership; H5444 105/105 unresolved; H5445 `MONEY_DAILY_RECONCILIATION=true` in prod while evidence says unset, 22/22 runs `incomplete`.
+7. **Predecessors.** Claim: H5443 PASS; H5442 T+24h missing (UNVERIFIED) + late observation found PayPal 14613 paid `beyond_5`, 23 paid on groupless courses, 6 paid without membership; H5444 PASS with named `unresolved_rate` exceptions but 0 versioned terms (P4 gap); H5445 PASS on its dry-run acceptance but `MONEY_DAILY_RECONCILIATION=true` in prod while evidence says unset, 22/22 runs `incomplete` (P4 gap).
 
 ## Controls you must challenge (at least one)
 
@@ -67,7 +67,7 @@ python3 scripts/p4/readiness.py verify --manifest manifest.json --db /tmp/p4.sql
 3. Is the 18 000 ₽ (P99.5) anomaly threshold defensible, or does it hide material rows below it (e.g. repeated small anomalies)?
 4. Does the manifest's 55-row selection satisfy D3 ("opening balances + open debts + material anomalies only"), or does it silently reconstruct ordinary history / omit an open item?
 5. Is the real-apply FAIL (10 `recipient_unproven`, 15 113 000 kop. gap) the correct readiness verdict, or should the packet be re-scoped before H5446 starts?
-6. Are any of the 9 blockers in report §9 overstated or understated?
+6. Are any of the 9 blockers in report §9 overstated or understated? In particular, check that H5444/H5445 are marked PASS on their own acceptance and that only their P4 inputs are called blocking.
 
 ## Verdict format
 
