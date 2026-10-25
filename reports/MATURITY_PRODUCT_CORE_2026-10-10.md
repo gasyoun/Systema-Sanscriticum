@@ -99,3 +99,12 @@ No external error tracker (M14). The log stack sends everything to a single loca
 - **Checks:** `gh api repos/gasyoun/Systema-Sanscriticum/contents/reports/MATURITY_PRODUCT_CORE_2026-10-10.md` → 200 expected after human merge (product repo: PR-only per standing rule; merge left to MG).
 - **Risks:** report is a snapshot — CI/coverage numbers move daily; flake rate and cabinet-probe live rate remain unknown (see Risks).
 - **Inspect:** verdict table + M9/M10/M14/M15 rows (levers 1–2), M16 rows (lever 3, report-only proof).
+
+## Addendum — 25-10-2026 (lever 2 closed after the audit window)
+
+_Этот раздел дописан ПОСЛЕ аудита и вердикт аудита не пере-скоривает._
+
+- **M9 `HttpPaypalWebhookSignatureVerifier`: 3/43 (7 %) → 43/43 (100 %).** **M10 `ClaimTrustPolicy`: 0/12 (0 %) → 12/12 (100 %).** Обе цифры — из clover-артефакта [`coverage.yml` run 40176250915](https://github.com/gasyoun/Systema-Sanscriticum/actions/runs/40176250915) (`workflow_dispatch` на ветке PR, 25-10-2026T09:41Z) — тот же метод, что у M5–M11, не локальная оценка.
+- **PR:** [#3494](https://github.com/gasyoun/Systema-Sanscriticum/pull/3494) — два класса тестов, 31 тест / 52 assertions, Pint чист, CI (PHP 8.3) зелёный.
+- **Оговорка, которая переживает метрику:** `ClaimTrustPolicy` на `main` не вызывается ни из одного контроллера — живые каналы идут через `User::isEstablishedClaimStudent()`. 100 % покрытия этого класса доказывают поведение библиотечной политики, а НЕ то, что прод ходит через неё; к тому же docblock класса обещает неймспейс `'paypal'`/`'bank_claim'` вместо реальных `services.paypal`/`services.bank_claim`. Wire-or-delete — открытое человеческое решение, не часть этого PR.
+- Headline **3 / 5** не пере-скоривается этим аддендумом: для смены оценки нужен свежий полный прогон матрицы, а не две закрытые ячейки.
