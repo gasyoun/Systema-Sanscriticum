@@ -73,3 +73,55 @@ _pending the T+24h observation._ PASS requires all of the following:
 The migration columns stay (nullable, additive) and are harmless when the flag is off.
 
 _Гасунс_
+
+## Addendum — 25-10-2026: the T+24h receipt is missing, a new dated observation replaces it
+
+This addendum does not touch the 24-09-2026 record above. It records a gap and a new,
+separately dated run.
+
+**The T+24h receipt does not exist.** The document above was committed once with the
+T+24h column `_pending_` and the verdict `_pending the T+24h observation._`; it was
+never updated. On 25-10-2026 the prod host held only the two 24-09 reports
+(`storage/app/h5442_report_before.json` 12:47, `h5442_report_after.json` 13:23), no
+observation artefact for 25-09, and no Mac/launchd task named
+`h5442-money-wave-24h-observation`. H5442 was flipped by the H6210 close-backlog sweep
+without a 24-hour verdict. The historical gap is therefore preserved, not backfilled:
+no receipt dated 25-09-2026 will be invented.
+
+**New observation — 25-10-2026 17:43:29 (Europe/Moscow), read-only.** Command:
+`sudo -u www-data HOME=/tmp php artisan tinker scripts/ops/h5442_wave_observe.php`
+(prod HEAD `b7e01ea`, wave flag live). Window 745.34 h since the enable time; this is a
+31-day observation, **not** the missing 24-hour one.
+
+| Counter | New observation 25-10-2026 | Reading |
+|---|---|---|
+| payments created | 227 (202 manual paid, 23 pending, 1 transfer paid, 1 PayPal paid) | within the wave; no duplicate counter moved |
+| PayPal claims / with replay key | 1 / 1 | the one claim is payment 14613 |
+| paid beyond ±5% or unpriced | 1 (14613) | typed exception `currency_amount_mismatch:payment:14613`, **open** |
+| typed reconciliation exceptions (observer field) | 0 | observer looked in `claim_meta`; the queue holds 1 for 14613 — fixed in the script |
+| paid on a group-less course | 23 | 22 `salary_payout` expense rows + 1 archived course, see classification |
+| paid without group membership | 6 | 1 real open (14249), 3 admin self-purchases, 1 enrolling, 1 promise grant — see classification |
+| duplicate paid / replay-key dupes | 0 / 0 | PASS |
+| payouts created / with settlement key / negative | 24 / 0 / 0 | historical backfills (paid_at 2026-02..07), not new settlements |
+| log: fail-closed / unique violation / RuntimeException | 0 / 0 / 52 | the sampled lines are Telegram/media send failures (chat not found, message too long, media session busy); none money/access |
+
+**Payment 14613 (beyond ±5%).** The payer note carries a PayPal transaction code and a
+date; `claim_meta.amount_check` recorded `beyond_5` (`auto_confirm=false`) at
+2026-10-12 18:04. A SuperAdmin (admin id 937) then changed tariff `block_1` → `full`
+and status `pending` → `paid` on 13-10-2026 09:55–09:56. The basis is documented and
+the audit is preserved: `payment_audits` 6902 and 6903 (before/after values) plus one
+`activity_events` row; the reconciler independently opened exception #4
+(`currency_amount_mismatch:payment:14613`, state `open`, evidence key
+`claim-txn:paypal:0je1273149333403s`). No automatic change was made by this pass; the
+exception is left for a human resolution.
+
+**Access rows:** full row-by-row classification in
+[RESIDUAL_ACCESS_CLASSIFICATION_H5442_2026-10-25.md](RESIDUAL_ACCESS_CLASSIFICATION_H5442_2026-10-25.md).
+
+**Verdict of the new observation:** no duplicate money effect, no replay-key
+duplicate, no negative payout, no new fail-closed throw. One known access failure
+(14249, curator-owned since 29-09-2026) and one open typed money exception (14613).
+This does **not** retroactively satisfy the H5442 acceptance clause; it is a new,
+dated observation with its own scope and limits.
+
+_Dr. Mārcis Gasūns_

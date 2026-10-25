@@ -72,3 +72,70 @@ Sonnet 5 (Explore, отдельный контекст, только чтени�
 Флаги `MONEY_DAILY_RECONCILIATION` и `MONEY_REFUND_ACCESS_RULES` на проде не заданы — выключены; включение — отдельный ops-шаг.
 
 _Гасунс_
+
+## Addendum — 25-10-2026: four separate states, not one green light
+
+The 24-09-2026 record above is left intact. This addendum re-probes current prod and
+splits the single "deployed" claim into four independently checkable states. No flag
+was changed by this pass.
+
+### 1. «Команда исправна» — PASS
+
+Read-only rerun of a saved day, prod HEAD `b7e01ea`:
+
+```
+sudo -u www-data HOME=/tmp php artisan money:reconcile-daily --date=2026-10-24 --dry-alert
+```
+
+Exit 0; `status=incomplete`; identities `rows_classified`, `kopecks_classified`,
+`ledger_student_money`, `ok` all `true`; input fingerprint `56666e7b…`; control
+checksum `b4c166919a57eb2dff911ee79194e898a44b8839c80741765462d4a99045988a` — **equal**
+to the stored checksum of run #22. No drift, nothing written. The command is healthy;
+exit 0 is explicitly *not* treated as proof of completeness (the status says
+`incomplete`).
+
+### 2. «Расписание исполняется» — PASS
+
+- Cron: `* * * * * /usr/local/sbin/systema-schedule-run.sh` (www-data crontab).
+- `php artisan schedule:list` → `35 4 * * * php artisan money:reconcile-daily --persist --scheduled`.
+- `storage/logs/schedule.log` 25-10-2026 04:35:01 → `Running ['artisan' money:reconcile-daily --persist --scheduled] 521.90ms DONE`.
+- `money_recon_runs` holds 22 persisted runs, `mode=scheduled`, each created at
+  04:35:02, business dates 2026-09-28 … 2026-10-24.
+
+### 3. «Источники полны» — FAIL
+
+| Source | State | Evidence |
+|---|---|---|
+| `bank_acquiring`, `paypal`, `manual`, `teacher_direct`, `refund`, `webhook_journal`, `payout_packages` | present | run #22 `sources` JSON |
+| `bank_statement` | **missing** | one import only: `bank_statement_imports` #1 covers 2026-08-01 … 2026-09-28 (826 rows), imported 28-09-2026. Nothing covers 2026-09-29 … 2026-10-25 (27 days). `money:import-statement-credits` is a **manual** command: the accountant exports the CSV and states the covered period (`--from/--to`); it is intentionally not on the schedule. |
+| `ledger` | **dark** | every run carries `"P1 ledger is dark (MONEY_LEDGER_CORE off, no rows) — evidence cannot be matched against the subledger until P4 cutover"` |
+
+So an exit-0 scheduled run does **not** mean the sources are complete: each day is
+honestly recorded as `incomplete`.
+
+### 4. «Сверка завершена» — FAIL
+
+Every saved run has `status=incomplete`; none is `complete`. Four typed exceptions are
+open, all created 28-09-2026 / 14-10-2026: three from the single bank-statement import
+(`currency_amount_mismatch` ×2 — QR-settlement and acquiring-aggregate controls — and
+`unknown_purpose` for two unclassified credits) and one from payment 14613
+(`currency_amount_mismatch`, `paid_beyond_5_percent`). No exception was auto-resolved.
+
+### Run-journal gaps
+
+22 runs cover 27 business days. Missing: 2026-09-30 … 2026-10-03 (the flag was not yet
+armed — the first persisted run is 28-09, and a duplicate 29-09 exists) and
+2026-10-21, 2026-10-22 (unexplained; the host rebooted 2026-10-22 15:08, after those
+mornings, and `schedule.log` was rotated, so no direct receipt survives). These are
+recorded as gaps, not backfilled.
+
+### Dependency on the dark core → H5446
+
+The `ledger` source cannot become present while `MONEY_LEDGER_CORE` is off; that is the
+P4 cutover owned by **H5446** (its gate is `handoff:H5442,H5443,H5444,H5445`). This is
+a genuine circularity: H5445 cannot reach "reconciliation complete" before H5446, and
+H5446 may not start before H5445 is terminal. The four-state split resolves the
+reporting problem without flipping any flag: P3 is healthy and executing, while
+completeness legitimately waits for H5446 and for the next manual bank export.
+
+_Dr. Mārcis Gasūns_
