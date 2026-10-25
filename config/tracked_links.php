@@ -189,6 +189,29 @@ foreach (['c', 't', 'h', 'p'] as $creative) {
 }
 
 /*
+ * ksh3 — обзорное занятие 3-го потока «Кашмирского шиваизма» (М. А. Ворошилов;
+ * 29-10-2026 чт 14:00 МСК, бесплатное, «не в счет 16»; курс — 16 занятий по
+ * чт 14:00 МСК с 05-11-2026, сбор голосов, оплата не открыта): /ga/-ключи ведут
+ * на карточку курса (голос «Намерен участвовать» + расписание), маршрут на само
+ * занятие — куратор. Креативы = гипотезы поста: c — предмет, t — преподаватель/
+ * история курса, h — время/слот. Слот p не минтуется, пока оплата закрыта.
+ */
+$ksh3Campaign = 'kashmir_shaivism_open_oct_2026';
+
+foreach (['c', 't', 'h'] as $creative) {
+    $links["ksh3-ors-{$creative}"] = [
+        'destination' => '/k/kasmirskii-sivaizm-3-potok-2026',
+        'utm' => [
+            'utm_source' => $channels['ors']['source'],
+            'utm_medium' => $channels['ors']['medium'],
+            'utm_campaign' => $ksh3Campaign,
+            'utm_content' => "ksh3_{$creative}",
+            'utm_term' => 'overview',
+        ],
+    ];
+}
+
+/*
  * Демо-кампания — постоянная смок-фикстура скилла anons-attribution-mint
  * (H5934): живые /ga/demo-* ключи, чтобы прогонять редирект + метки без
  * реального набора. Синтетические utm_source помечены demo_, поэтому
@@ -365,6 +388,11 @@ return [
             'destination' => '/online',
             'utm_campaign' => $demoCampaign,
             'utm_term' => 'smoke',
+        ],
+        'ksh3' => [
+            'destination' => '/k/kasmirskii-sivaizm-3-potok-2026',
+            'utm_campaign' => $ksh3Campaign,
+            'utm_term' => 'overview',
         ],
         'lingq' => [
             'destination' => 'https://t.me/samskrtamru/4166',
