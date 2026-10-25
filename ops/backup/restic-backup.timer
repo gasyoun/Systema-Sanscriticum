@@ -1,12 +1,21 @@
 [Unit]
-Description=Run restic-backup.service daily (#3038: hourly→daily, ingest ~2.7 GB/day on .91)
+Description=Run restic-backup.service twice daily — 03:30Z + 15:30Z (#3038, MG 25-10-2026)
 
 [Timer]
 # H6352-r9 / #3038: ежечасная пара пушей (systema ~9.4 GiB + samudra ~5.4 GiB)
 # добавляла ~0.2 ГБ новых паков в час (~2.7 ГБ/сутки) в нерасширяемый диск .91.
 # Рулинг MG (грилл 10-10, карта 12): резать частоту у источника — часовые
 # пуши → суточные. RPO-трейд-офф: 24 ч (отклонён вариант «4–6 пушей/сутки»).
+#
+# 25-10-2026 (MG «add second», GTD WHL): суточный RPO несовместим с рулингом
+# 13-09 «при атаке терять максимум час» — MG выбрал ВТОРОЙ пуш вместо возврата
+# на hourly: два пуша в сутки дают RPO ≤12 ч при inflow ~+0.1–0.3 ГБ/сутки
+# (один лишний прогон, а не 23 лишних, как в hourly-эре). Вариант «4–6 пушей»
+# остаётся отклонённым. Диск .91 (8.5 ГБ свободно, prune суточный
+# 06:40Z: --keep-hourly 3 --keep-daily 3 --keep-weekly 1) — запас меряется,
+# а не предполагается: см. Uprava reports/WHL_SECOND_DAILY_PUSH_2026-10-25.md.
 OnCalendar=*-*-* 03:30:00
+OnCalendar=*-*-* 15:30:00
 RandomizedDelaySec=600
 Persistent=true
 
