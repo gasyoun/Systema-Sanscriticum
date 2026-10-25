@@ -18,7 +18,7 @@ _Created: 25-10-2026 · Last updated: 25-10-2026_
 | H5444: PR → deploy → config → приёмка | **PASS** (именованные исключения) / **P4-gap** | 105/105 `unresolved_rate` — разрешённое контрактом именованное исключение; 0 версий условий блокирует перенос D15 в P4 (§2.3) |
 | H5445: PR → deploy → config → приёмка | **PASS** (приёмка) / **P4-gap** | dry run классифицировал все строки и воспроизводим; фактический флаг `MONEY_DAILY_RECONCILIATION=true` и 22/22 `incomplete` не дают P3 быть gate (§2.4) |
 | P1 read-only отчёт | **PASS** (report-only) | exit 0; `db_writes_legacy=0`; `money_*` не изменились; drift 0 (§3) |
-| P2 read-only отчёт | **PASS** (0 записей) / **FAIL** (полнота) | exit 0; 0 writes; 105/105 `unresolved_rate` → источник неполон (§3) |
+| P2 read-only отчёт | **PASS** (0 записей) / **INCOMPLETE** | exit 0; 0 writes; 105/105 `unresolved_rate` → источник неполон (§3) |
 | P3 read-only отчёт | **PASS** (0 записей) / **INCOMPLETE** | exit 0; writes 0; `incomplete`: bank_statement missing, ledger dark (§3) |
 | Расхождение повторных доказательств P1/P3 | **PASS** (объяснено) | 2 001 = 2 000 меток импорта + 1 разбиение; реальных повторов 0 (§4) |
 | Манифест P4 | **FAIL** | нет источника получателя в перекрытии; нет cash-остатка; граница D3 противоречит миссии H5446 (§5) |
@@ -104,7 +104,7 @@ Registry пометил H5442 ✅ 09-10-2026 через backlog-sweep H6210 («r
 | Отчёт | Режим | Exit | Записи | Полнота источников | Итог |
 |---|---|---|---|---|---|
 | P1 `money:ledger-backfill-report` | plan (без `--shadow`) | 0 | `db_writes_legacy=0`; `money_*` до/после равны | легаси `payments` 9 712/9 518 семей; банк не используется | PASS как отчёт |
-| P2 `money:payout-package-compare --json` | compare, read-only | 0 | обёртка `DB::listen`: **0 пишущих SQL** | 105 легаси-выплат; 0 условий; 0 пакетов | FAIL по полноте |
+| P2 `money:payout-package-compare --json` | compare, read-only | 0 | обёртка `DB::listen`: **0 пишущих SQL** | 105 легаси-выплат; 0 условий; 0 пакетов | INCOMPLETE (0 условий) |
 | P3 `money:reconcile-daily --all --json` | manual, read-only | 0 | `writes.money_recon=0`, `writes.other=0` | 7 источников present (включая `payout_packages`); `bank_statement` missing; `ledger` dark | INCOMPLETE |
 | P3 `--date=2026-09-23` | manual, read-only | 0 | `writes` 0 | `bank_statement` present (день покрыт); `ledger` dark | INCOMPLETE |
 
