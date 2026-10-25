@@ -4,6 +4,21 @@ _Created: 25-10-2026 · Last updated: 25-10-2026_
 
 Часть 1 (вердикт, цепочка H5442–H5445, read-only отчёты, повторные доказательства): [EVIDENCE_MONEY_P4_READINESS_H7263_25-10-2026.md](EVIDENCE_MONEY_P4_READINESS_H7263_25-10-2026.md).
 
+## 2.5 Приёмка H5444/H5445: named exceptions vs P4 gap
+
+Контракт H5444 прямо допускает «reconcile exactly **or remain named evidence/rate exceptions**». Все 105 строк — именованные `unresolved_rate` с основанием «нет датированного назначения; ставка не выводится (D15/D17); ждёт рулинга H5250», а не `guessed rate` и не `unexplained delta`. Поэтому приёмка H5444 — **PASS с именованными исключениями**. Но для P4 это gap: версионированных условий **0**, переносить D15 не из чего; ставки живут в чатах/старом реестре вне системы. P2 остаётся тёмным, и его включение — не P4-переключение.
+
+### 2.4 H5445 — P3, ежедневная сверка
+
+| Шаг | Факт | Вердикт |
+|---|---|---|
+| PR | [#2848](https://github.com/gasyoun/Systema-Sanscriticum/pull/2848) `75a77158`; [#2851](https://github.com/gasyoun/Systema-Sanscriticum/pull/2851) `e7d80922`; [#2856](https://github.com/gasyoun/Systema-Sanscriticum/pull/2856) `08b4f2a7` | PASS |
+| Deploy | все SHA — предки прод; миграция 229 Ran | PASS |
+| Config | evidence P3: «`MONEY_DAILY_RECONCILIATION` и `MONEY_REFUND_ACCESS_RULES` не заданы»; **факт 25-10: `MONEY_DAILY_RECONCILIATION=true`** | **PASS** (приёмка) / **P4-gap** (config drift) |
+| Приёмка | dry run классифицировал 8 251 строку, повтор дал тот же отпечаток и контрольную сумму; 22 плановых прогона 28-09…24-10, **все `incomplete`**; 4 открытых исключения | **PASS** (приёмка) / **P4-gap** |
+
+Приёмка H5445 («one production-safe dry run classifies every imported row … totals reproducible on rerun») выполнена: 8 251 строка, тот же отпечаток `33de8d80…` и сумма `2e7544…` на повторе. Причина `incomplete` устойчива и ожидаема: `ledger` dark (P1 не пишет) и `bank_statement` отсутствует для всей истории. Но для P4 это gap: включение `MONEY_DAILY_RECONCILIATION=true` без обновления evidence-записи — config drift, а 22/22 `incomplete` не позволяют P3 быть gate.
+
 ## 4. Повторные доказательства P1/P3 на одном снимке
 
 Расхождение: P1 помечает 2 001 строку `evidence_reused`, P3 — 0. Оба результата корректны в своих определениях; источник не исправлялся.
