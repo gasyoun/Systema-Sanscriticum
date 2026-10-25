@@ -41,6 +41,12 @@ final class ClaimTrustGateWiringTest extends TestCase
         Http::fake();
 
         Config::set('features.claim_trust_policy', false);
+        // Изоляция шва: H5442-волна (в dev-.env бывает ON) сама понижает
+        // доверенную заявку до pending, если валютная сумма не сошлась с
+        // прайсом, — это её собственные тесты, здесь предмет другой.
+        Config::set('features.payment_fix_wave1', false);
+        Config::set('services.paypal.trust_existing_students', true);
+        Config::set('services.bank_claim.trust_existing_students', true);
         Config::set('services.paypal.enabled', true);
         Config::set('services.paypal.me_link', 'https://www.paypal.com/paypalme/school');
         Config::set('services.bank_claim.enabled', true);
