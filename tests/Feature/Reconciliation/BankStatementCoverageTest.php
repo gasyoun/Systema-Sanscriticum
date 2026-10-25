@@ -134,17 +134,17 @@ class BankStatementCoverageTest extends TestCase
         $exceptionsBefore = MoneyReconException::query()->count();
 
         $this->importCovering('2026-08-01', '2026-09-28');
-        $this->assertSame('missing', $control->source($day, $day)['status']);
+        $this->assertSame('missing', $control->source($day, $day->addDay())['status']);
 
         // Новый импорт закрывает 29…30 сентября.
         $this->importCovering('2026-09-29', '2026-09-30', [
             ['2026-09-29', 100000, BankStatementCredit::KIND_QR],
         ]);
 
-        $this->assertSame('present', $control->source($day, $day)['status']);
+        $this->assertSame('present', $control->source($day, $day->addDay())['status']);
         $this->assertSame(
             100000,
-            $control->source($day, $day)['credits'][BankStatementCredit::KIND_QR]['kopecks'],
+            $control->source($day, $day->addDay())['credits'][BankStatementCredit::KIND_QR]['kopecks'],
         );
 
         // Деньги, доступ, флаги и очередь исключений не изменились.
