@@ -31,29 +31,87 @@ $out['paypal_claims'] = [
     'total' => $claims->count(),
     'with_replay_key' => $claims->whereNotNull('claim_replay_key')->count(),
     'by_verdict' => $claims->countBy(fn ($p) => $p->claim_meta['amount_check']['verdict'] ?? 'none')->all(),
-    'reconciliation_exceptions' => $claims->filter(fn ($p) => ! empty($p->claim_meta['reconciliation_exception']))
-        ->map(fn ($p) => ['payment_id' => $p->id, 'status' => $p->status, 'type' => $p->claim_meta['reconciliation_exception']])->values()->all(),
+    // Typed exceptions live in the queue (money_recon_exceptions), not in claim_meta.
+    'reconciliation_exceptions' => $claims->isEmpty() ? [] : DB::table('money_recon_exceptions')
+        ->whereIn('source_ref', $claims->map(fn ($p) => 'payment:'.$p->id)->all())
+        ->get(['id', 'type', 'source_ref', 'state'])
+        ->map(fn ($r) => ['payment_id' => (int) substr((string) $r->source_ref, 8), 'exception_id' => $r->id, 'type' => $r->type, 'state' => $r->state])
+        ->values()->all(),
     'paid_beyond_or_unpriced' => $claims->filter(fn ($p) => in_array($p->status, ['paid', 'success'], true)
         && in_array($p->claim_meta['amount_check']['verdict'] ?? null, ['beyond_5', 'no_expected_price'], true))->pluck('id')->all(),
 ];
 
-// Silent access success: paid since enable, course has groups, user in none of them.
+// Silent access success: paid since enable, course has groups, and the buyer has no
+// access path at all. Rows that cannot grant access by design are classified, not
+// counted: salary_payout rows are teacher-salary mirrors on a technical course,
+// admin accounts reach the course through the panel, and course_user enrolment or a
+// live lesson grant is a real access path.
 $paidSince = Payment::query()->whereIn('status', ['paid', 'success'])->where('updated_at', '>=', $since)
-    ->whereNotNull('course_id')->whereNotNull('user_id')->get(['id', 'course_id', 'user_id']);
+    ->whereNotNull('course_id')->whereNotNull('user_id')->get(['id', 'course_id', 'user_id', 'tariff', 'amount', 'linked_promise_id']);
+$adminIds = DB::table('users')->whereIn('role', ['super_admin', 'admin'])->pluck('id')->flip();
 $silent = [];
 $groupless = [];
+$expense = [];
+$admin = [];
+$otherAccess = [];
+$notYetDue = [];
+$promiseGrant = [];
+$courseFormat = [];
 foreach ($paidSince as $p) {
+    if ($p->tariff === 'salary_payout') {
+        $expense[] = $p->id;
+
+        continue;
+    }
+    $courseFormat[$p->course_id] ??= (string) DB::table('courses')->where('id', $p->course_id)->value('format');
+    if ($courseFormat[$p->course_id] === 'enrolling') {
+        $notYetDue[] = $p->id;
+
+        continue;
+    }
+    if ((float) $p->amount === 0.0 && $p->linked_promise_id !== null) {
+        $promiseGrant[] = $p->id;
+
+        continue;
+    }
     $groupIds = DB::table('course_group')->where('course_id', $p->course_id)->pluck('group_id');
     if ($groupIds->isEmpty()) {
         $groupless[] = $p->id;
 
         continue;
     }
-    if (! DB::table('group_user')->where('user_id', $p->user_id)->whereIn('group_id', $groupIds)->exists()) {
-        $silent[] = $p->id;
+    if (DB::table('group_user')->where('user_id', $p->user_id)->whereIn('group_id', $groupIds)->exists()) {
+        continue;
     }
+    if (isset($adminIds[$p->user_id])) {
+        $admin[] = $p->id;
+
+        continue;
+    }
+    $enrolled = DB::table('course_user')->where('user_id', $p->user_id)->where('course_id', $p->course_id)
+        ->where('status', '!=', 'Покинул')->exists();
+    $granted = DB::table('lesson_access_grants')->where('user_id', $p->user_id)->where('course_id', $p->course_id)
+        ->whereNull('revoked_at')
+        ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))->exists();
+    if ($enrolled || $granted) {
+        $otherAccess[] = $p->id;
+
+        continue;
+    }
+    $silent[] = $p->id;
 }
-$out['access'] = ['paid_since' => $paidSince->count(), 'paid_on_groupless_course' => $groupless, 'paid_without_group_membership' => $silent];
+$out['access'] = [
+    'paid_since' => $paidSince->count(),
+    'paid_on_groupless_course' => $groupless,
+    'paid_without_group_membership' => $silent,
+    'classified' => [
+        'salary_payout_expense' => $expense,
+        'admin_account' => $admin,
+        'other_access_path' => $otherAccess,
+        'course_enrolling' => $notYetDue,
+        'zero_amount_promise_grant' => $promiseGrant,
+    ],
+];
 
 // Duplicate money effects since enable.
 $out['duplicates'] = [
