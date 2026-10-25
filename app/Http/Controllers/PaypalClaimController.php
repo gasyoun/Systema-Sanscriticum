@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\AttributionService;
 use App\Services\Consent\ConsentRecorder;
 use App\Services\CuratorNotifier;
+use App\Services\Payments\ClaimTrustGate;
 use App\Services\Payments\PaypalClaimAmountCheck;
 use App\Services\Payments\PaypalForeignPriceService;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -114,8 +115,9 @@ final class PaypalClaimController extends Controller
         // auth()->check() доверял сессии, которую сама эта публичная форма
         // наминтила минуту назад — второй POST того же гостя уходил сразу
         // в paid без денег (Nv06 two-POST bootstrap).
-        $trusted = auth()->check()
-            && auth()->user()->isEstablishedClaimStudent()
+        // H6395 lever 2 (WIC): предикат живёт в ClaimTrustGate — OFF (default) =
+        // легаси isEstablishedClaimStudent(), ON = ClaimTrustPolicy с порогом канала.
+        $trusted = app(ClaimTrustGate::class)->trusts(auth()->user(), ClaimTrustGate::PAYPAL)
             && (bool) config('services.paypal.trust_existing_students', true);
 
         // Резолв пользователя — вне транзакции, может бросить ValidationException
@@ -284,8 +286,9 @@ final class PaypalClaimController extends Controller
     {
         // Флаг доверия читаем ДО resolveUser — он логинит созданного гостя
         // (см. комментарий в store()).
-        $trusted = auth()->check()
-            && auth()->user()->isEstablishedClaimStudent()
+        // H6395 lever 2 (WIC): предикат живёт в ClaimTrustGate — OFF (default) =
+        // легаси isEstablishedClaimStudent(), ON = ClaimTrustPolicy с порогом канала.
+        $trusted = app(ClaimTrustGate::class)->trusts(auth()->user(), ClaimTrustGate::PAYPAL)
             && (bool) config('services.paypal.trust_existing_students', true);
 
         $user = $this->resolveUser($request);

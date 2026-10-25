@@ -18,20 +18,26 @@ use App\Models\User;
  * POST той же сессии auth()->check() истинен — прежний предикат создавал
  * auto-trusted paid-платеж без единой сверки (self-minted bootstrap).
  *
- * Доверие теперь требует одного из:
+ * Доверие требует одного из:
  *  1. хотя бы один PAID-платеж этого пользователя (статус из
  *     Payment::PAID_STATUSES — проверенный денежный контур: вебхук
  *     эквайринга с подписью, ручная сверка админом, подтвержденный
  *     прошлый claim);
- *  2. возраст аккаунта ≥ trust_min_account_age_hours (по умолчанию 24ч) —
- *     аккаунт, самозагруженный в этой же сессии, в окно не попадает.
+ *  2. возраст аккаунта ≥ trust_min_account_age_hours — аккаунт,
+ *     самозагруженный в этой же сессии, в окно не попадает. Дефолт 168 ч
+ *     (= 7 сут, User::CLAIM_TRUST_MIN_AGE_DAYS): включение флага
+ *     features.claim_trust_policy без настройки env поведение НЕ меняет.
  *
- * Конфиг-неймспейс передается вызывающим контроллером ('paypal' /
- * 'bank_claim'), чтобы порог окна настраивался отдельно на канал.
+ * $configNamespace — ПОЛНЫЙ путь конфига канала ('services.paypal',
+ * 'services.bank_claim', 'services.gasuns_pay'), а не голое имя: config() на
+ * несуществующем ключе молча отдаёт дефолт, и порог из env был бы
+ * проигнорирован. Готовые значения — константы ClaimTrustGate::PAYPAL /
+ * ::BANK_CLAIM / ::GASUNS_PAY.
  */
 final class ClaimTrustPolicy
 {
-    public const DEFAULT_MIN_ACCOUNT_AGE_HOURS = 24;
+    /** 168 ч = 7 сут = User::CLAIM_TRUST_MIN_AGE_DAYS: ON-путь при пустом env равен OFF-пути. */
+    public const DEFAULT_MIN_ACCOUNT_AGE_HOURS = 168;
 
     public function isPreexistingVerified(User $user, string $configNamespace): bool
     {
