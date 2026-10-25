@@ -12,7 +12,7 @@ use Illuminate\Support\Collection;
 /**
  * H7268 — read-only классификатор строк «доступ под обещание»
  * (`transaction_id = promise_grant_#<promise id>`, создаёт
- * {@see \App\Services\ConditionalAccessGranter}).
+ * {@see ConditionalAccessGranter}).
  *
  * Контракт строки (docs/money-access-core-manual.md §1.6, §640):
  *  - `is_conditional = true` и `amount = 0` — доступ без денег; строка обязана
