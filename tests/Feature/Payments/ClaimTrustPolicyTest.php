@@ -55,7 +55,7 @@ final class ClaimTrustPolicyTest extends TestCase
 
     private function policy(): ClaimTrustPolicy
     {
-        return new ClaimTrustPolicy();
+        return new ClaimTrustPolicy;
     }
 
     /** Аккаунт заданного возраста; null ⇒ created_at снят. */

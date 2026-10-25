@@ -69,7 +69,7 @@ final class HttpPaypalWebhookSignatureVerifierTest extends TestCase
 
     private function verifier(): HttpPaypalWebhookSignatureVerifier
     {
-        return new HttpPaypalWebhookSignatureVerifier(new PaypalSubscriptionsService());
+        return new HttpPaypalWebhookSignatureVerifier(new PaypalSubscriptionsService);
     }
 
     private function webhookRequest(string $body = self::WEBHOOK_EVENT): Request
