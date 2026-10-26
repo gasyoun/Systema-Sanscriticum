@@ -192,6 +192,16 @@ class ContentCalendarSlotResourceGateTest extends TestCase
         $this->assertSame(0, ContentCalendarSlot::query()->where('title', 'Кашмирский шиваизм')->count());
     }
 
+    /** Заплатка от кражи фокуса TiptapEditor'ом подключена к админ-панели. */
+    public function test_admin_pages_carry_the_tiptap_focus_fix(): void
+    {
+        $this->crosspostSlot();
+
+        $this->get(ContentCalendarSlotResource::getUrl('create'))
+            ->assertOk()
+            ->assertSee('__tiptapFocusFix', false);
+    }
+
     public function test_create_requires_future_time_and_text(): void
     {
         $this->crosspostSlot();
