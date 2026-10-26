@@ -86,7 +86,9 @@ class ContentCalendarSlotResource extends Resource
                 ->tools(['bold', 'italic', 'underline', 'strike', '|', 'link', 'blockquote', 'code', 'code-block', 'highlight'])
                 ->output(TiptapOutput::Html)
                 ->disableFloatingMenus()
-                ->live(onBlur: true)
+                // Без live(): ответ Livewire заново кладёт state в редактор, а
+                // updateEditorContent() делает editor.focus() — клик в другое
+                // поле прыгал к редактору наверх и терялся (26-10-2026).
                 ->helperText('Маркер = спойлер в Telegram. В VK форматирование не переносится: уходит простой текст, ссылка — «текст (url)».')
                 ->rules([
                     fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
@@ -114,7 +116,6 @@ class ContentCalendarSlotResource extends Resource
                     'video/mp4', 'video/quicktime', 'video/webm',
                 ])
                 ->maxSize(51200)
-                ->live()
                 ->openable()
                 ->downloadable()
                 ->columnSpanFull(),
@@ -148,7 +149,8 @@ class ContentCalendarSlotResource extends Resource
                 })
                 ->columnSpanFull(),
             Forms\Components\Placeholder::make('vk_preview')
-                ->label('Как увидит VK')
+                ->label('Как увидит VK (обновляется после сохранения)')
+                ->hiddenOn('create')
                 ->content(fn (Get $get): HtmlString => new HtmlString(
                     '<div style="white-space: pre-wrap">'.e(PostFormatter::toPlain(self::bodyHtml($get('body')))).'</div>'
                 ))

@@ -158,6 +158,19 @@ class ContentCalendarSlotResourceGateTest extends TestCase
         $this->assertSame(['vk_a'], $slot->destinations);
     }
 
+    /**
+     * Живой редактор после ответа Livewire сам делает focus(): клик в другое
+     * поле формы прыгал к редактору наверх и терялся (26-10-2026).
+     */
+    public function test_editor_and_upload_do_not_round_trip_on_blur(): void
+    {
+        $this->crosspostSlot();
+
+        Livewire::test(ContentCalendarSlotResource\Pages\CreateContentCalendarSlot::class)
+            ->assertFormFieldExists('body', fn ($field): bool => ! $field->isLive())
+            ->assertFormFieldExists('media_path', fn ($field): bool => ! $field->isLive());
+    }
+
     public function test_create_requires_future_time_and_text(): void
     {
         $this->crosspostSlot();
