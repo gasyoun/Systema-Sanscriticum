@@ -46,6 +46,8 @@ class CalendarStoryPublishTest extends TestCase
 
         TelegramBusinessConnection::create([
             'business_connection_id' => 'biz-conn',
+            'owner_telegram_user_id' => 1001,
+            'owner_chat_id' => 1001,
             'is_enabled' => true,
             'rights' => ['can_manage_stories' => true],
         ]);

@@ -202,6 +202,22 @@ class ContentCalendarSlotResourceGateTest extends TestCase
             ->assertSee('__tiptapFocusFix', false);
     }
 
+    public function test_story_picture_is_saved_separately_from_post_media(): void
+    {
+        Storage::fake(ContentCalendarSlot::MEDIA_DISK);
+        $slot = $this->crosspostSlot();
+
+        Livewire::test(ContentCalendarSlotResource\Pages\EditContentCalendarSlot::class, ['record' => $slot->getRouteKey()])
+            ->set('data.story_media_path', UploadedFile::fake()->image('story.jpg', 1080, 1920))
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $slot->refresh();
+        $this->assertStringStartsWith('content-calendar/stories/', (string) $slot->story_media_path);
+        $this->assertNull($slot->media_path);
+        Storage::disk(ContentCalendarSlot::MEDIA_DISK)->assertExists($slot->story_media_path);
+    }
+
     public function test_create_requires_future_time_and_text(): void
     {
         $this->crosspostSlot();
