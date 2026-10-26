@@ -8,17 +8,13 @@ use App\Models\ContentCalendarPublication;
 use App\Models\ContentCalendarSlot;
 
 /**
- * Куда ведёт сторис слота: первая ссылка samskrte.ru из текста поста (обычно
- * трекинговая /ga/…), иначе — вышедший пост в публичном канале «Оповещение».
+ * Куда ведёт сторис слота: на вышедший пост в публичном канале «Оповещение»
+ * (решение 26-10-2026). Пост ещё не вышел или в «Оповещение» не шёл — null.
  */
 final class CalendarStoryLink
 {
     public static function for(ContentCalendarSlot $slot): ?string
     {
-        if (preg_match('~https://samskrte\.ru/[^\s<>"()]+~u', PostFormatter::toPlain($slot->body), $match) === 1) {
-            return rtrim($match[0], '.,;:!?»');
-        }
-
         $username = ltrim((string) config('content_calendar.tg_public_username'), '@');
         $post = ContentCalendarPublication::query()
             ->where('content_calendar_slot_id', $slot->id)

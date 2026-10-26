@@ -83,7 +83,7 @@ class EditContentCalendarSlot extends EditRecord
         }
 
         $checklist = app(ContentProhibitionsChecklist::class);
-        $verdict = $checklist->check((string) $slot->title."\n".CalendarBusinessStoryPublisher::caption($slot));
+        $verdict = $checklist->check((string) $slot->title."\n".strip_tags(CalendarBusinessStoryPublisher::caption($slot)['caption']));
         if (! $verdict['ok']) {
             Notification::make()->title('Сторис не опубликована')
                 ->body($checklist->journalLine($verdict))->danger()->persistent()->send();
