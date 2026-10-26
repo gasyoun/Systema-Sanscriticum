@@ -79,7 +79,7 @@ _Гасунс_
 This addendum does not touch the 24-09-2026 record above. It records a gap and a new,
 separately dated run.
 
-**The T+24h receipt does not exist.** The document above was committed once with the
+**No T+24h receipt was found.** The document above was committed once with the
 T+24h column `_pending_` and the verdict `_pending the T+24h observation._`; it was
 never updated. On 25-10-2026 the prod host held only the two 24-09 reports
 (`storage/app/h5442_report_before.json` 12:47, `h5442_report_after.json` 13:23), no
@@ -87,6 +87,11 @@ observation artefact for 25-09, and no Mac/launchd task named
 `h5442-money-wave-24h-observation`. H5442 was flipped by the H6210 close-backlog sweep
 without a 24-hour verdict. The historical gap is therefore preserved, not backfilled:
 no receipt dated 25-09-2026 will be invented.
+
+That is a statement about the surviving record, not proof that no run happened: a run
+that persisted nothing leaves no artefact, and today's absent task does not prove
+absence a month ago. Until the archive for that window is searched, the honest verdict
+is "execution unproven", not "the observation never happened" (corrected 26-10-2026).
 
 **New observation — 25-10-2026 17:43:29 (Europe/Moscow), read-only.** Command:
 `sudo -u www-data HOME=/tmp php artisan tinker scripts/ops/h5442_wave_observe.php`
@@ -100,10 +105,27 @@ no receipt dated 25-09-2026 will be invented.
 | paid beyond ±5% or unpriced | 1 (14613) | typed exception `currency_amount_mismatch:payment:14613`, **open** |
 | typed reconciliation exceptions (observer field) | 0 | observer looked in `claim_meta`; the queue holds 1 for 14613 — fixed in the script |
 | paid on a group-less course | 23 | 22 `salary_payout` expense rows + 1 archived course, see classification |
-| paid without group membership | 6 | 1 real open (14249), 3 admin self-purchases, 1 enrolling, 1 promise grant — see classification |
+| paid without group membership | 6 | 1 real open (14249), 3 admin self-purchases, 1 enrolling, 1 promise grant — see classification and the 26-10 correction below |
 | duplicate paid / replay-key dupes | 0 / 0 | PASS |
 | payouts created / with settlement key / negative | 24 / 0 / 0 | historical backfills (paid_at 2026-02..07), not new settlements |
-| log: fail-closed / unique violation / RuntimeException | 0 / 0 / 52 | the sampled lines are Telegram/media send failures (chat not found, message too long, media session busy); none money/access |
+| log: fail-closed / unique violation / RuntimeException | 0 / 0 / 52 | 52 is the match count in the **files that existed**, not a classification: the lines were sampled, not typed, and missing daily files were skipped silently (see 26-10 correction) |
+
+**Correction — 26-10-2026 (independent review).** Two readings above were too strong.
+
+1. **14577 is not "access not yet due".** `ConditionalAccessGranter::grantForPromise()`
+   creates the conditional payment (`amount=0`, `status=paid`, `linked_promise_id`) and
+   immediately calls `grantAccess()`; the student message says access is open *until*
+   the promise date. The zero `paid` row is therefore the mechanism, and access is due
+   at grant time, not on 31-10. Whether the student can actually watch the promised
+   block depends on lesson-level visibility (`group_id IS NULL` lessons are visible
+   without a group) and on the tariff key; that was not tested, so the access verdict
+   is **unproven**, not "not due", and the row must not be changed on the strength of
+   its status. See the addendum in
+   [RESIDUAL_ACCESS_CLASSIFICATION_H5442_2026-10-25.md](RESIDUAL_ACCESS_CLASSIFICATION_H5442_2026-10-25.md).
+2. **"0 log matches" is not "0 errors".** It means zero matches in the files that were
+   found; the old scan skipped a missing daily file silently. The observer now prints
+   `log_coverage` (days, present, missing, complete), and the 52 `RuntimeException`
+   lines remain a sample, not a classification.
 
 **Payment 14613 (beyond ±5%).** The payer note carries a PayPal transaction code and a
 date; `claim_meta.amount_check` recorded `beyond_5` (`auto_confirm=false`) at

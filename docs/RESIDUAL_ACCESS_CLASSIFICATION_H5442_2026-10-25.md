@@ -43,4 +43,29 @@ rows and admin accounts as "paid without access", and looked for typed exception
 `payments.claim_meta` instead of the `money_recon_exceptions` queue. The hardened
 script classifies those cases explicitly and keeps the one real row (14249) flagged.
 
+## Correction — 26-10-2026 (independent review)
+
+The row for 14577 and the "observer defect fixed" paragraph above are superseded.
+
+**14577 is not "access not yet due".** `ConditionalAccessGranter::grantForPromise()`
+creates exactly this row (`amount=0`, `status=paid`, `is_conditional=1`,
+`linked_promise_id`) and immediately calls `grantAccess()`; the notification tells the
+student access is open *until* 31-10. Access is therefore due at grant time, and a
+zero-amount `paid` row with a live promise is the mechanism, not a bookkeeping defect by
+itself. The missing `group_user` / `course_user` row is also not proof of non-delivery:
+a lesson whose `group_id` is NULL is visible without any group, and the tariff key
+`block_1` unlocks block 1. Whether this student can watch the promised block was not
+tested on 25-10, so the access verdict is **unproven** — the row must not be changed on
+the strength of its status (no status, amount, group or access write).
+
+**The observer's promise-grant exclusion was itself a defect.** The 25-10 script
+skipped every `amount=0 && linked_promise_id != null` row before checking access, so a
+promise grant that delivered nothing could never be flagged; it also accepted any single
+active `lesson_access_grants` row as sufficient for a block or full-course payment. Both
+are fixed in `scripts/ops/h5442_wave_observe.php` (26-10-2026): promise grants are
+reported in `promise_grants` with `paid_lessons_in_scope` / `open_paid_lessons`, partial
+delivery is its own class, and log coverage (`days`, `files_present`, `files_missing`,
+`complete`) is printed next to the counts. The 6/23 numbers above are the pre-fix
+script's output and are not comparable with a post-fix run.
+
 _Dr. Mārcis Gasūns_
