@@ -89,15 +89,13 @@ class ContentCalendarSlotResource extends Resource
                 // Без live(): ответ Livewire заново кладёт state в редактор, а
                 // updateEditorContent() делает editor.focus() — клик в другое
                 // поле прыгал к редактору наверх и терялся (26-10-2026).
-                ->helperText('Маркер = спойлер в Telegram. В VK форматирование не переносится: уходит простой текст, ссылка — «текст (url)».')
+                ->helperText('Маркер = спойлер в Telegram. В VK форматирование не переносится: уходит простой текст, ссылка — «текст (url)». '
+                    .'Без вложения — до 4096 символов, с картинкой или видео — до 1024.')
                 ->rules([
-                    fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                    fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
                         $length = PostFormatter::telegramLength(self::bodyHtml($value));
-                        $limit = filled($get('media_path')) ? PostFormatter::TG_CAPTION_LIMIT : PostFormatter::TG_MESSAGE_LIMIT;
-                        if ($length > $limit) {
-                            $fail(filled($get('media_path'))
-                                ? "С фото/видео Telegram допускает подпись до {$limit} символов, сейчас {$length}. Сократите текст или уберите вложение."
-                                : "Telegram допускает сообщение до {$limit} символов, сейчас {$length}.");
+                        if ($length > PostFormatter::TG_MESSAGE_LIMIT) {
+                            $fail('Telegram допускает сообщение до '.PostFormatter::TG_MESSAGE_LIMIT." символов, сейчас {$length}.");
                         }
                     },
                 ])
@@ -116,6 +114,19 @@ class ContentCalendarSlotResource extends Resource
                     'video/mp4', 'video/quicktime', 'video/webm',
                 ])
                 ->maxSize(51200)
+                // Лимит подписи 1024 проверяется ЗДЕСЬ, а не на тексте: ошибка
+                // встаёт у кнопки загрузки. На поле текста Filament уводил
+                // страницу к началу редактора, а сама ошибка оставалась под
+                // длинным текстом за краем экрана (26-10-2026).
+                ->rules([
+                    fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                        $length = PostFormatter::telegramLength(self::bodyHtml($get('body')));
+                        if ($length > PostFormatter::TG_CAPTION_LIMIT) {
+                            $fail('С картинкой или видео Telegram допускает текст до '.PostFormatter::TG_CAPTION_LIMIT
+                                ." символов, сейчас {$length}. Сократите текст или уберите вложение.");
+                        }
+                    },
+                ])
                 ->openable()
                 ->downloadable()
                 ->columnSpanFull(),

@@ -240,7 +240,8 @@ class ContentCalendarSlotResourceGateTest extends TestCase
             ->set('data.media_path', UploadedFile::fake()->image('cover.jpg'))
             ->set('data.body', $long)
             ->call('save')
-            ->assertHasFormErrors(['body']);
+            ->assertHasFormErrors(['media_path'])
+            ->assertHasNoFormErrors(['body']);
 
         Livewire::test(ContentCalendarSlotResource\Pages\EditContentCalendarSlot::class, ['record' => $slot->getRouteKey()])
             ->set('data.body', $long)
