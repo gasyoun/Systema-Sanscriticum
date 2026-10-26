@@ -203,10 +203,14 @@ class ContentCalendarSlotResource extends Resource
                 static fn (array $d): string => (string) $d['label'],
                 (array) config('content_calendar.destinations', []),
             ))
-            ->descriptions(array_map(
-                static fn (): string => 'не настроено',
-                array_diff_key((array) config('content_calendar.destinations', []), $enabled),
-            ))
+            ->descriptions(array_filter(array_map(
+                static fn (array $d): ?string => match (true) {
+                    ! in_array($d, $enabled, true) => 'не настроено',
+                    ContentCalendarSlot::isStoryDestination($d) => 'только если загружена картинка для сторис',
+                    default => null,
+                },
+                (array) config('content_calendar.destinations', []),
+            )))
             ->disableOptionWhen(static fn (string $value): bool => ! isset($enabled[$value]))
             ->rules([
                 static fn (): Closure => static function (string $attribute, mixed $value, Closure $fail) use ($enabled): void {
