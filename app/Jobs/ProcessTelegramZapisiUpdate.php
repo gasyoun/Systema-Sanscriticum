@@ -70,6 +70,15 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
         // Отсекать здесь ничего нельзя: n8n сам решает, что ему интересно.
         $this->forwardToN8n();
 
+        // Календарь контента: пост, вышедший в канале «Оповещение», становится
+        // слотом и разносится по остальным площадкам. Джоб сам гейтится флагом
+        // CONTENT_CAL_TG_INGEST и каналом-источником; обычная обработка
+        // апдейта (корпус и пр.) идёт дальше без изменений.
+        if (isset($this->update['channel_post']) && is_array($this->update['channel_post'])
+            && config('content_calendar.tg_ingest_enabled')) {
+            IngestCalendarChannelPostJob::dispatch($this->update['channel_post']);
+        }
+
         // #ДЗ / кнопки выбора урока: @zapisi_ORSbot сидит в чатах групп
         // (в отличие от student-bot). Callback и входящий тег обрабатываем здесь.
         // 20-10-2026: заявка в чат группы по ссылке после оплаты — одобряем

@@ -21,7 +21,7 @@ class ContentAutopilotDigestCommandTest extends TestCase
         config([
             'features.content_calendar_autopilot' => true,
             'features.telegram_story_publisher' => true,
-            'services.n8n.calendar_post_webhook' => '',
+            'content_calendar.destinations' => [],
         ]);
 
         ContentCalendarSlot::create([
@@ -59,7 +59,7 @@ class ContentAutopilotDigestCommandTest extends TestCase
         $this->assertStringNotContainsString('старое', $md, 'outside the window');
         $this->assertStringContainsString('Удержано чек-листом §2.8 — 1', $md);
         $this->assertStringContainsString('competitors («Окаруто»)', $md);
-        $this->assertStringContainsString('`CONTENT_CALENDAR_AUTOPILOT` | ✅ true | ⚠️ `N8N_CALENDAR_POST_WEBHOOK` пуст', $md);
+        $this->assertStringContainsString('`CONTENT_CALENDAR_AUTOPILOT` | ✅ true | ⚠️ площадки `CONTENT_CAL_*` не заданы', $md);
         $this->assertStringContainsString('`TELEGRAM_STORY_PUBLISHER` | ✅ true', $md);
         @unlink($out);
     }
