@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\InternalAccounts;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -212,7 +213,8 @@ class CourseWaitlistItem extends Model
     public function voters(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'waitlist_votes', 'course_waitlist_item_id', 'user_id')
-            ->withTimestamps();
+            ->withTimestamps()
+            ->whereNotIn('users.id', InternalAccounts::ids());
     }
 
     /**
@@ -236,9 +238,19 @@ class CourseWaitlistItem extends Model
 
     // ================= Витринные производные =================
 
+    /**
+     * Голоса студентов: внутренние (staff/owner) аккаунты не считаются нигде —
+     * рулинг MG 26-10-2026. Базовая связь votes() остаётся полной: админке
+     * нужны все строки, включая собственные голоса сотрудников.
+     */
+    public function studentVotes(): HasMany
+    {
+        return $this->votes()->whereNotIn('user_id', InternalAccounts::ids());
+    }
+
     public function votesCount(): int
     {
-        return $this->votes()->count();
+        return $this->studentVotes()->count();
     }
 
     /**
