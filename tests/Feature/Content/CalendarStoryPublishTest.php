@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Content;
 
+use App\Filament\Resources\ContentCalendarSlotResource\Pages\EditContentCalendarSlot;
 use App\Models\ContentCalendarPublication;
 use App\Models\ContentCalendarSlot;
 use App\Models\TelegramBusinessConnection;
+use App\Models\User;
 use App\Models\VkUserToken;
 use App\Services\Access\TelegramAdminNotifier;
+use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Livewire;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
@@ -165,5 +169,43 @@ class CalendarStoryPublishTest extends TestCase
         $vk = $slot->publications()->sole();
         $this->assertSame(ContentCalendarPublication::STATUS_PUBLISHED, $vk->status);
         $this->assertSame('https://vk.com/story-88831040_456239001', $vk->permalink);
+    }
+
+    /** Кнопка «Опубликовать сторис»: только сторис, пост не уходит, повтор невозможен. */
+    public function test_edit_page_button_publishes_only_the_story(): void
+    {
+        config(['features.content_calendar' => true]);
+        $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
+        $slot = $this->slot(['publish_at' => now()->addDay(), 'destinations' => ['tg_opoveshchenie', 'tg_story_business']]);
+
+        Livewire::test(EditContentCalendarSlot::class, ['record' => $slot->getRouteKey()])
+            ->callAction('publishStory', data: ['targets' => ['tg_story_business']])
+            ->assertHasNoActionErrors()
+            ->assertNotified('Сторис опубликована');
+
+        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'postStory'));
+        Http::assertNotSent(fn (Request $r) => str_contains($r->url(), 'sendMessage'));
+        $slot->refresh();
+        $this->assertSame(ContentCalendarSlot::STATUS_SCHEDULED, $slot->status);
+        $this->assertSame(ContentCalendarPublication::STATUS_PUBLISHED, $slot->publications()->where('destination', 'tg_story_business')->value('status'));
+        $this->assertNull($slot->publications()->where('destination', 'tg_opoveshchenie')->first());
+
+        Livewire::test(EditContentCalendarSlot::class, ['record' => $slot->getRouteKey()])
+            ->callAction('publishStory', data: ['targets' => ['tg_story_business']])
+            ->assertNotified('Сторис опубликована');
+        $this->assertSame(1, Http::recorded(fn (Request $r) => str_contains($r->url(), 'postStory'))->count());
+    }
+
+    public function test_edit_page_button_needs_a_story_picture(): void
+    {
+        config(['features.content_calendar' => true]);
+        $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
+        $slot = $this->slot(['story_media_path' => null, 'status' => ContentCalendarSlot::STATUS_PUBLISHED]);
+
+        Livewire::test(EditContentCalendarSlot::class, ['record' => $slot->getRouteKey()])
+            ->callAction('publishStory', data: ['targets' => ['tg_story_business']])
+            ->assertNotified('Сторис не опубликована');
+
+        Http::assertNotSent(fn (Request $r) => str_contains($r->url(), 'postStory'));
     }
 }
