@@ -171,6 +171,27 @@ class ContentCalendarSlotResourceGateTest extends TestCase
             ->assertFormFieldExists('media_path', fn ($field): bool => ! $field->isLive());
     }
 
+    public function test_create_with_media_and_long_text_explains_why_it_was_not_saved(): void
+    {
+        Storage::fake(ContentCalendarSlot::MEDIA_DISK);
+        $this->crosspostSlot();
+
+        Livewire::test(ContentCalendarSlotResource\Pages\CreateContentCalendarSlot::class)
+            ->fillForm([
+                'title' => 'Кашмирский шиваизм',
+                'publish_at' => now('Europe/Moscow')->addDay()->toDateTimeString(),
+                'body' => '<p>'.str_repeat('а', 1100).'</p>',
+                'destinations' => ['tg_a'],
+            ])
+            ->set('data.media_path', UploadedFile::fake()->image('cover.jpg'))
+            ->call('create')
+            ->assertHasFormErrors(['media_path'])
+            ->assertHasNoFormErrors(['body'])
+            ->assertNotified('Пост не сохранён');
+
+        $this->assertSame(0, ContentCalendarSlot::query()->where('title', 'Кашмирский шиваизм')->count());
+    }
+
     public function test_create_requires_future_time_and_text(): void
     {
         $this->crosspostSlot();
