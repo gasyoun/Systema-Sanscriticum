@@ -10,6 +10,7 @@ use App\Models\ContentCandidate;
 use App\Services\Access\TelegramAdminNotifier;
 use App\Services\Content\CalendarPublishException;
 use App\Services\Content\CalendarPublishService;
+use App\Services\Content\CalendarBusinessStoryPublisher;
 use App\Services\Content\CalendarTelegramPublisher;
 use App\Services\Content\CalendarVkPublisher;
 use App\Support\TelegramSendGuard;
@@ -65,6 +66,7 @@ class PublishCalendarSlotJob implements ShouldBeUnique, ShouldQueue
     public function handle(
         CalendarTelegramPublisher $telegram,
         CalendarVkPublisher $vk,
+        CalendarBusinessStoryPublisher $story,
         TelegramAdminNotifier $notifier,
         CalendarPublishService $service,
     ): void {
@@ -116,7 +118,12 @@ class PublishCalendarSlotJob implements ShouldBeUnique, ShouldQueue
             $publication->increment('attempts');
 
             try {
-                $result = ($destination['platform'] === 'vk' ? $vk : $telegram)->publish($slot, $destination);
+                $result = match ($destination['platform']) {
+                    'vk' => $vk->publish($slot, $destination),
+                    'vk_story' => $vk->publishStory($slot, $destination),
+                    'tg_business_story' => $story->publish($slot, $destination),
+                    default => $telegram->publish($slot, $destination),
+                };
             } catch (Throwable $e) {
                 $permanent = $e instanceof CalendarPublishException && $e->permanent;
                 $failed = $permanent || $publication->attempts >= $maxAttempts;

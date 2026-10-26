@@ -37,13 +37,7 @@ class CalendarVkPublisher
      */
     public function publish(ContentCalendarSlot $slot, array $destination): array
     {
-        $groupId = (int) ($destination['group_id'] ?? 0);
-        $authorized = array_map('intval', (array) config('video-anons.vk.authorized_group_ids', []));
-        if ($groupId <= 0 || ! in_array($groupId, $authorized, true)) {
-            throw CalendarPublishException::permanent(
-                "vk: группа {$groupId} не входит в VK_PUBLISH_AUTHORIZED_GROUPS (гейт публикации)"
-            );
-        }
+        $groupId = $this->authorizedGroup($destination);
 
         $tokenRow = VkUserToken::current();
         $token = VkUserToken::activeAccessToken();
@@ -70,6 +64,77 @@ class CalendarVkPublisher
             'permalink' => "https://vk.com/wall-{$groupId}_{$postId}",
             'warning' => $warning,
         ];
+    }
+
+    /**
+     * Картинка для сторис слота → сторис сообщества: stories.getPhotoUploadServer
+     * → загрузка → stories.save. Нужно право stories у токена (без него —
+     * постоянный отказ с причиной), гейт тот же, что у постов.
+     *
+     * @param  array<string, mixed>  $destination
+     * @return array{external_id: string, permalink: string, warning: ?string}
+     */
+    public function publishStory(ContentCalendarSlot $slot, array $destination): array
+    {
+        $groupId = $this->authorizedGroup($destination);
+
+        $tokenRow = VkUserToken::current();
+        $token = VkUserToken::activeAccessToken();
+        if ($tokenRow === null || $token === null) {
+            throw new CalendarPublishException('vk: нет действующего VK-токена (vk:token-import / vk:token-refresh)');
+        }
+        if (! $tokenRow->hasScope('stories')) {
+            throw CalendarPublishException::permanent('vk: у токена нет права «stories» — сторис не опубликована');
+        }
+
+        $disk = Storage::disk(ContentCalendarSlot::MEDIA_DISK);
+        $path = (string) $slot->story_media_path;
+        if ($path === '' || ! $disk->exists($path)) {
+            throw CalendarPublishException::permanent("vk: файл картинки для сторис не найден ({$path})");
+        }
+
+        $params = ['group_id' => $groupId, 'add_to_news' => 1];
+        $link = CalendarStoryLink::for($slot);
+        if ($link !== null) {
+            $params += ['link_text' => 'learn_more', 'link_url' => $link];
+        }
+        $server = $this->call('stories.getPhotoUploadServer', $token, $params);
+        $uploadUrl = (string) ($server['upload_url'] ?? '');
+        if ($uploadUrl === '') {
+            throw new CalendarPublishException('vk: stories.getPhotoUploadServer — '.($server['error'] ?? 'нет upload_url'));
+        }
+
+        $uploaded = Http::timeout(120)->attach('file', (string) $disk->get($path), basename($path))->post($uploadUrl)->json() ?? [];
+        $uploadResult = $uploaded['response']['upload_result'] ?? null;
+        if (! is_string($uploadResult) || $uploadResult === '') {
+            throw new CalendarPublishException('vk: загрузка сторис — пустой ответ upload-сервера');
+        }
+
+        $saved = $this->call('stories.save', $token, ['upload_results' => $uploadResult]);
+        $story = $saved['items'][0] ?? null;
+        if (! is_array($story) || ! isset($story['id'])) {
+            throw new CalendarPublishException('vk: stories.save — '.($saved['error'] ?? 'нет id сторис'));
+        }
+
+        return [
+            'external_id' => (string) $story['id'],
+            'permalink' => "https://vk.com/story-{$groupId}_{$story['id']}",
+            'warning' => null,
+        ];
+    }
+
+    /** @param  array<string, mixed>  $destination */
+    private function authorizedGroup(array $destination): int
+    {
+        $groupId = (int) ($destination['group_id'] ?? 0);
+        $authorized = array_map('intval', (array) config('video-anons.vk.authorized_group_ids', []));
+        if ($groupId <= 0 || ! in_array($groupId, $authorized, true)) {
+            throw CalendarPublishException::permanent(
+                "vk: группа {$groupId} не входит в VK_PUBLISH_AUTHORIZED_GROUPS (гейт публикации)"
+            );
+        }
+
+        return $groupId;
     }
 
     /** @return array{0: list<string>, 1: ?string} */
