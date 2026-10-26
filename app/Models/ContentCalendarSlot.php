@@ -69,6 +69,9 @@ class ContentCalendarSlot extends Model
     /** Предел вложений одного wall.post. */
     public const VK_ATTACHMENT_LIMIT = 10;
 
+    /** Площадки-сторис: публикуются, только если у слота есть картинка для сторис. */
+    public const STORY_PLATFORMS = ['tg_business_story', 'vk_story'];
+
     protected $fillable = [
         'channel',
         'slot_date',
@@ -81,6 +84,7 @@ class ContentCalendarSlot extends Model
         'body',
         'media_path',
         'vk_attachments',
+        'story_media_path',
         'destinations',
         'meta',
     ];
@@ -118,26 +122,46 @@ class ContentCalendarSlot extends Model
     {
         return array_filter(
             (array) config('content_calendar.destinations', []),
-            static fn (array $d): bool => ($d['platform'] ?? null) === 'telegram'
-                ? filled($d['chat_id'] ?? null)
-                : (int) ($d['group_id'] ?? 0) > 0,
+            static fn (array $d): bool => match ($d['platform'] ?? null) {
+                'telegram' => filled($d['chat_id'] ?? null),
+                'tg_business_story' => (bool) ($d['enabled'] ?? false),
+                default => (int) ($d['group_id'] ?? 0) > 0,
+            },
         );
+    }
+
+    public static function isStoryDestination(array $destination): bool
+    {
+        return in_array($destination['platform'] ?? null, self::STORY_PLATFORMS, true);
     }
 
     /**
      * Куда уходит этот слот: выбранные галочками площадки ∩ включённые.
-     * null в destinations = все включённые.
+     * null в destinations = все включённые. Сторис — только при картинке для
+     * сторис; они идут после постов (ссылка в сторис ведёт на вышедший пост).
      *
      * @return list<string>
      */
     public function targetDestinations(): array
     {
-        $enabled = array_keys(self::enabledDestinations());
-        if ($this->destinations === null) {
-            return $enabled;
+        $enabled = self::enabledDestinations();
+        if (blank($this->story_media_path)) {
+            $enabled = array_filter($enabled, static fn (array $d): bool => ! self::isStoryDestination($d));
+        }
+        $keys = array_keys($enabled);
+        if ($this->destinations !== null) {
+            $keys = array_values(array_intersect($keys, (array) $this->destinations));
         }
 
-        return array_values(array_intersect($enabled, (array) $this->destinations));
+        usort($keys, static fn (string $a, string $b): int => self::isStoryDestination($enabled[$a]) <=> self::isStoryDestination($enabled[$b]));
+
+        return $keys;
+    }
+
+    /** Публичный URL картинки для сторис. */
+    public function storyMediaUrl(): ?string
+    {
+        return blank($this->story_media_path) ? null : Storage::disk(self::MEDIA_DISK)->url((string) $this->story_media_path);
     }
 
     /** photo|video по расширению вложения, null — пост без медиа. */
