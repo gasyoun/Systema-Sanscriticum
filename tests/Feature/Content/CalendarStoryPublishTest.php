@@ -95,7 +95,7 @@ class CalendarStoryPublishTest extends TestCase
         return $out;
     }
 
-    public function test_story_goes_to_business_account_after_the_post_with_link_area(): void
+    public function test_story_goes_to_business_account_after_the_post_with_linked_caption(): void
     {
         $slot = $this->slot(['destinations' => ['tg_opoveshchenie', 'tg_story_business']]);
 
@@ -114,8 +114,9 @@ class CalendarStoryPublishTest extends TestCase
             return $f['business_connection_id'] === 'biz-conn'
                 && json_decode($f['content'], true) === ['type' => 'photo', 'photo' => 'attach://photo']
                 && $f['photo'] === 'STORYJPEG'
-                && $f['caption'] === '🌙 Кашмирский шиваизм'
-                && str_contains($f['areas'], 'https://samskrte.ru/ga/ksh3-ors-c');
+                && $f['caption'] === '<a href="https://t.me/samskrte/677">🌙 Кашмирский шиваизм</a>'
+                && $f['parse_mode'] === 'HTML'
+                && ! isset($f['areas']);
         });
         $story = $slot->publications()->where('destination', 'tg_story_business')->sole();
         $this->assertSame(ContentCalendarPublication::STATUS_PUBLISHED, $story->status);
@@ -123,14 +124,26 @@ class CalendarStoryPublishTest extends TestCase
         $this->assertSame(ContentCalendarSlot::STATUS_PUBLISHED, $slot->refresh()->status);
     }
 
-    public function test_without_samskrte_link_story_points_to_the_published_channel_post(): void
+    public function test_story_before_the_post_carries_a_shortened_text_without_link(): void
     {
-        $this->slot(['body' => '<p>Просто текст</p>', 'destinations' => ['tg_opoveshchenie', 'tg_story_business']]);
+        $long = '<p>🌙 Кашмирский шиваизм</p><p>'.str_repeat('Слово ', 150).'</p>';
+        $slot = $this->slot(['body' => $long, 'destinations' => ['tg_story_business']]);
 
         $this->artisan('content:publish-due')->assertSuccessful();
 
-        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'postStory')
-            && str_contains(self::fields($r)['areas'], 'https://t.me/samskrte/677'));
+        Http::assertSent(function (Request $r): bool {
+            if (! str_contains($r->url(), 'postStory')) {
+                return false;
+            }
+            $f = self::fields($r);
+
+            return str_starts_with($f['caption'], '🌙 Кашмирский шиваизм
+Слово')
+                && str_ends_with($f['caption'], '…')
+                && mb_strlen($f['caption']) <= 501
+                && ! isset($f['parse_mode']);
+        });
+        $this->assertSame(ContentCalendarPublication::STATUS_PUBLISHED, $slot->publications()->sole()->status);
     }
 
     public function test_slot_without_story_picture_publishes_no_story(): void
@@ -164,7 +177,7 @@ class CalendarStoryPublishTest extends TestCase
         $this->artisan('content:publish-due')->assertSuccessful();
 
         Http::assertSent(fn (Request $r) => str_contains($r->url(), 'stories.getPhotoUploadServer')
-            && (int) $r['group_id'] === 88831040 && $r['link_url'] === 'https://samskrte.ru/ga/ksh3-ors-c');
+            && (int) $r['group_id'] === 88831040 && ! isset($r['link_url']));
         Http::assertSent(fn (Request $r) => str_contains($r->url(), 'stories.save') && $r['upload_results'] === 'UPRES');
         $vk = $slot->publications()->sole();
         $this->assertSame(ContentCalendarPublication::STATUS_PUBLISHED, $vk->status);

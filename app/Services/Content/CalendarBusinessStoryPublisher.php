@@ -6,7 +6,6 @@ namespace App\Services\Content;
 
 use App\Models\ContentCalendarSlot;
 use App\Models\TelegramBusinessConnection;
-use App\Services\TelegramBusiness\TelegramStoryLink;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -22,7 +21,8 @@ use Illuminate\Support\Str;
  */
 class CalendarBusinessStoryPublisher
 {
-    private const CAPTION_LIMIT = 200;
+    /** Сокращённый текст поста — подпись, пока пост не вышел (Business = Premium, лимит 2048). */
+    private const PREVIEW_LIMIT = 500;
 
     /**
      * @param  array<string, mixed>  $destination
@@ -51,12 +51,7 @@ class CalendarBusinessStoryPublisher
             'business_connection_id' => $connection->business_connection_id,
             'content' => json_encode(['type' => 'photo', 'photo' => 'attach://photo']),
             'active_period' => (int) config('services.telegram_business.story_active_period', 86400),
-            'caption' => self::caption($slot),
-        ];
-        $link = CalendarStoryLink::for($slot);
-        if ($link !== null) {
-            $payload['areas'] = TelegramStoryLink::area($link);
-        }
+        ] + self::caption($slot);
 
         try {
             $response = Http::timeout(120)
@@ -77,11 +72,42 @@ class CalendarBusinessStoryPublisher
         return ['external_id' => (string) $id, 'permalink' => null, 'warning' => null];
     }
 
-    /** Первая строка поста — подпись к сторис. */
-    public static function caption(ContentCalendarSlot $slot): string
+    /**
+     * Подпись сторис. Пост в «Оповещении» вышел — его первая строка ссылкой
+     * на пост (клик по подписи открывает пост); не вышел — сокращённый текст
+     * поста без ссылки.
+     *
+     * @return array{caption: string, parse_mode?: string}
+     */
+    public static function caption(ContentCalendarSlot $slot): array
     {
-        $first = trim((string) strtok(PostFormatter::toPlain($slot->body), "\n"));
+        $plain = trim(PostFormatter::toPlain($slot->body));
+        $link = CalendarStoryLink::for($slot);
+        if ($link === null) {
+            return ['caption' => self::shorten($plain, self::PREVIEW_LIMIT)];
+        }
 
-        return Str::limit($first, self::CAPTION_LIMIT - 1);
+        $first = Str::limit(trim((string) strtok($plain, "\n")), 200, '…');
+
+        return [
+            'caption' => '<a href="'.e($link).'">'.e($first).'</a>',
+            'parse_mode' => 'HTML',
+        ];
+    }
+
+    /** Обрезка по последнему пробелу/переводу строки; абзацы сохраняются. */
+    private static function shorten(string $text, int $limit): string
+    {
+        if (mb_strlen($text) <= $limit) {
+            return $text;
+        }
+
+        $cut = mb_substr($text, 0, $limit);
+        $space = max((int) mb_strrpos($cut, ' '), (int) mb_strrpos($cut, "\n"));
+        if ($space > $limit / 2) {
+            $cut = mb_substr($cut, 0, $space);
+        }
+
+        return rtrim($cut, " \n,.;:—-").'…';
     }
 }
