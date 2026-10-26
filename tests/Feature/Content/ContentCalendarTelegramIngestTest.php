@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Content;
 
+use App\Jobs\IngestCalendarChannelPostJob;
+use App\Jobs\ProcessTelegramZapisiUpdate;
 use App\Jobs\PublishCalendarSlotJob;
 use App\Models\ContentCalendarPublication;
 use App\Models\ContentCalendarSlot;
+use App\Models\MarketingSetting;
 use App\Models\VkUserToken;
 use App\Services\Access\TelegramAdminNotifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
@@ -25,10 +29,6 @@ class ContentCalendarTelegramIngestTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const SECRET = 'hook-secret';
-
-    private int $updateId = 1000;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -36,7 +36,6 @@ class ContentCalendarTelegramIngestTest extends TestCase
         config([
             'features.content_calendar_autopilot' => true,
             'content_calendar.tg_ingest_enabled' => true,
-            'content_calendar.tg_webhook_secret' => self::SECRET,
             'content_calendar.tg_bot_token' => 'BOT',
             'content_calendar.destinations' => [
                 'tg_opoveshchenie' => ['platform' => 'telegram', 'label' => 'TG Оповещение', 'chat_id' => '@samskrte'],
@@ -67,35 +66,56 @@ class ContentCalendarTelegramIngestTest extends TestCase
         });
     }
 
-    /** @param  array<string, mixed>  $post */
-    private function webhook(array $post, string $secret = self::SECRET)
+    /** @param  array<string, mixed>  $post  поля channel_post поверх поста @samskrte #77 */
+    private function channelPost(array $post): void
     {
-        return $this->postJson('/api/webhooks/content-calendar-tg', [
-            'update_id' => $this->updateId++,
-            'channel_post' => array_merge([
-                'message_id' => 77,
-                'date' => now()->timestamp,
-                'chat' => ['id' => -1009999, 'username' => 'samskrte', 'type' => 'channel'],
-            ], $post),
-        ], ['X-Telegram-Bot-Api-Secret-Token' => $secret]);
+        IngestCalendarChannelPostJob::dispatchSync(array_merge([
+            'message_id' => 77,
+            'date' => now()->timestamp,
+            'chat' => ['id' => -1009999, 'username' => 'samskrte', 'type' => 'channel'],
+        ], $post));
     }
 
-    public function test_flag_off_is_404_and_bad_secret_is_403(): void
+    public function test_zapisi_bot_update_stream_feeds_ingest_only_with_flag_on(): void
     {
-        $this->webhook(['text' => 'x'], 'wrong')->assertForbidden();
+        Bus::fake([IngestCalendarChannelPostJob::class]);
+        $update = ['update_id' => 5001, 'channel_post' => [
+            'message_id' => 77, 'date' => now()->timestamp, 'text' => 'x',
+            'chat' => ['id' => -1009999, 'username' => 'samskrte', 'type' => 'channel'],
+        ]];
+
+        (new ProcessTelegramZapisiUpdate($update))->handle();
+        Bus::assertDispatched(IngestCalendarChannelPostJob::class, fn (IngestCalendarChannelPostJob $j) => $j->post['message_id'] === 77);
 
         config(['content_calendar.tg_ingest_enabled' => false]);
-        $this->webhook(['text' => 'x'])->assertNotFound();
+        (new ProcessTelegramZapisiUpdate(['update_id' => 5002] + $update))->handle();
+        Bus::assertDispatchedTimes(IngestCalendarChannelPostJob::class, 1);
+    }
+
+    public function test_flag_off_ingests_nothing(): void
+    {
+        config(['content_calendar.tg_ingest_enabled' => false]);
+        $this->channelPost(['text' => 'x']);
 
         $this->assertSame(0, ContentCalendarSlot::count());
     }
 
+    public function test_without_override_the_zapisi_bot_token_is_used(): void
+    {
+        config(['content_calendar.tg_bot_token' => '']);
+        MarketingSetting::create(['zapisi_bot_token' => 'ZAPISI']);
+
+        $this->channelPost(['text' => 'Ом']);
+
+        Http::assertSent(fn (Request $r) => str_contains($r->url(), '/botZAPISI/copyMessage'));
+    }
+
     public function test_channel_post_becomes_slot_and_is_copied_to_other_destinations(): void
     {
-        $this->webhook([
+        $this->channelPost([
             'text' => "Ом намах\nподробнее",
             'entities' => [['type' => 'bold', 'offset' => 0, 'length' => 2], ['type' => 'text_link', 'offset' => 9, 'length' => 9, 'url' => 'https://samskrte.ru/k']],
-        ])->assertOk();
+        ]);
 
         $slot = ContentCalendarSlot::sole();
         $this->assertSame(ContentCalendarSlot::TYPE_TG_CHANNEL, $slot->slot_type);
@@ -119,8 +139,8 @@ class ContentCalendarTelegramIngestTest extends TestCase
         config(['features.content_calendar_autopilot' => false]); // разнос — вручную ниже
 
         $photo = [['file_id' => 'small', 'file_size' => 100], ['file_id' => 'big', 'file_size' => 2000]];
-        $this->webhook(['message_id' => 11, 'media_group_id' => 'g1', 'photo' => $photo])->assertOk();
-        $this->webhook(['message_id' => 10, 'media_group_id' => 'g1', 'photo' => $photo, 'caption' => 'Подпись альбома'])->assertOk();
+        $this->channelPost(['message_id' => 11, 'media_group_id' => 'g1', 'photo' => $photo]);
+        $this->channelPost(['message_id' => 10, 'media_group_id' => 'g1', 'photo' => $photo, 'caption' => 'Подпись альбома']);
 
         $slot = ContentCalendarSlot::sole();
         $this->assertSame([10, 11], $slot->meta['tg_source']['message_ids']);
@@ -140,7 +160,7 @@ class ContentCalendarTelegramIngestTest extends TestCase
     {
         config(['features.content_calendar_autopilot' => false]);
 
-        $this->webhook(['video' => ['file_id' => 'v', 'file_size' => 60 * 1024 * 1024], 'caption' => 'Большое видео'])->assertOk();
+        $this->channelPost(['video' => ['file_id' => 'v', 'file_size' => 60 * 1024 * 1024], 'caption' => 'Большое видео']);
 
         $slot = ContentCalendarSlot::sole();
         $this->assertNull($slot->media_path);
@@ -159,15 +179,15 @@ class ContentCalendarTelegramIngestTest extends TestCase
             'status' => ContentCalendarPublication::STATUS_PUBLISHED, 'external_id' => '77',
         ]);
 
-        $this->webhook(['text' => 'наш же кросспост'])->assertOk();
-        $this->webhook(['message_id' => 5, 'text' => 'чужой канал', 'chat' => ['id' => -100555, 'username' => 'other', 'type' => 'channel']])->assertOk();
+        $this->channelPost(['text' => 'наш же кросспост']);
+        $this->channelPost(['message_id' => 5, 'text' => 'чужой канал', 'chat' => ['id' => -100555, 'username' => 'other', 'type' => 'channel']]);
 
         $this->assertSame(1, ContentCalendarSlot::count());
     }
 
     public function test_prohibited_channel_post_is_held_and_not_spread(): void
     {
-        $this->webhook(['text' => 'Ученица Мария Иванова пишет: лучше, чем Окаруто'])->assertOk();
+        $this->channelPost(['text' => 'Ученица Мария Иванова пишет: лучше, чем Окаруто']);
 
         $slot = ContentCalendarSlot::sole();
         $this->assertSame(ContentCalendarSlot::STATUS_DRAFT, $slot->status);
