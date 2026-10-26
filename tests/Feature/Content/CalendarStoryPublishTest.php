@@ -174,7 +174,7 @@ class CalendarStoryPublishTest extends TestCase
     /** Кнопка «Опубликовать сторис»: только сторис, пост не уходит, повтор невозможен. */
     public function test_edit_page_button_publishes_only_the_story(): void
     {
-        config(['features.content_calendar' => true]);
+        config(['features.content_calendar' => true, 'content_calendar.destinations.vk_story_ors.group_id' => 0]);
         $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
         $slot = $this->slot(['publish_at' => now()->addDay(), 'destinations' => ['tg_opoveshchenie', 'tg_story_business']]);
 
