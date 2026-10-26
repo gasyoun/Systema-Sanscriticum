@@ -12,7 +12,6 @@ use App\Http\Controllers\Api\PublicWaitlistController;
 use App\Http\Controllers\Api\VkBotController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\WebhookController;
-use App\Http\Controllers\Webhooks\ContentCalendarTelegramWebhookController;
 use App\Http\Controllers\Webhooks\ExamScoresWebhookController;
 use App\Http\Controllers\Webhooks\InboundEmailWebhookController;
 use App\Http\Controllers\Webhooks\LeadStepWebhookController;
