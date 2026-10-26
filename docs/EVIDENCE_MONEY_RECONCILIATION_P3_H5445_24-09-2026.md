@@ -129,13 +129,22 @@ armed — the first persisted run is 28-09, and a duplicate 29-09 exists) and
 mornings, and `schedule.log` was rotated, so no direct receipt survives). These are
 recorded as gaps, not backfilled.
 
+The arithmetic closes only with the duplicate: 27 business dates − 6 uncovered days =
+21 covered dates, and 22 runs = 21 dates + a second run on 2026-09-29. Reading "22 runs"
+as 22 covered dates would overstate coverage by one day; the earlier wording did not say
+that the 22nd run is the duplicate.
+
 ### Dependency on the dark core → H5446
 
 The `ledger` source cannot become present while `MONEY_LEDGER_CORE` is off; that is the
-P4 cutover owned by **H5446** (its gate is `handoff:H5442,H5443,H5444,H5445`). This is
-a genuine circularity: H5445 cannot reach "reconciliation complete" before H5446, and
-H5446 may not start before H5445 is terminal. The four-state split resolves the
-reporting problem without flipping any flag: P3 is healthy and executing, while
-completeness legitimately waits for H5446 and for the next manual bank export.
+P4 cutover owned by **H5446** (its gate is `handoff:H5442,H5443,H5444,H5445`). The
+dependency is one-way, not circular: H5446 requires P0–P3 **terminal**, and H5445 was
+closed terminal on 24-09-2026; P3's own acceptance rule is "a missing source is
+loud/incomplete, never zero", so a per-run `status=incomplete` is the designed honest
+state, not a precondition H5445 must clear before P4. The earlier "genuine circularity"
+wording is withdrawn (26-10-2026): no task text makes "each reconciliation complete" a
+gate for P4, and the P4 gate reads handoff status, not run status. The four-state split
+stands: P3 is healthy and executing, sources are incomplete, runs are honestly
+incomplete, and `ledger` can only appear at the H5446 cutover.
 
 _Dr. Mārcis Gasūns_
