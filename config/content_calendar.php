@@ -54,7 +54,37 @@ return [
             'label' => 'VK · Институт исследования санскрита',
             'group_id' => (int) env('CONTENT_CAL_VK_INSTITUT', 0),
         ],
+
+        // Сторис — только у слотов с картинкой для сторис, после постов.
+        // Telegram: аккаунт, подключённый к Business-боту (Bot API postStory,
+        // нужен can_manage_stories), как у сторис из видео каналов.
+        'tg_story_business' => [
+            'platform' => 'tg_business_story',
+            'label' => 'Сторис · Telegram Business',
+            'enabled' => (bool) env('CONTENT_CAL_TG_BUSINESS_STORY', false),
+        ],
+        // VK: сторис сообщества; у VK-токена должно быть право stories, гейт
+        // VK_PUBLISH_AUTHORIZED_GROUPS — как у постов.
+        'vk_story_opoveshchenie' => [
+            'platform' => 'vk_story',
+            'label' => 'Сторис · VK Оповещение санскритян',
+            'group_id' => (int) env('CONTENT_CAL_VK_OPOVESHCHENIE', 0),
+        ],
+        'vk_story_ors' => [
+            'platform' => 'vk_story',
+            'label' => 'Сторис · VK Общество ревнителей санскрита',
+            'group_id' => (int) env('CONTENT_CAL_VK_ORS', 0),
+        ],
+        'vk_story_institut' => [
+            'platform' => 'vk_story',
+            'label' => 'Сторис · VK Институт исследования санскрита',
+            'group_id' => (int) env('CONTENT_CAL_VK_INSTITUT', 0),
+        ],
     ],
+
+    // Публичный @username канала «Оповещение» — ссылка из сторис на вышедший
+    // пост (t.me/c/… для числового chat_id открывается только участникам).
+    'tg_public_username' => env('CONTENT_CAL_TG_PUBLIC_USERNAME', 'samskrte'),
 
     // Бот — @zapisi_ORSbot (MarketingSetting.zapisi_bot_token), админ с правом
     // публикации во всех TG-каналах выше. Переменная — только чтобы
