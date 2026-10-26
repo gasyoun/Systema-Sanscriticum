@@ -15,6 +15,7 @@ use App\Services\Access\TelegramAdminNotifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
@@ -79,6 +80,9 @@ class ContentCalendarTelegramIngestTest extends TestCase
     public function test_zapisi_bot_update_stream_feeds_ingest_only_with_flag_on(): void
     {
         Bus::fake([IngestCalendarChannelPostJob::class]);
+        $store = storage_path('framework/testing/cc-ingest-'.uniqid());
+        config(['services.telegram_harvest.store_path' => $store]);
+        $this->beforeApplicationDestroyed(fn () => File::deleteDirectory($store));
         $update = ['update_id' => 5001, 'channel_post' => [
             'message_id' => 77, 'date' => now()->timestamp, 'text' => 'x',
             'chat' => ['id' => -1009999, 'username' => 'samskrte', 'type' => 'channel'],

@@ -7,15 +7,22 @@ _Создан 22-10-2026._
 
 | Ключ | Площадка | env |
 |---|---|---|
-| `tg_opoveshchenie` | TG «Оповещение санскритян» | `CONTENT_CAL_TG_OPOVESHCHENIE` (chat_id или @username) |
-| `tg_ors` | TG «Общество ревнителей санскрита» | `CONTENT_CAL_TG_ORS` |
-| `tg_institut` | TG «Институт исследования санскрита» | `CONTENT_CAL_TG_INSTITUT` |
+| `tg_opoveshchenie` | TG «Оповещение санскритян» (-1001762848803) | `CONTENT_CAL_TG_OPOVESHCHENIE` (chat_id или @username) |
+| `tg_ors` | TG «Общество ревнителей санскрита» (-1001417740969) | `CONTENT_CAL_TG_ORS` |
+| `tg_institut` | TG «Институт исследования санскрита» (-1001730104817) | `CONTENT_CAL_TG_INSTITUT` |
 | `vk_opoveshchenie` | VK samskrte (236973776) | `CONTENT_CAL_VK_OPOVESHCHENIE` |
 | `vk_ors` | VK samskrtamru (88831040) | `CONTENT_CAL_VK_ORS` |
-| `vk_institut` | VK «Институт исследования санскрита» | `CONTENT_CAL_VK_INSTITUT` |
+| `vk_institut` | VK «Институт исследования санскрита» (89658969) | `CONTENT_CAL_VK_INSTITUT` |
 
-Площадка с пустым значением выключена и в форме не показывается. Ключи
-стабильны: на них завязаны строки `content_calendar_publications`.
+Площадка с пустым значением выключена: в форме она серая, «не настроено».
+Ключи стабильны: на них завязаны строки `content_calendar_publications`.
+
+**Бот — @zapisi_ORSbot** (`MarketingSetting.zapisi_bot_token`; переменная
+`CONTENT_CAL_TG_BOT_TOKEN` только подменяет его). Он админ всех трёх каналов
+с правом публикации. Своего вебхука у календаря нет: `channel_post` приходит в
+общий поток апдейтов бота записей (`ProcessTelegramZapisiUpdate`; вебхук через
+входной узел или аварийный `zapisi:poll`), остальные сценарии бота — разнос
+записей по чатам групп, n8n-форварды — не затронуты.
 
 ## Откуда берутся слоты
 
@@ -23,7 +30,7 @@ _Создан 22-10-2026._
   время публикации (MSK, в будущем), текст, вложение, галочки площадок.
   Слот сразу `scheduled`, тип `manual`.
 - **Telegram** — любой админ публикует пост в канале «Оповещение санскритян»
-  (сразу или отложкой Telegram). Бот календаря получает его в момент выхода
+  (сразу или отложкой Telegram). Бот записей получает его в момент выхода
   (`channel_post`; отложенные посты бот до выхода не видит — ограничение
   Telegram), создаёт слот типа `tg_channel` с уже опубликованной площадкой
   «TG · Оповещение» и сразу разносит пост в остальные площадки:
@@ -36,12 +43,10 @@ _Создан 22-10-2026._
   первой части. Чек-лист §2.8 удерживает пост от разноса (`draft`).
   Правки поста в канале после выхода не переносятся.
 
-Включение приёма из Telegram:
-1. **Отдельный** бот (у бота один вебхук — `content:tg-webhook` откажет, если
-   вебхук уже смотрит в чужую полосу), админ всех трёх TG-каналов.
-2. `.env`: `CONTENT_CAL_TG_BOT_TOKEN`, `CONTENT_CAL_TG_WEBHOOK_SECRET`
-   (случайная строка), `CONTENT_CAL_TG_INGEST=true`, `config:cache`.
-3. `php artisan content:tg-webhook` (проверить: `--info`).
+Включение приёма из Telegram: `CONTENT_CAL_TG_INGEST=true` и
+`CONTENT_CAL_TG_OPOVESHCHENIE` в `.env`, `config:cache`. Ничего
+перерегистрировать не нужно — `channel_post` уже в `allowed_updates` бота
+записей (`zapisi:set-webhook`).
 
 ## Как это работает
 
@@ -50,8 +55,7 @@ _Создан 22-10-2026._
    плоскому тексту и ставит `PublishCalendarSlotJob`.
 2. Джоб публикует в каждую выбранную площадку и пишет строку
    `content_calendar_publications` (status / attempts / permalink / error / warning).
-   - Telegram — бот `CONTENT_CAL_TG_BOT_TOKEN` (должен быть админом всех трёх
-     каналов с правом публикации), `parse_mode=HTML`; с вложением —
+   - Telegram — бот записей @zapisi_ORSbot, `parse_mode=HTML`; с вложением —
      `sendPhoto`/`sendVideo` с подписью.
    - VK — `wall.post` от имени сообщества (`from_group=1`) VK ID токеном админа
      (см. ниже). Группа обязана стоять в `VK_PUBLISH_AUTHORIZED_GROUPS`, иначе
