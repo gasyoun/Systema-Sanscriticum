@@ -84,7 +84,7 @@ class CalendarBusinessStoryPublisher
         $plain = trim(PostFormatter::toPlain($slot->body));
         $link = CalendarStoryLink::for($slot);
         if ($link === null) {
-            return ['caption' => Str::limit($plain, self::PREVIEW_LIMIT, '…', preserveWords: true)];
+            return ['caption' => self::shorten($plain, self::PREVIEW_LIMIT)];
         }
 
         $first = Str::limit(trim((string) strtok($plain, "\n")), 200, '…');
@@ -93,5 +93,21 @@ class CalendarBusinessStoryPublisher
             'caption' => '<a href="'.e($link).'">'.e($first).'</a>',
             'parse_mode' => 'HTML',
         ];
+    }
+
+    /** Обрезка по последнему пробелу/переводу строки; абзацы сохраняются. */
+    private static function shorten(string $text, int $limit): string
+    {
+        if (mb_strlen($text) <= $limit) {
+            return $text;
+        }
+
+        $cut = mb_substr($text, 0, $limit);
+        $space = max((int) mb_strrpos($cut, ' '), (int) mb_strrpos($cut, "\n"));
+        if ($space > $limit / 2) {
+            $cut = mb_substr($cut, 0, $space);
+        }
+
+        return rtrim($cut, " \n,.;:—-").'…';
     }
 }
