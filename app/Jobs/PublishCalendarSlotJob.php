@@ -8,12 +8,8 @@ use App\Models\ContentCalendarPublication;
 use App\Models\ContentCalendarSlot;
 use App\Models\ContentCandidate;
 use App\Services\Access\TelegramAdminNotifier;
-use App\Services\Content\CalendarBusinessStoryPublisher;
-use App\Services\Content\CalendarPublishException;
+use App\Services\Content\CalendarPublicationRunner;
 use App\Services\Content\CalendarPublishService;
-use App\Services\Content\CalendarTelegramPublisher;
-use App\Services\Content\CalendarVkPublisher;
-use App\Support\TelegramSendGuard;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -21,7 +17,6 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Throwable;
 
 /**
  * Кросспостинг одного слота календаря во все выбранные площадки (22-10-2026).
@@ -46,10 +41,6 @@ class PublishCalendarSlotJob implements ShouldBeUnique, ShouldQueue
 
     public int $uniqueFor = 3600;
 
-    private const IN_FLIGHT_TTL = 900;
-
-    private const DONE_TTL = 2592000;
-
     public function __construct(public readonly int $slotId)
     {
         if (config('queue.default') === 'redis') {
@@ -64,9 +55,7 @@ class PublishCalendarSlotJob implements ShouldBeUnique, ShouldQueue
     }
 
     public function handle(
-        CalendarTelegramPublisher $telegram,
-        CalendarVkPublisher $vk,
-        CalendarBusinessStoryPublisher $story,
+        CalendarPublicationRunner $runner,
         TelegramAdminNotifier $notifier,
         CalendarPublishService $service,
     ): void {
@@ -97,65 +86,12 @@ class PublishCalendarSlotJob implements ShouldBeUnique, ShouldQueue
         }
 
         $destinations = ContentCalendarSlot::enabledDestinations();
-        $maxAttempts = (int) config('content_calendar.max_attempts', 3);
         $report = [];
 
         foreach ($targets as $key) {
-            $publication = ContentCalendarPublication::firstOrCreate([
-                'content_calendar_slot_id' => $slot->id,
-                'destination' => $key,
-            ]);
-            if ($publication->isDone()) {
-                continue;
-            }
-
-            $claim = "content-calendar:{$slot->id}:{$key}";
-            if (! TelegramSendGuard::claimKey($claim, self::IN_FLIGHT_TTL)) {
-                continue; // этот же пост уже в полёте в параллельном прогоне
-            }
-
-            $destination = $destinations[$key];
-            $publication->increment('attempts');
-
-            try {
-                $result = match ($destination['platform']) {
-                    'vk' => $vk->publish($slot, $destination),
-                    'vk_story' => $vk->publishStory($slot, $destination),
-                    'tg_business_story' => $story->publish($slot, $destination),
-                    default => $telegram->publish($slot, $destination),
-                };
-            } catch (Throwable $e) {
-                $permanent = $e instanceof CalendarPublishException && $e->permanent;
-                $failed = $permanent || $publication->attempts >= $maxAttempts;
-                $publication->update([
-                    'status' => $failed ? ContentCalendarPublication::STATUS_FAILED : ContentCalendarPublication::STATUS_PENDING,
-                    'error' => mb_substr($e->getMessage(), 0, 1000),
-                ]);
-                Log::warning('PublishCalendarSlotJob: площадка не опубликована', [
-                    'calendar_slot_id' => $slot->id,
-                    'destination' => $key,
-                    'attempt' => $publication->attempts,
-                    'failed' => $failed,
-                    'error' => $e->getMessage(),
-                ]);
-                if ($failed) {
-                    $report[] = "❌ {$destination['label']}: {$e->getMessage()}";
-                }
-
-                continue;
-            }
-
-            TelegramSendGuard::extendKey($claim, self::DONE_TTL);
-            $publication->update([
-                'status' => ContentCalendarPublication::STATUS_PUBLISHED,
-                'external_id' => $result['external_id'],
-                'permalink' => $result['permalink'],
-                'warning' => $result['warning'],
-                'error' => null,
-                'published_at' => now(),
-            ]);
-            if ($result['warning'] !== null) {
-                $report[] = "⚠️ {$destination['label']}: {$result['warning']}";
+            $line = $runner->run($slot, $key, $destinations[$key])['line'];
+            if ($line !== null) {
+                $report[] = $line;
             }
         }
 
