@@ -130,6 +130,20 @@ class ContentCalendarSlotResource extends Resource
                 ->openable()
                 ->downloadable()
                 ->columnSpanFull(),
+            Forms\Components\FileUpload::make('story_media_path')
+                ->label('Картинка для сторис (необязательно)')
+                ->helperText('Вертикальная, 1080×1920, JPG/PNG до 10 МБ. Уходит сторис вместе с постом — в отмеченные ниже '
+                    .'«Сторис · …»; ссылка в сторис ведёт на samskrte.ru из текста или на вышедший пост в «Оповещении». '
+                    .'Без картинки сторис не публикуется.')
+                ->disk(ContentCalendarSlot::MEDIA_DISK)
+                ->directory('content-calendar/stories')
+                ->visibility('public')
+                ->image()
+                ->acceptedFileTypes(['image/jpeg', 'image/png'])
+                ->maxSize(10240)
+                ->openable()
+                ->downloadable()
+                ->columnSpanFull(),
             Forms\Components\Textarea::make('vk_attachments')
                 ->label('Готовое медиа VK (необязательно)')
                 ->helperText('Ссылки на фото или видео, уже загруженные в VK (vk.com/photo-…, vk.com/video-…, '
