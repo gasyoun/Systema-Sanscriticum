@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Content;
 
 use App\Models\ContentCalendarSlot;
+use App\Models\MarketingSetting;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -17,16 +18,22 @@ use Illuminate\Support\Facades\Storage;
  */
 class CalendarTelegramPublisher
 {
+    /** CONTENT_CAL_TG_BOT_TOKEN, иначе @zapisi_ORSbot из настроек маркетинга. */
+    public static function botToken(): string
+    {
+        return (string) (config('content_calendar.tg_bot_token') ?: MarketingSetting::cached()?->zapisi_bot_token ?? '');
+    }
+
     /**
      * @param  array<string, mixed>  $destination
      * @return array{external_id: string, permalink: ?string, warning: ?string}
      */
     public function publish(ContentCalendarSlot $slot, array $destination): array
     {
-        $token = (string) config('content_calendar.tg_bot_token');
+        $token = self::botToken();
         $chatId = (string) ($destination['chat_id'] ?? '');
         if ($token === '' || $chatId === '') {
-            throw CalendarPublishException::permanent('telegram: не настроен CONTENT_CAL_TG_BOT_TOKEN или chat_id площадки');
+            throw CalendarPublishException::permanent('telegram: нет токена бота записей (MarketingSetting.zapisi_bot_token) или chat_id площадки');
         }
 
         $api = "https://api.telegram.org/bot{$token}";

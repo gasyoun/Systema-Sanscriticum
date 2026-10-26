@@ -197,7 +197,7 @@ class IngestCalendarChannelPostJob implements ShouldQueue
             return;
         }
 
-        $token = (string) config('content_calendar.tg_bot_token');
+        $token = CalendarTelegramPublisher::botToken();
         try {
             $path = (string) Http::timeout(30)->get("https://api.telegram.org/bot{$token}/getFile", ['file_id' => $file['file_id']])
                 ->json('result.file_path');
