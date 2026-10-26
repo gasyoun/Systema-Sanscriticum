@@ -137,8 +137,8 @@ class CalendarStoryPublishTest extends TestCase
             }
             $f = self::fields($r);
 
-            return str_starts_with($f['caption'], "🌙 Кашмирский шиваизм
-Слово")
+            return str_starts_with($f['caption'], '🌙 Кашмирский шиваизм
+Слово')
                 && str_ends_with($f['caption'], '…')
                 && mb_strlen($f['caption']) <= 501
                 && ! isset($f['parse_mode']);
