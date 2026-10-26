@@ -674,7 +674,9 @@ return [
         // PAID-платеж (см. App\Services\Payments\ClaimTrustPolicy). Иначе
         // сессия, сама mintившая аккаунт первым POST'ом, доверяла бы себе на
         // втором POST'е (auto-paid без сверки).
-        'trust_min_account_age_hours' => (int) env('PAYPAL_TRUST_MIN_ACCOUNT_AGE_HOURS', 24),
+        // H6395 lever 2: 168 ч = 7 сут = легаси CLAIM_TRUST_MIN_AGE_DAYS, чтобы
+        // включение features.claim_trust_policy без env-тюнинга не меняло поведение.
+        'trust_min_account_age_hours' => (int) env('PAYPAL_TRUST_MIN_ACCOUNT_AGE_HOURS', 168),
         // MG 23-08-2026: в PayPal платят только EUR (предпочтительно) и USD,
         // и дороже рублевых — рублевую цену тарифа на форме НЕ показываем.
         // Валютная цена за БЛОК по course_id; показывается только блочным
@@ -714,7 +716,8 @@ return [
         'trust_existing_students' => (bool) env('BANK_TRUST_EXISTING_STUDENTS', true),
         // H5083: зеркало PayPal-канала — auto-trust требует дозагрузочный
         // аккаунт (возраст ≥ N часов ИЛИ один PAID-платеж). ClaimTrustPolicy.
-        'trust_min_account_age_hours' => (int) env('BANK_TRUST_MIN_ACCOUNT_AGE_HOURS', 24),
+        // H6395 lever 2: дефолт = легаси-окно 7 сут (см. paypal-канал).
+        'trust_min_account_age_hours' => (int) env('BANK_TRUST_MIN_ACCOUNT_AGE_HOURS', 168),
         // Реквизиты для шага 1 формы (показываются ученику).
         'recipient_name' => env('BANK_RECIPIENT_NAME', ''),
         'iban' => env('BANK_RECIPIENT_IBAN', ''),
@@ -740,6 +743,9 @@ return [
         // ученик — сразу paid (зеркало paypal.trust_existing_students).
         // Kill-switch на случай волны спама/ошибок — false → все заявки pending.
         'trust_existing_students' => (bool) env('GASUNS_PAY_TRUST_EXISTING', true),
+        // H6395 lever 2: порог канала для features.claim_trust_policy=ON
+        // (168 ч = 7 сут — как у легаси-предиката).
+        'trust_min_account_age_hours' => (int) env('GASUNS_PAY_TRUST_MIN_ACCOUNT_AGE_HOURS', 168),
     ],
 
     // H4462 — аудит-след перезаписи паролей (инцидент 09-09-2026: smoke-студент

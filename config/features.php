@@ -2096,4 +2096,16 @@ return [
      | Пример: ENROLL_PILOT_TELEGRAM_IDS=123456789
      */
     'enroll_pilot_telegram_ids' => array_values(array_filter(array_map('trim', explode(',', (string) env('ENROLL_PILOT_TELEGRAM_IDS', ''))))),
+
+    /*
+     | H6395 lever 2 (GTD WIC) — доверие заявки через ClaimTrustPolicy.
+     | ВЫКЛ (default): легаси User::isEstablishedClaimStudent() — возраст
+     |   ≥ CLAIM_TRUST_MIN_AGE_DAYS (7) сут ИЛИ проведённый платёж.
+     | ВКЛ: ClaimTrustPolicy::isPreexistingVerified() с порогом ИЗ КОНФИГА КАНАЛА
+     |   (services.{paypal,bank_claim,gasuns_pay}.trust_min_account_age_hours).
+     |   Дефолт 168 ч = 7 сут, поэтому включение без env-тюнинга семантику НЕ
+     |   меняет; понижение порога — сознательное решение по денежному контуру.
+     | Включение в проде — отдельный ops-шаг (env + config:cache), не мерж PR.
+     */
+    'claim_trust_policy' => (bool) env('CLAIM_TRUST_POLICY_ENABLED', false),
 ];

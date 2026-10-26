@@ -26,6 +26,7 @@ use Tests\TestCase;
 
 /**
  * «Как оплатить?» → бот уточняет, что и какой блок → ссылка на оплату (22-10-2026).
+ * 23-10-2026: вопрос открытый, без списка; ответ ищется среди групп; бот не молчит.
  */
 class SupportDmPayClarifyTest extends TestCase
 {
@@ -144,18 +145,20 @@ class SupportDmPayClarifyTest extends TestCase
             ->orderBy('id')->get()->map(fn ($e) => $e->meta['fact_type'] ?? null)->all();
     }
 
-    public function test_question_lists_options_and_number_answer_gets_link(): void
+    public function test_open_question_without_list_and_group_number_gets_link(): void
     {
         $this->joinWithFirstBlockPaid($this->hindi);
         $this->joinWithFirstBlockPaid($this->sanskrit);
 
         $this->assertSame('sent', $this->ask('Здравствуйте, как оплатить?')['status']);
         $question = $this->lastBotText();
-        $this->assertStringContainsString('1) «Хинди — гр.70» — блок 2, 5 000 ₽', $question);
-        $this->assertStringContainsString('2) «Санскрит — гр.71» — блок 2, 8 000 ₽', $question);
+        $this->assertStringContainsString('что хотите оплатить: название курса или группы', $question);
+        // 23-10-2026: без списка «на выбор» и без цен.
+        $this->assertStringNotContainsString('₽', $question);
+        $this->assertStringNotContainsString('1)', $question);
 
         Carbon::setTestNow(now()->addMinutes(5));
-        $this->assertSame('sent', $this->ask('2')['status']);
+        $this->assertSame('sent', $this->ask('гр.71')['status']);
 
         $link = $this->lastBotText();
         $tariff = Tariff::query()->where('course_id', $this->sanskrit->courses()->first()->id)->where('block_number', 2)->first();
@@ -165,18 +168,174 @@ class SupportDmPayClarifyTest extends TestCase
         $this->assertSame(['pay_clarify', 'pay_choice_link'], $this->sentFactTypes());
     }
 
-    public function test_single_option_still_asks_and_yes_gets_link(): void
+    /** @return iterable<string, array{0: string}> */
+    public static function payHelpPhrasings(): iterable
+    {
+        // Пилот 23-10-2026: первая фраза осталась без ответа.
+        yield 'оплатить, подскажите как' => ['Хочу оплатить, подскажите как'];
+        yield 'хочу оплатить' => ['Здравствуйте! Хочу оплатить следующий блок'];
+        yield 'нужно заплатить' => ['Мне нужно заплатить, куда?'];
+        yield 'как оплатить' => ['Здравствуйте, как оплатить?'];
+    }
+
+    /** @dataProvider payHelpPhrasings */
+    public function test_pay_help_phrasings_get_question(string $text): void
     {
         $this->joinWithFirstBlockPaid($this->sanskrit);
 
-        $this->ask('Пришлите ссылку на оплату');
-        $this->assertStringContainsString('1) «Санскрит — гр.71» — блок 2', $this->lastBotText());
-        $this->assertSame(1, $this->botMessages());
+        $this->assertSame('sent', $this->ask($text)['status']);
+        $this->assertStringContainsString('что хотите оплатить', $this->lastBotText());
+    }
 
+    public function test_question_closed_before_outcome_marks_does_not_block_new_one(): void
+    {
+        // Пилот 23-10-2026: вчерашний вопрос закрыт кодом до #3439 (без outcome).
+        $this->joinWithFirstBlockPaid($this->sanskrit);
+        $this->ask('Здравствуйте, как оплатить?');
         Carbon::setTestNow(now()->addMinutes(3));
-        $this->ask('да');
+        $this->ask('гр.71');
 
-        $this->assertStringContainsString('Ссылка на оплату блока 2', $this->lastBotText());
+        $event = SupportAiReplyEvent::query()->get()->first(fn ($e) => ($e->meta['fact_type'] ?? null) === 'pay_clarify');
+        $meta = $event->meta;
+        unset($meta['outcome']);
+        $event->forceFill(['meta' => $meta])->save();
+
+        Carbon::setTestNow(now()->addHours(3));
+        $this->assertSame('sent', $this->ask('Здравствуйте, как оплатить?')['status']);
+        $this->assertStringContainsString('что хотите оплатить', $this->lastBotText());
+    }
+
+    public function test_day_matching_several_groups_asks_which_then_link(): void
+    {
+        $sankhya = $this->groupWithCourse('Философия санкхьи', 'Санкхья — пн 18:00', 6000);
+        $this->groupWithCourse('Традиции толкования упанишад', 'Упанишады — пн 20:00', 7000);
+
+        $this->ask('как оплатить?');
+        Carbon::setTestNow(now()->addMinutes(2));
+        $this->ask('давайте тот, что по понедельникам');
+
+        $which = $this->lastBotText();
+        $this->assertStringContainsString('Нашёл несколько подходящих групп', $which);
+        $this->assertStringContainsString('«Санкхья — пн 18:00»', $which);
+        $this->assertStringContainsString('«Упанишады — пн 20:00»', $which);
+        $this->assertStringNotContainsString('Хинди', $which);
+
+        Carbon::setTestNow(now()->addMinutes(2));
+        $this->ask('санкхья');
+
+        $this->assertStringContainsString('блока 1 группы «Санкхья — пн 18:00» — 6 000 ₽', $this->lastBotText());
+        $this->assertSame($sankhya->id, SupportAiReplyEvent::query()->get()->last(fn ($e) => ($e->meta['fact_type'] ?? null) === 'pay_choice_link')->meta['group_id']);
+    }
+
+    public function test_pilot_replay_monday_lists_open_groups_skips_paid_and_understands_other(): void
+    {
+        // Скриншот 23-10-2026: «группа по понедельникам» → бот взял свою
+        // оплаченную санкхью; «нет, другая по грамматике» — повторил вопрос.
+        $sankhya = $this->groupWithCourse('Философия санкхьи', 'Философия санкхьи — пн 18:00 (2026)', 6000);
+        $hindi = $this->groupWithCourse('Грамматика хинди гр. 5', 'Грамматика хинди гр. 5, пн', 5000);
+        $this->user->activeGroups()->attach([$sankhya->id, $hindi->id]);
+        Payment::create(['user_id' => $this->user->id, 'course_id' => $sankhya->courses()->first()->id, 'amount' => 1, 'tariff' => 'full', 'status' => 'paid']);
+        $this->groupWithCourse('Грамматика по Кочергиной гр.61', 'Грамматика по Кочергиной гр.61, пн 08:00', 8000);
+        $this->groupWithCourse('Традиции толкования упанишад', 'Упанишады — пн 20:00', 7000);
+
+        $this->ask('Хочу оплатить, подскажите как');
+        Carbon::setTestNow(now()->addMinutes(1));
+        $this->ask('группа по понедельникам');
+
+        $which = $this->lastBotText();
+        $this->assertStringContainsString('гр.61', $which);
+        $this->assertStringContainsString('Упанишады', $which);
+        $this->assertStringNotContainsString('санкхьи', $which);
+        $this->assertStringNotContainsString('хинди', $which);
+
+        Carbon::setTestNow(now()->addMinutes(1));
+        $this->ask('нет, другая по грамматике');
+
+        $this->assertStringContainsString('блока 1 группы «Грамматика по Кочергиной гр.61, пн 08:00» — 8 000 ₽', $this->lastBotText());
+    }
+
+    public function test_time_of_day_narrows_which_question(): void
+    {
+        $this->groupWithCourse('Грамматика гр.61', 'Грамматика гр.61, пн', 8000)
+            ->schedules()->create(['title' => 'урок', 'start' => '2026-10-26 08:00:00', 'end' => '2026-10-26 10:00:00']);
+        $this->groupWithCourse('Грамматика гр.53', 'Грамматика гр.53, пн', 6000)
+            ->schedules()->create(['title' => 'урок', 'start' => '2026-10-26 20:00:00', 'end' => '2026-10-26 22:00:00']);
+
+        $this->ask('как оплатить?');
+        Carbon::setTestNow(now()->addMinutes(1));
+        $this->ask('по понедельникам');
+        $this->assertStringContainsString('Нашёл несколько подходящих групп', $this->lastBotText());
+
+        Carbon::setTestNow(now()->addMinutes(1));
+        $this->ask('та, что в 8 утра');
+
+        $this->assertStringContainsString('группы «Грамматика гр.61, пн» — 8 000 ₽', $this->lastBotText());
+    }
+
+    public function test_fully_paid_course_named_says_so_instead_of_asking_block(): void
+    {
+        $sankhya = $this->groupWithCourse('Философия санкхьи', 'Философия санкхьи — пн 18:00 (2026)', 6000);
+        $this->user->activeGroups()->attach($sankhya->id);
+        Payment::create(['user_id' => $this->user->id, 'course_id' => $sankhya->courses()->first()->id, 'amount' => 1, 'tariff' => 'full', 'status' => 'paid']);
+
+        $this->ask('как оплатить санкхью?');
+
+        $this->assertStringContainsString('у вас уже оплачен полностью', $this->lastBotText());
+        $this->assertStringNotContainsString('Какой блок', $this->lastBotText());
+    }
+
+    public function test_my_group_phrase_searches_only_own_groups(): void
+    {
+        $own = $this->groupWithCourse('Грамматика по Кочергиной гр.62', 'Грамматика по Кочергиной гр.62, среда 20:00', 6000);
+        $this->groupWithCourse('Грамматика хинди гр. 1', 'Грамматика хинди гр. 1, среда 08:00', 5000);
+        $this->groupWithCourse('Продленка санскрита', 'Продленка санскрита среда 19:00', 4000);
+        $this->user->activeGroups()->attach($own->id);
+
+        $this->ask('как оплатить?');
+        Carbon::setTestNow(now()->addMinutes(1));
+        $this->ask('ну ту, где я по средам занимаюсь');
+
+        $this->assertStringContainsString('блока 1 группы «Грамматика по Кочергиной гр.62, среда 20:00»', $this->lastBotText());
+    }
+
+    public function test_ordinal_answer_to_which_question(): void
+    {
+        $this->groupWithCourse('Философия санкхьи', 'Санкхья — пн 18:00', 6000);
+        $this->groupWithCourse('Традиции толкования упанишад', 'Упанишады — пн 20:00', 7000);
+
+        $this->ask('как оплатить?');
+        Carbon::setTestNow(now()->addMinutes(2));
+        $this->ask('в понедельник');
+        Carbon::setTestNow(now()->addMinutes(2));
+        $this->ask('вторая');
+
+        $this->assertStringContainsString('группы «Упанишады — пн 20:00» — 7 000 ₽', $this->lastBotText());
+    }
+
+    public function test_whole_course_without_full_tariff_asks_block_then_number_gets_link(): void
+    {
+        $this->groupWithCourse('Философия санкхьи', 'Санкхья — пн 18:00', 6000);
+
+        $this->ask('не могу оплатить, философия санкхья весь курс');
+
+        $question = $this->lastBotText();
+        $this->assertStringContainsString('Весь курс сразу здесь оплатить нельзя', $question);
+        $this->assertStringContainsString('Какой блок «Санкхья — пн 18:00» оплатить?', $question);
+
+        Carbon::setTestNow(now()->addMinutes(2));
+        $this->ask('2');
+
+        $this->assertStringContainsString('блока 2 группы «Санкхья — пн 18:00» — 6 000 ₽', $this->lastBotText());
+    }
+
+    public function test_paid_block_named_gets_block_question_with_note(): void
+    {
+        $this->joinWithFirstBlockPaid($this->sanskrit);
+
+        $this->ask('как оплатить 1 блок гр.71?');
+
+        $this->assertStringContainsString('Блок 1 у вас уже оплачен.', $this->lastBotText());
+        $this->assertSame(['pay_clarify'], $this->sentFactTypes());
     }
 
     public function test_answer_with_course_and_block_words(): void
@@ -186,9 +345,9 @@ class SupportDmPayClarifyTest extends TestCase
 
         $this->ask('как можно оплатить?');
         Carbon::setTestNow(now()->addMinutes(2));
-        $this->ask('гр.70, первый блок');
+        $this->ask('гр.70, второй блок');
 
-        $this->assertStringContainsString('блока 1 группы «Хинди — гр.70» — 5 000 ₽', $this->lastBotText());
+        $this->assertStringContainsString('блока 2 группы «Хинди — гр.70» — 5 000 ₽', $this->lastBotText());
     }
 
     public function test_student_named_group_and_block_gets_link_without_question(): void
@@ -221,21 +380,19 @@ class SupportDmPayClarifyTest extends TestCase
         $this->assertStringContainsString('tgc='.$contact->id, $link);
     }
 
-    public function test_unparsed_money_answer_goes_to_curator_without_second_question(): void
+    public function test_bot_never_goes_silent_and_hands_over_after_three_questions(): void
     {
-        $this->joinWithFirstBlockPaid($this->hindi);
         $this->joinWithFirstBlockPaid($this->sanskrit);
 
         $this->ask('как оплатить?');
-        Carbon::setTestNow(now()->addMinutes(2));
-        $this->ask('тот, что дешевле по цене');
+        foreach (range(1, 3) as $i) {
+            Carbon::setTestNow(now()->addMinutes(2));
+            $this->ask('тот, что дешевле по цене');
+        }
 
-        $this->assertSame(['pay_clarify'], $this->sentFactTypes());
-        Http::assertSent(fn ($r) => str_contains((string) ($r['text'] ?? ''), 'ответ не разобрал'));
-
-        Carbon::setTestNow(now()->addMinutes(2));
-        $this->ask('как оплатить?');
-        $this->assertSame(1, $this->botMessages());
+        $this->assertSame(['pay_clarify', 'pay_clarify', 'pay_clarify', 'pay_handoff'], $this->sentFactTypes());
+        $this->assertStringContainsString('Передаю ваш вопрос куратору', $this->lastBotText());
+        Http::assertSent(fn ($r) => str_contains((string) ($r['text'] ?? ''), 'несколько раз уточнял'));
     }
 
     public function test_after_link_follow_up_without_pay_word_and_new_question_work(): void
@@ -253,10 +410,20 @@ class SupportDmPayClarifyTest extends TestCase
         $this->ask('хинди гр.70 2 блок');
         $this->assertStringContainsString('блока 2 группы «Хинди — гр.70»', $this->lastBotText());
 
-        // Прошлый вопрос закончился ссылкой — новый вопрос можно задать.
         Carbon::setTestNow(now()->addMinutes(2));
         $this->ask('а как оплатить ещё раз?');
-        $this->assertStringContainsString('Подскажите, что хотите оплатить', $this->lastBotText());
+        $this->assertStringContainsString('что хотите оплатить', $this->lastBotText());
+    }
+
+    public function test_group_mentioned_after_link_without_pay_word_gets_no_link(): void
+    {
+        $this->joinWithFirstBlockPaid($this->sanskrit);
+
+        $this->ask('Как оплатить 2 блок гр.71?');
+        Carbon::setTestNow(now()->addMinutes(5));
+        $this->ask('а в гр.71 когда следующее занятие?');
+
+        $this->assertSame(['pay_choice_link'], $this->sentFactTypes());
     }
 
     public function test_whole_course_gets_full_tariff_link(): void
@@ -270,18 +437,6 @@ class SupportDmPayClarifyTest extends TestCase
         $this->assertStringContainsString(route('checkout.show', $full), $this->lastBotText());
     }
 
-    public function test_paid_block_from_chat_history_is_not_offered(): void
-    {
-        $this->joinWithFirstBlockPaid($this->sanskrit);
-        $this->incoming('есть ли места в гр.71?');
-
-        $this->ask('как оплатить?');
-
-        $question = $this->lastBotText();
-        $this->assertStringContainsString('«Санскрит — гр.71» — блок 2', $question);
-        $this->assertStringNotContainsString('блок 1', $question);
-    }
-
     public function test_unrelated_reply_leaves_question_open(): void
     {
         $this->joinWithFirstBlockPaid($this->sanskrit);
@@ -290,7 +445,7 @@ class SupportDmPayClarifyTest extends TestCase
         Carbon::setTestNow(now()->addMinutes(2));
         $this->ask('а занятие во сколько будет?');
         Carbon::setTestNow(now()->addMinutes(2));
-        $this->ask('1');
+        $this->ask('гр.71');
 
         $this->assertStringContainsString('Ссылка на оплату блока 2', $this->lastBotText());
     }
@@ -303,8 +458,20 @@ class SupportDmPayClarifyTest extends TestCase
         Http::assertSent(fn ($r) => str_contains((string) ($r['text'] ?? ''), 'Проблема с оплатой'));
 
         Carbon::setTestNow(now()->addMinutes(2));
-        $this->ask('1');
+        $this->ask('гр.71');
         $this->assertStringContainsString('снимок экрана', $this->lastBotText());
+    }
+
+    public function test_installment_in_pay_talk_is_handed_over_not_silent(): void
+    {
+        $this->joinWithFirstBlockPaid($this->sanskrit);
+
+        $this->ask('как оплатить?');
+        Carbon::setTestNow(now()->addMinutes(2));
+        $this->ask('дороговато, можно в рассрочку?');
+
+        $this->assertStringContainsString('Передаю ваш вопрос куратору', $this->lastBotText());
+        Http::assertSent(fn ($r) => str_contains((string) ($r['text'] ?? ''), 'студенту нужен человек'));
     }
 
     public function test_reports_refunds_installments_and_flag_off_stay_with_humans(): void
@@ -319,6 +486,21 @@ class SupportDmPayClarifyTest extends TestCase
         $this->ask('как оплатить?');
 
         $this->assertSame([], $this->sentFactTypes());
+    }
+
+    public function test_pilot_test_chat_is_not_stopped_by_auto_send_ceiling(): void
+    {
+        config([
+            'features.enroll_pilot_telegram_ids' => [(string) self::TG],
+            'services.telegram_support.sufler_max_steps_per_ticket' => 1,
+        ]);
+        $this->joinWithFirstBlockPaid($this->sanskrit);
+
+        $this->ask('как оплатить?');
+        Carbon::setTestNow(now()->addMinutes(2));
+        $this->ask('гр.71');
+
+        $this->assertSame(['pay_clarify', 'pay_choice_link'], $this->sentFactTypes());
     }
 
     public function test_pilot_list_excludes_other_students(): void
