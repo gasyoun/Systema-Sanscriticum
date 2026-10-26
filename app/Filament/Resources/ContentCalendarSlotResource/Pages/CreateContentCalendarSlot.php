@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\ContentCalendarSlotResource\Pages;
 
 use App\Filament\Resources\ContentCalendarSlotResource;
+use App\Filament\Resources\ContentCalendarSlotResource\Concerns\NotifiesValidationErrors;
 use App\Models\ContentCalendarSlot;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Carbon;
@@ -15,6 +16,8 @@ use Illuminate\Support\Carbon;
  */
 class CreateContentCalendarSlot extends CreateRecord
 {
+    use NotifiesValidationErrors;
+
     protected static string $resource = ContentCalendarSlotResource::class;
 
     /** @param  array<string, mixed>  $data */
