@@ -53,6 +53,11 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make()->label('Маркетинг'),
                 NavigationGroup::make()->label('Допматериалы'),
             ])
+            // TiptapEditor крадёт фокус у других полей формы — см. view.
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn () => view('filament.tiptap-focus-fix'),
+            )
             // --- НАЧАЛО: ПОБЕДА НАД КУРАТОРОМ + ОПТИМИЗАЦИЯ СКОРОСТИ ---
             ->renderHook(
                 PanelsRenderHook::BODY_END,
