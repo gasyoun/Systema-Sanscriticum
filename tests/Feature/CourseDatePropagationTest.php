@@ -130,19 +130,16 @@ class CourseDatePropagationTest extends TestCase
     }
 
     /** @test */
-    public function ends_at_shift_is_used_when_starts_at_unchanged(): void
+    public function ends_at_shift_does_not_move_sessions(): void
     {
         $block = $this->blockWithSessions();
         $s1 = $this->createSession($block, '2026-10-17 09:00:00', '2026-10-17 11:00:00');
 
-        $block->ends_at = $block->ends_at->copy()->addDays(5); // +5 дней, starts_at не тронут
+        $block->ends_at = $block->ends_at->copy()->addDays(105)->subSeconds(59);
         $block->save();
 
-        $this->assertSame(
-            $s1->start->copy()->addDays(5)->format('Y-m-d H:i:s'),
-            $s1->refresh()->start->format('Y-m-d H:i:s'),
-            'при неизменной starts_at дельта берётся от end-границы'
-        );
+        $this->assertSame('2026-10-17 09:00:00', $s1->refresh()->start->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-10-17 11:00:00', $s1->end->format('Y-m-d H:i:s'));
     }
 
     /** @test */
