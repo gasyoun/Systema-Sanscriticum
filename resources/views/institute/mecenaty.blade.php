@@ -128,7 +128,7 @@
             </div>
 
             <button type="submit"
-                    class="rounded-lg bg-brand px-6 py-2 font-bold text-white hover:opacity-90">
+                    class="min-h-11 rounded-lg bg-brand px-6 py-2 font-bold text-white hover:opacity-90">
                 Поддержать
             </button>
         </form>
