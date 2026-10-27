@@ -24,6 +24,7 @@
     "@capacitor/status-bar": "^8.0.3"
   },
   "devDependencies": {
+    "@types/node": "^26.6.5",
     "dotenv": "^18.0.1",
     "typescript": "^7.0.2"
   },
