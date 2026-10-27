@@ -13,10 +13,11 @@ use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 /**
- * H6369 — Phase 4 роадмапа Google-календаря: правка starts_at/ends_at у
+ * H6369 — Phase 4 роадмапа Google-календаря: только правка starts_at у
  * CourseBlock сдвигает будущие занятия Schedule его курса по правилу
  * translate (решение MG 10-10-2026): одна дельта для всех будущих строк,
- * интервалы сохраняются, прошедшие занятия не трогаются.
+ * интервалы сохраняются, прошедшие занятия не трогаются. Правка ends_at
+ * расписание не меняет (регрессия курса 296, 20-10-2026).
  */
 class CourseDatePropagationTest extends TestCase
 {
@@ -130,19 +131,16 @@ class CourseDatePropagationTest extends TestCase
     }
 
     /** @test */
-    public function ends_at_shift_is_used_when_starts_at_unchanged(): void
+    public function ends_at_shift_does_not_move_sessions(): void
     {
         $block = $this->blockWithSessions();
         $s1 = $this->createSession($block, '2026-10-17 09:00:00', '2026-10-17 11:00:00');
 
-        $block->ends_at = $block->ends_at->copy()->addDays(5); // +5 дней, starts_at не тронут
+        $block->ends_at = $block->ends_at->copy()->addDays(105)->subSeconds(59);
         $block->save();
 
-        $this->assertSame(
-            $s1->start->copy()->addDays(5)->format('Y-m-d H:i:s'),
-            $s1->refresh()->start->format('Y-m-d H:i:s'),
-            'при неизменной starts_at дельта берётся от end-границы'
-        );
+        $this->assertSame('2026-10-17 09:00:00', $s1->refresh()->start->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-10-17 11:00:00', $s1->end->format('Y-m-d H:i:s'));
     }
 
     /** @test */

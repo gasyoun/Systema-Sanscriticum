@@ -9,8 +9,9 @@ use App\Services\Calendar\CourseDatePropagationService;
 
 /**
  * Каскад дат блока курса (H6369, Phase 4 роадмапа Google-календаря):
- * правка starts_at/ends_at у CourseBlock сдвигает будущие занятия Schedule
+ * только правка starts_at у CourseBlock сдвигает будущие занятия Schedule
  * его курса по правилу translate — сервис CourseDatePropagationService.
+ * Правка ends_at расписание не меняет.
  *
  * Модельный уровень, чтобы срабатывало с любой поверхности (Filament, tinker).
  * Уведомления группам и перенос Zoom-встреч — вне скоупа (Phase 3-каскад).
@@ -23,7 +24,7 @@ class CourseBlockObserver
 
     public function updated(CourseBlock $block): void
     {
-        if (! $block->wasChanged('starts_at') && ! $block->wasChanged('ends_at')) {
+        if (! $block->wasChanged('starts_at')) {
             return;
         }
 
