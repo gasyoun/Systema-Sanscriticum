@@ -45,6 +45,10 @@ const config: CapacitorConfig = {
   appId: 'ru.samskrte.app',
   appName: 'Кабинет самскрте',
   webDir: 'www',
+  ios: {
+    // Persistent marker: the web login hides social providers only in the iOS wrapper.
+    appendUserAgent: 'SystemaIOS/1.0',
+  },
   server: {
     url: serverUrl,
     allowNavigation,

@@ -1,7 +1,10 @@
 {{-- Кнопки входа через соцсети. Показываются, только если у провайдера задан
-     client_id (см. SocialAuthService::enabledProviders) — иначе блок пуст. --}}
+     client_id (см. SocialAuthService::enabledProviders) — иначе блок пуст.
+     В iOS-обёртке остаётся только email+пароль (Apple Guideline 4.8);
+     обычный Safari на iPhone и другие клиенты не затрагиваются. --}}
 @php
-    $providers = \App\Services\SocialAuthService::enabledProviders();
+    $iosEmailOnly = str_contains(request()->userAgent() ?? '', 'SystemaIOS/');
+    $providers = $iosEmailOnly ? [] : \App\Services\SocialAuthService::enabledProviders();
     $meta = [
         'google' => ['Google', 'fa-google'],
         'vkontakte' => ['ВКонтакте', 'fa-vk'],
