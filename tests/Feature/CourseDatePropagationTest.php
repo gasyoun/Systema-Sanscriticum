@@ -13,10 +13,11 @@ use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 /**
- * H6369 — Phase 4 роадмапа Google-календаря: правка starts_at/ends_at у
+ * H6369 — Phase 4 роадмапа Google-календаря: только правка starts_at у
  * CourseBlock сдвигает будущие занятия Schedule его курса по правилу
  * translate (решение MG 10-10-2026): одна дельта для всех будущих строк,
- * интервалы сохраняются, прошедшие занятия не трогаются.
+ * интервалы сохраняются, прошедшие занятия не трогаются. Правка ends_at
+ * расписание не меняет (регрессия курса 296, 20-10-2026).
  */
 class CourseDatePropagationTest extends TestCase
 {
