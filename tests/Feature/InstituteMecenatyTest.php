@@ -13,6 +13,8 @@ class InstituteMecenatyTest extends TestCase
 
     public function test_page_renders_with_brand_guards(): void
     {
+        config(['institute.donations_enabled' => false]);
+
         $this->get('/mecenaty')
             ->assertOk()
             ->assertSee('Меценаты Института')
