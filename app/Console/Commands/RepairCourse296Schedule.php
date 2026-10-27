@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\Schedule;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -96,7 +97,7 @@ final class RepairCourse296Schedule extends Command
 
     /**
      * @param  Collection<int, Schedule>  $rows
-     * @return list<array{row: Schedule, start: \Carbon\Carbon, end: \Carbon\Carbon}>
+     * @return list<array{row: Schedule, start: Carbon, end: Carbon}>
      */
     private function plan(Collection $rows): array
     {
