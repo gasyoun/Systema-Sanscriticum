@@ -7,6 +7,7 @@ namespace App\Models;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -76,6 +77,7 @@ class ContentCalendarSlot extends Model
         'channel',
         'slot_date',
         'slot_type',
+        'rubric_id',
         'status',
         'publish_at',
         'source_kind',
@@ -105,6 +107,11 @@ class ContentCalendarSlot extends Model
     public function candidates(): HasMany
     {
         return $this->hasMany(ContentCandidate::class, 'calendar_slot_id');
+    }
+
+    public function rubric(): BelongsTo
+    {
+        return $this->belongsTo(ContentCalendarRubric::class, 'rubric_id');
     }
 
     public function publications(): HasMany
