@@ -59,7 +59,7 @@ class ContentCalendarRubricTest extends TestCase
         ]);
     }
 
-    private function post(ContentCalendarRubric $rubric, string $at, string $status = ContentCalendarSlot::STATUS_SCHEDULED): ContentCalendarSlot
+    private function rubricPost(ContentCalendarRubric $rubric, string $at, string $status = ContentCalendarSlot::STATUS_SCHEDULED): ContentCalendarSlot
     {
         return ContentCalendarSlot::create([
             'slot_date' => substr($at, 0, 10),
@@ -96,12 +96,12 @@ class ContentCalendarRubricTest extends TestCase
 
         $this->assertSame('2026-10-28 18:00', $scheduler->nextFreeAt($rubric)?->format('Y-m-d H:i'));
 
-        $this->post($rubric, '2026-10-28 18:00:00');
-        $this->post($rubric, '2026-10-30 18:00:00', ContentCalendarSlot::STATUS_CANCELED);
+        $this->rubricPost($rubric, '2026-10-28 18:00:00');
+        $this->rubricPost($rubric, '2026-10-30 18:00:00', ContentCalendarSlot::STATUS_CANCELED);
         $this->assertSame('2026-10-30 18:00', $scheduler->nextFreeAt($rubric)?->format('Y-m-d H:i'));
 
         // Другая рубрика на то же время не мешает.
-        $this->post($this->rubric(['name' => 'Другая']), '2026-10-30 18:00:00');
+        $this->rubricPost($this->rubric(['name' => 'Другая']), '2026-10-30 18:00:00');
         $this->assertSame('2026-10-30 18:00', $scheduler->nextFreeAt($rubric)?->format('Y-m-d H:i'));
 
         $this->assertNull($scheduler->nextFreeAt($this->rubric(['name' => 'Пустая', 'schedule' => []])));
@@ -110,9 +110,9 @@ class ContentCalendarRubricTest extends TestCase
     public function test_reflow_packs_unpublished_posts_onto_consecutive_runs(): void
     {
         $rubric = $this->rubric();
-        $a = $this->post($rubric, '2026-11-02 18:00:00');
-        $b = $this->post($rubric, '2026-11-06 18:00:00');
-        $done = $this->post($rubric, '2026-10-26 18:00:00', ContentCalendarSlot::STATUS_PUBLISHED);
+        $a = $this->rubricPost($rubric, '2026-11-02 18:00:00');
+        $b = $this->rubricPost($rubric, '2026-11-06 18:00:00');
+        $done = $this->rubricPost($rubric, '2026-10-26 18:00:00', ContentCalendarSlot::STATUS_PUBLISHED);
 
         $this->assertSame(2, app(RubricScheduler::class)->reflow($rubric));
 
@@ -137,7 +137,7 @@ class ContentCalendarRubricTest extends TestCase
         Storage::fake(ContentCalendarSlot::MEDIA_DISK);
         $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
         $rubric = $this->rubric();
-        $this->post($rubric, '2026-10-28 18:00:00');
+        $this->rubricPost($rubric, '2026-10-28 18:00:00');
 
         Livewire::test(ContentCalendarSlotResource\Pages\CreateContentCalendarSlot::class)
             ->fillForm([
@@ -206,7 +206,7 @@ class ContentCalendarRubricTest extends TestCase
     {
         $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
         $rubric = $this->rubric();
-        $slot = $this->post($rubric, '2026-10-30 18:00:00');
+        $slot = $this->rubricPost($rubric, '2026-10-30 18:00:00');
 
         Livewire::test(ContentCalendarRubricResource\Pages\EditContentCalendarRubric::class, ['record' => $rubric->getRouteKey()])
             ->assertSuccessful()
@@ -249,7 +249,7 @@ class ContentCalendarRubricTest extends TestCase
         $this->assertStringContainsString('28.10 18:00', $sent[0]);
 
         // Пост на этот выход есть — молчит.
-        $this->post($rubric, '2026-10-28 18:00:00');
+        $this->rubricPost($rubric, '2026-10-28 18:00:00');
         $rubric->forceFill(['last_empty_alert_for' => null])->save();
         $this->artisan('content:rubric-gaps')->assertSuccessful();
         $this->assertCount(1, $sent);
