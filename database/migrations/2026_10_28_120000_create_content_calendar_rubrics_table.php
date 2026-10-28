@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('prefix')->nullable();
             $table->json('schedule');
+            $table->json('channels')->nullable();
             $table->boolean('with_story')->default(true);
             $table->boolean('is_active')->default(true);
             $table->timestamp('last_empty_alert_for')->nullable();
