@@ -225,11 +225,11 @@ ensure_directive() { # ensure_directive <file> <key> <value> <sep> — прав�
   if grep -qxF "$line" "$file"; then ok "$file :: $line"; return 0; fi
   if [ "$DRY_RUN" = 1 ]; then chg "$file :: $line (dry-run)"; CHANGED+=("$file"); return 0; fi
   backup "$file"
-  if grep -qE "^[[:space:]]*$key[[:space:]]*=" "$file"; then
+  if grep -qE "^[[:space:]]*${key}[[:space:]]*=" "$file"; then
     # Заменяем ВСЕ активные вхождения: иначе последнее продолжит выигрывать и
     # правка окажется декоративной. Закомментированные примеры дистрибутива не
     # трогаем — они документация, а не значение.
-    sed -i -E "s|^[[:space:]]*$key[[:space:]]*=.*|$line|" "$file"
+    sed -i -E "s|^[[:space:]]*${key}[[:space:]]*=.*|$line|" "$file"
   else
     printf '%s\n' "$line" >> "$file"
   fi
