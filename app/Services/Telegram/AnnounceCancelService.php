@@ -56,6 +56,10 @@ final class AnnounceCancelService
      */
     public static function matches(array $message): bool
     {
+        if (AnnounceRescheduleService::matches($message)) {
+            return false;
+        }
+
         $text = self::normalize($message);
 
         return $text !== '' && preg_match(self::ANNOUNCE_PATTERN, $text) === 1;
