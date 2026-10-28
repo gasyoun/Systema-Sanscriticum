@@ -173,7 +173,8 @@ $REAL_DIRTY
       fail "Рабочее дерево грязное (не только public/docs/*.pdf) — сначала разобраться с локальными изменениями (git status)"
     fi
     say "Стэшу прод-локальные PDF (public/docs) на время обновления кода"
-    # shellcheck disable=SC2086 — пути прошли allowlist-регэксп, пробелов нет
+    # пути прошли allowlist-регэксп, пробелов нет
+    # shellcheck disable=SC2086
     git stash push -m "deploy.sh auto-stash $(date '+%F %T')" -- $DIRTY_FILES
     STASHED=1
   fi
