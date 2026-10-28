@@ -68,6 +68,16 @@ final class AnnounceRescheduleService
             return;
         }
 
+        // Повтор уже применённого сообщения не должен превращаться в запрос
+        // уточнения после того, как исходная дата исчезла из расписания.
+        $alreadyHandled = TelegramScheduleReschedule::query()
+            ->where('telegram_chat_id', $chatId)
+            ->where('telegram_message_id', $messageId)
+            ->exists();
+        if ($alreadyHandled) {
+            return;
+        }
+
         $reference = Carbon::createFromTimestamp((int) $sentAt, (string) config('app.timezone', 'Europe/Moscow'));
         $parsed = $this->parse(self::normalize($message), $reference);
         if ($parsed === null) {

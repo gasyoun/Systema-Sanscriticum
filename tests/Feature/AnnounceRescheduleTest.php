@@ -302,7 +302,10 @@ class AnnounceRescheduleTest extends TestCase
         $group = $this->seedTeacherWorld();
         $source = $this->lesson($group, '2026-10-29 08:00:00', 'Будущее (#2, 29.10.26)');
 
-        $this->process($this->message('Занятие 29.10 переносим на 30.10 в 08:00'));
+        $this->process($this->message(
+            'Занятие 29.10 переносим на 30.10 в 08:00',
+            date: Carbon::parse('2026-10-29 07:00:00', 'Europe/Moscow')->timestamp,
+        ));
 
         $this->assertSame('2026-10-30 08:00:00', $source->fresh()->start->format('Y-m-d H:i:s'));
         Http::assertSentCount(1);
