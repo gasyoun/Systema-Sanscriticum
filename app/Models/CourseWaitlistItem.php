@@ -201,8 +201,24 @@ class CourseWaitlistItem extends Model
      */
     public function scopeOnShowcase(Builder $query): Builder
     {
+        $ids = implode(',', InternalAccounts::ids());
+        $idCol = $query->getModel()->qualifyColumn('id');
+
         return $query->where('is_listed', true)
-            ->whereNotIn('status', [self::STATUS_CLOSED, self::STATUS_SCHEDULED]);
+            ->whereNotIn('status', [self::STATUS_CLOSED, self::STATUS_SCHEDULED])
+            // MG 28-10-2026: «как только порог достигается, снимать, но в порог
+            // не считать Ивана и Марциса». Порог считают только студенческие
+            // голоса; достигнут — строка уходит с витрины в момент голосования,
+            // без ожидания cron-прогона waitlist:process.
+            ->where(function (Builder $q) use ($ids, $idCol): void {
+                $q->whereNull('min_payers')
+                    ->orWhere('min_payers', '<', 1)
+                    ->orWhereRaw(
+                        '(SELECT COUNT(*) FROM waitlist_votes wv'
+                        ." WHERE wv.course_waitlist_item_id = {$idCol}"
+                        ." AND wv.user_id NOT IN ({$ids})) < min_payers"
+                    );
+            });
     }
 
     public function votes(): HasMany
