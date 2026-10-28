@@ -228,6 +228,59 @@ class ContentCalendarRubricTest extends TestCase
             ->assertSee('28.10.2026 18:00');
     }
 
+    private function schoolDestinations(): void
+    {
+        config(['content_calendar.destinations' => [
+            'tg_opoveshchenie' => ['platform' => 'telegram', 'label' => 'TG · Оповещение', 'chat_id' => '@o'],
+            'tg_ors' => ['platform' => 'telegram', 'label' => 'TG · ОРС', 'chat_id' => '@r'],
+            'tg_institut' => ['platform' => 'telegram', 'label' => 'TG · Институт', 'chat_id' => '@i'],
+            'vk_opoveshchenie' => ['platform' => 'vk', 'label' => 'VK · Оповещение', 'group_id' => 1],
+            'vk_ors' => ['platform' => 'vk', 'label' => 'VK · ОРС', 'group_id' => 0],
+            'tg_story_business' => ['platform' => 'tg_business_story', 'label' => 'Сторис · TG', 'enabled' => true],
+            'vk_story_opoveshchenie' => ['platform' => 'vk_story', 'label' => 'Сторис · VK Оповещение', 'group_id' => 1],
+        ]]);
+    }
+
+    public function test_channels_expand_to_tg_vk_and_stories_of_enabled_destinations(): void
+    {
+        $this->schoolDestinations();
+
+        $rubric = $this->rubric(['channels' => ['opoveshchenie', 'ors']]);
+        $this->assertSame(['tg_opoveshchenie', 'tg_ors', 'vk_opoveshchenie', 'tg_story_business', 'vk_story_opoveshchenie'], $rubric->destinationKeys());
+        $this->assertSame('Оповещение, ОРС', $rubric->channelsLabel());
+
+        $noStory = $this->rubric(['name' => 'Без сторис', 'channels' => ['institut'], 'with_story' => false]);
+        $this->assertSame(['tg_institut'], $noStory->destinationKeys());
+
+        $this->assertNull($this->rubric(['name' => 'Без каналов'])->destinationKeys());
+
+        $this->assertSame(
+            'Оповещение: TG, VK, сторис VK · ОРС: TG · сторис TG',
+            ContentCalendarSlot::destinationSummary(['tg_opoveshchenie', 'tg_ors', 'vk_opoveshchenie', 'vk_story_opoveshchenie', 'tg_story_business']),
+        );
+    }
+
+    public function test_choosing_a_rubric_ticks_its_channels_and_list_shows_where_the_post_goes(): void
+    {
+        $this->schoolDestinations();
+        $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
+        $rubric = $this->rubric(['channels' => ['ors'], 'with_story' => false]);
+
+        Livewire::test(ContentCalendarSlotResource\Pages\CreateContentCalendarSlot::class)
+            ->fillForm(['rubric_id' => $rubric->id])
+            ->assertFormSet(['destinations' => ['tg_ors']])
+            ->fillForm(['title' => 'ОРС пост', 'body' => '<p>текст</p>'])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $slot = ContentCalendarSlot::query()->where('title', 'ОРС пост')->sole();
+        $this->assertSame(['tg_ors'], $slot->destinations);
+
+        Livewire::test(ContentCalendarSlotResource\Pages\ListContentCalendarSlots::class)
+            ->assertSuccessful()
+            ->assertSee('ОРС: TG');
+    }
+
     public function test_gap_alert_is_sent_once_per_run(): void
     {
         $sent = [];
