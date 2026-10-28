@@ -39,13 +39,19 @@ class StoryImageComposer
         $scale = max(self::WIDTH / $w, self::HEIGHT / $h);
         $cw = min($w, (int) ceil(self::WIDTH / $scale));
         $ch = min($h, (int) ceil(self::HEIGHT / $scale));
-        $small = imagecreatetruecolor(36, 64);
-        imagecopyresampled($small, $src, 0, 0, intdiv($w - $cw, 2), intdiv($h - $ch, 2), 36, 64, $cw, $ch);
-        for ($i = 0; $i < 3; $i++) {
-            imagefilter($small, IMG_FILTER_GAUSSIAN_BLUR);
+        // Растягиваем ступенями с размытием на каждой — без ступенек-пикселей.
+        $layer = imagecreatetruecolor(27, 48);
+        imagecopyresampled($layer, $src, 0, 0, intdiv($w - $cw, 2), intdiv($h - $ch, 2), 27, 48, $cw, $ch);
+        foreach ([[54, 96], [135, 240], [270, 480], [540, 960], [self::WIDTH, self::HEIGHT]] as [$lw, $lh]) {
+            for ($i = 0; $i < 4; $i++) {
+                imagefilter($layer, IMG_FILTER_GAUSSIAN_BLUR);
+            }
+            $next = imagecreatetruecolor($lw, $lh);
+            imagecopyresampled($next, $layer, 0, 0, 0, 0, $lw, $lh, imagesx($layer), imagesy($layer));
+            $layer = $next;
         }
-        imagecopyresampled($canvas, $small, 0, 0, 0, 0, self::WIDTH, self::HEIGHT, 36, 64);
-        imagefilter($canvas, IMG_FILTER_GAUSSIAN_BLUR);
+        imagefilter($layer, IMG_FILTER_GAUSSIAN_BLUR);
+        imagecopy($canvas, $layer, 0, 0, 0, 0, self::WIDTH, self::HEIGHT);
         imagefilter($canvas, IMG_FILTER_BRIGHTNESS, -70);
 
         // Обложка целиком (contain) по центру.
