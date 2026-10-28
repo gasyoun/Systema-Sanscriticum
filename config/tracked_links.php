@@ -189,6 +189,23 @@ foreach (['c', 't', 'h', 'p'] as $creative) {
 }
 
 /*
+ * Креатив r — рекап открытого занятия 25-10 (как у vas26-ors-r): маршрут ведет
+ * на WP-статью записи урока на samskrtam.ru (rutube/vk/youtube + стенограмма),
+ * а не на карточку курса. Внешний destination — как у t.me-хопов ниже:
+ * флеш-цель Метрики на нем не ставится, клик пишется в anons_link_clicks.
+ */
+$links['syn26-ors-r'] = [
+    'destination' => 'https://samskrtam.ru/sintaksis-sanskrita/',
+    'utm' => [
+        'utm_source' => $channels['ors']['source'],
+        'utm_medium' => $channels['ors']['medium'],
+        'utm_campaign' => $syn26Campaign,
+        'utm_content' => 'syn26_r',
+        'utm_term' => 'advanced',
+    ],
+];
+
+/*
  * ksh3 — обзорное занятие 3-го потока «Кашмирского шиваизма» (М. А. Ворошилов;
  * 29-10-2026 чт 14:00 МСК, бесплатное, «не в счет 16»; курс — 16 занятий по
  * чт 14:00 МСК с 05-11-2026, сбор голосов, оплата не открыта): /ga/-ключи ведут

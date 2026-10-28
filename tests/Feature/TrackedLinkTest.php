@@ -226,6 +226,20 @@ class TrackedLinkTest extends TestCase
     }
 
     /** @test */
+    public function syn26_recap_key_routes_to_the_open_lesson_recording_article(): void
+    {
+        $this->get('/ga/syn26-ors-r')
+            ->assertRedirect('https://samskrtam.ru/sintaksis-sanskrita/');
+
+        $attribution = session(config('tracked_links.session_key'));
+        $this->assertSame('telegram_samskrte', $attribution['utm_source'], 'source');
+        $this->assertSame('owned_channel', $attribution['utm_medium'], 'medium');
+        $this->assertSame('syntax_open_oct_2026', $attribution['utm_campaign'], 'campaign');
+        $this->assertSame('syn26_r', $attribution['utm_content'], 'content');
+        $this->assertSame('advanced', $attribution['utm_term'], 'term');
+    }
+
+    /** @test */
     public function ksh3_overview_lesson_keys_route_to_the_kashmir_shaivism_course_card(): void
     {
         foreach ([
