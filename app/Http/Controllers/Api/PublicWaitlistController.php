@@ -185,7 +185,7 @@ class PublicWaitlistController extends Controller
     private function buildFeed(): array
     {
         $items = CourseWaitlistItem::query()
-            ->where('is_listed', true)
+            ->onShowcase()
             ->orderBy('sort_order')
             ->orderBy('id')
             ->withCount(['votes as votes_count' => fn ($q) => $q->whereNotIn('user_id', InternalAccounts::ids())])

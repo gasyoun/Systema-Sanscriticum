@@ -297,11 +297,7 @@ class ShopController extends Controller
         abort_unless((bool) config('features.waitlist_voting', false), 404);
 
         $items = CourseWaitlistItem::query()
-            ->where('is_listed', true)
-            ->whereNotIn('status', [
-                CourseWaitlistItem::STATUS_CLOSED,
-                CourseWaitlistItem::STATUS_SCHEDULED,
-            ])
+            ->onShowcase()
             ->withCount(['votes as votes_count' => fn ($q) => $q->whereNotIn('user_id', InternalAccounts::ids())])
             ->with([
                 // Обложка карточки ждуна — витринная плашка курса
