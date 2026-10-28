@@ -457,6 +457,13 @@ return [
         // H4519: детект анонсов отмены обычными словами → кнопка-подтверждение.
         // Default false: включается на проде после live-smoke (Sandbox-чат).
         'announce_cancel_detect' => (bool) env('TELEGRAM_ZAPISI_ANNOUNCE_CANCEL_DETECT', false),
+        // Разовый перенос занятия обычными словами. Оба гейта fail-closed:
+        // флаг OFF и пустой список групп означают полную инертность.
+        'announce_reschedule_detect' => (bool) env('TELEGRAM_ZAPISI_ANNOUNCE_RESCHEDULE_DETECT', false),
+        'announce_reschedule_group_ids' => array_values(array_filter(array_map(
+            'intval',
+            explode(',', (string) env('TELEGRAM_ZAPISI_ANNOUNCE_RESCHEDULE_GROUP_IDS', '')),
+        ))),
         // Рубильник АВАРИЙНОГО поллинга. Штатно апдейты приходят вебхуком через
         // входной узел; поллинг нужен, только когда узел недоступен. Дефолт
         // false осознанно: команда снимает вебхук, и случайный запуск иначе
