@@ -24,6 +24,7 @@ class ContentCalendarRubric extends Model
         'name',
         'prefix',
         'schedule',
+        'channels',
         'with_story',
         'is_active',
         'last_empty_alert_for',
@@ -31,6 +32,7 @@ class ContentCalendarRubric extends Model
 
     protected $casts = [
         'schedule' => 'array',
+        'channels' => 'array',
         'with_story' => 'boolean',
         'is_active' => 'boolean',
         'last_empty_alert_for' => 'datetime',
@@ -44,6 +46,43 @@ class ContentCalendarRubric extends Model
     public function slots(): HasMany
     {
         return $this->hasMany(ContentCalendarSlot::class, 'rubric_id');
+    }
+
+    /**
+     * Площадки постов рубрики: канал школы = его TG и VK; со сторис — ещё
+     * сторис VK канала и сторис Telegram Business. Только включённые
+     * площадки; без отмеченных каналов — null (площадки поста не трогаем).
+     *
+     * @return list<string>|null
+     */
+    public function destinationKeys(): ?array
+    {
+        $channels = array_values(array_intersect((array) $this->channels, array_keys((array) config('content_calendar.channels', []))));
+        if ($channels === []) {
+            return null;
+        }
+
+        $keys = [];
+        foreach ($channels as $channel) {
+            $keys[] = "tg_{$channel}";
+            $keys[] = "vk_{$channel}";
+            if ($this->with_story) {
+                $keys[] = "vk_story_{$channel}";
+            }
+        }
+        if ($this->with_story) {
+            $keys[] = 'tg_story_business';
+        }
+
+        return array_values(array_intersect(array_keys(ContentCalendarSlot::enabledDestinations()), $keys));
+    }
+
+    /** «Оповещение, ОРС» */
+    public function channelsLabel(): string
+    {
+        $names = (array) config('content_calendar.channels', []);
+
+        return implode(', ', array_map(static fn (string $c): string => $names[$c] ?? $c, array_values(array_intersect(array_keys($names), (array) $this->channels))));
     }
 
     /**

@@ -84,8 +84,13 @@ class ContentCalendarSlotResource extends Resource
                     if ($operation === 'create' && filled($state)) {
                         $set('publish_at', null);
                     }
+                    $keys = filled($state) ? ContentCalendarRubric::find($state)?->destinationKeys() : null;
+                    if ($keys !== null) {
+                        $set('destinations', $keys);
+                    }
                 })
                 ->helperText('Пост рубрики без времени публикации встанет на ближайшее свободное время рубрики; '
+                    .'галочки «Куда публиковать» встанут по каналам рубрики (их можно поправить); '
                     .'префикс рубрики добавится в начало текста, картинка для сторис соберётся из картинки поста.')
                 ->columnSpanFull(),
             Forms\Components\DateTimePicker::make('publish_at')
@@ -309,16 +314,19 @@ class ContentCalendarSlotResource extends Resource
                     ->limit(50)
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('crosspost')
-                    ->label('Площадки')
+                    ->label('Куда')
                     ->state(function (ContentCalendarSlot $record): string {
-                        $targets = count($record->targetDestinations());
+                        $keys = $record->targetDestinations();
+                        $where = ContentCalendarSlot::destinationSummary($keys) ?: 'никуда';
+                        if ($record->publications->isEmpty()) {
+                            return $where;
+                        }
                         $done = $record->publications->where('status', ContentCalendarPublication::STATUS_PUBLISHED)->count();
                         $failed = $record->publications->where('status', ContentCalendarPublication::STATUS_FAILED)->count();
 
-                        return $record->publications->isEmpty()
-                            ? (string) $targets
-                            : "{$done}/{$targets}".($failed > 0 ? " · ошибок: {$failed}" : '');
+                        return $where.' — вышло '.$done.'/'.count($keys).($failed > 0 ? ", ошибок: {$failed}" : '');
                     })
+                    ->wrap()
                     ->color(fn (ContentCalendarSlot $record): ?string => $record->publications->contains('status', ContentCalendarPublication::STATUS_FAILED) ? 'danger' : null)
                     ->tooltip(fn (ContentCalendarSlot $record): string => implode(', ', array_map(
                         static fn (string $key): string => (string) (config("content_calendar.destinations.{$key}.label") ?? $key),

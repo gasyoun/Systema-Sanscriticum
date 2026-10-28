@@ -165,6 +165,41 @@ class ContentCalendarSlot extends Model
         return $keys;
     }
 
+    /**
+     * Площадки по каналам школы: «Оповещение: TG, VK, сторис VK · ОРС: TG ·
+     * сторис TG». Ключи вне каналов — их подписью из конфига.
+     *
+     * @param  list<string>  $keys
+     */
+    public static function destinationSummary(array $keys): string
+    {
+        $channels = (array) config('content_calendar.channels', []);
+        $byChannel = [];
+        $other = [];
+        foreach ($keys as $key) {
+            if ($key === 'tg_story_business') {
+                $other[] = 'сторис TG';
+
+                continue;
+            }
+            if (preg_match('/^(tg|vk_story|vk)_(.+)$/', $key, $m) === 1 && isset($channels[$m[2]])) {
+                $byChannel[$m[2]][] = ['tg' => 'TG', 'vk' => 'VK', 'vk_story' => 'сторис VK'][$m[1]];
+
+                continue;
+            }
+            $other[] = (string) (config("content_calendar.destinations.{$key}.label") ?? $key);
+        }
+
+        $parts = [];
+        foreach ($channels as $channel => $name) {
+            if (isset($byChannel[$channel])) {
+                $parts[] = $name.': '.implode(', ', $byChannel[$channel]);
+            }
+        }
+
+        return implode(' · ', array_merge($parts, $other));
+    }
+
     /** Публичный URL картинки для сторис. */
     public function storyMediaUrl(): ?string
     {
