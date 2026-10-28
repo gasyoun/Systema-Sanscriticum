@@ -131,13 +131,13 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CONTENT_AUTO_PUBLISH_PILOT` | feature-flag | `false` | config/features.php:1073 |
 | `CONTENT_CALENDAR_AUTOPILOT` | optional | `false` | config/features.php:1016 |
 | `CONTENT_CALENDAR_ENABLED` | feature-flag | `false` | config/features.php:1010 |
-| `CONTENT_CAL_TG_BOT_TOKEN` | secret | `''` | config/content_calendar.php:92 |
+| `CONTENT_CAL_TG_BOT_TOKEN` | secret | `''` | config/content_calendar.php:101 |
 | `CONTENT_CAL_TG_BUSINESS_STORY` | optional | `false` | config/content_calendar.php:64 |
-| `CONTENT_CAL_TG_INGEST` | optional | `false` | config/content_calendar.php:102 |
+| `CONTENT_CAL_TG_INGEST` | optional | `false` | config/content_calendar.php:111 |
 | `CONTENT_CAL_TG_INSTITUT` | optional | `''` | config/content_calendar.php:38 |
 | `CONTENT_CAL_TG_OPOVESHCHENIE` | optional | `''` | config/content_calendar.php:28 |
 | `CONTENT_CAL_TG_ORS` | optional | `''` | config/content_calendar.php:33 |
-| `CONTENT_CAL_TG_PUBLIC_USERNAME` | optional | `'samskrte'` | config/content_calendar.php:87 |
+| `CONTENT_CAL_TG_PUBLIC_USERNAME` | optional | `'samskrte'` | config/content_calendar.php:96 |
 | `CONTENT_CAL_VK_INSTITUT` | optional | `0` | config/content_calendar.php:55<br>config/content_calendar.php:81 |
 | `CONTENT_CAL_VK_OPOVESHCHENIE` | optional | `0` | config/content_calendar.php:44<br>config/content_calendar.php:71 |
 | `CONTENT_CAL_VK_ORS` | optional | `0` | config/content_calendar.php:50<br>config/content_calendar.php:76 |

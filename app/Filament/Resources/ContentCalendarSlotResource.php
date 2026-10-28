@@ -7,6 +7,7 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\ContentCalendarSlotResource\Pages;
 use App\Models\ContentCalendarPublication;
+use App\Models\ContentCalendarRubric;
 use App\Models\ContentCalendarSlot;
 use App\Services\Content\PostFormatter;
 use App\Support\RoleGate;
@@ -14,6 +15,7 @@ use Closure;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -69,10 +71,33 @@ class ContentCalendarSlotResource extends Resource
             Forms\Components\DatePicker::make('slot_date')->label('Дата')->disabled()->hiddenOn('create'),
             Forms\Components\TextInput::make('slot_type')->label('Тип')->disabled()->hiddenOn('create'),
             Forms\Components\TextInput::make('status')->label('Статус')->disabled()->hiddenOn('create'),
+            Forms\Components\Select::make('rubric_id')
+                ->label('Рубрика')
+                ->placeholder('без рубрики')
+                ->options(fn (?ContentCalendarSlot $record): array => ContentCalendarRubric::query()
+                    ->where(fn (Builder $q) => $q->where('is_active', true)->orWhere('id', $record?->rubric_id))
+                    ->orderBy('name')->get()
+                    ->mapWithKeys(fn (ContentCalendarRubric $r): array => [$r->id => $r->name.' · '.$r->scheduleLabel().($r->is_active ? '' : ' (выключена)')])
+                    ->all())
+                ->live()
+                ->afterStateUpdated(function (Set $set, mixed $state, string $operation): void {
+                    if ($operation === 'create' && filled($state)) {
+                        $set('publish_at', null);
+                    }
+                    $keys = filled($state) ? ContentCalendarRubric::find($state)?->destinationKeys() : null;
+                    if ($keys !== null) {
+                        $set('destinations', $keys);
+                    }
+                })
+                ->helperText('Пост рубрики без времени публикации встанет на ближайшее свободное время рубрики; '
+                    .'галочки «Куда публиковать» встанут по каналам рубрики (их можно поправить); '
+                    .'префикс рубрики добавится в начало текста, картинка для сторис соберётся из картинки поста.')
+                ->columnSpanFull(),
             Forms\Components\DateTimePicker::make('publish_at')
                 ->label('Публикация (MSK)')
                 ->seconds(false)
-                ->required(fn (string $operation): bool => $operation === 'create')
+                ->helperText(fn (Get $get): ?string => filled($get('rubric_id')) ? 'Пусто — ближайшее свободное время рубрики.' : null)
+                ->required(fn (string $operation, Get $get): bool => $operation === 'create' && blank($get('rubric_id')))
                 ->after(fn (string $operation): ?string => $operation === 'create' ? 'now' : null)
                 ->default(fn (): string => now('Europe/Moscow')->addDay()->setTime(12, 0)->toDateTimeString()),
             Forms\Components\TextInput::make('title')
@@ -92,8 +117,8 @@ class ContentCalendarSlotResource extends Resource
                 ->helperText('Маркер = спойлер в Telegram. В VK форматирование не переносится: уходит простой текст, ссылка — «текст (url)». '
                     .'Без вложения — до 4096 символов, с картинкой или видео — до 1024.')
                 ->rules([
-                    fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
-                        $length = PostFormatter::telegramLength(self::bodyHtml($value));
+                    fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                        $length = self::postLength(self::bodyHtml($value), $get('rubric_id'));
                         if ($length > PostFormatter::TG_MESSAGE_LIMIT) {
                             $fail('Telegram допускает сообщение до '.PostFormatter::TG_MESSAGE_LIMIT." символов, сейчас {$length}.");
                         }
@@ -120,7 +145,7 @@ class ContentCalendarSlotResource extends Resource
                 // длинным текстом за краем экрана (26-10-2026).
                 ->rules([
                     fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
-                        $length = PostFormatter::telegramLength(self::bodyHtml($get('body')));
+                        $length = self::postLength(self::bodyHtml($get('body')), $get('rubric_id'));
                         if ($length > PostFormatter::TG_CAPTION_LIMIT) {
                             $fail('С картинкой или видео Telegram допускает текст до '.PostFormatter::TG_CAPTION_LIMIT
                                 ." символов, сейчас {$length}. Сократите текст или уберите вложение.");
@@ -237,6 +262,14 @@ class ContentCalendarSlotResource extends Resource
         return is_string($state) ? $state : null;
     }
 
+    /** Длина поста в Telegram вместе с префиксом рубрики, который добавится при сохранении. */
+    private static function postLength(?string $html, mixed $rubricId): int
+    {
+        $rubric = filled($rubricId) ? ContentCalendarRubric::find($rubricId) : null;
+
+        return PostFormatter::telegramLength($html) + ($rubric?->prefixLength($html) ?? 0);
+    }
+
     private static function publicationsReport(ContentCalendarSlot $record): HtmlString
     {
         $labels = array_map(static fn (array $d): string => (string) $d['label'], (array) config('content_calendar.destinations', []));
@@ -267,12 +300,13 @@ class ContentCalendarSlotResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('publications'))
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['publications', 'rubric']))
             ->defaultSort('slot_date')
             ->columns([
                 Tables\Columns\TextColumn::make('slot_date')->label('Дата')->date('d.m.Y')->sortable(),
                 Tables\Columns\TextColumn::make('slot_type')->label('Тип')->badge(),
                 Tables\Columns\TextColumn::make('status')->label('Статус')->badge(),
+                Tables\Columns\TextColumn::make('rubric.name')->label('Рубрика')->placeholder('—')->toggleable(),
                 Tables\Columns\TextColumn::make('title')->label('Заголовок')->limit(40)->wrap(),
                 Tables\Columns\TextColumn::make('body')
                     ->label('Текст')
@@ -280,16 +314,19 @@ class ContentCalendarSlotResource extends Resource
                     ->limit(50)
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('crosspost')
-                    ->label('Площадки')
+                    ->label('Куда')
                     ->state(function (ContentCalendarSlot $record): string {
-                        $targets = count($record->targetDestinations());
+                        $keys = $record->targetDestinations();
+                        $where = ContentCalendarSlot::destinationSummary($keys) ?: 'никуда';
+                        if ($record->publications->isEmpty()) {
+                            return $where;
+                        }
                         $done = $record->publications->where('status', ContentCalendarPublication::STATUS_PUBLISHED)->count();
                         $failed = $record->publications->where('status', ContentCalendarPublication::STATUS_FAILED)->count();
 
-                        return $record->publications->isEmpty()
-                            ? (string) $targets
-                            : "{$done}/{$targets}".($failed > 0 ? " · ошибок: {$failed}" : '');
+                        return $where.' — вышло '.$done.'/'.count($keys).($failed > 0 ? ", ошибок: {$failed}" : '');
                     })
+                    ->wrap()
                     ->color(fn (ContentCalendarSlot $record): ?string => $record->publications->contains('status', ContentCalendarPublication::STATUS_FAILED) ? 'danger' : null)
                     ->tooltip(fn (ContentCalendarSlot $record): string => implode(', ', array_map(
                         static fn (string $key): string => (string) (config("content_calendar.destinations.{$key}.label") ?? $key),
@@ -308,6 +345,7 @@ class ContentCalendarSlotResource extends Resource
                 Tables\Columns\TextColumn::make('publish_at')->label('Publish at')->dateTime('d.m.Y H:i')->sortable(),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('rubric_id')->label('Рубрика')->relationship('rubric', 'name'),
                 Tables\Filters\SelectFilter::make('status')->label('Статус')->options([
                     ContentCalendarSlot::STATUS_EMPTY => 'empty',
                     ContentCalendarSlot::STATUS_DRAFT => 'draft',

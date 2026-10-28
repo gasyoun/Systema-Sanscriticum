@@ -220,6 +220,14 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('publish-due-content-calendar');
 
+        // Рубрики календаря: пустой выход в ближайшие 24 ч → одно сообщение
+        // админам. No-op при выключенном features.content_calendar.
+        $schedule->command('content:rubric-gaps')
+            ->hourlyAt(5)
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('content-calendar-rubric-gaps');
+
         // Часовой VK ID токен кросспостинга календаря: refresh ротирует пару,
         // владелец один — прод. No-op, пока токен не импортирован.
         $schedule->command('vk:token-refresh')

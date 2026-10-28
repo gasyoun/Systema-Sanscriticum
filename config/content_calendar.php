@@ -82,6 +82,15 @@ return [
         ],
     ],
 
+    // Каналы школы: галочка канала у рубрики = его TG и VK (ключи
+    // tg_<канал>, vk_<канал>, сторис vk_story_<канал>). Сторис Telegram
+    // Business — общая для всех каналов.
+    'channels' => [
+        'opoveshchenie' => 'Оповещение',
+        'ors' => 'ОРС',
+        'institut' => 'Институт',
+    ],
+
     // Публичный @username канала «Оповещение» — ссылка из сторис на вышедший
     // пост (t.me/c/… для числового chat_id открывается только участникам).
     'tg_public_username' => env('CONTENT_CAL_TG_PUBLIC_USERNAME', 'samskrte'),

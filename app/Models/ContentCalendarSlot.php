@@ -7,6 +7,7 @@ namespace App\Models;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -76,6 +77,7 @@ class ContentCalendarSlot extends Model
         'channel',
         'slot_date',
         'slot_type',
+        'rubric_id',
         'status',
         'publish_at',
         'source_kind',
@@ -105,6 +107,11 @@ class ContentCalendarSlot extends Model
     public function candidates(): HasMany
     {
         return $this->hasMany(ContentCandidate::class, 'calendar_slot_id');
+    }
+
+    public function rubric(): BelongsTo
+    {
+        return $this->belongsTo(ContentCalendarRubric::class, 'rubric_id');
     }
 
     public function publications(): HasMany
@@ -156,6 +163,41 @@ class ContentCalendarSlot extends Model
         usort($keys, static fn (string $a, string $b): int => self::isStoryDestination($enabled[$a]) <=> self::isStoryDestination($enabled[$b]));
 
         return $keys;
+    }
+
+    /**
+     * Площадки по каналам школы: «Оповещение: TG, VK, сторис VK · ОРС: TG ·
+     * сторис TG». Ключи вне каналов — их подписью из конфига.
+     *
+     * @param  list<string>  $keys
+     */
+    public static function destinationSummary(array $keys): string
+    {
+        $channels = (array) config('content_calendar.channels', []);
+        $byChannel = [];
+        $other = [];
+        foreach ($keys as $key) {
+            if ($key === 'tg_story_business') {
+                $other[] = 'сторис TG';
+
+                continue;
+            }
+            if (preg_match('/^(tg|vk_story|vk)_(.+)$/', $key, $m) === 1 && isset($channels[$m[2]])) {
+                $byChannel[$m[2]][] = ['tg' => 'TG', 'vk' => 'VK', 'vk_story' => 'сторис VK'][$m[1]];
+
+                continue;
+            }
+            $other[] = (string) (config("content_calendar.destinations.{$key}.label") ?? $key);
+        }
+
+        $parts = [];
+        foreach ($channels as $channel => $name) {
+            if (isset($byChannel[$channel])) {
+                $parts[] = $name.': '.implode(', ', $byChannel[$channel]);
+            }
+        }
+
+        return implode(' · ', array_merge($parts, $other));
     }
 
     /** Публичный URL картинки для сторис. */
