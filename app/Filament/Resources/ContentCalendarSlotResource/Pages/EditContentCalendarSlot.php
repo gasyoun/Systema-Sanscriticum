@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\ContentCalendarSlotResource\Pages;
 
 use App\Filament\Resources\ContentCalendarSlotResource;
+use App\Filament\Resources\ContentCalendarSlotResource\Concerns\AppliesRubric;
 use App\Filament\Resources\ContentCalendarSlotResource\Concerns\NotifiesValidationErrors;
 use App\Models\ContentCalendarPublication;
 use App\Models\ContentCalendarSlot;
@@ -19,6 +20,7 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditContentCalendarSlot extends EditRecord
 {
+    use AppliesRubric;
     use NotifiesValidationErrors;
 
     protected static string $resource = ContentCalendarSlotResource::class;
@@ -29,6 +31,12 @@ class EditContentCalendarSlot extends EditRecord
         $data['body'] = PostFormatter::toEditorHtml($data['body'] ?? null);
 
         return $data;
+    }
+
+    /** @param  array<string, mixed>  $data */
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        return $this->applyRubric($data, (int) $this->getRecord()->getKey());
     }
 
     protected function getHeaderActions(): array

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\ContentCalendarSlotResource\Pages;
 
 use App\Filament\Resources\ContentCalendarSlotResource;
+use App\Filament\Resources\ContentCalendarSlotResource\Concerns\AppliesRubric;
 use App\Filament\Resources\ContentCalendarSlotResource\Concerns\NotifiesValidationErrors;
 use App\Models\ContentCalendarSlot;
 use Filament\Resources\Pages\CreateRecord;
@@ -16,6 +17,7 @@ use Illuminate\Support\Carbon;
  */
 class CreateContentCalendarSlot extends CreateRecord
 {
+    use AppliesRubric;
     use NotifiesValidationErrors;
 
     protected static string $resource = ContentCalendarSlotResource::class;
@@ -23,6 +25,7 @@ class CreateContentCalendarSlot extends CreateRecord
     /** @param  array<string, mixed>  $data */
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        $data = $this->applyRubric($data);
         $publishAt = Carbon::parse($data['publish_at'], 'Europe/Moscow');
 
         return array_merge($data, [
