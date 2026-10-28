@@ -86,6 +86,13 @@ class ContentCalendarRubricResource extends Resource
                 ->minItems(1)
                 ->addActionLabel('Добавить время')
                 ->columnSpanFull(),
+            Forms\Components\CheckboxList::make('channels')
+                ->label('Каналы')
+                ->options(fn (): array => (array) config('content_calendar.channels', []))
+                ->helperText('Канал = его Telegram и VK. Посты рубрики сразу получат эти площадки (в посте их можно поправить). '
+                    .'Ненастроенные площадки пропускаются.')
+                ->columns(3)
+                ->columnSpanFull(),
             Forms\Components\Toggle::make('with_story')
                 ->label('Сторис к каждому посту')
                 ->helperText('Если у поста нет картинки для сторис, она соберётся из картинки поста (1080×1920).')
@@ -106,6 +113,12 @@ class ContentCalendarRubricResource extends Resource
                 Tables\Columns\TextColumn::make('schedule_label')
                     ->label('Расписание')
                     ->state(fn (ContentCalendarRubric $record): string => $record->scheduleLabel()),
+                Tables\Columns\TextColumn::make('where')
+                    ->label('Куда')
+                    ->state(fn (ContentCalendarRubric $record): string => ($keys = $record->destinationKeys()) === null
+                        ? 'по галочкам поста'
+                        : (ContentCalendarSlot::destinationSummary($keys) ?: 'площадки не настроены'))
+                    ->wrap(),
                 Tables\Columns\TextColumn::make('queue')
                     ->label('В очереди')
                     ->state(fn (ContentCalendarRubric $record): int => self::queue($record)->count()),
