@@ -213,6 +213,20 @@ class AnnounceRescheduleTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_reschedule_flag_off_preserves_existing_cancellation_offer(): void
+    {
+        Redis::shouldReceive('set')->andReturn(true);
+        $group = $this->seedTeacherWorld();
+        config()->set('services.telegram_zapisi.announce_reschedule_detect', false);
+        config()->set('services.telegram_zapisi.announce_cancel_detect', true);
+        $source = $this->lesson($group, '2026-10-27 09:00:00', 'Будущее (#2, 27.10.26)');
+
+        $this->process($this->message('Занятие 27.10 переносим на 30.10 в 08:00'));
+
+        $this->assertSame('2026-10-27 09:00:00', $source->fresh()->start->format('Y-m-d H:i:s'));
+        Http::assertSent(fn (Request $request): bool => str_contains((string) $request['text'], 'Снять с расписания'));
+    }
+
     public function test_group_allowlist_is_fail_closed(): void
     {
         Redis::shouldReceive('set')->andReturn(true);

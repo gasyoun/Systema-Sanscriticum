@@ -164,6 +164,27 @@ final class AnnounceRescheduleService
         $this->sendReceipt($action);
     }
 
+    public static function enabledForMessage(array $message): bool
+    {
+        if (! (bool) config('services.telegram_zapisi.announce_reschedule_detect', false)) {
+            return false;
+        }
+
+        $chatId = $message['chat']['id'] ?? null;
+        if (! is_numeric($chatId)) {
+            return false;
+        }
+
+        $group = Group::query()->where('telegram_chat_id', (string) $chatId)->first(['id']);
+        if ($group === null) {
+            return false;
+        }
+
+        $allowed = (array) config('services.telegram_zapisi.announce_reschedule_group_ids', []);
+
+        return in_array($group->id, array_map('intval', $allowed), true);
+    }
+
     private function enabled(): bool
     {
         return (bool) config('services.telegram_zapisi.announce_reschedule_detect', false);

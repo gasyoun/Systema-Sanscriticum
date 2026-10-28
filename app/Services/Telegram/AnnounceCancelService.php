@@ -56,7 +56,8 @@ final class AnnounceCancelService
      */
     public static function matches(array $message): bool
     {
-        if (AnnounceRescheduleService::matches($message)) {
+        if (AnnounceRescheduleService::matches($message)
+            && AnnounceRescheduleService::enabledForMessage($message)) {
             return false;
         }
 
