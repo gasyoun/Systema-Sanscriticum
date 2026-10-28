@@ -97,10 +97,14 @@ class ContentCalendarRubric extends Model
         return $escaped.$html;
     }
 
-    /** Сколько символов добавит префикс к этому тексту. */
+    /** Сколько символов (UTF-16, как считает Bot API) добавит префикс к этому тексту. */
     public function prefixLength(?string $html): int
     {
-        return trim((string) $this->prefix) === '' || $this->hasPrefix($html) ? 0 : mb_strlen((string) $this->prefix);
+        if (trim((string) $this->prefix) === '' || $this->hasPrefix($html)) {
+            return 0;
+        }
+
+        return intdiv(strlen((string) mb_convert_encoding((string) $this->prefix, 'UTF-16LE', 'UTF-8')), 2);
     }
 
     private function hasPrefix(?string $html): bool
