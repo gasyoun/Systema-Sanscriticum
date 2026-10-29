@@ -339,6 +339,19 @@ class ContentCalendarSlotResource extends Resource
                     ->getStateUsing(fn (ContentCalendarSlot $record): ?string => $record->mediaType() === ContentCalendarSlot::MEDIA_PHOTO ? $record->media_path : null)
                     ->width(72)
                     ->height(90)
+                    ->extraImgAttributes(['style' => 'cursor: zoom-in'])
+                    // Клик по ячейке — нативная модалка Filament поверх
+                    // страницы: карточку слота не покидаем.
+                    ->action(
+                        Tables\Actions\Action::make('zoom_media_preview')
+                            ->visible(fn (ContentCalendarSlot $record): bool => $record->mediaType() === ContentCalendarSlot::MEDIA_PHOTO)
+                            ->modalHeading(fn (ContentCalendarSlot $record): string => (string) $record->title)
+                            ->modalContent(fn (ContentCalendarSlot $record): HtmlString => new HtmlString(
+                                '<img src="'.e((string) $record->mediaUrl()).'" alt="Обложка слота" style="width:100%;height:auto;border-radius:8px">'
+                            ))
+                            ->modalSubmitAction(false)
+                            ->modalCancelAction(false),
+                    )
                     ->toggleable(),
                 Tables\Columns\IconColumn::make('media_path')
                     ->label('Медиа')
