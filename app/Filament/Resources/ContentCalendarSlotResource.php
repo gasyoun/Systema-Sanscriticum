@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\HtmlString;
 
 /**
  * Monthly content calendar ops surface (H1564). No live VK publish here.
@@ -59,6 +60,20 @@ class ContentCalendarSlotResource extends Resource
             Forms\Components\TextInput::make('slot_type')->label('Тип')->disabled(),
             Forms\Components\TextInput::make('status')->label('Статус')->disabled(),
             Forms\Components\DateTimePicker::make('publish_at')->label('Публикация (MSK)'),
+            // Cover is not a column in the schema — copy_packet slots carry it in meta.media_url.
+            Forms\Components\Placeholder::make('cover_preview')
+                ->label('Обложка')
+                ->content(function (?ContentCalendarSlot $record): HtmlString {
+                    $url = $record?->meta['media_url'] ?? null;
+                    if ($url === null) {
+                        return new HtmlString('<span style="color:#6b7280">нет обложки (meta.media_url)</span>');
+                    }
+
+                    return new HtmlString(sprintf(
+                        '<img src="%s" alt="Обложка слота" style="max-width:220px;border-radius:8px">',
+                        e($url)
+                    ));
+                }),
             Forms\Components\TextInput::make('title')->label('Заголовок')->maxLength(255)->columnSpanFull(),
             Forms\Components\Textarea::make('body')->label('Текст')->rows(8)->columnSpanFull(),
             Forms\Components\TextInput::make('source_ref')->label('Источник (id)')->disabled(),
@@ -70,6 +85,12 @@ class ContentCalendarSlotResource extends Resource
         return $table
             ->defaultSort('slot_date')
             ->columns([
+                // Cover is not a column in the schema — copy_packet slots carry it in meta.media_url.
+                Tables\Columns\ImageColumn::make('cover')
+                    ->label('Обложка')
+                    ->getStateUsing(fn (ContentCalendarSlot $record): ?string => $record->meta['media_url'] ?? null)
+                    ->width(72)
+                    ->height(90),
                 Tables\Columns\TextColumn::make('slot_date')->label('Дата')->date('d.m.Y')->sortable(),
                 Tables\Columns\TextColumn::make('slot_type')->label('Тип')->badge(),
                 Tables\Columns\TextColumn::make('status')->label('Статус')->badge(),
