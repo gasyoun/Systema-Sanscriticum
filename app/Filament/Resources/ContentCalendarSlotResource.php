@@ -18,6 +18,7 @@ use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Table;
 use FilamentTiptapEditor\Enums\TiptapOutput;
@@ -345,9 +346,11 @@ class ContentCalendarSlotResource extends Resource
                     ->action(
                         Tables\Actions\Action::make('zoom_media_preview')
                             ->visible(fn (ContentCalendarSlot $record): bool => $record->mediaType() === ContentCalendarSlot::MEDIA_PHOTO)
+                            ->modalWidth(MaxWidth::SevenExtraLarge)
                             ->modalHeading(fn (ContentCalendarSlot $record): string => (string) $record->title)
                             ->modalContent(fn (ContentCalendarSlot $record): HtmlString => new HtmlString(
-                                '<img src="'.e((string) $record->mediaUrl()).'" alt="Обложка слота" style="width:100%;height:auto;border-radius:8px">'
+                                '<img src="'.e((string) $record->mediaUrl()).'" alt="Обложка слота"'
+                                .' style="display:block;margin:0 auto;width:auto;height:auto;max-width:100%;max-height:80vh;border-radius:8px">'
                             ))
                             ->modalSubmitAction(false)
                             ->modalCancelAction(false),
