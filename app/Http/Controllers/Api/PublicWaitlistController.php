@@ -8,6 +8,7 @@ use App\Http\Resources\PublicWaitlistResource;
 use App\Models\CourseWaitlistItem;
 use App\Models\User;
 use App\Models\WaitlistVote;
+use App\Support\InternalAccounts;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -184,10 +185,10 @@ class PublicWaitlistController extends Controller
     private function buildFeed(): array
     {
         $items = CourseWaitlistItem::query()
-            ->where('is_listed', true)
+            ->onShowcase()
             ->orderBy('sort_order')
             ->orderBy('id')
-            ->withCount('votes')
+            ->withCount(['votes as votes_count' => fn ($q) => $q->whereNotIn('user_id', InternalAccounts::ids())])
             ->get();
 
         return PublicWaitlistResource::collection($items)->resolve();

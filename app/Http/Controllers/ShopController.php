@@ -23,6 +23,7 @@ use App\Support\CourseHeroSchedule;
 use App\Support\CoursePageContent;
 use App\Support\FlagshipExperiments;
 use App\Support\FlagshipLanding;
+use App\Support\InternalAccounts;
 use App\Support\ProductLadderAnchors;
 use App\Support\ShopCatalogUrl;
 use App\Support\TrajectoryPathway;
@@ -296,12 +297,8 @@ class ShopController extends Controller
         abort_unless((bool) config('features.waitlist_voting', false), 404);
 
         $items = CourseWaitlistItem::query()
-            ->where('is_listed', true)
-            ->whereNotIn('status', [
-                CourseWaitlistItem::STATUS_CLOSED,
-                CourseWaitlistItem::STATUS_SCHEDULED,
-            ])
-            ->withCount('votes')
+            ->onShowcase()
+            ->withCount(['votes as votes_count' => fn ($q) => $q->whereNotIn('user_id', InternalAccounts::ids())])
             ->with([
                 // Обложка карточки ждуна — витринная плашка курса
                 // (Course::catalogBadgeUrl()): ассет 4:3, фолбэк image_path.
@@ -553,7 +550,7 @@ class ShopController extends Controller
                     CourseWaitlistItem::STATUS_CLOSED,
                     CourseWaitlistItem::STATUS_SCHEDULED,
                 ])
-                ->withCount('votes')
+                ->withCount(['votes as votes_count' => fn ($q) => $q->whereNotIn('user_id', InternalAccounts::ids())])
                 ->first();
 
             if ($waitlistItem !== null && Auth::check()) {

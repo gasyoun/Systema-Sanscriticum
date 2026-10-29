@@ -9,6 +9,8 @@ use App\Services\Anons\VideoAnons\VideoAnonsService;
 use App\Services\HomeworkTelegramTagService;
 use App\Services\Telegram\AnnounceCancelCallbackService;
 use App\Services\Telegram\AnnounceCancelService;
+use App\Services\Telegram\AnnounceRescheduleCallbackService;
+use App\Services\Telegram\AnnounceRescheduleService;
 use App\Services\Telegram\CancelClassCommandService;
 use App\Services\Telegram\CancelUsageHint;
 use App\Services\Telegram\ChatJoinRequestApprover;
@@ -70,6 +72,15 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
         // Отсекать здесь ничего нельзя: n8n сам решает, что ему интересно.
         $this->forwardToN8n();
 
+        // Календарь контента: пост, вышедший в канале «Оповещение», становится
+        // слотом и разносится по остальным площадкам. Джоб сам гейтится флагом
+        // CONTENT_CAL_TG_INGEST и каналом-источником; обычная обработка
+        // апдейта (корпус и пр.) идёт дальше без изменений.
+        if (isset($this->update['channel_post']) && is_array($this->update['channel_post'])
+            && config('content_calendar.tg_ingest_enabled')) {
+            IngestCalendarChannelPostJob::dispatch($this->update['channel_post']);
+        }
+
         // #ДЗ / кнопки выбора урока: @zapisi_ORSbot сидит в чатах групп
         // (в отличие от student-bot). Callback и входящий тег обрабатываем здесь.
         // 20-10-2026: заявка в чат группы по ссылке после оплаты — одобряем
@@ -86,6 +97,11 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
 
         $homeworkTag = app(HomeworkTelegramTagService::class);
         if (isset($this->update['callback_query']) && is_array($this->update['callback_query'])) {
+            // Разовый перенос: кнопка отмены переноса — свой префикс arsu:.
+            if (app(AnnounceRescheduleCallbackService::class)->handle($this->update['callback_query'])) {
+                return;
+            }
+
             // H4519: кнопки предложения отмены — свои префиксы acx:/acxn.
             if (app(AnnounceCancelCallbackService::class)->handle($this->update['callback_query'])) {
                 return;
@@ -148,6 +164,14 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
             app(VacationCommandService::class)->handle($message);
         } catch (Throwable $e) {
             Log::warning('VacationCommand: handler failed', ['error' => $e->getMessage()]);
+        }
+
+        // Разовый перенос обычными словами: явные и безопасные случаи применяются,
+        // неоднозначные получают уточнение. Идёт перед старой кнопкой отмены.
+        try {
+            app(AnnounceRescheduleService::class)->handle($message);
+        } catch (Throwable $e) {
+            Log::warning('AnnounceReschedule: handler failed', ['error' => $e->getMessage()]);
         }
 
         // H4519: анонс отмены обычными словами → предложение-кнопка. Сам фильтрует

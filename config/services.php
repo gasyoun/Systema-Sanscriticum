@@ -128,11 +128,6 @@ return [
         // webhook-forward паттерн, что monthly_schedule/clip_extract.
         'social_post_webhook' => env('N8N_SOCIAL_POST_WEBHOOK'),
         'social_post_secret' => env('N8N_SOCIAL_POST_SECRET'),
-        // VK/ORS content calendar Wave 5 auto-pilot (H1568): content:publish-due
-        // posts one due ContentCalendarSlot at a time — same webhook-forward
-        // pattern as monthly_schedule/social_post, VK-only (D10, no TG mirror).
-        'calendar_post_webhook' => env('N8N_CALENDAR_POST_WEBHOOK'),
-        'calendar_post_secret' => env('N8N_CALENDAR_POST_SECRET'),
     ],
 
     // Входящий email-канал поддержки (H3462): секрет пути вебхука
@@ -462,6 +457,13 @@ return [
         // H4519: детект анонсов отмены обычными словами → кнопка-подтверждение.
         // Default false: включается на проде после live-smoke (Sandbox-чат).
         'announce_cancel_detect' => (bool) env('TELEGRAM_ZAPISI_ANNOUNCE_CANCEL_DETECT', false),
+        // Разовый перенос занятия обычными словами. Оба гейта fail-closed:
+        // флаг OFF и пустой список групп означают полную инертность.
+        'announce_reschedule_detect' => (bool) env('TELEGRAM_ZAPISI_ANNOUNCE_RESCHEDULE_DETECT', false),
+        'announce_reschedule_group_ids' => array_values(array_filter(array_map(
+            'intval',
+            explode(',', (string) env('TELEGRAM_ZAPISI_ANNOUNCE_RESCHEDULE_GROUP_IDS', '')),
+        ))),
         // Рубильник АВАРИЙНОГО поллинга. Штатно апдейты приходят вебхуком через
         // входной узел; поллинг нужен, только когда узел недоступен. Дефолт
         // false осознанно: команда снимает вебхук, и случайный запуск иначе

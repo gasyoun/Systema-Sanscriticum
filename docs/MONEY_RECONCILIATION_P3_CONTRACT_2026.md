@@ -114,6 +114,14 @@ php artisan money:import-statement-credits /var/www/html/storage/app/statements/
 
 **Статус источника.** `present` — только если какой-то **один** импорт покрывает день целиком; частичная выписка остаётся `missing`, и прогон честно `incomplete`. Пока флаг `MONEY_BANK_STATEMENT_CREDITS` выключен, сверка строк выписки не читает вовсе.
 
+**Покрытие по месяцам** (только чтение, период берётся из `covers_from`/`covers_to`, никогда из дат строк):
+
+```bash
+php artisan money:statement-coverage --from=2026-08-01 --to=2026-10-25
+```
+
+Ритм выгрузки (Мария, бухгалтер: 3-й рабочий день следующего месяца, догоняющий — до 10-го), процедура «сухой прогон → импорт → проверка» и текущий отчёт: [MONEY_BANK_STATEMENT_COVERAGE_AND_IMPORT_CADENCE_2026-10-26.md](MONEY_BANK_STATEMENT_COVERAGE_AND_IMPORT_CADENCE_2026-10-26.md). Пин покрытия: `tests/Feature/Reconciliation/BankStatementCoverageTest.php`.
+
 **Дневные контроли** (расхождение = одно исключение на контроль, доказательство — хэши строк выписки; сверка ничего не чинит и не закрывает):
 
 | Контроль | Что сравнивается | Тип исключения |
@@ -130,7 +138,7 @@ php artisan money:import-statement-credits /var/www/html/storage/app/statements/
 
 ## Известные пробелы
 
-1. ~~Нет импорта выписки зачислений банка~~ — закрыто [H5480](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5480-Opus_Systema-Sanscriticum_money-p3b-bank-statement-credits-source_24.09.26.md), см. «Источник bank_statement» ниже. Остаток: пока `MONEY_BANK_STATEMENT_CREDITS` выключен в проде, источник по-прежнему missing и прогоны `incomplete`.
+1. ~~Нет импорта выписки зачислений банка~~ — закрыто [H5480](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5480-Opus_Systema-Sanscriticum_money-p3b-bank-statement-credits-source_24.09.26.md), см. «Источник bank_statement» ниже. Остаток на 26-10-2026: выписка покрывает 2026-08-01…2026-09-28, дни 2026-09-29…2026-10-25 (27 дн.) не покрыты, поэтому прогоны `incomplete`; закрывается ритмом ручной выгрузки [H7267](MONEY_BANK_STATEMENT_COVERAGE_AND_IMPORT_CADENCE_2026-10-26.md), а не расписанием.
 2. Ядро тёмное до P4 — строки сверяются по согласованности доказательств, сверка с ядром включится сама, когда в ядре появятся строки.
 3. Пакеты выплат P2 (H5444) ещё не существуют — используется легаси `teacher_payouts`; P2 подключается через `MONEY_RECON_PAYOUT_PACKAGES_TABLE` без второй модели.
 
