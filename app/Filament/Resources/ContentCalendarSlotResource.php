@@ -340,7 +340,7 @@ class ContentCalendarSlotResource extends Resource
                     ->getStateUsing(fn (ContentCalendarSlot $record): ?string => $record->mediaType() === ContentCalendarSlot::MEDIA_PHOTO ? $record->media_path : null)
                     ->width(72)
                     ->height(90)
-                    ->extraImgAttributes(['style' => 'cursor: zoom-in'])
+                    ->extraImgAttributes(['class' => 'cursor-pointer'])
                     // Клик по ячейке — нативная модалка Filament поверх
                     // страницы: карточку слота не покидаем.
                     ->action(
@@ -349,8 +349,11 @@ class ContentCalendarSlotResource extends Resource
                             ->modalWidth(MaxWidth::SevenExtraLarge)
                             ->modalHeading(fn (ContentCalendarSlot $record): string => (string) $record->title)
                             ->modalContent(fn (ContentCalendarSlot $record): HtmlString => new HtmlString(
+                                // !important обязательны: глобальный хук панели
+                                // (AdminPanelProvider) жмёт все картинки .fi-main до
+                                // 150px с !important — инлайн без него проигрывает.
                                 '<img src="'.e((string) $record->mediaUrl()).'" alt="Обложка слота"'
-                                .' style="display:block;margin:0 auto;width:auto;height:auto;max-width:100%;max-height:80vh;border-radius:8px">'
+                                .' style="display:block;margin:0 auto;width:auto!important;height:auto!important;max-width:100%!important;max-height:80vh!important;border-radius:8px">'
                             ))
                             ->modalSubmitAction(false)
                             ->modalCancelAction(false),
