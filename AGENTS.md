@@ -6,6 +6,10 @@ Repo-local instructions for Codex/Claude agents working in this Laravel app.
 Org-level Sanskrit Lexicon rules still apply, but this repository is **not** a
 CDSL dictionary source repo; do not apply csl-orig correction workflows here.
 
+Start every task with [PROJECT_MAP.md](PROJECT_MAP.md), then open only the
+relevant domain card and matching `CLAUDE.md` section. Do not read the full
+documentation tree upfront.
+
 ## Current Product Priorities
 
 Use the public roadmap in `README.md` and the working journal in `.ai_state.md`.
