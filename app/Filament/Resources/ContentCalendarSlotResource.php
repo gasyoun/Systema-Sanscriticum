@@ -333,6 +333,13 @@ class ContentCalendarSlotResource extends Resource
                         $record->targetDestinations(),
                     )) ?: 'никуда')
                     ->toggleable(),
+                Tables\Columns\ImageColumn::make('media_preview')
+                    ->label('Обложка')
+                    ->disk(ContentCalendarSlot::MEDIA_DISK)
+                    ->getStateUsing(fn (ContentCalendarSlot $record): ?string => $record->mediaType() === ContentCalendarSlot::MEDIA_PHOTO ? $record->media_path : null)
+                    ->width(72)
+                    ->height(90)
+                    ->toggleable(),
                 Tables\Columns\IconColumn::make('media_path')
                     ->label('Медиа')
                     ->icon(fn (ContentCalendarSlot $record): ?string => match ($record->mediaType()) {
