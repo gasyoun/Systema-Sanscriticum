@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-_Created: 07-05-2026 · Last updated: 10-10-2026 (H5885 SLA trim; H5176 slim before)_
+_Created: 07-05-2026 · Last updated: 30-10-2026 (H7474 SLA slim to tier-0 budget; H5885 trim, H5176 slim before)_
 
 **Systema-Sanscriticum** is the Laravel LMS for [samskrte.ru](https://samskrte.ru).
 Org spine applies; repo-local always-on only — open the matching section,
@@ -33,7 +33,7 @@ curator link, a **curator-gated sale** defined by STATE (`is_visible=false`+
 deactivate/hide/retire/delete on that inference. Audits:
 `CatalogFamilyAudit::CLASS_CURATOR_GATED_SALE`,
 `CatalogShellAudit::isCuratorGatedSale()`; pin:
-[`CuratorGatedHiddenSaleTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Catalog/CuratorGatedHiddenSaleTest.php).
+`tests/Feature/Catalog/CuratorGatedHiddenSaleTest.php`.
 
 There is **no manual group assignment** — `Payment::processSuccessfulPayment()` →
 `Payment::grantAccess()` adds the user to the course `Group`. Tariff keys:
@@ -41,42 +41,41 @@ There is **no manual group assignment** — `Payment::processSuccessfulPayment()
 / `Lesson::isUnlockedBy()` are the single source of truth. Thresholds live in
 `config/{receivables,profit_funds,conversion,investment}.php` — **never
 hardcode**. Installment policy is a finance-lead decision. Rhythm:
-[FINANCE_REVIEW_RHYTHM.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FINANCE_REVIEW_RHYTHM.md).
+`docs/FINANCE_REVIEW_RHYTHM.md`.
 
 **Курс-запись с нулём уроков чинится уроками, а не выдачей чужого доступа**
 (доступ считается ПО КУРСУ, `block_N` из `lessons.block_number`). Лекарство —
-[`catalog:mirror-recording-lessons`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/MirrorRecordingLessons.php)
-(H3823): пишет только в `lessons`, сухой прогон обязателен и обязан совпасть до
-`--apply`, идемпотентна по `(block_number, block_half, sort_order)`. Запрещено
-выдавать доступ к урокам курса B купившим курс A — только `/money-pr-land`.
-Тарифы и видимость не трогать (инцидент 31-08-2026). Пин:
-[`MirrorRecordingLessonsTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Catalog/MirrorRecordingLessonsTest.php).
-Меняется `MirrorRecordingLessons::CARRIED` ⇒ тот же PR обновляет этот абзац и README.
+`catalog:mirror-recording-lessons` (`app/Console/Commands/MirrorRecordingLessons.php`,
+H3823): пишет только в `lessons`, сухой прогон обязан совпасть до `--apply`,
+идемпотентна по `(block_number, block_half, sort_order)`. Запрещено выдавать
+доступ к урокам курса B купившим курс A — только `/money-pr-land`. Тарифы и
+видимость не трогать (инцидент 31-08-2026). Пин:
+`tests/Feature/Catalog/MirrorRecordingLessonsTest.php`. Меняется
+`MirrorRecordingLessons::CARRIED` ⇒ тот же PR обновляет этот абзац и README.
 
 **Never grant homework review via `course_teacher`** — feeds
 `TeacherSalaryService`, pays the reviewer. Use `group_reviewer` (`users.id`).
 Settlement arithmetic only in `MutualSettlementService`, deducted **before**
-payout. [ARCHITECTURE…SETTLEMENT.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_SYSTEMA_TEACHER_STUDENT_SETTLEMENT_GROUP_REVIEWERS.md).
+payout. `docs/ARCHITECTURE_SYSTEMA_TEACHER_STUDENT_SETTLEMENT_GROUP_REVIEWERS.md`.
 
 ## Deploy / soft-alert (always-on)
 
-Only [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh)
-— never a hand `git pull` on prod. Ritual+gate: [deploy.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md)
+Only `deploy.sh` — never a hand `git pull` on prod. Ritual+gate: `docs/deploy.md`
 (incl. the no-GitHub fallback when `api.github.com` is down);
-guards+playbook: [server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md) ·
-[SERVER_SOFT_ALERT_PLAYBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md).
+guards+playbook: `docs/server-resource-guards.md` ·
+`docs/SERVER_SOFT_ALERT_PLAYBOOK.md`.
 Soft TG «Кабинет: soft-сбой» + `auto_deploy.disabled`/tracked dirty ≠ cabinet
 down. **Never** edit tracked `app/`/`config/` on the VPS. Safe auto:
 `php artisan ops:soft-remediate` (origin-equal dirty only). Webhook (OFF until
-env): [SOFT_ALERT_WEBHOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/SOFT_ALERT_WEBHOOK.md).
-Uptime: [EN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md)/[RU](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md).
+env): `docs/ops/SOFT_ALERT_WEBHOOK.md`.
+Uptime: `docs/UPTIME_BETTERSTACK_MONITORING.md` (EN) / `…_RU.md` (RU).
 
 ## Teacher surfaces
 
 Admin-like staff see every teacher surface (`RoleGate::seesTeacherSurfaces()`).
 Impersonation `MODE_TEACHER` — super_admin only, flag `STAFF_IMPERSONATION`.
 Card holder sees **own** salary; school-wide payroll stays `accounting()`.
-Policy: [ADMIN_SEES_TEACHER_SURFACES_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STANDING_POLICY_ADMIN_SEES_TEACHER_SURFACES_2026.md).
+Policy: `docs/STANDING_POLICY_ADMIN_SEES_TEACHER_SURFACES_2026.md`.
 
 ## CRM homework-pause
 
@@ -84,7 +83,7 @@ Student «ДЗ + больничный/застой/догоню» → **append**
 `users.note`. Do not invent a `HomeworkSubmission` status. Agent standing (A):
 needs identity **and** homework cue ∧ life cue; «догоню» alone is not a pause
 note; append only, one dated line with «не давить». Rule:
-[docs/CRM_HOMEWORK_PAUSE_NOTE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CRM_HOMEWORK_PAUSE_NOTE_2026.md).
+`docs/CRM_HOMEWORK_PAUSE_NOTE_2026.md`.
 
 ## Staff instructions (MG 18-08-2026)
 
@@ -121,12 +120,12 @@ Iterate with `--filter`; full suite (~11 min) before the PR. Pin time via
 |---|---|---|
 | Filament | `AdminPanelProvider`(`is_admin`) vs `LectureEditorPanelProvider`(`is_lecture_editor`); `Filament/Resources/`+`Editor/`. | — |
 | Access | Payment-driven groups; tariff keys above | Money |
-| Finance screens | `RoleGate::finance()` pages; never hardcode thresholds. Scoreboard/forecast flags OFF, separate pages. | [RHYTHM](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FINANCE_REVIEW_RHYTHM.md) · [FORECAST](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CRM_SALES_FORECAST_METHODOLOGY_2026.md) |
+| Finance screens | `RoleGate::finance()` pages; never hardcode thresholds. Scoreboard/forecast flags OFF, separate pages. | [RHYTHM](docs/FINANCE_REVIEW_RHYTHM.md) · [FORECAST](docs/CRM_SALES_FORECAST_METHODOLOGY_2026.md) |
 | Groups | `forming`/`active`/`archived`; curator flips status; `groups:notify-forming-shortfall`. | — |
 | Reviewers | `group_reviewer` ≠ `course_teacher`; settlement before payout | Money above |
-| Витрина курса (`CourseCadence`) | groups multi-stream courses by `schedules.group_id`. **Never sum streams:** `total()`/`hours()` take longest; `progressLabel()` `null` with >1 stream. Pin: [CourseCadenceMultiStreamTest](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Shop/CourseCadenceMultiStreamTest.php). | — |
-| Reading packs | Frozen under `resources/data/` — never hand-edit; re-vendor via [vendor_cohort](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/vendor_cohort_start_chteniya_packs.py)/[vendor_nala](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/vendor_nala_subhashita_packs.py). «Старт чтения»=`kosha_reader` **AND** `hasEntitlement`; per-course route=`CourseCohortEntitlement` alone, OFF. | — |
-| Queues | Nothing heavy on the request path — builds run as jobs (`imports`/`redis-long`). `ShouldQueue`-Mailable's **constructor runs IN the request** — only `handle()`/`attachments()` defer; `sync` runs inline → try/catch; test there. | [DECISION_HOMEWORK_PDF_OFF_PATH](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DECISION_HOMEWORK_IMAGES_PDF_OFF_REQUEST_PATH_2026.md) |
+| Витрина курса (`CourseCadence`) | groups multi-stream courses by `schedules.group_id`. **Never sum streams:** `total()`/`hours()` take longest; `progressLabel()` `null` with >1 stream. Pin: [CourseCadenceMultiStreamTest](tests/Feature/Shop/CourseCadenceMultiStreamTest.php). | — |
+| Reading packs | Frozen under `resources/data/` — never hand-edit; re-vendor via [vendor_cohort](scripts/vendor_cohort_start_chteniya_packs.py)/[vendor_nala](scripts/vendor_nala_subhashita_packs.py). «Старт чтения»=`kosha_reader` **AND** `hasEntitlement`; per-course route=`CourseCohortEntitlement` alone, OFF. | — |
+| Queues | Nothing heavy on the request path — builds run as jobs (`imports`/`redis-long`). `ShouldQueue`-Mailable's **constructor runs IN the request** — only `handle()`/`attachments()` defer; `sync` runs inline → try/catch; test there. | [DECISION_HOMEWORK_PDF_OFF_PATH](docs/DECISION_HOMEWORK_IMAGES_PDF_OFF_REQUEST_PATH_2026.md) |
 | Other | Marathon `/online/konsultaciya`: `MARATHON_LANDING_VISUAL_VARIANT`≠copy, `?skin=` QA-only. `LandingPage` catch-all `/{slug}`. Activity = middleware+heartbeat. | — |
 
 Schema derives from migrations; Money above carries the invariants.
@@ -136,21 +135,21 @@ Schema derives from migrations; Money above carries the invariants.
 - Tochka `/api/webhooks/tochka` · Telegram `/api/telegram/webhook` · VK `/api/vk-webhook` · DomPDF.
 - Чеки: Digital Kassa (`DIGITALKASSA_RECEIPTS`, OFF) — провайдер фиксируется на платеже (`payments.fiscal_provider`) при создании ссылки; чек после paid-вебхука, `fiscal:retry-digitalkassa`. Флаг OFF = чек Точки.
 - Lead-magnet bots: `/api/webhooks/telegram-magnet`, `/vk-magnet`, `/max-magnet/{secret}` (secret **in the path** — rotate in `MarketingSetting` after a leak). Secrets use Eloquent `encrypted`.
-- New Telegram send points claim via [TelegramSendGuard](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/TelegramSendGuard.php) before the API call (an unclaimed retry duplicates the send). Dedupe: `update_id` via `claimUpdate()`.
+- New Telegram send points claim via [TelegramSendGuard](app/Support/TelegramSendGuard.php) before the API call (an unclaimed retry duplicates the send). Dedupe: `update_id` via `claimUpdate()`.
 - n8n ZOOM 1.4: DOWNLOAD only via the fresh signed URL (≤24h); cleanup deletes only `…/executions/{{ \.id }}*`, never a global rm. API-PUT: back up JSON first.
 
 ## Environment / worktrees
 
 - TZ `Europe/Moscow`; flags `config/features.php`; HTTPS forced.
-- **New `env()` key ⇒ regen inventory same pass:** `php scripts/generate_env_inventory.php`; CI `--check` **silently reddens `main`** on drift ([#2088](https://github.com/gasyoun/Systema-Sanscriticum/pull/2088)).
-- **New worktree:** [worktree_bootstrap.ps1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/worktree_bootstrap.ps1) (robocopy `vendor/`). Never junction/symlink `vendor/` ([#713](https://github.com/gasyoun/Systema-Sanscriticum/issues/713))
+- **New `env()` key ⇒ regen inventory same pass:** `php scripts/generate_env_inventory.php`; CI `--check` **silently reddens `main`** on drift (PR #2088).
+- **New worktree:** [worktree_bootstrap.ps1](scripts/worktree_bootstrap.ps1) (robocopy `vendor/`). Never junction/symlink `vendor/` (#713).
 - Wrong-case `git add` is a no-op on Windows — take case from `git ls-files` ([FINDINGS §348](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md)).
 - `preg_split('/\R/',...)` w/o `/u` splits Cyrillic — use `/\r\n|\n|\r/`.
 
 ## Operational hazards
 
 Destructive-risk facts: [Uprava DANGER_FACTS.md](https://github.com/gasyoun/Uprava/blob/main/DANGER_FACTS.md)
-(org-private); public-safe subset in [AGENTS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/AGENTS.md)'s generated block.
+(org-private); public-safe subset in `AGENTS.md`'s generated block.
 
 ## Agent skills
 
@@ -160,7 +159,7 @@ Destructive-risk facts: [Uprava DANGER_FACTS.md](https://github.com/gasyoun/Upra
 
 ## Memory store
 
-Committed memory store at [`.claude/projects/Systema-Sanscriticum/memory/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/.claude/projects/Systema-Sanscriticum/memory);
+Committed memory store at `.claude/projects/Systema-Sanscriticum/memory/`;
 dangerous/durable facts go there, indexed in its `MEMORY.md` (`/danger-memory`).
 
 ## Repo guards
