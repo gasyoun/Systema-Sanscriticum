@@ -63,35 +63,24 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::BODY_END,
                 fn () => new HtmlString('
                     <style>
-                        /* 1. Починка картинок в самой форме (Основной экран) - ЭТО ОСТАВЛЯЕМ, оно работает */
-                        .fi-main img { max-height: 150px !important; width: auto !important; object-fit: contain !important; border-radius: 0.5rem; }
-                        
-                        /* 2. НОВАЯ, точечная починка Куратора (Медиатеки/Диалога) */
-                        
-                        /* Сначала вынуждаем сетку использовать Flexbox wrapping (как и раньше) */
-                        dialog .grid { 
-                            display: flex !important; 
-                            flex-wrap: wrap !important; 
-                            gap: 15px !important; 
-                            align-items: flex-start !important; 
-                        }
-                        
-                        /* ГЛАВНОЕ: Жестко ограничиваем размер *самой плитки* (контейнера картинки) */
-                        dialog .grid > * { 
-                            max-width: 150px !important; 
-                            max-height: 150px !important; 
-                            flex: 0 0 150px !important; /* Flex-grow: 0, Flex-shrink: 0, initial-size: 150px */
-                            aspect-ratio: 1/1 !important; /* Принудительно делаем плитку квадратной */
-                            overflow: hidden !important; 
-                            border-radius: 0.5rem; 
-                        }
-                        
-                        /* Делаем так, чтобы *сама картинка* занимала весь свой контейнер без искажений */
-                        dialog img {
-                            width: 100% !important;
-                            height: 100% !important;
-                            object-fit: contain !important; /* Keeps full image visible, respects aspect ratio */
-                        }
+                        /* 1. Превья поля CuratorPicker в формах: сохраняем исторический вид
+   (максимум 150px, contain) — но ТОЛЬКО внутри компонента пикера.
+   Якорь по DOM: обёртка div.curator-media-picker в
+   awcodes/filament-curator v3.7.10 (resources/views/components/forms/picker.blade.php).
+   Прежнее правило висело на .fi-main img и сжимало ВСЕ картинки админки:
+   обложку контент-календаря (пришлось глушить инлайн-!important в
+   ContentCalendarSlotResource), превью баннеров уроков, аватары бота.
+   Скоуп снят — эти элементы снова рендерятся по своему собственному CSS. */
+.curator-media-picker img { max-height: 150px !important; width: auto !important; object-fit: contain !important; border-radius: 0.5rem; }
+
+/* 2. Сетку медиатеки Curator НЕ трогаем. Модалка пикера — это
+   div.fi-modal.curator-panel: Filament v3.3.54 рендерит модалки как
+   role=dialog-див, а НЕ нативный <dialog>; сетка ul.curator-picker-grid
+   уже респонсивная (grid-cols-3 … 2xl:grid-cols-10), плитки li.aspect-square.
+   Прежние селекторы dialog .grid / dialog .grid > * / dialog img не совпадали
+   ни с одним элементом установленного DOM (нативного <dialog> нет ни в
+   Filament, ни в Curator, ни во вьюхах приложения) — удалены как мёртвые,
+   чтобы не сработали внезапно при появлении настоящего <dialog>. */
 
                         /* 3. Масштаб таблиц: кнопки x1 / x1.5 / x2 пропорционально ужимают
                            таблицы через CSS zoom (одна переменная --fi-tbl-zoom на :root).
