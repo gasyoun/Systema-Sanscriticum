@@ -178,6 +178,17 @@ trait SchedulesOpsAndMembership
         // (WATCHDOG_MONEY_SLI_DAILY_*/WATCHDOG_MONEY_SLI_HOURLY_*). Оба флага
         // (features.money_sli_synthetic_pay/_hourly_reconcile) default OFF —
         // включение в проде отдельный ops-шаг, см. DEPLOY_QUEUE.md.
+
+        // --- СВЕРКА «ОПЛАЧЕН, НО ДОСТУПА НЕТ» (инцидент 14577/14066) ---
+        // Ежедневный СУХОЙ прогон access:reconcile-course-user: paid-платежи
+        // (включая promise-grant) без строки в course_user. Записи не делает —
+        // только warning в логи при дрифте; запись — ручной --apply
+        // (идемпотентный грант каноническими методами Payment).
+        $schedule->command('access:reconcile-course-user')
+            ->dailyAt('06:20')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('reconcile-course-user');
     }
 
     /** club membership expiry/free lesson + PayPal fixed prices. */
