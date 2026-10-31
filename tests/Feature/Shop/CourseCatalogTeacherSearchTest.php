@@ -8,6 +8,7 @@ use App\Livewire\Shop\CourseCatalog;
 use App\Models\Course;
 use App\Models\Teacher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -41,5 +42,20 @@ class CourseCatalogTeacherSearchTest extends TestCase
             ->assertSee('Ранние санскритские рукописи')
             ->set('search', 'Гагарин')
             ->assertDontSee('Ранние санскритские рукописи');
+    }
+
+    /** @test */
+    public function search_matches_a_course_whose_main_teacher_fk_matches(): void
+    {
+        $teacher = Teacher::factory()->create(['name' => 'Леонов Максим Владимирович']);
+        $course = Course::factory()->create([
+            'title' => 'Ведийская литература (2026)',
+            'teacher_id' => $teacher->id,
+        ]);
+        $this->assertSame(0, DB::table('course_teacher')->count());
+
+        Livewire::test(CourseCatalog::class)
+            ->set('search', 'Леонов')
+            ->assertSee('Ведийская литература (2026)');
     }
 }
