@@ -138,6 +138,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CONTENT_CAL_TG_OPOVESHCHENIE` | optional | `''` | config/content_calendar.php:28 |
 | `CONTENT_CAL_TG_ORS` | optional | `''` | config/content_calendar.php:33 |
 | `CONTENT_CAL_TG_PUBLIC_USERNAME` | optional | `'samskrte'` | config/content_calendar.php:96 |
+| `CONTENT_CAL_TG_ROUTING_CHAT` | optional | `''` | config/content_calendar.php:118 |
 | `CONTENT_CAL_VK_INSTITUT` | optional | `0` | config/content_calendar.php:55<br>config/content_calendar.php:81 |
 | `CONTENT_CAL_VK_OPOVESHCHENIE` | optional | `0` | config/content_calendar.php:44<br>config/content_calendar.php:71 |
 | `CONTENT_CAL_VK_ORS` | optional | `0` | config/content_calendar.php:50<br>config/content_calendar.php:76 |

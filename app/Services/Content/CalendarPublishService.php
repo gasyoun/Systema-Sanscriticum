@@ -45,6 +45,10 @@ class CalendarPublishService
         $staleBefore = $now->copy()->subHours((int) config('content_calendar.max_lateness_hours', 24));
 
         foreach ($due as $slot) {
+            if (CalendarIngestRouting::isPending($slot)) {
+                continue; // ждёт выбора площадок в служебном чате
+            }
+
             if (blank($slot->meta['checklist_passed_at'] ?? null) && $slot->publish_at->lt($staleBefore)) {
                 // Протухший слот (автопилот стоял, площадок не было) не
                 // выстреливает пачкой старых постов — ждёт новую дату.

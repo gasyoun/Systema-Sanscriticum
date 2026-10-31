@@ -8,6 +8,7 @@ use App\Models\ContentCalendarPublication;
 use App\Models\ContentCalendarSlot;
 use App\Models\ContentCandidate;
 use App\Services\Access\TelegramAdminNotifier;
+use App\Services\Content\CalendarIngestRouting;
 use App\Services\Content\CalendarPublicationRunner;
 use App\Services\Content\CalendarPublishService;
 use Illuminate\Bus\Queueable;
@@ -61,6 +62,11 @@ class PublishCalendarSlotJob implements ShouldBeUnique, ShouldQueue
     ): void {
         $slot = ContentCalendarSlot::find($this->slotId);
         if ($slot === null || $slot->status !== ContentCalendarSlot::STATUS_SCHEDULED) {
+            return;
+        }
+
+        // Пост из TG-канала ждёт выбора площадок в служебном чате.
+        if (CalendarIngestRouting::isPending($slot)) {
             return;
         }
 
