@@ -6,6 +6,8 @@ namespace App\Services\Content;
 
 use App\Models\VkUserToken;
 use App\Services\Access\TelegramAdminNotifier;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -18,6 +20,12 @@ use RuntimeException;
  * старый refresh_token после этого мёртв. Поэтому у пары один владелец:
  * после import() Mac-агент vk-token-refresh должен быть выключен, иначе две
  * стороны будут по очереди инвалидировать друг друга.
+ *
+ * 31-10-2026: refresh под Cache::lock с перечитыванием пары (два refresh
+ * одним refresh_token — второй убивает пару), обрыв связи с id.vk.com — тоже
+ * отказ с уведомлением (VK мог успеть выдать новую пару, а мы её не получили),
+ * отозванный ключ (invalid_grant) — сразу «нужна переавторизация», успешный
+ * refresh пишется в лог (без значений) — чтобы было видно, когда пара умерла.
  *
  * Право смотрим по полю scope из ответа OAuth: account.getAppPermissions для
  * VK ID-токенов отдаёт неверный битмаск (проверено 22-10-2026).
@@ -64,6 +72,11 @@ class VkTokenManager
     /** Обновить, если пора. true — токен действующий после вызова. */
     public function refreshIfNeeded(): bool
     {
+        return Cache::lock('vk-user-token:refresh', 120)->block(60, fn (): bool => $this->refreshIfNeededLocked());
+    }
+
+    private function refreshIfNeededLocked(): bool
+    {
         $token = VkUserToken::current();
         if ($token === null) {
             return false;
@@ -85,7 +98,9 @@ class VkTokenManager
                 $this->notifier->notifyAdmins(
                     "⚠️ VK-токен кросспостинга не обновился: {$e->getMessage()}\n"
                     .($left > 0 ? "Текущий проживёт ещё ~{$left} мин." : 'Текущий уже истёк — VK-публикации стоят.')
-                    ."\nЕсли не пройдёт на следующем тике — нужна переавторизация и vk:token-import."
+                    ."\n".(self::isRevoked($e->getMessage())
+                        ? 'Ключ продления отозван VK — сам не восстановится: нужна переавторизация и vk:token-import (docs/CONTENT_CALENDAR_CROSSPOST.md).'
+                        : 'Если не пройдёт на следующем тике — нужна переавторизация и vk:token-import.')
                 );
             }
 
@@ -95,13 +110,17 @@ class VkTokenManager
 
     public function refresh(VkUserToken $token): void
     {
-        $response = Http::timeout(30)->asForm()->post(self::OAUTH_URL, array_filter([
-            'grant_type' => 'refresh_token',
-            'refresh_token' => (string) $token->refresh_token,
-            'client_id' => $token->client_id,
-            'device_id' => $token->device_id,
-            'state' => Str::random(32),
-        ], static fn ($v): bool => $v !== null && $v !== ''));
+        try {
+            $response = Http::connectTimeout(10)->timeout(60)->asForm()->post(self::OAUTH_URL, array_filter([
+                'grant_type' => 'refresh_token',
+                'refresh_token' => (string) $token->refresh_token,
+                'client_id' => $token->client_id,
+                'device_id' => $token->device_id,
+                'state' => Str::random(32),
+            ], static fn ($v): bool => $v !== null && $v !== ''));
+        } catch (ConnectionException $e) {
+            throw new RuntimeException('id.vk.com не ответил ('.$e->getMessage().')', 0, $e);
+        }
 
         $json = $response->json() ?? [];
         if (! $response->successful() || blank($json['access_token'] ?? null)) {
@@ -117,5 +136,16 @@ class VkTokenManager
             'refreshed_at' => now(),
             'last_error' => null,
         ])->save();
+
+        Log::info('VkTokenManager: токен обновлён', [
+            'expires_at' => $token->expires_at->toDateTimeString(),
+            'scope' => $token->scope,
+            'refresh_rotated' => isset($json['refresh_token']),
+        ]);
+    }
+
+    private static function isRevoked(string $error): bool
+    {
+        return str_contains($error, 'refresh_token is missing or invalid') || str_contains($error, 'invalid_grant');
     }
 }
