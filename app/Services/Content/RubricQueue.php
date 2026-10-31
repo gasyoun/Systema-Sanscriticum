@@ -57,6 +57,7 @@ class RubricQueue
             'publish_at' => $at,
             'slot_date' => $at->toDateString(),
             'body' => $rubric->applyPrefix($slot->body),
+            'destinations' => $rubric->destinationKeys(),
             'story_media_path' => $story['path'] ?? $slot->story_media_path,
         ])->save();
 

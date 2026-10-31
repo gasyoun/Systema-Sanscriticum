@@ -6,6 +6,7 @@ namespace Tests\Feature\Content;
 
 use App\Filament\Resources\ContentCalendarRubricResource;
 use App\Filament\Resources\ContentCalendarSlotResource;
+use App\Models\ContentCalendarPublication;
 use App\Models\ContentCalendarRubric;
 use App\Models\ContentCalendarSlot;
 use App\Models\User;
@@ -215,6 +216,32 @@ class ContentCalendarRubricTest extends TestCase
             ->assertHasNoFormErrors();
 
         $this->assertSame('2026-10-29 10:00', $slot->refresh()->publish_at->format('Y-m-d H:i'));
+    }
+
+    public function test_rubric_channels_change_reaches_its_unpublished_posts(): void
+    {
+        $this->schoolDestinations();
+        $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
+        $rubric = $this->rubric(['channels' => ['institut'], 'with_story' => false]);
+        $waiting = $this->rubricPost($rubric, '2026-10-30 18:00:00');
+        $waiting->forceFill(['destinations' => ['tg_institut']])->save();
+        $sent = $this->rubricPost($rubric, '2026-10-28 12:00:00', ContentCalendarSlot::STATUS_PUBLISHED);
+        $sent->forceFill(['destinations' => ['tg_institut']])->save();
+        ContentCalendarPublication::create([
+            'content_calendar_slot_id' => $sent->id,
+            'destination' => 'tg_institut',
+            'status' => ContentCalendarPublication::STATUS_PUBLISHED,
+            'attempts' => 1,
+        ]);
+
+        Livewire::test(ContentCalendarRubricResource\Pages\EditContentCalendarRubric::class, ['record' => $rubric->getRouteKey()])
+            ->set('data.channels', ['opoveshchenie', 'institut'])
+            ->call('save')
+            ->assertHasNoFormErrors()
+            ->assertNotified('Площадки рубрики применены к постам: 1');
+
+        $this->assertSame(['tg_opoveshchenie', 'tg_institut', 'vk_opoveshchenie'], $waiting->refresh()->destinations);
+        $this->assertSame(['tg_institut'], $sent->refresh()->destinations);
     }
 
     public function test_rubric_list_renders(): void
