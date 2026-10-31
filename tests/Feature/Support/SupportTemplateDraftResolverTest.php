@@ -153,6 +153,7 @@ class SupportTemplateDraftResolverTest extends TestCase
     {
         $this->enableSuggester();
         $this->enableLlm();
+        config(['features.support_template_drafts' => false]); // H7591: дефолт стал ON
         // features.support_template_drafts остаётся выключенным (дефолт).
         $this->bindTemplate(SupportAnswerSuggestion::CATEGORY_PAYMENT, 'Оплата — в кабинете: {pay_link}');
         $user = $this->studentWithTariff();
