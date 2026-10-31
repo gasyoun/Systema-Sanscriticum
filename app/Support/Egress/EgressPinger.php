@@ -6,7 +6,6 @@ namespace App\Support\Egress;
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
-use Throwable;
 
 /**
  * Доставка исходящих пульсов мониторинга (heartbeat:ping, cabinet:probe
