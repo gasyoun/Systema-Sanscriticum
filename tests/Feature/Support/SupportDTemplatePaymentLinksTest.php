@@ -7,8 +7,8 @@ namespace Tests\Feature\Support;
 use App\Models\MarketingSetting;
 use App\Models\MessageTemplate;
 use App\Models\SupportAnswerSuggestion;
-use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 /**
  * H7591: seeder binds exactly one active D-category template whose body
