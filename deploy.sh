@@ -311,6 +311,16 @@ ensure_views_dir_shared
 run_as_app_user php artisan optimize
 run_as_app_user php artisan filament:optimize 2>/dev/null || { warn "filament:optimize failed — Filament caches not warmed"; DEPLOY_SOFT_FAIL=1; }
 
+# ── 4b. LYW-паки (H7069) ─────────────────────────────────────────────────────
+# Девять zan1-паков закоммичены в resources/data/lesson_packs и читаются
+# оттуда (config('lyw.packs_path')). Если LYW_ENABLED=true, а у включённой
+# группы нет manifest.json/пак битый — это провальный деплой, а не тихие 404
+# студентам. На rollback команды может не быть в старом коммите — пропускаем.
+if [ -z "$ROLLBACK_TO" ]; then
+  say "LYW packs: php artisan lyw:verify-packs"
+  php artisan lyw:verify-packs || fail "LYW packs неполны при LYW_ENABLED=true — включённые группы остались бы без контента. Источник: resources/data/lesson_packs (tracked)"
+fi
+
 # Страховка: шаги ниже (cabinet:probe от www-data, guards:verify от root) могут
 # дособрать вьюхи. Chown идемпотентен и дёшев.
 chown_compiled_views
