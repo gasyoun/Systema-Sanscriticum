@@ -285,9 +285,11 @@ run green on Git Bash and on .92). Deployment options, in order of preference:
 
 | Option | What | Owning act |
 |---|---|---|
-| Estate SOCKS exit | a no-auth-on-tailnet `microsocks` listener on `magenta-duck` (100.87.185.5, already offers exit-node) or the SOCKS5-VPS foreign box; then copy the two patched scripts to `/usr/local/sbin/` and set `HEARTBEAT_PROXY=socks5h://…` in **both** `/etc/default` files | deploy the listener from an admin box (unreachable from .92 today), then apply |
-| Hoster ticket | evidence pack in the H7556 ops issue — filtering started 29-10 22:29Z, both boxes, only CF/Better Stack flows | human files it |
-| Wait | filters of this class have lifted within days before; the units self-heal with zero changes (the next delivered ping reopens the heartbeats) | none — then verify per the runbook |
+| ✅ **Estate SOCKS exit — CHOSEN & DEPLOYED 31-10-2026 ~08:33Z** (see deployment record below) | `magenta-duck` (100.87.185.5) as **tailscale exit node** for .92 + the already-existing tailnet-only `microsocks.service` on duck; scripts ping via .92's userspace-tailscaled socks | done by agent (H7556 residual); nothing further owed while the filter persists |
+| Hoster ticket | evidence pack in the H7556 ops issue — filtering started 29-10 22:29Z, both boxes, only CF/Better Stack flows | human files it (still worthwhile: the filter is the actual fault) |
+| Wait | filters of this class have lifted within days before; with the proxy deployed this is now background — when the filter lifts, the direct leg succeeds first and the proxy leg is not even tried | none — verify per the runbook |
+
+**Deployment record (31-10-2026, H7556 residual):** the `microsocks` listener turned out to already exist on `magenta-duck` — systemd `microsocks.service` ("SOCKS5 egress for the Mac AI lane, tailnet-only"), enabled since 23-10, bound `-i 100.87.185.5 -p 1080`. The real gap was elsewhere: **.92/.91 run tailscaled with `--tun=userspace-networking` (FLEET.md), so kernel TCP to 100.x is impossible by design** — `ip route get 100.87.185.5` leaves via eth0 and dies; that is why direct `HEARTBEAT_PROXY=socks5h://100.87.185.5:1080` cannot work from .92. Deployed shape: `tailscale set --exit-node=magenta-duck` on .92 (userspace mode — affects ONLY traffic through the local tailscaled proxy; kernel routes/rules verified byte-identical before/after) + `HEARTBEAT_PROXY=socks5h://127.0.0.1:1055` in both `/etc/default` files + the patched scripts installed to `/usr/local/sbin/` (originals kept as `*.bak-h7556-20261031T0833Z`). Chain: script → direct (15 s timeout, still filtered) → 127.0.0.1:1055 → tailnet → duck → Better Stack (~0.8 s, app-routed 404 on the fake-token probe). Canary OKs 08:33:52Z / 08:34:09Z. When the upstream filter lifts, the direct leg wins again and the exit-node setting becomes dormant (consider removing it then to keep egress minimal).
 
 Recovery / rollback runbook:
 
@@ -296,8 +298,12 @@ Recovery / rollback runbook:
 curl -4 -sS -o /dev/null -w '%{http_code}\n' --max-time 12 \
   https://uptime.betterstack.com/api/v1/heartbeat/zz-invalid-token-probe-zz
 
-# 2. (proxy option only) install patched scripts + set in BOTH /etc/default files:
-#    HEARTBEAT_PROXY=socks5h://100.87.185.5:1080
+# 2. Proxy option (as deployed 31-10-2026): patched scripts are in /usr/local/sbin/
+#    (originals *.bak-h7556-*), and BOTH /etc/default files carry:
+#    HEARTBEAT_PROXY=socks5h://127.0.0.1:1055
+#    (.92 userspace tailscaled socks; requires the exit node set on .92:
+#     tailscale set --exit-node=magenta-duck  — verify with
+#     tailscale status --json | grep -o '"ExitNodeStatus":{[^}]*"Online":[a-z]*')
 #    scripts are NOT manifest-managed — copy manually from scripts/server_guards/sbin/.
 
 # 3. One manual cycle, then watch the schedule:
@@ -309,6 +315,9 @@ journalctl -u cologne-cdsl-heartbeat -u samskrte-internals-heartbeat --since '-1
 
 # Rollback of the proxy option: delete the HEARTBEAT_PROXY line(s); behaviour
 # reverts to direct-only on the next run — no restart, no unit change.
+# Full rollback additionally: tailscale set --exit-node= (clears the exit node;
+# harmless to leave if you want the socks path available for other tools) and
+# restore the *.bak-h7556-* script/default copies.
 ```
 
 ---
