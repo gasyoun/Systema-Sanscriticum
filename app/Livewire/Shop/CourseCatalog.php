@@ -111,11 +111,13 @@ class CourseCatalog extends Component
             ->where('is_visible', true)
             ->when($this->search !== '', function ($q) {
                 $escaped = str_replace(['%', '_'], ['\%', '\_'], $this->search);
-                // Свободный текст матчит и название курса, и имя/фамилию преподавателя
-                // (H7589): «Леонов» находит его активные курсы и курсы в записи.
+                // Свободный текст матчит и название курса, и преподавателя (H7589):
+                // основной — через courses.teacher_id, со-преподы — через pivot
+                // course_teacher; тот же спариватель, что у фасета forTeacher.
                 $q->where(function ($qq) use ($escaped) {
                     $qq->where('title', 'LIKE', '%'.$escaped.'%')
-                        ->orWhereHas('teachers', fn ($t) => $t->where('teachers.name', 'LIKE', '%'.$escaped.'%'));
+                        ->orWhereHas('teachers', fn ($t) => $t->where('teachers.name', 'LIKE', '%'.$escaped.'%'))
+                        ->orWhereIn('teacher_id', Teacher::query()->where('name', 'LIKE', '%'.$escaped.'%')->select('id'));
                 });
             })
             ->when(! empty($this->categoryIds), function ($q) {
