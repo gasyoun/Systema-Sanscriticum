@@ -25,7 +25,16 @@ proxy=0
 for a in "$@"; do [ "$a" = "-x" ] && proxy=1; done
 case " $* " in
   *" -X POST "*)
-    [ "$proxy" = 1 ] && exit "${FAKE_PROXY_PING_EXIT:-7}"
+    if [ "$proxy" = 1 ]; then
+      # FAKE_PROXY_RETRY_OK: first proxy POST of the run fails (transient DNS
+      # churn shape), later ones succeed — exercises the hb_post retry.
+      if [ -n "${FAKE_PROXY_RETRY_OK:-}" ]; then
+        if [ -f "${FAKE_PROXY_STATE:?}" ]; then exit 0; fi
+        : > "${FAKE_PROXY_STATE:?}"
+        exit "${FAKE_PROXY_PING_EXIT:-7}"
+      fi
+      exit "${FAKE_PROXY_PING_EXIT:-7}"
+    fi
     exit "${FAKE_PING_EXIT:-0}"
     ;;
   *"%{http_code}"*) echo "${FAKE_SITE_CODE:-200}"; exit 0 ;;
@@ -76,14 +85,18 @@ proxy_posts()   { grep -c -- " -x " "$LOG" 2>/dev/null || true; }
 
 run_cologne() {
   : > "$LOG"
-  env PATH="$TMP/bin:$PATH" FAKE_CURL_LOG="$LOG" COLOGNE_HEARTBEAT_URL="http://hb.invalid/api/v1/heartbeat/T" \
+  rm -f "$TMP/proxy-state"
+  env PATH="$TMP/bin:$PATH" FAKE_CURL_LOG="$LOG" FAKE_PROXY_STATE="$TMP/proxy-state" \
+    COLOGNE_HEARTBEAT_URL="http://hb.invalid/api/v1/heartbeat/T" \
     COLOGNE_CHECK_URL="http://check.invalid/" HEARTBEAT_PROXY="${HEARTBEAT_PROXY:-}" \
     bash "$TMP/cologne.sh" 2>&1
 }
 
 run_internals() {
   : > "$LOG"
-  env PATH="$TMP/bin:$PATH" FAKE_CURL_LOG="$LOG" INTERNALS_HEARTBEAT_URL="http://hb.invalid/api/v1/heartbeat/T" \
+  rm -f "$TMP/proxy-state"
+  env PATH="$TMP/bin:$PATH" FAKE_CURL_LOG="$LOG" FAKE_PROXY_STATE="$TMP/proxy-state" \
+    INTERNALS_HEARTBEAT_URL="http://hb.invalid/api/v1/heartbeat/T" \
     HEARTBEAT_PROXY="${HEARTBEAT_PROXY:-}" \
     bash "$TMP/internals.sh" 2>&1
 }
@@ -133,8 +146,14 @@ check "cologne proxy fallback ok"       0 "OK:"                            2 0 1
 
 FAKE_PROXY_PING_EXIT=7; export FAKE_PROXY_PING_EXIT
 got_out=$(run_cologne); got_exit=$?
-check "cologne proxy dead too"          1 "FAIL: heartbeat ping failed"    2 2 2
-unset FAKE_PING_EXIT FAKE_PROXY_PING_EXIT HEARTBEAT_PROXY
+check "cologne proxy dead too"          1 "FAIL: heartbeat ping failed"    3 3 4
+unset FAKE_PING_EXIT FAKE_PROXY_PING_EXIT
+
+FAKE_PING_EXIT=7; FAKE_PROXY_PING_EXIT=7; FAKE_PROXY_RETRY_OK=1
+export FAKE_PING_EXIT FAKE_PROXY_PING_EXIT FAKE_PROXY_RETRY_OK
+got_out=$(run_cologne); got_exit=$?
+check "cologne proxy transient then ok" 0 "OK:"                            3 0 2
+unset FAKE_PING_EXIT FAKE_PROXY_PING_EXIT FAKE_PROXY_RETRY_OK HEARTBEAT_PROXY
 
 # --- internals ---------------------------------------------------------------
 got_out=$(run_internals); got_exit=$?
@@ -159,6 +178,13 @@ export HEARTBEAT_PROXY FAKE_PROXY_PING_EXIT
 got_out=$(run_internals); got_exit=$?
 check "internals proxy fallback ok"     0 "OK:"                            2 0 1
 unset FAKE_PING_EXIT FAKE_PROXY_PING_EXIT HEARTBEAT_PROXY
+
+FAKE_PING_EXIT=7; FAKE_PROXY_PING_EXIT=7; FAKE_PROXY_RETRY_OK=1
+export FAKE_PING_EXIT FAKE_PROXY_PING_EXIT FAKE_PROXY_RETRY_OK
+HEARTBEAT_PROXY="socks5h://127.0.0.1:1080"; export HEARTBEAT_PROXY
+got_out=$(run_internals); got_exit=$?
+check "internals proxy transient then ok" 0 "OK:"                           3 0 2
+unset FAKE_PING_EXIT FAKE_PROXY_PING_EXIT FAKE_PROXY_RETRY_OK HEARTBEAT_PROXY
 
 if [ "$FAIL" = 0 ]; then echo "ALL PASS"; else echo "FIXTURES FAILED"; fi
 exit "$FAIL"

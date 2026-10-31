@@ -28,8 +28,12 @@ HEARTBEAT_PROXY="${HEARTBEAT_PROXY:-}"
 
 hb_post() {
   # $1 = full ping URL, $2 = body. Direct first; proxy fallback only if set.
+  # Proxy leg retries once: the userspace-tailscaled socks DNS lookup has rare
+  # sub-5s timeouts during tailnet path churn (measured 31-10-2026 08:44:19Z,
+  # journalctl -u tailscaled «lookup uptime.betterstack.com: i/o timeout»).
   curl -fsS -m 15 -X POST "$1" --data-binary "$2" >/dev/null 2>&1 && return 0
   [ -n "$HEARTBEAT_PROXY" ] || return 1
+  curl -fsS -m 20 -x "$HEARTBEAT_PROXY" -X POST "$1" --data-binary "$2" >/dev/null 2>&1 && return 0
   curl -fsS -m 20 -x "$HEARTBEAT_PROXY" -X POST "$1" --data-binary "$2" >/dev/null 2>&1
 }
 
