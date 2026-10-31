@@ -169,7 +169,8 @@ return [
      | байт-в-байт как до H1838, даже если привязки уже расставлены в админке.
      | Включение — SUPPORT_TEMPLATE_DRAFTS=true + config:cache после ревью.
      */
-    'support_template_drafts' => (bool) env('SUPPORT_TEMPLATE_DRAFTS', false),
+    // H7591: суггестер-полоса (черновик-подсказка куратору по шаблону) — on.
+    'support_template_drafts' => (bool) env('SUPPORT_TEMPLATE_DRAFTS', true),
 
     /*
      | FAQ RAG for Helpdesk suggester (H2448 Track B): BM25 top-3 chunks from
@@ -345,7 +346,9 @@ return [
      | разрешены владельцем на срок испытания; откат — false + config:cache,
      | либо auto_reply_enabled=false на аккаунте.
      */
-    'support_auto_reply_templates' => (bool) env('SUPPORT_AUTO_REPLY_TEMPLATES', false),
+    // H7591 (рулинг MG 01-11-2026): включено по умолчанию — бот отвечает
+    // «как оплатить» шаблоном без человека; откат: SUPPORT_AUTO_REPLY_TEMPLATES=0.
+    'support_auto_reply_templates' => (bool) env('SUPPORT_AUTO_REPLY_TEMPLATES', true),
 
     /*
      | H3380: ack «приняли, ответим» когда автоответить нечем. Не чаще одного
