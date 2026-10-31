@@ -10,6 +10,7 @@ use App\Models\ContentCalendarPublication;
 use App\Models\ContentCalendarRubric;
 use App\Models\ContentCalendarSlot;
 use App\Services\Content\PostFormatter;
+use App\Services\Content\RubricQueue;
 use App\Support\RoleGate;
 use Closure;
 use Filament\Forms;
@@ -394,6 +395,20 @@ class ContentCalendarSlotResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('enqueue')
+                    ->label('В очередь')
+                    ->icon('heroicon-o-queue-list')
+                    ->color('success')
+                    ->visible(fn (ContentCalendarSlot $record): bool => RubricQueue::canEnqueue($record))
+                    ->requiresConfirmation()
+                    ->modalDescription('Пост встанет на ближайший свободный выход рубрики и будет опубликован автоматически.')
+                    ->action(function (ContentCalendarSlot $record): void {
+                        $result = app(RubricQueue::class)->enqueue($record);
+                        $note = Notification::make()
+                            ->title($result['ok'] ? 'Пост в очереди: '.$result['at']?->format('d.m.Y H:i') : 'Не поставлен в очередь')
+                            ->body($result['note']);
+                        ($result['ok'] ? $note->success() : $note->danger())->send();
+                    }),
                 Tables\Actions\Action::make('keep')
                     ->label('Keep')
                     ->icon('heroicon-o-check')
@@ -420,6 +435,33 @@ class ContentCalendarSlotResource extends Resource
                     }),
             ])
             ->bulkActions([
+                Tables\Actions\BulkAction::make('enqueue')
+                    ->label('В очередь рубрики')
+                    ->icon('heroicon-o-queue-list')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalDescription('Черновики рубрик встанут на ближайшие свободные выходы своих рубрик — по порядку даты слота. Остальные выбранные слоты не меняются.')
+                    ->action(function (Collection $records): void {
+                        $queue = app(RubricQueue::class);
+                        $done = 0;
+                        $notes = [];
+                        foreach ($records->sortBy([['slot_date', 'asc'], ['id', 'asc']]) as $record) {
+                            /** @var ContentCalendarSlot $record */
+                            if (! RubricQueue::canEnqueue($record)) {
+                                continue;
+                            }
+                            $result = $queue->enqueue($record);
+                            $done += $result['ok'] ? 1 : 0;
+                            if ($result['note'] !== null) {
+                                $notes[] = $result['note'];
+                            }
+                        }
+                        Notification::make()->title("Поставлено в очередь: {$done}")
+                            ->body($notes === [] ? null : implode("
+", array_unique($notes)))
+                            ->success()->send();
+                    })
+                    ->deselectRecordsAfterCompletion(),
                 Tables\Actions\BulkAction::make('keep')
                     ->label('Keep')
                     ->icon('heroicon-o-check')
