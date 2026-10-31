@@ -219,6 +219,16 @@ ssh mac 'grep -E "^VK_(APP_ID|ACCESS_TOKEN|REFRESH_TOKEN|DEVICE_ID)=" ~/.claude/
 Если токен умер (Mac/прод молчали дольше часа, refresh отозван) — заново
 авторизоваться (`vk_token_setup.py --flow vkid`) и повторить `vk:token-import`.
 
+_31-10-2026._ Ключ продления одноразовый: если им воспользовался кто-то ещё
+(копия в `vk_poll.env` на Mac/ПК, повторный импорт той же пары, новая
+авторизация приложения) или ответ id.vk.com потерялся по дороге — пара мертва,
+и refresh отвечает `refresh_token is missing or invalid`. Поэтому после импорта
+`VK_ACCESS_TOKEN`/`VK_REFRESH_TOKEN` в локальных `vk_poll.env` очищаются.
+`vk:token-refresh` работает под блокировкой, обрыв связи и отозванный ключ
+сразу сообщает админам («сам не восстановится» = нужна переавторизация),
+каждый успешный refresh пишется в лог (`VkTokenManager: токен обновлён`,
+без значений).
+
 ## Включение
 
 1. `.env` на проде: `CONTENT_CAL_*`, `CONTENT_CAL_TG_BOT_TOKEN`,

@@ -8,6 +8,7 @@ use App\Models\VkUserToken;
 use App\Services\Access\TelegramAdminNotifier;
 use App\Services\Content\VkTokenManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -112,6 +113,28 @@ class VkTokenManagerTest extends TestCase
         Carbon::setTestNow(now()->addMinutes(25));
         $this->artisan('vk:token-refresh')->assertFailed();
         $this->assertNull(VkUserToken::activeAccessToken());
+    }
+
+    public function test_revoked_refresh_key_asks_for_reauthorization_at_once(): void
+    {
+        $this->fakeOauth(400, ['error' => 'invalid_grant', 'error_description' => 'refresh_token is missing or invalid']);
+        VkUserToken::create(['client_id' => '1', 'access_token' => 'a', 'refresh_token' => 'r', 'expires_at' => now()->addMinutes(30)]);
+
+        $this->artisan('vk:token-refresh')->assertSuccessful();
+
+        $this->assertCount(1, $this->notified);
+        $this->assertStringContainsString('сам не восстановится', $this->notified[0]);
+    }
+
+    public function test_lost_connection_is_reported_not_crashed(): void
+    {
+        Http::fake(fn () => throw new ConnectionException('cURL error 28: timed out'));
+        VkUserToken::create(['client_id' => '1', 'access_token' => 'a', 'refresh_token' => 'r', 'expires_at' => now()->addMinutes(30)]);
+
+        $this->artisan('vk:token-refresh')->assertSuccessful();
+
+        $this->assertStringContainsString('id.vk.com не ответил', VkUserToken::current()->last_error);
+        $this->assertCount(1, $this->notified);
     }
 
     public function test_refresh_is_noop_without_imported_token(): void
