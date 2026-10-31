@@ -43,6 +43,7 @@ class CourseCatalogTeacherSearchTest extends TestCase
             ->set('search', 'Гагарин')
             ->assertDontSee('Ранние санскритские рукописи');
     }
+
     /** @test */
     public function search_matches_a_course_whose_main_teacher_fk_matches(): void
     {
