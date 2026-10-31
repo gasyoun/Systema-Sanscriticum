@@ -266,6 +266,29 @@ Measured 31-10-2026 via the API token (ZCode `GLM-5.3-Flash`, direct MG chat; to
   native Telegram integration (UI, MG's TG auth); **(c)** public authenticated route to the
   sink (nginx + shared secret — the sink has no auth, do not expose it as-is).
 
+**RULING 31-10-2026 (MG, direct chat): option (b) — Better Stack native Telegram
+integration, wired in the UI.** Agent-side prep is complete (this § is the state of
+record). What remains is MG's own Telegram authorization, which no API token can do:
+
+1. Open `https://uptime.betterstack.com/team/t576984` from a box where the UI loads
+   (Windows-msi and Mac both reach the domain; **not** .92/.91 — RU-upstream Cloudflare
+   filter, H7556; magenta-duck exit node is the proven fallback).
+2. **Integrations → Add integration → Telegram** → connect via the Better Stack bot
+   (Telegram opens; press Start/approve). Expected to work on the free tier — escalation
+   policies are the gated piece (403), basic alerting integrations are not. If the UI
+   gates it too, that single click settles (a)-vs-(b) definitively.
+3. Attach the integration to **all 4 HTTP monitors + 6 heartbeats** (or "all current and
+   future monitors"), keeping email as the second channel.
+4. **Receipt drill (H4195 pattern):** fire `/fail` on heartbeat **477230**
+   (`samskrte heartbeat:ping`, 5-min period — the next scheduled OK ping auto-resolves
+   the incident, so the drill window is <5 min):
+   `ssh root@193.232.229.92 "grep -oP '^HEARTBEAT_PING_URL=\K.*' /var/www/html/.env | xargs -I{} curl -s -m 15 {}/fail"`
+   Expect: Better Stack incident + TG message from the Better Stack bot within ~a minute.
+
+Until the drill receipt lands, **email remains the only proven Better Stack → MG leg**.
+The `hermes-alert-sink` `betterstack` adapter stays idle as fallback (no public route —
+deliberately).
+
 Until one of (a)–(c) lands, **email is the only Better Stack → MG leg**; TG coverage of
 infra alerts comes from the other producers (beszel relay, lane pages), not from Better
 Stack.
