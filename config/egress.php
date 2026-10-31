@@ -11,9 +11,10 @@ return [
     |
     | Мотив. С 29-10-2026 22:29Z RU-апстрим режет TLS-потоки к Cloudflare-IP
     | Better Stack (172.66.0.0/13) с .92/.91 — per-flow SNI-фильтр (H7556,
-    | issue #3632). Исходящие пульсы приложения молчат: heartbeat:ping (*/5),
-    | cabinet:probe healthchecks-нога (*/15), money:sli пара — «Пинг не ушел:
-    | cURL error 28». Системд-ноги уже обведены (exit-node magenta-duck +
+    | issue #3632). Исходящие пульсы приложения молчат: heartbeat:ping
+    | (каждые 5 мин), healthchecks-нога cabinet:probe (каждые 15 мин),
+    | money:sli пара — «Пинг не ушел: cURL error 28». Системд-ноги уже
+    | обведены (exit-node magenta-duck +
     | HEARTBEAT_PROXY в /etc/default, PR #3633); здесь — та же обводка для
     | app-крона.
     |
