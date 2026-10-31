@@ -1,14 +1,12 @@
 name: CodeQL
 
+# DISPATCH-ONLY since 30-10-2026: every CodeQL run on this PRIVATE repo
+# activates Advanced Security usage billing (~$49 x each active committer
+# per month) — that was the bulk of the $210 October bill. PHP SAST coverage
+# continues via semgrep.yml (free minutes). Run manually for deep scans and
+# expect the GHAS line item for that month.
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-  schedule:
-    - cron: '0 3 * * 1'
+  workflow_dispatch: {}
 
 permissions:
   actions: read
