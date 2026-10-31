@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Models\ContentCalendarRubric;
 use App\Models\ContentCalendarSlot;
 use App\Services\Access\TelegramAdminNotifier;
+use App\Services\Content\RubricQueue;
 use App\Services\Content\RubricScheduler;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
@@ -57,7 +58,11 @@ class RubricGapsCommand extends Command
                 continue;
             }
 
-            $notifier->notifyAdmins("Календарь контента: в рубрике «{$rubric->name}» нет поста на {$gap->format('d.m H:i')} МСК — выход будет пропущен. Добавьте пост в рубрику.");
+            $drafts = $rubric->slots()->whereIn('status', RubricQueue::ENQUEUEABLE)->count();
+            $notifier->notifyAdmins("Календарь контента: в рубрике «{$rubric->name}» нет поста на {$gap->format('d.m H:i')} МСК — выход будет пропущен. "
+                .($drafts > 0
+                    ? "В рубрике {$drafts} черновиков: «Рубрики календаря» → «Черновики в очередь»."
+                    : 'Добавьте пост в рубрику.'));
             $rubric->forceFill(['last_empty_alert_for' => $gap])->save();
             $alerts++;
         }
