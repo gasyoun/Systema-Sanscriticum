@@ -17,6 +17,7 @@ use App\Services\CuratorNotifier;
 use App\Services\HomeworkService;
 use App\Services\Schedule\TextbookScale;
 use App\Support\Deploy\DeployDriftInspector;
+use App\Support\Egress\EgressPinger;
 use App\Support\Roles;
 use App\Support\ServerGuards\CabinetProbeAlertState;
 use App\Support\ServerGuards\CompiledViewsOwnershipInspector;
@@ -966,14 +967,16 @@ class ProbeCabinetHealth extends Command
         }
 
         try {
-            $response = Http::timeout((int) config('cabinet_probe.timeout', 15))
-                ->withBody($body, 'text/plain')
-                ->post($target);
+            // H7565: общий транспорт пульсов (config/egress.php) — прямая нога,
+            // при транспортном отказе нога через EGRESS_PING_PROXY.
+            $delivery = app(EgressPinger::class)->send($target, $body, (int) config('cabinet_probe.timeout', 15));
 
-            if ($response->successful()) {
-                $this->info('healthchecks: '.$target);
+            if ($delivery->delivered) {
+                $this->info('healthchecks: '.$target.($delivery->via === 'proxy' ? ' (нога прокси)' : ''));
+            } elseif ($delivery->status !== null) {
+                Log::warning('cabinet:probe healthchecks non-2xx', ['status' => $delivery->status, 'via' => $delivery->via]);
             } else {
-                Log::warning('cabinet:probe healthchecks non-2xx', ['status' => $response->status()]);
+                Log::warning('cabinet:probe healthchecks unreachable', ['error' => $delivery->detail, 'via' => $delivery->via]);
             }
         } catch (Throwable $e) {
             Log::warning('cabinet:probe healthchecks unreachable', ['error' => $e->getMessage()]);
