@@ -152,8 +152,7 @@ class ContentCalendarRubricResource extends Resource
                     ->action(function (ContentCalendarRubric $record): void {
                         $result = app(RubricQueue::class)->enqueueDrafts($record);
                         Notification::make()->title("Поставлено в очередь: {$result['done']}")
-                            ->body($result['notes'] === [] ? null : implode("
-", $result['notes']))
+                            ->body($result['notes'] === [] ? null : implode("\n", $result['notes']))
                             ->success()->send();
                     }),
                 Tables\Actions\Action::make('reflow')

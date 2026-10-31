@@ -457,8 +457,7 @@ class ContentCalendarSlotResource extends Resource
                             }
                         }
                         Notification::make()->title("Поставлено в очередь: {$done}")
-                            ->body($notes === [] ? null : implode("
-", array_unique($notes)))
+                            ->body($notes === [] ? null : implode("\n", array_unique($notes)))
                             ->success()->send();
                     })
                     ->deselectRecordsAfterCompletion(),
