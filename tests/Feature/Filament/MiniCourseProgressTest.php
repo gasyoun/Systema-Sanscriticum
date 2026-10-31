@@ -6,6 +6,7 @@ namespace Tests\Feature\Filament;
 
 use App\Filament\Pages\MiniCourseProgress;
 use App\Models\Course;
+use App\Models\CourseBlock;
 use App\Models\CourseQuiz;
 use App\Models\CourseQuizAttempt;
 use App\Models\CourseQuizQuestion;
@@ -207,5 +208,119 @@ class MiniCourseProgressTest extends TestCase
 
         $this->assertStringStartsWith("\xEF\xBB\xBF", $csv);
         $this->assertStringContainsString('"Экспортная Анна";anna@example.com', $csv);
+    }
+
+    /** @test */
+    public function export_includes_messenger_contacts_and_final_result(): void
+    {
+        $student = User::factory()->create([
+            'name' => 'Контактная',
+            'email' => 'contact@example.com',
+            'telegram_id' => 111222,
+            'telegram_username' => 'kontaktnaya',
+            'vk_id' => 333444,
+        ]);
+        $unbound = User::factory()->create(['name' => 'Без мессенджеров', 'email' => 'none@example.com']);
+        $this->enroll($student);
+        $this->enroll($unbound);
+        $this->attemptFinal($student, passed: true);
+
+        $component = Livewire::actingAs($this->admin)
+            ->test(MiniCourseProgress::class)
+            ->callAction('export');
+
+        $csv = base64_decode($component->effects['download']['content']);
+
+        $this->assertStringContainsString('Студент;Email;Telegram;VK;', $csv);
+        $this->assertStringContainsString('Контактная;contact@example.com;https://t.me/kontaktnaya;https://vk.com/id333444;', $csv);
+        $this->assertStringContainsString('"зачёт 8/10"', $csv);
+        $this->assertStringContainsString('none@example.com;—;—;', $csv);
+    }
+
+    /** @test */
+    public function final_filter_splits_passed_from_everyone_else(): void
+    {
+        $passed = User::factory()->create(['name' => 'Сдавшая']);
+        $retried = User::factory()->create(['name' => 'Пересдавшая']);
+        $failed = User::factory()->create(['name' => 'Несдавшая']);
+        $noAttempts = User::factory()->create(['name' => 'Без попыток']);
+
+        foreach ([$passed, $retried, $failed, $noAttempts] as $student) {
+            $this->enroll($student);
+        }
+
+        $this->attemptFinal($passed, passed: true);
+        $this->attemptFinal($retried, passed: false);
+        $this->attemptFinal($retried, passed: true);
+        $this->attemptFinal($failed, passed: false);
+
+        Livewire::actingAs($this->admin)
+            ->test(MiniCourseProgress::class)
+            ->filterTable('final', 'passed')
+            ->assertCanSeeTableRecords([$passed, $retried])
+            ->assertCanNotSeeTableRecords([$failed, $noAttempts])
+            ->filterTable('final', 'not_passed')
+            ->assertCanSeeTableRecords([$failed, $noAttempts])
+            ->assertCanNotSeeTableRecords([$passed, $retried]);
+    }
+
+    /** @test */
+    public function promo_filter_splits_issued_redeemed_and_none(): void
+    {
+        $issued = User::factory()->create(['name' => 'С промокодом']);
+        $redeemed = User::factory()->create(['name' => 'Оплатившая']);
+        $none = User::factory()->create(['name' => 'Без промокода']);
+
+        foreach ([$issued, $redeemed, $none] as $student) {
+            $this->enroll($student);
+        }
+
+        $this->issuePromo($issued);
+        Payment::create([
+            'user_id' => $redeemed->id, 'course_id' => $this->grammarCourse->id,
+            'tariff' => 'full', 'amount' => 3000, 'status' => 'paid',
+            'promo_code_id' => $this->issuePromo($redeemed)->id,
+        ]);
+
+        Livewire::actingAs($this->admin)
+            ->test(MiniCourseProgress::class)
+            ->filterTable('promo', 'issued')
+            ->assertCanSeeTableRecords([$issued, $redeemed])
+            ->assertCanNotSeeTableRecords([$none])
+            ->filterTable('promo', 'redeemed')
+            ->assertCanSeeTableRecords([$redeemed])
+            ->assertCanNotSeeTableRecords([$issued, $none])
+            ->filterTable('promo', 'none')
+            ->assertCanSeeTableRecords([$none])
+            ->assertCanNotSeeTableRecords([$issued, $redeemed]);
+    }
+
+    /** Попытка итогового теста: квиз блока 6, блоки этапов — 1 и 2, как в сидере курса. */
+    private function attemptFinal(User $student, bool $passed): void
+    {
+        foreach ([1, 2] as $number) {
+            CourseBlock::firstOrCreate(
+                ['course_id' => $this->course->id, 'number' => $number],
+                ['title' => 'Этап '.$number, 'is_active' => true],
+            );
+        }
+
+        $quiz = CourseQuiz::firstOrCreate(
+            ['course_id' => $this->course->id, 'block_number' => 6],
+            ['title' => 'Итоговый тест', 'pass_score' => 60, 'is_active' => true],
+        );
+
+        CourseQuizAttempt::create([
+            'user_id' => $student->id, 'course_quiz_id' => $quiz->id,
+            'score' => $passed ? 8 : 3, 'total' => 10, 'passed' => $passed, 'answers' => [],
+        ]);
+    }
+
+    private function issuePromo(User $student): PromoCode
+    {
+        return PromoCode::create([
+            'code' => 'PREP50-'.$student->id, 'type' => 'percent', 'value' => 50,
+            'course_id' => $this->grammarCourse->id, 'usage_limit' => 1, 'is_active' => true,
+        ]);
     }
 }

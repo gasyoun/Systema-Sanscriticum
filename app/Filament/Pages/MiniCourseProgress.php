@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Models\Course;
+use App\Models\Payment;
+use App\Models\PromoCode;
 use App\Models\User;
 use App\Support\MiniCourseProgress as MiniCourseProgressData;
 use App\Support\RoleGate;
@@ -22,6 +24,7 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -187,7 +190,11 @@ class MiniCourseProgress extends Page implements HasTable
                             return;
                         }
 
-                        $query->whereExists($this->finalSubquery($value === 'passed'));
+                        // «Не сдан» — нет ни одной зачётной попытки: сюда входят и те,
+                        // кто не приступал к финалу.
+                        $value === 'passed'
+                            ? $query->whereExists($this->finalPassedSubquery())
+                            : $query->whereNotExists($this->finalPassedSubquery());
                     }),
                 SelectFilter::make('promo')
                     ->label('Промокод грамматики')
@@ -204,24 +211,19 @@ class MiniCourseProgress extends Page implements HasTable
 
                         $prefix = (string) config('mini_courses.promo_code_prefix', 'PREP50');
 
-                        $query->whereExists(function ($q) use ($prefix, $value): void {
-                            $q->from('promo_codes')
-                                ->whereColumn('promo_codes.code', \DB::raw("CONCAT('".$prefix."-', users.id)"))
-                                ->when($value === 'redeemed', fn ($qq) => $qq->whereExists(function ($qp) {
-                                    $qp->from('payments')
-                                        ->whereColumn('payments.promo_code_id', 'promo_codes.id')
-                                        ->where('payments.status', 'paid');
-                                }))
-                                ->when($value === 'none', fn ($qq) => $qq->where('promo_codes.id', 0));
-                        }, $value !== 'none');
+                        // Код детерминирован (PREP50-{user_id}): id владельца — в самом коде.
+                        $promoUserIds = PromoCode::query()
+                            ->where('code', 'like', $prefix.'-%')
+                            ->when($value === 'redeemed', fn ($q) => $q->whereIn(
+                                'id',
+                                Payment::query()->paid()->whereNotNull('promo_code_id')->select('promo_code_id'),
+                            ))
+                            ->pluck('code')
+                            ->map(fn (string $code): int => (int) Str::after($code, $prefix.'-'));
 
-                        if ($value === 'none') {
-                            $query->whereNotExists(function ($q) use ($prefix): void {
-                                $q->select(\DB::raw(1))
-                                    ->from('promo_codes')
-                                    ->whereColumn('promo_codes.code', \DB::raw("CONCAT('".$prefix."-', users.id)"));
-                            });
-                        }
+                        $value === 'none'
+                            ? $query->whereNotIn('users.id', $promoUserIds)
+                            : $query->whereIn('users.id', $promoUserIds);
                     }),
                 TernaryFilter::make('has_homework')
                     ->label('Есть сданная домашка')
@@ -319,9 +321,9 @@ class MiniCourseProgress extends Page implements HasTable
         return '<span class="font-mono" style="font-weight:700">'.$row->promo_code.'</span>';
     }
 
-    private function finalSubquery(bool $passed): \Closure
+    private function finalPassedSubquery(): \Closure
     {
-        return function ($q) use ($passed): void {
+        return function ($q): void {
             $q->from('course_quiz_attempts')
                 ->join('course_quizzes', 'course_quizzes.id', '=', 'course_quiz_attempts.course_quiz_id')
                 ->whereColumn('course_quiz_attempts.user_id', 'users.id')
@@ -331,11 +333,11 @@ class MiniCourseProgress extends Page implements HasTable
                         ->from('course_blocks')
                         ->where('course_blocks.course_id', MiniCourseProgressData::course()?->id ?? 0);
                 })
-                ->when($passed, fn ($qq) => $qq->where('course_quiz_attempts.passed', true));
+                ->where('course_quiz_attempts.passed', true);
         };
     }
 
-    /** CSV для рекламного отдела: те же колонки, что в таблице. */
+    /** CSV для рекламного отдела и кураторов: колонки таблицы плюс контакты в мессенджерах. */
     private function exportCsv(): StreamedResponse
     {
         $courseId = MiniCourseProgressData::course()?->id ?? 0;
@@ -346,7 +348,7 @@ class MiniCourseProgress extends Page implements HasTable
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM для Excel
             fputcsv($out, [
-                'Студент', 'Email', 'Источник', 'Регистрация', 'Записан',
+                'Студент', 'Email', 'Telegram', 'VK', 'Источник', 'Регистрация', 'Записан',
                 'Уроки', 'Этап 1', 'Этап 2', 'Этап 3', 'Этап 4', 'Этап 5',
                 'Финал', 'ДЗ принято/всего', 'Промокод', 'Промокод использован',
             ], ';');
@@ -361,6 +363,8 @@ class MiniCourseProgress extends Page implements HasTable
                 fputcsv($out, [
                     $row->name,
                     $row->email,
+                    $row->telegram ?? '—',
+                    $row->vk ?? '—',
                     $row->signup_source,
                     optional($row->registered_at)->format('Y-m-d'),
                     optional($row->enrolled_at)->format('Y-m-d'),
