@@ -17,6 +17,7 @@ use App\Models\PromoCode;
 use App\Models\User;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -187,5 +188,24 @@ class MiniCourseProgressTest extends TestCase
         Livewire::actingAs($this->admin)
             ->test(MiniCourseProgress::class)
             ->assertActionVisible('export');
+    }
+
+    /** @test */
+    public function export_action_downloads_csv_with_enrolled_students(): void
+    {
+        Carbon::setTestNow('2026-10-31 12:00:00');
+
+        $student = User::factory()->create(['name' => 'Экспортная Анна', 'email' => 'anna@example.com']);
+        $this->enroll($student);
+
+        $component = Livewire::actingAs($this->admin)
+            ->test(MiniCourseProgress::class)
+            ->callAction('export')
+            ->assertFileDownloaded('mini-course-progress-2026-10-31.csv');
+
+        $csv = base64_decode($component->effects['download']['content']);
+
+        $this->assertStringStartsWith("\xEF\xBB\xBF", $csv);
+        $this->assertStringContainsString('"Экспортная Анна";anna@example.com', $csv);
     }
 }

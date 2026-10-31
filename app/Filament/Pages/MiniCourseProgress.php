@@ -339,7 +339,7 @@ class MiniCourseProgress extends Page implements HasTable
     private function exportCsv(): StreamedResponse
     {
         $courseId = MiniCourseProgressData::course()?->id ?? 0;
-        $rows = MiniCourseProgress::rows($courseId);
+        $rows = MiniCourseProgressData::rows($courseId);
         $filename = 'mini-course-progress-'.now()->format('Y-m-d').'.csv';
 
         return response()->streamDownload(function () use ($rows): void {
