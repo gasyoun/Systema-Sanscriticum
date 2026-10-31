@@ -241,6 +241,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `ECON_PAYBACK_RED` | optional | `9.0` | config/unit_economics.php:37 |
 | `ECON_RETENTION_HORIZON` | optional | `12` | config/unit_economics.php:24 |
 | `ECON_USN_PCT` | optional | `6.0` | config/economics.php:16 |
+| `EGRESS_PING_PROXY` | optional | `''` | config/egress.php:52 |
 | `EMAIL_CAMPAIGNS` | optional | `false` | config/features.php:956 |
 | `ENROLL_PILOT_TELEGRAM_IDS` | optional | `''` | config/features.php:2098 |
 | `EXCHANGERATE_HOST_KEY` | required | `—` | config/services.php:93 |
