@@ -60,7 +60,13 @@ class EgressPingerTest extends TestCase
 
     public function test_transport_failure_without_proxy_stays_a_single_direct_attempt(): void
     {
-        Http::fake(fn () => throw new ConnectionException('cURL error 28: Connection timed out'));
+        // Бросок из фейка не пишется в историю Http::assertSentCount — считаем попытки сами.
+        $attempts = 0;
+        Http::fake(function () use (&$attempts) {
+            $attempts++;
+
+            return throw new ConnectionException('cURL error 28: Connection timed out');
+        });
 
         $delivery = app(EgressPinger::class)->send(self::TARGET, 'ok', 5);
 
@@ -68,7 +74,7 @@ class EgressPingerTest extends TestCase
         $this->assertSame('none', $delivery->via);
         $this->assertNull($delivery->status);
         $this->assertStringContainsString('cURL error 28', $delivery->detail);
-        Http::assertSentCount(1);
+        $this->assertSame(1, $attempts);
     }
 
     public function test_transport_failure_falls_over_to_the_proxy_leg(): void
