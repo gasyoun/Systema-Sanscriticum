@@ -1,6 +1,6 @@
 # Uptime monitoring — Better Stack (for agents)
 
-_Created: 30-07-2026 · Last updated: 14-09-2026_
+_Created: 30-07-2026 · Last updated: 31-10-2026_ (H7556: known-incident §2.6 + inventory reconciliation — samskrte-internals row, systemd migration of the Cologne probe, retired samskrtam probe, scripts source-tracked)
 
 **Audience: agents** (Claude / Codex / ops automation). Env keys, cron paths,
 smoke commands, inventory table — operate without re-deriving from chat.
@@ -76,6 +76,7 @@ Host: LXC / Beget VPS `193.232.229.92`, app `/var/www/html`.
 | `samskrte cabinet:probe` | Heartbeat | silence / fail from app | **15 min** / **20 min** | Env `CABINET_PROBE_PING_URL` · cron www-data `*/15` → `cabinet:probe` · critical unhealthy → `/fail`; soft failures use TG only (see soft cooldown) |
 | `samskrte money:sli-synthetic-pay` (H4672) | Heartbeat | silence / fail from app | **~24 h** / **6 h** | Env `MONEY_SLI_DAILY_PING_URL` · cron app-user `7 3 * * *` → `systema-watchdog-run.sh "money:sli-synthetic-pay"` · flag `MONEY_SLI_SYNTHETIC_PAY` (default OFF) · mocked webhook only, no live bank charge — see `config/money_sli.php` |
 | `samskrte money:sli-hourly-reconcile` (H4672) | Heartbeat | silence / fail from app | **~1 h** / **2 h** | Env `MONEY_SLI_HOURLY_PING_URL` · cron app-user `17 * * * *` → `systema-watchdog-run.sh "money:sli-hourly-reconcile"` · flag `MONEY_SLI_HOURLY_RECONCILE` (default OFF) · read-only: webhook success-rate + H2085 silent-grant check |
+| `samskrte-internals` self-check (agent 18-09-2026) | Heartbeat | silence / fail from .92's own internals probe (site route, DB, horizon+reverb, schedule.log freshness, disk) | **10 min** / per UI | Better Stack [477251](https://uptime.betterstack.com/team/t576984/heartbeats/477251) · systemd `samskrte-internals-heartbeat.timer` → [`scripts/server_guards/sbin/samskrte-internals-heartbeat.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/sbin/samskrte-internals-heartbeat.sh) (source-tracked H7556) · `/etc/default/samskrte-internals-heartbeat` |
 
 In-app Telegram from `cabinet:probe` (critical/soft + runbook) is **orthogonal**:
 Better Stack = silence / external pulse; TG = detailed failure lines. Soft TG has
@@ -127,6 +128,12 @@ prove `/parallel-corpus` nginx root is healthy.
 | `/etc/default/samskrtam-heartbeat` | `SAMSKRTAM_HEARTBEAT_URL` (+ HOME/CORPUS URLs/keywords) — **not in git** |
 | root crontab | `*/5 * * * * . /etc/default/samskrtam-heartbeat; /usr/local/sbin/samskrtam-heartbeat.sh >> /var/log/samskrtam-heartbeat.log 2>&1` |
 
+> **RETIRED ~01-08-2026 (observed H7556, 31-10-2026): the crontab row above is gone
+> from the box and `/var/log/samskrtam-heartbeat.log` stops at 2026-08-01T03:55Z —
+> no systemd replacement exists, so the «samskrtam.ru check-from-samskrte» heartbeat
+> has been silent since then.** Recreating it is a §2.4-style human act (heartbeat +
+> ping URL), independent of the §2.6 delivery outage.
+
 Checks both URLs by default (`SAMSKRTAM_CHECK_CORPUS=1`). Smoke:
 
 ```bash
@@ -147,11 +154,12 @@ Site: `https://sanskrit-lexicon.uni-koeln.de/` (Universität zu Köln).
 
 | Path | Role |
 |---|---|
-| `/usr/local/sbin/cologne-cdsl-heartbeat.sh` | curl homepage + keyword → POST heartbeat or `/fail` |
+| [`scripts/server_guards/sbin/cologne-cdsl-heartbeat.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/sbin/cologne-cdsl-heartbeat.sh) | source of record (H7556); deployed copy `/usr/local/sbin/cologne-cdsl-heartbeat.sh` — curl homepage + keyword → POST heartbeat or `/fail` |
 | `/etc/default/cologne-cdsl-heartbeat` | `COLOGNE_HEARTBEAT_URL` (+ optional CHECK_URL / KEYWORD / TIMEOUT) — **not in git** |
-| root crontab | `*/5 * * * * . /etc/default/cologne-cdsl-heartbeat; /usr/local/sbin/cologne-cdsl-heartbeat.sh >> /var/log/cologne-cdsl-heartbeat.log 2>&1` |
+| systemd `cologne-cdsl-heartbeat.timer` | every **10 min** (`OnUnitActiveSec=10min`, `RandomizedDelaySec=30`, `Persistent=true`), agent 18-09-2026 — completes the 30-07 install that lacked a scheduler and replaces its root-crontab `*/5`; unit + timer tracked at `scripts/server_guards/systemd/` |
 
-Heartbeat UI: period **5 min**, grace **~10 min**.
+Heartbeat contract per the 18-09 timer unit: period **15 min**, grace **20 min**
+(the «5 min / ~10 min» figures above predate the systemd migration).
 
 When Cologne is down, also update
 [SERVER_OUTAGES.md](https://github.com/gasyoun/Uprava/blob/main/SERVER_OUTAGES.md)
@@ -240,6 +248,77 @@ Timers, not cron lines. On 18-08-2026 `cron.service` hit its shared 2 GiB cgroup
 budget and strangled every cron job at once (H3121 — ledger row №10, MTTD
 7 h 33 m, `guard = none`). A watchdog in that cgroup shares the fate of what it
 watches.
+
+### 2.6 Known incident — RU-upstream filter blocks Better Stack ingest (since 29-10-2026, ACTIVE)
+
+**State (H7556 verdict BLOCKED, 31-10-2026): the heartbeat *delivery channel* is
+down, not the monitored services.** Every check on .92 passes; only the final
+POST to Better Stack cannot leave the host. Both `cologne-cdsl-heartbeat.service`
+and `samskrte-internals-heartbeat.service` fail truthfully every ~10 min with
+`FAIL: heartbeat ping failed`.
+
+- **Onset:** last delivered pings 2026-10-29 22:18Z; first failed run 22:29:03Z
+  (`journalctl -u cologne-cdsl-heartbeat --since 2026-10-29`).
+- **Cause (measured, not inferred):** TLS flows to Better Stack's Cloudflare IPs
+  (`heartbeat.betteruptime.com` and `uptime.betterstack.com` → 172.66.0.0/13) are
+  dropped **upstream on the RU path** (.92 → hoster → DE-CIX FRA → Cloudflare).
+  Evidence: ICMP to 172.66.42.234 passes while TCP/443 to it times out;
+  `traceroute -T -p 443` completes to the same IP (the path exists — flows are
+  being filtered, not routed away); SNI-pinning to other Cloudflare edge IPs is
+  filtered too; `1.1.1.1`/`1.0.0.1` refuse foreign SNIs by design (CF error
+  1034); port 80 answers but 301-forces HTTPS back onto the blocked 443;
+  **.91 is equally blocked** (same hoster); and **Better Stack itself is up** —
+  200/301/404 from a non-RU vantage in ~1 s.
+- **Blast radius:** every outbound heartbeat from .92 *and* .91 — the two systemd
+  units here, the app cron pings (`heartbeat:ping`, `cabinet:probe`, the
+  money:sli pair — the smoke command now answers «Пинг не ушел: cURL error 28»),
+  and the §2.5 peer-probes. Better Stack correctly reports them all as
+  missing/silent. **That silence is truthful — do not mute the alerts.**
+- **Nothing local changed** at onset: unit/script/config mtimes all predate it,
+  the OUTPUT firewall is empty, apt history is benign.
+
+**Prepared fix (this PR, dormant until an egress asset exists):** both scripts
+accept `HEARTBEAT_PROXY` (socks5/http) from their `/etc/default` file — direct
+POST first, proxy fallback second, and a ping that cannot be delivered still
+FAILs the unit. Fixtures: `sbin/test_heartbeat_scripts.sh` (11 cases, hermetic,
+run green on Git Bash and on .92). Deployment options, in order of preference:
+
+| Option | What | Owning act |
+|---|---|---|
+| ✅ **Estate SOCKS exit — CHOSEN & DEPLOYED 31-10-2026 ~08:33Z** (see deployment record below) | `magenta-duck` (100.87.185.5) as **tailscale exit node** for .92 + the already-existing tailnet-only `microsocks.service` on duck; scripts ping via .92's userspace-tailscaled socks | done by agent (H7556 residual); nothing further owed while the filter persists |
+| Hoster ticket | evidence pack in the H7556 ops issue — filtering started 29-10 22:29Z, both boxes, only CF/Better Stack flows | human files it (still worthwhile: the filter is the actual fault) |
+| Wait | filters of this class have lifted within days before; with the proxy deployed this is now background — when the filter lifts, the direct leg succeeds first and the proxy leg is not even tried | none — verify per the runbook |
+
+**Deployment record (31-10-2026, H7556 residual):** the `microsocks` listener turned out to already exist on `magenta-duck` — systemd `microsocks.service` ("SOCKS5 egress for the Mac AI lane, tailnet-only"), enabled since 23-10, bound `-i 100.87.185.5 -p 1080`. The real gap was elsewhere: **.92/.91 run tailscaled with `--tun=userspace-networking` (FLEET.md), so kernel TCP to 100.x is impossible by design** — `ip route get 100.87.185.5` leaves via eth0 and dies; that is why direct `HEARTBEAT_PROXY=socks5h://100.87.185.5:1080` cannot work from .92. Deployed shape: `tailscale set --exit-node=magenta-duck` on .92 (userspace mode — affects ONLY traffic through the local tailscaled proxy; kernel routes/rules verified byte-identical before/after) + `HEARTBEAT_PROXY=socks5h://127.0.0.1:1055` in both `/etc/default` files + the patched scripts installed to `/usr/local/sbin/` (originals kept as `*.bak-h7556-20261031T0833Z`). Chain: script → direct (15 s timeout, still filtered) → 127.0.0.1:1055 → tailnet → duck → Better Stack (~0.8 s, app-routed 404 on the fake-token probe). Canary OKs 08:33:52Z / 08:34:09Z. When the upstream filter lifts, the direct leg wins again and the exit-node setting becomes dormant (consider removing it then to keep egress minimal).
+
+Recovery / rollback runbook:
+
+```bash
+# 1. Delivery-channel liveness from .92 — expect 404 (app-routed), a timeout means still blocked:
+curl -4 -sS -o /dev/null -w '%{http_code}\n' --max-time 12 \
+  https://uptime.betterstack.com/api/v1/heartbeat/zz-invalid-token-probe-zz
+
+# 2. Proxy option (as deployed 31-10-2026): patched scripts are in /usr/local/sbin/
+#    (originals *.bak-h7556-*), and BOTH /etc/default files carry:
+#    HEARTBEAT_PROXY=socks5h://127.0.0.1:1055
+#    (.92 userspace tailscaled socks; requires the exit node set on .92:
+#     tailscale set --exit-node=magenta-duck  — verify with
+#     tailscale status --json | grep -o '"ExitNodeStatus":{[^}]*"Online":[a-z]*')
+#    scripts are NOT manifest-managed — copy manually from scripts/server_guards/sbin/.
+
+# 3. One manual cycle, then watch the schedule:
+systemctl start cologne-cdsl-heartbeat.service samskrte-internals-heartbeat.service
+journalctl -u cologne-cdsl-heartbeat -u samskrte-internals-heartbeat --since '-1 h' | grep -E 'OK:|FAIL'
+
+# 4. Accept only: three consecutive scheduled OKs AND receiver-side freshness for
+#    477251 / 477235 in the Better Stack UI. A manual OK alone is not acceptance.
+
+# Rollback of the proxy option: delete the HEARTBEAT_PROXY line(s); behaviour
+# reverts to direct-only on the next run — no restart, no unit change.
+# Full rollback additionally: tailscale set --exit-node= (clears the exit node;
+# harmless to leave if you want the socks path available for other tools) and
+# restore the *.bak-h7556-* script/default copies.
+```
 
 ---
 
