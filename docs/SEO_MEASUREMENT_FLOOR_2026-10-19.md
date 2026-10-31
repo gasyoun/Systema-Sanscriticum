@@ -101,14 +101,30 @@ python3 scripts/drift_compare.py https://samskrte.ru/online --skip-cwv
 
 ## 5. IndexNow (индексация без Вебмастера)
 
-Ключ добавлен в `public/3d8b1b068ee599d1f5aa9ae9c63d0968.txt` (тело файла = ключ). После деплоя:
+Ключ добавлен в `public/3d8b1b068ee599d1f5aa9ae9c63d0968.txt` (тело файла = ключ).
+Скрипт — [`scripts/indexnow_submit.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/indexnow_submit.py):
+stdlib, без `requests`, **dry-run по умолчанию**; 24 теста —
+`python3 -m unittest scripts/test_indexnow_submit.py -v`. После деплоя:
 
 ```sh
 curl -s https://samskrte.ru/3d8b1b068ee599d1f5aa9ae9c63d0968.txt   # должен вернуть ключ
+
+# 1. Проверить, что ключ опубликован и совпадает.
 python3 scripts/indexnow_submit.py --host samskrte.ru \
   --key 3d8b1b068ee599d1f5aa9ae9c63d0968 \
   --key-location https://samskrte.ru/3d8b1b068ee599d1f5aa9ae9c63d0968.txt \
-  --urls-file <(curl -s https://samskrte.ru/sitemap.xml | grep -o '<loc>[^<]*' | cut -c6-)
+  --verify-only
+
+# 2. Сухой прогон: печатает payload, в сеть не ходит.
+URLS=/tmp/urls.txt
+curl -s https://samskrte.ru/sitemap.xml | grep -o '<loc>[^<]*' | cut -c6- > "$URLS"
+python3 scripts/indexnow_submit.py --host samskrte.ru \
+  --key 3d8b1b068ee599d1f5aa9ae9c63d0968 \
+  --key-location https://samskrte.ru/3d8b1b068ee599d1f5aa9ae9c63d0968.txt \
+  --urls-file "$URLS"
+
+# 3. Отправка (--apply обязателен; без него сеть не трогается).
+python3 scripts/indexnow_submit.py ... --urls-file "$URLS" --apply
 ```
 
 Google IndexNow не поддерживает — сигнал идёт в Яндекс, Bing, Seznam, Naver (и Copilot-цитаты через Bing).
