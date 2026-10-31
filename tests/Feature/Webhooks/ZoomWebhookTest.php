@@ -170,4 +170,30 @@ class ZoomWebhookTest extends TestCase
 
         $this->postZoom($payload, secret: 'new-secret')->assertOk();
     }
+
+    /** @test */
+    public function signatures_from_extra_account_secret_are_accepted(): void
+    {
+        // События приходят от приложений всех аккаунтов школы: подпись секретом
+        // доп. аккаунта (services.zoom.extra_accounts.zoom2.webhook_secret)
+        // проходит наравне с основным.
+        config(['services.zoom.extra_accounts' => [
+            'zoom2' => ['account_id' => 'acc-2', 'client_id' => 'cid2', 'client_secret' => 'sec2', 'webhook_secret' => 'whsec-zydi'],
+        ]]);
+
+        // URL-валидация от доп. аккаунта: HMAC-эхо его же секретом.
+        $this->postZoom([
+            'event' => 'endpoint.url_validation',
+            'payload' => ['plainToken' => 'plain-2'],
+        ], secret: 'whsec-zydi')->assertOk()->assertJson([
+            'plainToken' => 'plain-2',
+            'encryptedToken' => hash_hmac('sha256', 'plain-2', 'whsec-zydi'),
+        ]);
+
+        // Participant-событие доп. аккаунта доходит до обработки (встреча
+        // неизвестна — резолв вернёт ignored, но не 403).
+        $this->postZoom($this->participantPayload('does-not-exist'), secret: 'whsec-zydi')
+            ->assertOk()
+            ->assertJson(['status' => 'ignored']);
+    }
 }
