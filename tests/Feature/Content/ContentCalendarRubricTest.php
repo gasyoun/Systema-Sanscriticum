@@ -334,11 +334,11 @@ class ContentCalendarRubricTest extends TestCase
         $c = $this->draft($rubric, '2026-11-13');
         $noRubric = ContentCalendarSlot::create(['slot_date' => '2026-11-14', 'status' => ContentCalendarSlot::STATUS_DRAFT, 'title' => 'без рубрики']);
 
-        Livewire::test(ContentCalendarSlotResource\Pages\ListContentCalendarSlots::class)
+        $list = Livewire::test(ContentCalendarSlotResource\Pages\ListContentCalendarSlots::class)
             ->assertTableActionHidden('enqueue', $noRubric)
             ->callTableAction('enqueue', $b)
-            ->assertNotified('Пост в очереди: 28.10.2026 18:00')
-            ->assertTableActionHidden('enqueue', $b)
+            ->assertNotified('Пост в очереди: 28.10.2026 18:00');
+        $list->assertTableActionHidden('enqueue', $b->refresh())
             ->callTableBulkAction('enqueue', [$c, $a, $noRubric])
             ->assertNotified('Поставлено в очередь: 2');
 
