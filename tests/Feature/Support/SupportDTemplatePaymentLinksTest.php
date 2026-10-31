@@ -7,6 +7,7 @@ namespace Tests\Feature\Support;
 use App\Models\MarketingSetting;
 use App\Models\MessageTemplate;
 use App\Models\SupportAnswerSuggestion;
+use Database\Seeders\MessageTemplateSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
