@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Srs;
 
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use Tests\TestCase;
 
+#[RunInSeparateProcess]
 /**
  * Explicit pre-boot `SRS_ENABLED=false` darks the whole surface (routes not
  * registered). Positive half: default ON is pinned by SrsFlagDefaultTest.
  *
- * H7606: @runInSeparateProcess обязателен. В общем процессе phpdotenv-лоадер
- * после первого boot считает SRS_ENABLED «своей» (значение из .env) и на
- * следующих boot-ах переписывает её поверх нашего putenv('false') — батч
- * падал там, где одиночный прогон зелёный. В отдельном процессе наш putenv —
- * единственный источник значения до boot.
- *
- * @runInSeparateProcess
- * @preserveGlobalState disabled
+ * H7606: атрибут RunInSeparateProcess обязателен (doc-аннотации PHPUnit 11
+ * не читает). В общем процессе phpdotenv-лоадер после первого boot считает
+ * SRS_ENABLED «своей» (значение из .env) и на следующих boot-ах переписывает
+ * её поверх нашего putenv('false') — батч падал там, где одиночный прогон
+ * зелёный. В отдельном процессе наш putenv — единственный источник до boot.
  */
 class SrsFlagOverrideTest extends TestCase
 {
