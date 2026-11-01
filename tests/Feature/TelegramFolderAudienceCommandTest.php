@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\TelegramSupportContact;
 use App\Services\Telegram\MadelineClientFactory;
+use App\Services\Telegram\MadelineSessionContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
@@ -196,7 +197,8 @@ class TelegramFolderAudienceCommandTest extends TestCase
     public function test_busy_session_is_reported_without_csv(): void
     {
         $this->fakeClient([$this->filter()]);
-        $lock = Cache::lock('madeline-session', 60);
+        // Контекст статический: другой тест процесса мог переключить сессию.
+        $lock = Cache::lock(MadelineSessionContext::lockName(), 60);
         $this->assertTrue($lock->get());
 
         try {
