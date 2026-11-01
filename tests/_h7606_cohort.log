@@ -1,112 +1,44 @@
 === G1_RevenueSchedule: --filter=RevenueScheduleTest
-Time: 00:02.599, Memory: 261.00 MB
-   │ RuntimeException: grantAccess: у курса 'Autem fugit placeat.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
+Time: 00:16.818, Memory: 263.00 MB
  ✔ Refunds conditional and teacher received produce no schedule
-   │ RuntimeException: grantAccess: у курса 'Hic labore qui cumque.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-ERRORS!
-Tests: 8, Assertions: 25, Errors: 2, PHPUnit Deprecations: 3316.
+OK, but there were issues!
+Tests: 8, Assertions: 29, PHPUnit Deprecations: 3316.
 
 === G3_ReferralProgram: --filter=ReferralProgram
-Time: 00:07.235, Memory: 297.00 MB
-   │ RuntimeException: grantAccess: у курса 'Et deleniti natus cupiditate quia.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Aperiam rerum sit.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Et deleniti optio.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Velit et eius.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: Telegram sendMessage error: {"ok":false,"error_code":404,"description":"Not Found"}
-   │ RuntimeException: Telegram sendMessage error: {"ok":false,"error_code":404,"description":"Not Found"}
-   │ RuntimeException: grantAccess: у курса 'Est voluptatem sed dignissimos.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Veniam suscipit animi optio.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: Telegram sendMessage error: {"ok":false,"error_code":404,"description":"Not Found"}
-   │ RuntimeException: Telegram sendMessage error: {"ok":false,"error_code":404,"description":"Not Found"}
-   │ RuntimeException: grantAccess: у курса 'Eos ex inventore.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Eos dolorem quia nihil vitae.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Necessitatibus possimus qui numquam.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Quis quia iste.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Ut minima dolores impedit est.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Modi eius delectus modi.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-ERRORS!
-Tests: 21, Assertions: 13, Errors: 16, PHPUnit Deprecations: 3316.
+Time: 00:23.810, Memory: 297.00 MB
+OK, but there were issues!
+Tests: 21, Assertions: 47, PHPUnit Deprecations: 3316.
 
 === G4_Srs: --filter=Srs
-Time: 00:41.613, Memory: 282.00 MB
-   │ RuntimeException: grantAccess: у курса 'Est quia saepe nostrum.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Itaque ut.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Quasi occaecati numquam quibusdam.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Tenetur quo eveniet.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'A sunt tempora et.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Quidem et dolor ullam.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Perspiciatis ullam dolorem temporibus nihil.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Et laudantium aliquam.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ Failed asserting that two strings are equal.
-   │ --- Expected
-   │ RuntimeException: grantAccess: у курса 'Est inventore.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Optio modi ipsa velit.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Qui aliquid voluptatibus.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Et ut sapiente.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'In quo tenetur consectetur alias.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ RuntimeException: grantAccess: у курса 'Illo sunt corporis dolor.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
+Time: 01:13.403, Memory: 284.00 MB
    │ Failed asserting that true is false.
-ERRORS!
-Tests: 169, Assertions: 1117, Errors: 14, Failures: 2, PHPUnit Deprecations: 3316.
+FAILURES!
+Tests: 169, Assertions: 1190, Failures: 1, PHPUnit Deprecations: 3316.
 
 === G42_Marathon: --filter=Marathon
-Time: 00:12.498, Memory: 296.00 MB
-   │ Failed asserting that false is true.
-   │ Failed asserting that false is true.
+Time: 00:36.335, Memory: 296.00 MB
  ✔ Downloads and stores voice and marks received
  ✔ Already received is a noop never overwrites
-   │ Failed asserting that two strings are equal.
-   │ --- Expected
-   │ Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
-   │ Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
-   │ Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
-   │ Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
-   │ Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
-   │ Failed asserting that two strings are equal.
-   │ --- Expected
-   │ Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\MarathonEnrollment].
-   │ Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
-   │ Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\MarathonEnrollment].
-   │ Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
-   │ Failed asserting that two strings are equal.
-   │ --- Expected
-   │ Failed asserting that two strings are equal.
-   │ --- Expected
-   │ Failed asserting that two strings are equal.
-   │ --- Expected
-   │ Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
-   │ Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
-   │ Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
-   │ Failed asserting that false is true.
-   │ RuntimeException: grantAccess: у курса 'Eius et ut.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-ERRORS!
-Tests: 165, Assertions: 549, Errors: 13, Failures: 8, PHPUnit Deprecations: 3316.
+OK, but there were issues!
+Tests: 165, Assertions: 592, PHPUnit Deprecations: 3316.
 
 === G55_Segment: --filter=SegmentTest
-Time: 00:02.765, Memory: 279.00 MB
+Time: 00:08.915, Memory: 279.00 MB
 OK, but there were issues!
 Tests: 14, Assertions: 33, PHPUnit Deprecations: 3316.
 
 === G56_HybridPhase: --filter=HybridPhase
-Time: 00:04.181, Memory: 291.00 MB
-   │ RuntimeException: grantAccess: у курса 'Грамматика долг' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
-   │ Failed asserting that true is false.
-   │ Failed asserting that true is false.
-ERRORS!
-Tests: 33, Assertions: 126, Errors: 1, Failures: 2, PHPUnit Deprecations: 3316.
+Time: 00:12.705, Memory: 300.00 MB
+OK, but there were issues!
+Tests: 33, Assertions: 129, PHPUnit Deprecations: 3316.
 
 === G57_StudentUnblock: --filter=StudentUnblockAccessTest
-Time: 00:05.863, Memory: 281.00 MB
-   │ Expected response status code [201, 301, 302, 303, 307, 308] but received 500.
-   │ Failed asserting that false is true.
-   │ RuntimeException: Telegram sendMessage error: {"ok":false,"error_code":404,"description":"Not Found"} in /Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Jobs/SendTelegramChatMessageJob.php:83
-FAILURES!
-Tests: 8, Assertions: 30, Failures: 1, PHPUnit Deprecations: 3316.
+Time: 00:06.584, Memory: 277.00 MB
+OK, but there were issues!
+Tests: 8, Assertions: 38, PHPUnit Deprecations: 3316.
 
 === G67_CourseDebt: --filter=CourseDebtChatRemoval
-Time: 00:06.079, Memory: 296.00 MB
-   │ RuntimeException: Telegram sendMessage error: {"ok":false,"error_code":404,"description":"Not Found"}
-   │ RuntimeException: Telegram sendMessage error: {"ok":false,"error_code":404,"description":"Not Found"}
-ERRORS!
-Tests: 30, Assertions: 109, Errors: 2, PHPUnit Deprecations: 3316.
+Time: 00:12.561, Memory: 300.00 MB
+OK, but there were issues!
+Tests: 30, Assertions: 113, PHPUnit Deprecations: 3316.
 

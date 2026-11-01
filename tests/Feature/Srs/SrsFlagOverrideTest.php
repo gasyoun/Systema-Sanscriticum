@@ -9,6 +9,15 @@ use Tests\TestCase;
 /**
  * Explicit pre-boot `SRS_ENABLED=false` darks the whole surface (routes not
  * registered). Positive half: default ON is pinned by SrsFlagDefaultTest.
+ *
+ * H7606: @runInSeparateProcess обязателен. В общем процессе phpdotenv-лоадер
+ * после первого boot считает SRS_ENABLED «своей» (значение из .env) и на
+ * следующих boot-ах переписывает её поверх нашего putenv('false') — батч
+ * падал там, где одиночный прогон зелёный. В отдельном процессе наш putenv —
+ * единственный источник значения до boot.
+ *
+ * @runInSeparateProcess
+ * @preserveGlobalState disabled
  */
 class SrsFlagOverrideTest extends TestCase
 {
