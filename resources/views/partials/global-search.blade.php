@@ -54,11 +54,11 @@
          go(item) { if (item && item.url) { window.location.href = item.url; } },
          goFull() { if (this.q.trim()) { window.location.href = this.fullUrl(); } },
          focusInput() {
-             const el = window.matchMedia('(min-width: 768px)').matches ? this.$refs.inputDesktop : this.$refs.inputMobile;
+             const el = window.matchMedia('(min-width: 1024px)').matches ? this.$refs.inputDesktop : this.$refs.inputMobile;
              if (el) { el.focus(); el.select(); }
          },
          openFromHotkey() {
-             if (window.matchMedia('(min-width: 768px)').matches) { this.focusInput(); return; }
+             if (window.matchMedia('(min-width: 1024px)').matches) { this.focusInput(); return; }
              this.mobileOpen = true;
              this.$nextTick(() => { this.$refs.inputMobile && this.$refs.inputMobile.focus(); });
          },
@@ -83,7 +83,7 @@
          до старта Alpine кнопка уже должна быть видна — это вход в поиск --}}
     <button type="button"
             x-show="!mobileOpen"
-            class="md:hidden w-10 h-10 flex items-center justify-center rounded-lg {{ $gsIconIdle }} transition-colors"
+            class="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg {{ $gsIconIdle }} transition-colors"
             @click="openFromHotkey()"
             aria-label="Поиск по сайту">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,7 +93,7 @@
 
     {{-- Десктопное поле (md+): компактный бокс, ширина растёт в фокусе --}}
     <form action="/poisk" method="GET"
-          class="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl border transition-all {{ $gsFieldBg }}"
+          class="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl border transition-all {{ $gsFieldBg }}"
           @submit.prevent="goFull()">
         <svg class="w-4 h-4 shrink-0 {{ $gsMetaColor }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/>
@@ -115,7 +115,7 @@
          x-transition:enter="transition ease-out duration-100"
          x-transition:enter-start="opacity-0 -translate-y-1"
          x-transition:enter-end="opacity-100 translate-y-0"
-         class="hidden md:block absolute right-0 top-full mt-2 w-96 max-h-[70vh] overflow-auto rounded-xl border shadow-2xl z-50 py-2 {{ $gsPanelBg }}">
+         class="hidden lg:block absolute right-0 top-full mt-2 w-96 max-h-[70vh] overflow-auto rounded-xl border shadow-2xl z-50 py-2 {{ $gsPanelBg }}">
         <template x-for="(item, idx) in results" :key="idx">
             <a :href="item.url"
                @click="open = false"
@@ -140,7 +140,7 @@
          x-transition:enter="transition ease-out duration-150"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
-         class="md:hidden fixed inset-0 z-50 flex flex-col {{ $gsDark ? 'bg-[#0A0D14]/98' : 'bg-[#FAF8F5]' }}"
+         class="lg:hidden fixed inset-0 z-50 flex flex-col {{ $gsDark ? 'bg-[#0A0D14]/98' : 'bg-[#FAF8F5]' }}"
          @click.self="mobileOpen = false">
         <div class="flex items-center gap-2 px-4 py-3 border-b {{ $gsPanelBg }}">
             <form action="/poisk" method="GET" class="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl border {{ $gsFieldBg }}" @submit.prevent="goFull()">
