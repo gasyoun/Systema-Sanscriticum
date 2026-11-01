@@ -71,5 +71,14 @@
         <env name="TELEGRAM_ONBOARDING_CHAT_ID" value=""/>
         <env name="TELEGRAM_CURATORS_CHAT_ID" value=""/>
         <env name="TELEGRAM_MARKETERS_CHAT_ID" value=""/>
+        <!-- SRS_ENABLED: пин продуманного дефолта config/srs.php. Без пина
+             второй boot процесса перетирает putenv('false') из SrsFlagOverrideTest
+             иммутабельным лоадером phpdotenv (лодер переписывает СВОИ vars),
+             и батч-прогон падает там, где одиночный — зелёный. -->
+        <env name="SRS_ENABLED" value="true"/>
+        <!-- Warm-tail: без пина MARATHON_WARM_TAIL_WAVE2_FROM из .env уводит
+             свежие энролы в wave-2 серию, а тесты ассертят flagship-тексты
+             (wave-2 тесты ставят cutoff себе сами через config()). -->
+        <env name="MARATHON_WARM_TAIL_WAVE2_FROM" value=""/>
     </php>
 </phpunit>
