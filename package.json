@@ -8,6 +8,9 @@
         "dev": "vite",
         "build": "vite build"
     },
+    "dependencies": {
+        "fuse.js": "^7.1.0"
+    },
     "devDependencies": {
         "@fontsource/charis-sil": "^5.3.0",
         "@fontsource/inter": "^5.3.0",

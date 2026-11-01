@@ -18,6 +18,7 @@
     {{-- Tailwind + шрифты/FontAwesome со своего сервера (152-ФЗ: без Google Fonts и cdnjs) --}}
     @include('partials.tailwind-cdn')
     @vite('resources/css/fonts.css')
+    @vite('resources/js/global-search.js') {{-- H7590 — лоадер поиска в шапке (Fuse.js лениво) --}}
 
 <style>
         [x-cloak] { display: none !important; }
@@ -96,7 +97,10 @@
 
             {{-- Правый блок: Войти / Аккаунт --}}
             <div class="flex items-center gap-2 md:gap-3 shrink-0">
-                
+
+                {{-- H7590 — глобальный поиск (клиентский индекс + /poisk/{q}) --}}
+                @include('partials.global-search', ['variant' => 'dark'])
+
                 {{-- Контакты для темной шапки магазина --}}
 @include('partials.contacts-bar', ['variant' => 'dark'])
 
