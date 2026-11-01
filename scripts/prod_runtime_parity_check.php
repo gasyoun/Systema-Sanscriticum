@@ -376,6 +376,8 @@ if ($viteBackup === null) {
         // 152-ФЗ: шрифты/иконки и Alpine со своего сервера — подключаются в общих лейаутах.
         'resources/css/fonts.css' => ['file' => 'assets/fonts.css', 'src' => 'resources/css/fonts.css', 'isEntry' => true],
         'resources/js/alpine-standalone.js' => ['file' => 'assets/alpine-standalone.js', 'src' => 'resources/js/alpine-standalone.js', 'isEntry' => true],
+        // H7590 — лоадер поиска в шапке, подключается теми же общими лейаутами.
+        'resources/js/global-search.js' => ['file' => 'assets/global-search.js', 'src' => 'resources/js/global-search.js', 'isEntry' => true],
     ]));
 }
 try {

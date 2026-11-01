@@ -45,12 +45,13 @@ final class ZapisiSetWebhook extends Command
         $this->info("Регистрируем webhook @zapisi_ORSbot: {$url}");
 
         // message + channel_post: ProcessTelegramZapisiUpdate читает оба типа
-        // (группа шлет message, канал — channel_post). callback_query не нужен.
+        // (группа шлет message, канал — channel_post). callback_query — кнопки
+        // бота: выбор площадок календаря контента, #ДЗ, отмена занятия.
         // my_chat_member (H4314): бот добавлен в чат → приветственная карточка
         // через zapisi_welcome_n8n_url (роутинг в ProcessTelegramZapisiUpdate).
         $telegram
             ->usingCredentials($token, $username)
-            ->setWebhook($url, $secret, ['message', 'channel_post', 'my_chat_member', 'chat_join_request'], TelegramWebhooks::certificateContents());
+            ->setWebhook($url, $secret, ['message', 'channel_post', 'my_chat_member', 'chat_join_request', 'callback_query'], TelegramWebhooks::certificateContents());
 
         $this->info('✓ Webhook @zapisi_ORSbot установлен.');
 

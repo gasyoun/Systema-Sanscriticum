@@ -77,6 +77,36 @@ class ContentCalendarRubric extends Model
         return array_values(array_intersect(array_keys(ContentCalendarSlot::enabledDestinations()), $keys));
     }
 
+    /**
+     * Площадки рубрики → её ещё не вышедшие посты (ни одной публикации).
+     * Площадки слота задаются при выборе рубрики в форме; без этого смена
+     * каналов рубрики не доходила бы до уже стоящих в ней постов.
+     *
+     * @return int сколько постов получили новые площадки
+     */
+    public function syncSlotDestinations(): int
+    {
+        $keys = $this->destinationKeys();
+        $changed = 0;
+        $this->slots()
+            ->whereIn('status', [
+                ContentCalendarSlot::STATUS_SCHEDULED,
+                ContentCalendarSlot::STATUS_DRAFT,
+                ContentCalendarSlot::STATUS_EMPTY,
+                ContentCalendarSlot::STATUS_KEPT,
+            ])
+            ->whereDoesntHave('publications')
+            ->get()
+            ->each(function (ContentCalendarSlot $slot) use ($keys, &$changed): void {
+                if ($slot->destinations !== $keys) {
+                    $slot->forceFill(['destinations' => $keys])->save();
+                    $changed++;
+                }
+            });
+
+        return $changed;
+    }
+
     /** «Оповещение, ОРС» */
     public function channelsLabel(): string
     {

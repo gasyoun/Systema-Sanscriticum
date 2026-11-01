@@ -92,6 +92,9 @@ window.sendGoal = function(goalName) {
     {{-- Alpine — нужен для модалок/интерактива в шапке и футере --}}
     @vite('resources/js/alpine-standalone.js')
 
+    {{-- H7590 — лоадер поиска в шапке (Fuse.js лениво) --}}
+    @vite('resources/js/global-search.js')
+
     <style>
         body { font-family: 'Montserrat', sans-serif; }
         [x-cloak] { display: none !important; }

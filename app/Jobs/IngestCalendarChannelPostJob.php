@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Models\ContentCalendarPublication;
 use App\Models\ContentCalendarSlot;
+use App\Services\Content\CalendarIngestRouting;
 use App\Services\Content\CalendarTelegramPublisher;
 use App\Services\Content\TelegramEntityHtml;
 use Illuminate\Bus\Queueable;
@@ -121,7 +122,9 @@ class IngestCalendarChannelPostJob implements ShouldQueue
 
         $this->attachMedia($slot, $messageId);
 
-        if (config('features.content_calendar_autopilot')) {
+        // Служебный чат задан — сначала выбор площадок кнопками
+        // (CalendarIngestRouting), разнос после выбора или по таймауту.
+        if (config('features.content_calendar_autopilot') && ! app(CalendarIngestRouting::class)->offer($slot)) {
             $wait = $isAlbum ? (int) config('content_calendar.tg_album_wait_seconds', 20) : 0;
             PublishCalendarSlotJob::dispatch($slot->id)->delay(now()->addSeconds($wait));
         }
