@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Support\SearchIndexBuilder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 
 /**
  * H7590 — страница полных результатов глобального поиска.
