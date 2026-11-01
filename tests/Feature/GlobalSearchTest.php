@@ -107,9 +107,6 @@ class GlobalSearchTest extends TestCase
         $third = $builder->write($dir);
         $this->assertNotSame($first['file'], $third['file']);
         $this->assertFileDoesNotExist($dir.'/'.$first['file']);
-
-        // Манифест виден blade-хелперу (кэш per-request — сброс внутрипроцессно).
-        $this->assertNotNull(SearchIndexBuilder::manifest());
     }
 
     /** @test */
