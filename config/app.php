@@ -10,6 +10,7 @@ use App\Providers\Filament\LectureEditorPanelProvider;
 use App\Providers\HorizonServiceProvider;
 use App\Providers\MessagingServiceProvider;
 use App\Providers\RouteServiceProvider;
+use App\Providers\SearchIndexServiceProvider;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
 
