@@ -183,6 +183,7 @@ return [
         RouteServiceProvider::class,
         BlogAnalyticsServiceProvider::class,
         MessagingServiceProvider::class,
+        SearchIndexServiceProvider::class,
     ])->toArray(),
 
     /*
