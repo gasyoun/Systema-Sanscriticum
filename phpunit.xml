@@ -54,5 +54,30 @@
         <env name="FAQ_HYBRID_RETRIEVAL" value="false"/>
         <env name="FAQ_RAG_SUGGESTER" value="false"/>
         <env name="KNOWLEDGE_EMBEDDING_DRIVER" value=""/>
+        <!-- H7606: тестовый прогон герметичен к прод-подобному локальному .env
+             (CI без .env зелёный, клон с ним — красный). Прод-флаги ниже пинятся
+             к дефолтам config/features.php; тестам, которым нужен флаг ON,
+             ставят config() внутри себя (все такие уже делают). Иначе:
+             PD_CONSENT_ENFORCE валидацию марафон-регистраций без pd_consent,
+             PAYMENT_FIX_WAVE1 — fail-closed grantAccess на курсах без групп. -->
+        <env name="PD_CONSENT_ENFORCE" value="false"/>
+        <env name="CHECKOUT_PD_CONSENT_ENFORCE" value="false"/>
+        <env name="PAYMENT_FIX_WAVE1" value="false"/>
+        <env name="GRANT_ACCESS_FAIL_CLOSED" value="false"/>
+        <env name="CABINET_HYBRID" value="false"/>
+        <!-- Исходящие Telegram-чаты: пусто → нотификаторы no-op, из тестов не
+             уходят живые HTTP-вызовы (SendTelegramChatMessageJob на sync-очереди
+             иначе постит в реальный чат при кураторских/онбординг-пингах). -->
+        <env name="TELEGRAM_ONBOARDING_CHAT_ID" value=""/>
+        <env name="TELEGRAM_CURATORS_CHAT_ID" value=""/>
+        <env name="TELEGRAM_MARKETERS_CHAT_ID" value=""/>
+        <!-- SRS_ENABLED: пин продуманного дефолта config/srs.php, чтобы .env
+             разработчика (SRS_ENABLED=false) не переворачивал Srs-сьюиты,
+             ожидающие ON. Override-тест уходит в отдельный процесс (см. класс). -->
+        <env name="SRS_ENABLED" value="true"/>
+        <!-- Warm-tail: без пина MARATHON_WARM_TAIL_WAVE2_FROM из .env уводит
+             свежие энролы в wave-2 серию, а тесты ассертят flagship-тексты
+             (wave-2 тесты ставят cutoff себе сами через config()). -->
+        <env name="MARATHON_WARM_TAIL_WAVE2_FROM" value=""/>
     </php>
 </phpunit>
