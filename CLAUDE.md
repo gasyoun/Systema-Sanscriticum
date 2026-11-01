@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-_Created: 07-05-2026 · Last updated: 30-10-2026 (H7474 SLA slim to tier-0 budget; H5885 trim, H5176 slim before)_
+_Created: 07-05-2026 · Last updated: 01-11-2026 — H7274 claims pass: 8/8 money-contour paths OK; composer matches Stack; grantAccess/TeacherSalaryService/MutualSettlementService/group_reviewer present)_
 
 **Systema-Sanscriticum** is the Laravel LMS for [samskrte.ru](https://samskrte.ru).
 Org spine applies; repo-local always-on only — open the matching section,
