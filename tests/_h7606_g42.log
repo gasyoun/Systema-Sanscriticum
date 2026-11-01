@@ -1,0 +1,255 @@
+PHP Deprecated:  Method ReflectionProperty::setAccessible() is deprecated since 8.5, as it has no effect since PHP 8.1 in /Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/bootstrap_worktree.php on line 24
+
+Deprecated: Method ReflectionProperty::setAccessible() is deprecated since 8.5, as it has no effect since PHP 8.1 in /Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/bootstrap_worktree.php on line 24
+PHP Deprecated:  Method ReflectionProperty::setAccessible() is deprecated since 8.5, as it has no effect since PHP 8.1 in /Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/bootstrap_worktree.php on line 41
+
+Deprecated: Method ReflectionProperty::setAccessible() is deprecated since 8.5, as it has no effect since PHP 8.1 in /Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/bootstrap_worktree.php on line 41
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: /Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/phpunit.xml
+
+.....................F..F.................EEEEE..........FE....  63 / 165 ( 38%)
+E..E..E........FFF............................EE.E............. 126 / 165 ( 76%)
+.............F.......................FE                         165 / 165 (100%)
+
+Time: 00:17.907, Memory: 296.00 MB
+
+There were 13 errors:
+
+1) Tests\Feature\MarathonAcquisitionAttributionTest::test_landing_campaign_survives_clean_navigation_and_duplicate_registration
+Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:850
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2866
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2882
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonAcquisitionAttributionTest.php:31
+
+2) Tests\Feature\MarathonAcquisitionAttributionTest::test_malformed_fields_are_ignored_and_strings_are_bounded
+Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:850
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2866
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2882
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonAcquisitionAttributionTest.php:47
+
+3) Tests\Feature\MarathonAcquisitionAttributionTest::test_internal_referrer_does_not_turn_unknown_into_an_acquisition_source
+Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:850
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2866
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2882
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonAcquisitionAttributionTest.php:57
+
+4) Tests\Feature\MarathonAcquisitionAttributionTest::test_existing_tracked_link_session_is_preserved_for_january_cohort
+Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:850
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2866
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2882
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonAcquisitionAttributionTest.php:66
+
+5) Tests\Feature\MarathonAcquisitionAttributionTest::test_tracked_link_metadata_has_existing_policy_priority_over_earlier_raw_campaign
+Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:850
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2866
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2882
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonAcquisitionAttributionTest.php:77
+
+6) Tests\Feature\MarathonEnrollmentTest::test_registration_paid_track_persists
+Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\MarathonEnrollment].
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:809
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonEnrollmentTest.php:80
+
+7) Tests\Feature\MarathonEnrollmentTest::test_registration_attaches_telegram_magnet_token_and_deep_link
+Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:809
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonEnrollmentTest.php:154
+
+8) Tests\Feature\MarathonEnrollmentTest::test_registration_defaults_to_zero_cohort
+Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\MarathonEnrollment].
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:809
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonEnrollmentTest.php:205
+
+9) Tests\Feature\MarathonEnrollmentTest::test_registration_assigns_an_ab_arm
+Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:809
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonEnrollmentTest.php:245
+
+10) Tests\Feature\MarathonLandingCopySplitTest::test_registration_tags_the_lead_with_its_visitor_variant_and_records_a_lead_event
+Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:809
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonLandingCopySplitTest.php:147
+
+11) Tests\Feature\MarathonLandingCopySplitTest::test_registration_without_a_variant_cookie_leaves_lead_variant_null_and_records_no_event
+Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:809
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonLandingCopySplitTest.php:164
+
+12) Tests\Feature\MarathonLandingCopySplitTest::test_a_pre_cutoff_cookie_still_read_after_cutoff_for_lead_tagging
+Illuminate\Database\Eloquent\ModelNotFoundException: No query results for model [App\Models\Lead].
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:809
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonLandingCopySplitTest.php:200
+
+13) Tests\Feature\StartChteniya\StartChteniyaCohortEntitlementTest::enrollment_never_touches_the_r20_marathon_cohort
+RuntimeException: grantAccess: у курса 'Labore autem qui.' (id=1) нет привязанных групп (payment #1). Оплата не применена: привяжите группу в админке курса и повторите.
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Models/Payment.php:1630
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Models/Payment.php:1029
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Concerns/ManagesTransactions.php:35
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php:502
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:364
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Models/Payment.php:1028
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Models/Payment.php:967
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Models/Payment.php:826
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:496
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:326
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:306
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Concerns/HasEvents.php:224
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1624
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1407
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1258
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Support/helpers.php:393
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1257
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2866
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2882
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/StartChteniya/StartChteniyaCohortEntitlementTest.php:204
+
+--
+
+There were 8 failures:
+
+1) Tests\Feature\DeliverMarathonWarmTailTest::test_sends_day1_warm_tail_message_on_day4
+An expected request was not recorded.
+Failed asserting that false is true.
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Http/Client/Factory.php:498
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:364
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/DeliverMarathonWarmTailTest.php:44
+
+2) Tests\Feature\DeliverMarathonWarmTailTest::test_progresses_to_the_next_day_once_it_arrives
+An expected request was not recorded.
+Failed asserting that false is true.
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Http/Client/Factory.php:498
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:364
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/DeliverMarathonWarmTailTest.php:75
+
+3) Tests\Feature\MarathonEnrollmentTest::test_registration_creates_lead_and_enrollment_free_track
+Failed asserting that two strings are equal.
+
+The following errors occurred during the last request:
+
+Нужно согласие на обработку персональных данных.
+
+--- Expected
++++ Actual
+@@ @@
+-'http://localhost:8000/online/konsultaciya'
++'http://localhost:8000'
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:46
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:440
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:214
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonEnrollmentTest.php:56
+
+4) Tests\Feature\MarathonJanuaryLandingTest::test_register_creates_deva_cohort_enrollment_scoped_to_january_landing
+Failed asserting that two strings are equal.
+
+The following errors occurred during the last request:
+
+Нужно согласие на обработку персональных данных.
+
+--- Expected
++++ Actual
+@@ @@
+-'http://localhost:8000/online/Janvar-27'
++'http://localhost:8000'
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:46
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:440
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:214
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonJanuaryLandingTest.php:61
+
+5) Tests\Feature\MarathonJanuaryLandingTest::test_register_resumes_existing_january_enrollment_without_resetting_clock
+Failed asserting that two strings are equal.
+
+The following errors occurred during the last request:
+
+Нужно согласие на обработку персональных данных.
+
+--- Expected
++++ Actual
+@@ @@
+-'http://localhost:8000/online/Janvar-27'
++'http://localhost:8000'
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:46
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:440
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:214
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonJanuaryLandingTest.php:86
+
+6) Tests\Feature\MarathonJanuaryLandingTest::test_january_registration_is_independent_of_zero_cohort_landing
+Failed asserting that two strings are equal.
+
+The following errors occurred during the last request:
+
+Нужно согласие на обработку персональных данных.
+
+--- Expected
++++ Actual
+@@ @@
+-'http://localhost:8000/online/Janvar-27'
++'http://localhost:8000'
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:46
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:440
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:214
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonJanuaryLandingTest.php:110
+
+7) Tests\Feature\MarathonStaffingGateTest::test_unstaffed_paid_registration_creates_no_lead_or_enrollment
+Session missing error: track
+Failed asserting that false is true.
+
+The following errors occurred during the last request:
+
+Нужно согласие на обработку персональных данных.
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:46
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:1714
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/MarathonStaffingGateTest.php:41
+
+8) Tests\Feature\Sandbox\H5085LeadDuplicateNoTokenTest::marathon_duplicate_does_not_re_disclose_victim_telegram_link
+Failed asserting that two strings are equal.
+
+The following errors occurred during the last request:
+
+Нужно согласие на обработку персональных данных.
+
+--- Expected
++++ Actual
+@@ @@
+-'http://localhost:8000/online/konsultaciya'
++'http://localhost:8000'
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:46
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:440
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:214
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/Sandbox/H5085LeadDuplicateNoTokenTest.php:142
+
+ERRORS!
+Tests: 165, Assertions: 549, Errors: 13, Failures: 8, PHPUnit Deprecations: 3316.

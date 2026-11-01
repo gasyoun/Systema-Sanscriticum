@@ -1,0 +1,109 @@
+PHP Deprecated:  Method ReflectionProperty::setAccessible() is deprecated since 8.5, as it has no effect since PHP 8.1 in /Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/bootstrap_worktree.php on line 24
+
+Deprecated: Method ReflectionProperty::setAccessible() is deprecated since 8.5, as it has no effect since PHP 8.1 in /Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/bootstrap_worktree.php on line 24
+PHP Deprecated:  Method ReflectionProperty::setAccessible() is deprecated since 8.5, as it has no effect since PHP 8.1 in /Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/bootstrap_worktree.php on line 41
+
+Deprecated: Method ReflectionProperty::setAccessible() is deprecated since 8.5, as it has no effect since PHP 8.1 in /Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/bootstrap_worktree.php on line 41
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: /Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/phpunit.xml
+
+....................EE........                                    30 / 30 (100%)
+
+Time: 00:09.668, Memory: 300.00 MB
+
+There were 2 errors:
+
+1) Tests\Feature\CourseDebtChatRemovalRuleTest::test_membership_lapse_is_never_course_debt
+RuntimeException: Telegram sendMessage error: {"ok":false,"error_code":404,"description":"Not Found"}
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Jobs/SendTelegramChatMessageJob.php:83
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:36
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Container/Util.php:43
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:96
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:35
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Container/Container.php:803
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Bus/Dispatcher.php:136
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:180
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:137
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Bus/Dispatcher.php:140
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Queue/CallQueuedHandler.php:159
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:180
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:137
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Queue/CallQueuedHandler.php:148
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Queue/CallQueuedHandler.php:86
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Queue/Jobs/Job.php:102
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Queue/SyncQueue.php:226
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Queue/SyncQueue.php:206
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Bus/Dispatcher.php:298
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Bus/Dispatcher.php:276
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Bus/Dispatcher.php:87
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Foundation/Bus/PendingDispatch.php:308
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Foundation/Bus/Dispatchable.php:19
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Services/CuratorNotifier.php:802
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Services/CuratorNotifier.php:61
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Models/Payment.php:1074
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Models/Payment.php:967
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Models/Payment.php:826
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:496
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:326
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:306
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Concerns/HasEvents.php:224
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1624
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1407
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1258
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Support/helpers.php:393
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1257
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2866
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2882
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/CourseDebtChatRemovalRuleTest.php:239
+
+2) Tests\Feature\CourseDebtChatRemovalRuleTest::test_membership_payment_never_covers_course_debt
+RuntimeException: Telegram sendMessage error: {"ok":false,"error_code":404,"description":"Not Found"}
+
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Jobs/SendTelegramChatMessageJob.php:83
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:36
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Container/Util.php:43
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:96
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php:35
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Container/Container.php:803
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Bus/Dispatcher.php:136
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:180
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:137
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Bus/Dispatcher.php:140
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Queue/CallQueuedHandler.php:159
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:180
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php:137
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Queue/CallQueuedHandler.php:148
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Queue/CallQueuedHandler.php:86
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Queue/Jobs/Job.php:102
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Queue/SyncQueue.php:226
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Queue/SyncQueue.php:206
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Bus/Dispatcher.php:298
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Bus/Dispatcher.php:276
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Bus/Dispatcher.php:87
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Foundation/Bus/PendingDispatch.php:308
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Foundation/Bus/Dispatchable.php:19
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Services/CuratorNotifier.php:802
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Services/CuratorNotifier.php:61
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Models/Payment.php:1074
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Models/Payment.php:967
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/app/Models/Payment.php:826
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:496
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:326
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php:306
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Concerns/HasEvents.php:224
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1624
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:1407
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1258
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Support/helpers.php:393
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:1257
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2866
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2882
+/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h7606-16933/tests/Feature/CourseDebtChatRemovalRuleTest.php:271
+
+ERRORS!
+Tests: 30, Assertions: 109, Errors: 2, PHPUnit Deprecations: 3316.
