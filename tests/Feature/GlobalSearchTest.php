@@ -48,6 +48,7 @@ class GlobalSearchTest extends TestCase
             'category_id' => $category->id,
             'title' => 'Йога в панчанге',
             'slug' => 'yoga-v-panchange',
+            'body' => 'Текст статьи о йоге.',
             'is_published' => true,
             'published_at' => now()->subDay(),
         ]);
@@ -57,7 +58,7 @@ class GlobalSearchTest extends TestCase
         Course::create(['title' => 'Секретный курс', 'slug' => 'secret', 'is_visible' => false]);
         LandingPage::create(['title' => 'Вебинар', 'slug' => 'vebinar', 'is_active' => true, 'is_listed' => false]);
         Teacher::create(['name' => 'Невидимый Препод', 'page_enabled' => false, 'page_slug' => 'none']);
-        Article::create(['title' => 'Черновик йоги', 'slug' => 'draft', 'is_published' => false]);
+        Article::create(['title' => 'Черновик йоги', 'slug' => 'draft', 'body' => 'Черновик.', 'is_published' => false]);
 
         unset($teacher);
     }
