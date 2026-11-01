@@ -87,7 +87,7 @@ class SearchController extends Controller
 
         $articles = Article::query()
             ->published()
-            ->with('category:id,title')
+            ->with('category:id,name')
             ->where(function ($query) use ($like): void {
                 $query->where('title', 'like', $like)
                     ->orWhere('subtitle', 'like', $like)
@@ -98,7 +98,7 @@ class SearchController extends Controller
             ->map(fn (Article $article) => [
                 'title' => $article->title,
                 'url' => '/s/'.$article->slug,
-                'hint' => $article->category?->title ?: ($article->subtitle ?: null),
+                'hint' => $article->category?->name ?: ($article->subtitle ?: null),
             ]);
 
         return view('search.results', [

@@ -43,7 +43,7 @@ class GlobalSearchTest extends TestCase
             'page_role' => 'Преподаватель хинди',
         ]);
 
-        $category = ArticleCategory::create(['title' => 'Грамматика', 'slug' => 'grammatika']);
+        $category = ArticleCategory::create(['name' => 'Грамматика', 'slug' => 'grammatika']);
         Article::create([
             'category_id' => $category->id,
             'title' => 'Йога в панчанге',

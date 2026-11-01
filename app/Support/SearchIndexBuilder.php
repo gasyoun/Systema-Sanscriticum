@@ -180,7 +180,7 @@ class SearchIndexBuilder
         // Статьи блога — только опубликованные (scopePublished: дата настала).
         Article::query()
             ->published()
-            ->with('category:id,title')
+            ->with('category:id,name')
             ->orderBy('title')
             ->get(['id', 'category_id', 'slug', 'title', 'subtitle'])
             ->each(function (Article $article) use (&$items): void {
@@ -192,7 +192,7 @@ class SearchIndexBuilder
                     'type' => 'статья',
                     'title' => (string) $article->title,
                     'url' => '/s/'.$article->slug,
-                    'hint' => $article->category?->title ?: ($article->subtitle ?: null),
+                    'hint' => $article->category?->name ?: ($article->subtitle ?: null),
                 ];
             });
 
