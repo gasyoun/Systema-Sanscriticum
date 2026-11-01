@@ -67,10 +67,14 @@ return [
     ],
 
     /*
-     | Корень закоммиченных паков (…/LessonPacks). В проде путь заполняется
-     | выкладкой контента; локально и в тестах переопределяется.
+     | H7069: девять zan1-паков закоммичены в resources/data/lesson_packs —
+     | это tracked-дефолт, который переживает пересборку/restore сервера и
+     | второй бокс. Раньше packs_path указывал в storage/app/lesson-packs, куда
+     | паки копировали руками, и rebuild молча оставлял LYW_ENABLED=true без
+     | контента. Env LYW_PACKS_PATH остаётся для стендов/тестов; проверить
+     | дерево: php artisan lyw:verify-packs.
      */
-    'packs_path' => env('LYW_PACKS_PATH', storage_path('app/lesson-packs')),
+    'packs_path' => env('LYW_PACKS_PATH', base_path('resources/data/lesson_packs')),
 
     // Схема манифеста, которую умеет читать этот контроллер.
     'schema' => 'lyw-pack-v1',
