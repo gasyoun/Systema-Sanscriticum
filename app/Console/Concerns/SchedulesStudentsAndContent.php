@@ -211,11 +211,18 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('lesson-banners-render');
 
-        // Content calendar auto-pilot (H1568, Wave 5): hourly tick crossposts
+        // Content calendar auto-pilot (H1568, Wave 5): the tick crossposts
         // every due `scheduled` slot to TG + VK (PublishCalendarSlotJob). No-op while
         // features.content_calendar_autopilot is OFF (default).
+        // 02-11-2026: every 5 min, not hourly. systema-schedule-run.sh skips a
+        // whole minute while the previous schedule:run holds its flock, and
+        // telegram-support:sync (everyMinute, ~64 s since 01-11) holds it into
+        // the next minute — an hourly :00 tick was skipped 12 of 24 times on
+        // 01-11 and a rubric post sat unpublished for hours. The command only
+        // takes due slots and PublishCalendarSlotJob is unique per slot, so a
+        // denser tick is harmless and a skipped one costs 5 min, not 1 h.
         $schedule->command('content:publish-due')
-            ->hourly()
+            ->everyFiveMinutes()
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('publish-due-content-calendar');

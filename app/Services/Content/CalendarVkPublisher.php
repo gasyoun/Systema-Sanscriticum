@@ -169,9 +169,15 @@ class CalendarVkPublisher
                 'error' => $e->getMessage(),
             ]);
 
-            return $type === ContentCalendarSlot::MEDIA_PHOTO
-                ? [[$slot->shareUrl()], 'VK: фото не загрузилось ('.$e->getMessage().') — ушло карточкой-ссылкой']
-                : [[], 'VK: видео не загрузилось ('.$e->getMessage().') — пост опубликован текстом'];
+            // 02-11-2026: фото при праве photos — повтор на следующем тике, а не
+            // карточка-ссылка: VK отклоняет карточку с вертикальной обложкой
+            // (link_photo_sizing_rule), и пост не выходил вовсе. Сбой загрузки
+            // обычно разовый (пустой ответ upload-сервера).
+            if ($type === ContentCalendarSlot::MEDIA_PHOTO) {
+                throw new CalendarPublishException('vk: фото не загрузилось ('.$e->getMessage().') — повтор на следующем тике');
+            }
+
+            return [[], 'VK: видео не загрузилось ('.$e->getMessage().') — пост опубликован текстом'];
         }
 
         return [[$attachment], null];
