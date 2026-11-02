@@ -349,6 +349,26 @@ class PublishDueContentCommandTest extends TestCase
         $this->assertNull($slot->publications()->first()->warning);
     }
 
+    public function test_failed_photo_upload_is_retried_not_posted_as_link_card(): void
+    {
+        VkUserToken::query()->update(['scope' => 'wall photos video offline']);
+        Storage::fake(ContentCalendarSlot::MEDIA_DISK);
+        Storage::disk(ContentCalendarSlot::MEDIA_DISK)->put('content-calendar/cover.jpg', 'JPEGDATA');
+        $this->fakeApis([
+            'photos.getWallUploadServer' => fn () => Http::response(['response' => ['upload_url' => 'https://pu.vk.example/upload']]),
+            'pu.vk.example' => fn () => Http::response(['server' => 7, 'photo' => '[]', 'hash' => 'h']),
+        ]);
+
+        $slot = $this->slot(['media_path' => 'content-calendar/cover.jpg', 'destinations' => ['vk_a']]);
+        $this->artisan('content:publish-due')->assertSuccessful();
+
+        $this->assertSame(0, self::sentTo('wall.post'));
+        $vk = $slot->publications()->first();
+        $this->assertSame(ContentCalendarPublication::STATUS_PENDING, $vk->status);
+        $this->assertStringContainsString('фото не загрузилось', $vk->error);
+        $this->assertSame(ContentCalendarSlot::STATUS_SCHEDULED, $slot->fresh()->status);
+    }
+
     public function test_prohibited_slot_is_held_as_draft_and_never_sent(): void
     {
         $this->fakeApis();
