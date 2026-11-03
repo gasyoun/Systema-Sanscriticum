@@ -14,6 +14,7 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Sleep;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
@@ -351,6 +352,7 @@ class PublishDueContentCommandTest extends TestCase
 
     public function test_failed_photo_upload_is_retried_not_posted_as_link_card(): void
     {
+        Sleep::fake();
         VkUserToken::query()->update(['scope' => 'wall photos video offline']);
         Storage::fake(ContentCalendarSlot::MEDIA_DISK);
         Storage::disk(ContentCalendarSlot::MEDIA_DISK)->put('content-calendar/cover.jpg', 'JPEGDATA');
@@ -363,10 +365,39 @@ class PublishDueContentCommandTest extends TestCase
         $this->artisan('content:publish-due')->assertSuccessful();
 
         $this->assertSame(0, self::sentTo('wall.post'));
+        $this->assertSame(3, self::sentTo('pu.vk.example'));
         $vk = $slot->publications()->first();
         $this->assertSame(ContentCalendarPublication::STATUS_PENDING, $vk->status);
         $this->assertStringContainsString('фото не загрузилось', $vk->error);
         $this->assertSame(ContentCalendarSlot::STATUS_SCHEDULED, $slot->fresh()->status);
+    }
+
+    // 03-11-2026: upload-сервер VK под параллельной нагрузкой отвечает
+    // HTML «405 Not Allowed» — повтор с новым upload_url в той же попытке.
+    public function test_upload_server_405_is_retried_within_the_same_attempt(): void
+    {
+        Sleep::fake();
+        VkUserToken::query()->update(['scope' => 'wall photos video offline']);
+        Storage::fake(ContentCalendarSlot::MEDIA_DISK);
+        Storage::disk(ContentCalendarSlot::MEDIA_DISK)->put('content-calendar/cover.jpg', 'JPEGDATA');
+        $uploads = 0;
+        $this->fakeApis([
+            'photos.getWallUploadServer' => fn () => Http::response(['response' => ['upload_url' => 'https://pu.vk.example/upload']]),
+            'pu.vk.example' => function () use (&$uploads) {
+                return ++$uploads === 1
+                    ? Http::response('<html><title>405 Not Allowed</title><center>kittenx</center></html>', 405)
+                    : Http::response(['server' => 7, 'photo' => '[{"p":1}]', 'hash' => 'h']);
+            },
+            'photos.saveWallPhoto' => fn () => Http::response(['response' => [['owner_id' => -111, 'id' => 5]]]),
+        ]);
+
+        $slot = $this->slot(['media_path' => 'content-calendar/cover.jpg', 'destinations' => ['vk_a']]);
+        $this->artisan('content:publish-due')->assertSuccessful();
+
+        $this->assertSame(2, self::sentTo('photos.getWallUploadServer'));
+        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'wall.post') && $r['attachments'] === 'photo-111_5');
+        $this->assertSame(ContentCalendarPublication::STATUS_PUBLISHED, $slot->publications()->first()->status);
+        Sleep::assertSleptTimes(1);
     }
 
     public function test_prohibited_slot_is_held_as_draft_and_never_sent(): void
