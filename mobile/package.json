@@ -24,7 +24,7 @@
     "@capacitor/status-bar": "^8.0.4"
   },
   "devDependencies": {
-    "dotenv": "^18.0.4",
+    "dotenv": "^18.0.9",
     "typescript": "^7.0.2"
   },
   "overrides": {
