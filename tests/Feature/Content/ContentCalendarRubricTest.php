@@ -6,6 +6,7 @@ namespace Tests\Feature\Content;
 
 use App\Filament\Resources\ContentCalendarRubricResource;
 use App\Filament\Resources\ContentCalendarSlotResource;
+use App\Jobs\PublishCalendarSlotJob;
 use App\Models\ContentCalendarPublication;
 use App\Models\ContentCalendarRubric;
 use App\Models\ContentCalendarSlot;
@@ -16,6 +17,7 @@ use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Mockery\MockInterface;
@@ -247,7 +249,7 @@ class ContentCalendarRubricTest extends TestCase
     public function test_paused_rubric_posts_are_not_published(): void
     {
         config(['features.content_calendar_autopilot' => true]);
-        \Illuminate\Support\Facades\Bus::fake();
+        Bus::fake();
         $paused = $this->rubric(['is_active' => false]);
         $active = $this->rubric(['name' => 'Слово']);
         $held = $this->rubricPost($paused, '2026-10-28 12:00:00');
@@ -255,8 +257,8 @@ class ContentCalendarRubricTest extends TestCase
 
         $this->artisan('content:publish-due')->assertSuccessful();
 
-        \Illuminate\Support\Facades\Bus::assertDispatched(\App\Jobs\PublishCalendarSlotJob::class, fn ($job) => $job->slotId === $due->id);
-        \Illuminate\Support\Facades\Bus::assertNotDispatched(\App\Jobs\PublishCalendarSlotJob::class, fn ($job) => $job->slotId === $held->id);
+        Bus::assertDispatched(PublishCalendarSlotJob::class, fn ($job) => $job->slotId === $due->id);
+        Bus::assertNotDispatched(PublishCalendarSlotJob::class, fn ($job) => $job->slotId === $held->id);
         $this->assertSame(ContentCalendarSlot::STATUS_SCHEDULED, $held->refresh()->status);
         $this->assertTrue($held->isRubricPaused());
     }
