@@ -41,6 +41,8 @@ jobs:
       - name: Commit refreshed lock
         env:
           GH_TOKEN: ${{ github.token }}
+          # github.ref_name — только через env, не подстановкой в run: (semgrep run-shell-injection).
+          CURRENT_REF: ${{ github.ref_name }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -52,7 +54,6 @@ jobs:
           git commit -m "chore(deps): composer update for security advisories (audit gate)"
           # main is protected (GH006-class): ship via bot PR; fix-branch
           # dispatches push onward.
-          CURRENT_REF="${{ github.ref_name }}"
           if [ "$CURRENT_REF" = "main" ]; then
             BRANCH="bot/composer-security-update"
             git push -f origin "HEAD:$BRANCH"
@@ -61,5 +62,5 @@ jobs:
               --body "Automated composer update of the flagged packages. Auto-merges when required checks pass." 2>/dev/null || true
             gh pr merge "$BRANCH" --squash --auto || gh pr merge "$BRANCH" --squash
           else
-            git push origin "HEAD:${{ github.ref_name }}"
+            git push origin "HEAD:$CURRENT_REF"
           fi
