@@ -28,8 +28,6 @@ jobs:
       - uses: shivammathur/setup-php@9e72090525849c5e812229a44bf1e5dc6ac0b66a # v2
         with:
           php-version: "8.3"
-        with:
-          php-version: "8.3"
 
       - name: Composer update (flagged packages, within constraints)
         run: |
