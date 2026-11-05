@@ -74,16 +74,17 @@ class RubricScheduler
     /**
      * Невышедшие посты рубрики (scheduled, будущие или без даты, без
      * публикаций) — на моменты расписания подряд, в прежнем порядке.
+     * $includeOverdue — и просроченные (пропущенные за паузу рубрики).
      *
      * @return int сколько постов получили новое время
      */
-    public function reflow(ContentCalendarRubric $rubric, ?CarbonInterface $now = null): int
+    public function reflow(ContentCalendarRubric $rubric, ?CarbonInterface $now = null, bool $includeOverdue = false): int
     {
         $from = Carbon::instance($now ?? Carbon::now(self::TZ))->addMinutes(self::LEAD_MINUTES);
 
         $queue = $rubric->slots()
             ->where('status', ContentCalendarSlot::STATUS_SCHEDULED)
-            ->where(fn ($q) => $q->whereNull('publish_at')->orWhere('publish_at', '>', $from))
+            ->when(! $includeOverdue, fn ($q) => $q->where(fn ($q) => $q->whereNull('publish_at')->orWhere('publish_at', '>', $from)))
             ->whereDoesntHave('publications')
             ->orderByRaw('publish_at is null')
             ->orderBy('publish_at')

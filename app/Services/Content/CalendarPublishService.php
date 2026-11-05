@@ -36,6 +36,7 @@ class CalendarPublishService
 
         $due = ContentCalendarSlot::query()
             ->scheduled()
+            ->rubricActive() // рубрика выключена — её посты на паузе
             ->where('publish_at', '<=', $now)
             ->orderBy('publish_at')
             ->get();
