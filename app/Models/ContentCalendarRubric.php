@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Services\Content\PostFormatter;
+use App\Services\Content\RubricScheduler;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -15,6 +16,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * content:publish-due.
  *
  * schedule: [{"days": [1, 3, 5], "time": "18:00"}, …], дни ISO (1 = пн).
+ *
+ * is_active (05-11-2026): выключенная рубрика на паузе — её посты стоят в
+ * календаре, но не публикуются (publish-due их пропускает). Включение
+ * пересобирает очередь вместе с просроченными за паузу постами: они встают
+ * на ближайшие выходы, а не выходят пачкой.
  */
 class ContentCalendarRubric extends Model
 {
@@ -42,6 +48,18 @@ class ContentCalendarRubric extends Model
         'with_story' => true,
         'is_active' => true,
     ];
+
+    /** Сколько постов получили новое время при последнем включении. */
+    public int $reflowedOnActivation = 0;
+
+    protected static function booted(): void
+    {
+        static::updated(function (self $rubric): void {
+            if ($rubric->wasChanged('is_active') && $rubric->is_active) {
+                $rubric->reflowedOnActivation = app(RubricScheduler::class)->reflow($rubric, includeOverdue: true);
+            }
+        });
+    }
 
     public function slots(): HasMany
     {

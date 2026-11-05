@@ -100,7 +100,8 @@ class ContentCalendarRubricResource extends Resource
                 ->default(true),
             Forms\Components\Toggle::make('is_active')
                 ->label('Активна')
-                ->helperText('Выключенную рубрику нельзя выбрать для нового поста, и о пустой очереди она не предупреждает. Уже стоящие посты выйдут.')
+                ->helperText('Выключенная рубрика на паузе: её посты не публикуются, о пустой очереди она не предупреждает. '
+                    .'При включении пропущенные посты встанут на ближайшие выходы по расписанию.')
                 ->default(true),
         ]);
     }
@@ -138,7 +139,16 @@ class ContentCalendarRubricResource extends Resource
                     ->label('Следующий пост встанет на')
                     ->state(fn (ContentCalendarRubric $record): ?string => app(RubricScheduler::class)->nextFreeAt($record)?->format('d.m.Y H:i')),
                 Tables\Columns\IconColumn::make('with_story')->label('Сторис')->boolean(),
-                Tables\Columns\IconColumn::make('is_active')->label('Активна')->boolean(),
+                Tables\Columns\ToggleColumn::make('is_active')
+                    ->label('Активна')
+                    ->tooltip('Выключенная рубрика на паузе: посты не публикуются')
+                    ->afterStateUpdated(function (ContentCalendarRubric $record, bool $state): void {
+                        Notification::make()
+                            ->title($state
+                                ? "«{$record->name}» включена".($record->reflowedOnActivation > 0 ? " — новое время получили постов: {$record->reflowedOnActivation}" : '')
+                                : "«{$record->name}» на паузе — её посты не публикуются")
+                            ->success()->send();
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

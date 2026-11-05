@@ -308,7 +308,9 @@ class ContentCalendarSlotResource extends Resource
                 Tables\Columns\TextColumn::make('slot_date')->label('Дата')->date('d.m.Y')->sortable(),
                 Tables\Columns\TextColumn::make('slot_type')->label('Тип')->badge(),
                 Tables\Columns\TextColumn::make('status')->label('Статус')->badge(),
-                Tables\Columns\TextColumn::make('rubric.name')->label('Рубрика')->placeholder('—')->toggleable(),
+                Tables\Columns\TextColumn::make('rubric.name')->label('Рубрика')->placeholder('—')->toggleable()
+                    ->description(fn (ContentCalendarSlot $record): ?string => $record->isRubricPaused() ? 'пауза' : null)
+                    ->color(fn (ContentCalendarSlot $record): ?string => $record->isRubricPaused() ? 'gray' : null),
                 Tables\Columns\TextColumn::make('title')->label('Заголовок')->limit(40)->wrap(),
                 Tables\Columns\TextColumn::make('body')
                     ->label('Текст')

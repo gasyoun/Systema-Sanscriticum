@@ -70,6 +70,11 @@ class PublishCalendarSlotJob implements ShouldBeUnique, ShouldQueue
             return;
         }
 
+        // Рубрику выключили, пока джоба стояла в очереди.
+        if ($slot->isRubricPaused()) {
+            return;
+        }
+
         // Слот из TG-канала диспатчится в обход content:publish-due — чек-лист
         // §2.8 здесь (для остальных no-op: тик уже отметил checklist_passed_at).
         if (! $service->passesChecklist($slot)) {

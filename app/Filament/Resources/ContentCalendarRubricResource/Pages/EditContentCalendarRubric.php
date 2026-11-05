@@ -32,7 +32,11 @@ class EditContentCalendarRubric extends EditRecord
     protected function afterSave(): void
     {
         /** @var ContentCalendarRubric $rubric */
-        $rubric = $this->getRecord()->refresh();
+        $rubric = $this->getRecord();
+        if ($rubric->reflowedOnActivation > 0) {
+            Notification::make()->title("Рубрика включена — новое время получили постов: {$rubric->reflowedOnActivation}")->success()->send();
+        }
+        $rubric->refresh();
 
         $synced = $rubric->syncSlotDestinations();
         if ($synced > 0) {

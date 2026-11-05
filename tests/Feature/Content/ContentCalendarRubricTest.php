@@ -244,6 +244,55 @@ class ContentCalendarRubricTest extends TestCase
         $this->assertSame(['tg_institut'], $sent->refresh()->destinations);
     }
 
+    public function test_paused_rubric_posts_are_not_published(): void
+    {
+        config(['features.content_calendar_autopilot' => true]);
+        \Illuminate\Support\Facades\Bus::fake();
+        $paused = $this->rubric(['is_active' => false]);
+        $active = $this->rubric(['name' => 'Слово']);
+        $held = $this->rubricPost($paused, '2026-10-28 12:00:00');
+        $due = $this->rubricPost($active, '2026-10-28 12:00:00');
+
+        $this->artisan('content:publish-due')->assertSuccessful();
+
+        \Illuminate\Support\Facades\Bus::assertDispatched(\App\Jobs\PublishCalendarSlotJob::class, fn ($job) => $job->slotId === $due->id);
+        \Illuminate\Support\Facades\Bus::assertNotDispatched(\App\Jobs\PublishCalendarSlotJob::class, fn ($job) => $job->slotId === $held->id);
+        $this->assertSame(ContentCalendarSlot::STATUS_SCHEDULED, $held->refresh()->status);
+        $this->assertTrue($held->isRubricPaused());
+    }
+
+    public function test_activation_moves_posts_missed_during_pause_to_next_runs(): void
+    {
+        $rubric = $this->rubric(['is_active' => false]); // пн/ср/пт 18:00
+        $missed1 = $this->rubricPost($rubric, '2026-10-23 18:00:00');
+        $missed2 = $this->rubricPost($rubric, '2026-10-26 18:00:00');
+        $future = $this->rubricPost($rubric, '2026-11-02 18:00:00');
+
+        $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
+        Livewire::test(ContentCalendarRubricResource\Pages\ListContentCalendarRubrics::class)
+            ->call('updateTableColumnState', 'is_active', (string) $rubric->getKey(), true)
+            ->assertNotified('«Анонс курсов» включена — новое время получили постов: 2');
+
+        $this->assertTrue($rubric->refresh()->is_active);
+        $this->assertSame('2026-10-28 18:00', $missed1->refresh()->publish_at->format('Y-m-d H:i'));
+        $this->assertSame('2026-10-30 18:00', $missed2->refresh()->publish_at->format('Y-m-d H:i'));
+        $this->assertSame('2026-11-02 18:00', $future->refresh()->publish_at->format('Y-m-d H:i'));
+    }
+
+    public function test_deactivation_from_list_keeps_dates(): void
+    {
+        $rubric = $this->rubric();
+        $slot = $this->rubricPost($rubric, '2026-10-30 18:00:00');
+
+        $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
+        Livewire::test(ContentCalendarRubricResource\Pages\ListContentCalendarRubrics::class)
+            ->call('updateTableColumnState', 'is_active', (string) $rubric->getKey(), false)
+            ->assertNotified('«Анонс курсов» на паузе — её посты не публикуются');
+
+        $this->assertFalse($rubric->refresh()->is_active);
+        $this->assertSame('2026-10-30 18:00', $slot->refresh()->publish_at->format('Y-m-d H:i'));
+    }
+
     public function test_rubric_list_renders(): void
     {
         $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
