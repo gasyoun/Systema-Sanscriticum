@@ -23,15 +23,16 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea # 2.40.0
         with:
           php-version: "8.3"
 
       - name: Composer update (flagged packages, within constraints)
+        env:
+          PKGS: ${{ github.event.inputs.packages }}
         run: |
-          PKGS=$(echo "${{ github.event.inputs.packages }}" | tr ',' ' ')
           composer update $PKGS --with-dependencies --no-interaction --no-progress
 
       - name: Verify audit
@@ -51,7 +52,8 @@ jobs:
           git commit -m "chore(deps): composer update for security advisories (audit gate)"
           # main is protected (GH006-class): ship via bot PR; fix-branch
           # dispatches push onward.
-          if [ "${{ github.ref_name }}" = "main" ]; then
+          CURRENT_REF="${{ github.ref_name }}"
+          if [ "$CURRENT_REF" = "main" ]; then
             BRANCH="bot/composer-security-update"
             git push -f origin "HEAD:$BRANCH"
             gh pr create --head "$BRANCH" --base main \
