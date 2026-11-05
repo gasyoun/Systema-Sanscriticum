@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: shivammathur/setup-php@9e72090525849c5e812229a44bf1e5dc6ac0b66a # v2
+      - uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea # 2.40.0
         with:
           php-version: "8.3"
 
