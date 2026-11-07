@@ -68,9 +68,10 @@
         <video src="{{ asset('images/faq/dz-example-phone.mp4') }}" controls playsinline preload="none"
                class="w-full max-w-[300px] mx-auto rounded-2xl border border-gray-200 shadow-sm"></video>
         <figcaption class="text-sm text-gray-500 mt-2 text-center">
-            Видео: заполняем форму с телефона (~30 сек, без звука)
+            Видео: заполняем форму с телефона
         </figcaption>
     </figure>
+    <p class="text-xs text-gray-400 text-center mb-3">~30 сек, без звука</p>
     <p class="text-gray-500 text-sm leading-relaxed mb-8">
         Куратору работу показывает только <strong>«Отправить на проверку»</strong> — «Сохранить черновик»
         оставляет её у вас.
