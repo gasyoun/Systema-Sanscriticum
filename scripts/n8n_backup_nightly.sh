@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+# H7690 — nightly disaster-recovery pack for the n8n stack on vps91 (context-ai.ru)
+# Created: 07-11-2026
+#
+# Nightly (default): one small tar with everything a rebuild needs — compose files,
+# .env (N8N_ENCRYPTION_KEY lives there; without it credentials never decrypt again),
+# caddy/, patches/, entrypoint + tg-webhook scripts, and a CONSISTENT sqlite snapshot
+# taken with `sqlite3 .backup` while prod keeps running. storage/binaryData and this
+# backups/ directory are never inside the nightly tar.
+#
+# Weekly (--full): same tar plus storage/binaryData, linked in rather than copied so
+# the box never holds two copies of it. Weekly tar is pushed and then removed locally.
+#
+# After every run the fresh tar is pushed off-box to duck (US, geo-separated) and the
+# copy is PROVEN by size + fresh-mtime probe on the far side — logs are not trusted.
+#
+# Retention: 14 archives, locally and on the off-box (never the one just written).
+# Restore procedure: docs/runbooks/n8n-vps91-migration.md (Systema-Sanscriticum).
+set -euo pipefail
+
+BASE=/opt/n8n
+BK="$BASE/backups"
+LOG=/var/log/n8n-backup.log
+OFF_PRIMARY="root@147.189.174.159"   # duck, US — geo-separated
+OFF_FALLBACK="root@193.232.229.92"   # .92 — SAME SPb DC as .91: a copy, not a DR site
+OFF_KEY="$HOME/.ssh/id_n8n_backup_duck"
+OFF_DIR="/root/n8n-backups"
+KEEP=14
+MAX_NIGHTLY_MB=500
+MIN_FREE_MB=2048
+
+FULL=0
+[ "${1:-}" = "--full" ] && FULL=1
+
+log() { printf '%s %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$LOG" >&2; }
+die() { log "FATAL: $*"; exit 1; }
+free_mb() { df -Pm "$1" | awk 'NR==2 {print $4}'; }
+
+mkdir -p "$BK"
+exec 9>"$BK/.backup.lock"
+flock -n 9 || die "another backup run holds $BK/.backup.lock"
+
+DAY=$(date +%Y%m%d)
+NAME="n8n-migration-$DAY.tar.gz"
+[ -e "$BK/$NAME" ] && NAME="n8n-migration-$DAY-$(date +%H%M%S).tar.gz"
+OUT="$BK/$NAME"
+
+STAGE=$(mktemp -d "$BK/.stage.XXXXXX")
+cleanup() { rm -rf "$STAGE"; }
+trap cleanup EXIT
+
+AVAIL=$(free_mb "$BK")
+[ "$AVAIL" -ge "$MIN_FREE_MB" ] || die "only ${AVAIL}MB free on $BK (< ${MIN_FREE_MB}MB guard); refusing to write"
+log "start name=$NAME mode=$([ "$FULL" = 1 ] && echo full || echo nightly) free=${AVAIL}MB"
+
+# --- (a) consistent DB snapshot; prod containers stay up --------------------
+[ -f "$BASE/storage/database.sqlite" ] || die "storage/database.sqlite missing"
+# .backup uses SQLite's online-backup API and is WAL-safe against a live writer.
+sqlite3 "$BASE/storage/database.sqlite" ".backup '$STAGE/database.sqlite'"
+[ "$(sqlite3 "$STAGE/database.sqlite" 'PRAGMA quick_check;')" = ok ] || die "DB snapshot failed quick_check"
+log "db snapshot ok: $(du -h "$STAGE/database.sqlite" | cut -f1)"
+
+# --- (b) stage exactly what a rebuild needs, nothing else -------------------
+mkdir -p "$STAGE/caddy" "$STAGE/patches" "$STAGE/db"
+cp -p "$BASE/docker-compose.yml" "$STAGE/"
+[ -f "$BASE/docker-compose.override.yml" ] && cp -p "$BASE/docker-compose.override.yml" "$STAGE/"
+cp -p "$BASE/.env" "$STAGE/.env"
+[ -f "$BASE/caddy/Caddyfile" ] && cp -p "$BASE/caddy/Caddyfile" "$STAGE/caddy/"
+[ -d "$BASE/patches" ] && cp -p "$BASE"/patches/* "$STAGE/patches/" 2>/dev/null || true
+for f in entrypoint-with-env-patch.sh tg-webhook-reregister.sh tg-webhook-guard-check.sh tg91.crt; do
+  # tg91.crt = PUBLIC half of the self-signed cert duck's relay presents; setWebhook
+  # needs it re-uploaded after any migration. Its private key lives only on duck
+  # (/etc/nginx/ssl/tg91.key) — see the runbook's §7 caveat.
+  [ -f "$BASE/$f" ] && cp -p "$BASE/$f" "$STAGE/"
+done
+# n8n runtime config dir (tiny; carries paths/umask state). NOT binaryData.
+[ -d "$BASE/storage/config" ] && cp -a "$BASE/storage/config" "$STAGE/storage-config"
+mv "$STAGE/database.sqlite" "$STAGE/db/database.sqlite"
+
+if [ "$FULL" = 1 ]; then
+  [ -d "$BASE/storage/storage" ] || die "full run: storage/storage missing"
+  BD_MB=$(du -sm "$BASE/storage/storage" | cut -f1)
+  # only the compressed output is written, so the box never holds a second copy
+  [ "$AVAIL" -ge $(( BD_MB / 2 + 1024 )) ] || die "full run: ${AVAIL}MB free, needs ~$(( BD_MB / 2 + 1024 ))MB"
+  ln -s "$BASE/storage/storage" "$STAGE/binaryData"
+  log "full run: binaryData linked, ${BD_MB}MB uncompressed"
+fi
+
+{
+  echo "created_utc=$(date -u +%FT%TZ)"
+  echo "host=$(hostname) ip=$(hostname -I | awk '{print $1}')"
+  echo "mode=$([ "$FULL" = 1 ] && echo full || echo nightly)"
+  echo "n8n_image=$(grep -m1 -o 'n8nio/n8n:[^ ]*' "$BASE/docker-compose.yml" || true)"
+  echo "caddy_image=$(grep -m1 -o 'caddy:[0-9][^ ]*' "$BASE/docker-compose.override.yml" 2>/dev/null || echo unset)"
+  echo "db_snapshot_sha256=$(sha256sum "$STAGE/db/database.sqlite" | cut -d' ' -f1)"
+  echo "restore=docs/runbooks/n8n-vps91-migration.md"
+} > "$STAGE/MANIFEST.txt"
+
+# -h: follow the binaryData link (full mode); binaryData/backups/ never in nightly
+tar -C "$STAGE" -czhf "$OUT" .
+SIZE=$(stat -c %s "$OUT"); SIZE_MB=$((SIZE/1024/1024))
+log "tar written $OUT ${SIZE_MB}MB"
+if [ "$FULL" = 0 ] && [ "$SIZE_MB" -gt "$MAX_NIGHTLY_MB" ]; then
+  log "WARN: nightly tar ${SIZE_MB}MB exceeds ${MAX_NIGHTLY_MB}MB budget"
+fi
+LIST="$STAGE/.listing"
+tar -tzf "$OUT" > "$LIST"
+grep -qx './.env' "$LIST"              || die "tar sanity: .env missing"
+grep -qx './db/database.sqlite' "$LIST" || die "tar sanity: db snapshot missing"
+grep -qx './docker-compose.yml' "$LIST" || die "tar sanity: docker-compose.yml missing"
+[ "$FULL" = 1 ] && { grep -qx './binaryData/' "$LIST" || die "tar sanity: binaryData missing in full run"; }
+
+# --- retention: 14 local, never the archive just written -------------------
+while IFS= read -r f; do
+  [ "$f" = "$OUT" ] || { rm -f -- "$f"; log "retention: removed $f"; }
+done < <(ls -1t "$BK"/n8n-migration-*.tar.gz 2>/dev/null | tail -n +$((KEEP+1)))
+
+# --- push off-box and PROVE it (size + fresh mtime on the far side) --------
+push() { # $1 host  $2 key (may be empty)  $3 label
+  local host="$1" key="$2" label="$3" rsize rmtime age
+  local -a SSHK=()
+  [ -n "$key" ] && SSHK=(-i "$key")
+  ssh "${SSHK[@]}" -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new "$host" "mkdir -p $OFF_DIR" || return 1
+  scp -q "${SSHK[@]}" -o BatchMode=yes -o ConnectTimeout=20 -o StrictHostKeyChecking=accept-new "$OUT" "$host:$OFF_DIR/" || return 1
+  rsize=$(ssh "${SSHK[@]}" -o BatchMode=yes -o ConnectTimeout=15 "$host" \
+      "stat -c '%s %Y' '$OFF_DIR/$NAME' 2>/dev/null") || return 1
+  rsize=${rsize:-}
+  [ -n "$rsize" ] || { log "offbox($label): file absent after copy"; return 1; }
+  rmtime=${rsize#* }; rsize=${rsize%% *}
+  [ "$rsize" = "$SIZE" ] || { log "offbox($label): size mismatch ${rsize} != $SIZE"; return 1; }
+  age=$(( $(date +%s) - rmtime ))
+  [ "$age" -le 900 ] || { log "offbox($label): copy mtime ${age}s old"; return 1; }
+  log "offbox($label) OK $host:$OFF_DIR/$NAME size=$rsize mtime_age=${age}s"
+  ssh "${SSHK[@]}" -o BatchMode=yes -o ConnectTimeout=15 "$host" \
+    "ls -1t $OFF_DIR/n8n-migration-*.tar.gz 2>/dev/null | tail -n +$((KEEP+1)) | while read -r r; do [ \"\$r\" = \"$OFF_DIR/$NAME\" ] || rm -f -- \"\$r\"; done" || true
+  return 0
+}
+
+PUSHED=0
+for try in 1 2 3; do
+  push "$OFF_PRIMARY" "$OFF_KEY" duck && { PUSHED=1; break; }
+  log "push $try/3 to duck failed; backoff $((try*10))s"; sleep $((try*10))
+done
+if [ "$PUSHED" = 0 ]; then
+  log "WARN: duck unreachable after 3 tries; falling back to .92 (SAME SPb DC as .91 — NOT geo-separated)"
+  for try in 1 2 3; do
+    push "$OFF_FALLBACK" "" 92 && { PUSHED=1; break; }
+    log "push $try/3 to .92 failed; backoff $((try*10))s"; sleep $((try*10))
+  done
+fi
+[ "$PUSHED" = 1 ] || die "no off-box copy landed (duck and .92 both failed)"
+
+# weekly full archive is transient: it exists to get off-box, not to sit on a 89%-full disk
+if [ "$FULL" = 1 ]; then rm -f -- "$OUT"; log "full archive removed locally after verified push"; fi
+log "done name=$NAME size_mb=$SIZE_MB"
