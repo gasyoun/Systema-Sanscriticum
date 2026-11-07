@@ -68,6 +68,13 @@ class ContentCalendarRubricResource extends Resource
                 ->label('Префикс первой строки (необязательно)')
                 ->helperText('Добавится в начало текста каждого поста рубрики, если текст с него ещё не начинается. Например: «🗣 Анонс курсов · ».')
                 ->maxLength(100),
+            Forms\Components\TextInput::make('hashtags')
+                ->label('Хештеги')
+                ->maxLength(500)
+                ->placeholder('#санскрит #неделя_в_группах')
+                ->helperText('Через пробел. Встанут последней строкой каждого поста рубрики в TG и VK — и у уже запланированных постов. '
+                    .'Входят в лимит 1024 знака подписи к картинке.')
+                ->columnSpanFull(),
             Forms\Components\Repeater::make('schedule')
                 ->label('Расписание (MSK)')
                 ->schema([
