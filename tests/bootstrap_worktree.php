@@ -21,7 +21,8 @@ if ($loader instanceof ClassLoader) {
     $ref = new ReflectionClass($loader);
     if ($ref->hasProperty('classMap')) {
         $prop = $ref->getProperty('classMap');
-        $prop->setAccessible(true);
+        // setAccessible() убраны (H7606): no-op с PHP 8.1, а их Deprecated-вывод
+        // ронял отдельные процессы (RunInSeparateProcess) ещё до старта теста.
         /** @var array<string, string> $map */
         $map = $prop->getValue($loader);
         foreach (array_keys($map) as $class) {
@@ -38,7 +39,6 @@ if ($loader instanceof ClassLoader) {
 
     if ($ref->hasProperty('classMapAuthoritative')) {
         $auth = $ref->getProperty('classMapAuthoritative');
-        $auth->setAccessible(true);
         $auth->setValue($loader, false);
     }
 }

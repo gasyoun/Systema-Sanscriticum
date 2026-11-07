@@ -4,13 +4,24 @@ set -uo pipefail
 LOG=/var/log/restic-backup.log
 export RESTIC_PASSWORD_FILE=/root/.restic-pass
 export RESTIC_REPOSITORY=sftp:restic-push@192.168.200.91:/systema
-RESTIC_ARGS=(-o "sftp.command=ssh restic-push@192.168.200.91 -i /root/.ssh/id_restic_push -s sftp")
+export HOME=/root
+RESTIC_ARGS=(-o "sftp.command=ssh restic-push@192.168.200.91 -i /root/.ssh/id_restic_push -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -s sftp")
 
 DUMP_SCRIPT=/usr/local/sbin/systema-db-dump.sh
 SAMUDRA_DB_DIR=/opt/samudra/db
 S3_ENV_FILE=/root/.restic-s3.env
 S3_ENDPOINT=https://storage.yandexcloud.net
 ts() { date -u +%Y-%m-%dT%H:%M:%SZ; }
+
+# 101026 (#3126): single-flight guard. 09-10 21:33 an out-of-band manual restic
+# hung for ~9h holding the repo exclusive lock; every timer run kept failing on
+# "repo already locked". Flock prevents overlapping runs; the ssh keepalive above
+# bounds a hung SFTP leg to <=60s instead of forever.
+exec 9>/var/lock/systema-restic-run.lock
+if ! flock -n 9; then
+    echo "$(ts) run SKIPPED: another restic run holds the flock" >>"$LOG"
+    exit 0
+fi
 
 # H3177: failure alerts reach Telegram via the shared sink (host + lane + log tail).
 ALERT_SCRIPT=/usr/local/sbin/systema-backup/backup_alert.py
@@ -26,6 +37,14 @@ alert_fail() { # alert_fail LANE SUBJECT
 overall_rc=0
 
 # 1. dump the Systema (Laravel) DB
+# H3038: the hour-gate (00/06/12/18 UTC) made sense under the hourly timer, but
+# on 17-10 MG cut the cadence to DAILY 03:30 UTC (issue #3038, H6352-r9) — with
+# hours 03-04 after jitter the gate skipped EVERY run and the DB dump went
+# stale (found 20-10: laravel.sql frozen since 17-10). Un-gated: ONE DUMP PER
+# RUN, so the DB RPO now follows the timer: <=12h since 25-10-2026, when MG
+# added a second daily push at 15:30Z (GTD WHL, «add second») instead of
+# restoring the hourly cadence. Runs are ~10x cheaper now (~10 MB packs/run)
+# than the hourly era, so the inflow concern is moot.
 if "$DUMP_SCRIPT" >>"$LOG" 2>&1; then
     dump_status=OK
 else
@@ -70,7 +89,7 @@ echo "$(ts) lane=samudra dest=sftp backup=${samudra_status}" >>"$LOG"
 # the newest snapshot of each tag must carry >= 80% of its predecessor's
 # payload, else THIS RUN FAILS (replays the 11 MB-stub-vs-1.4 GB incident).
 SANITY_SCRIPT=/usr/local/sbin/systema-backup/size_sanity_check.py
-SFTP_OPTS='"-o" "sftp.command=ssh restic-push@192.168.200.91 -i /root/.ssh/id_restic_push -s sftp"'
+SFTP_OPTS='"-o" "sftp.command=ssh restic-push@192.168.200.91 -i /root/.ssh/id_restic_push -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -s sftp"'
 if [ -x "$SANITY_SCRIPT" ]; then
     for TAG in systema samudra; do
         if RESTIC_CLI_OPTS="$SFTP_OPTS" python3 "$SANITY_SCRIPT" --repo "$RESTIC_REPOSITORY" \
@@ -158,6 +177,6 @@ fi
 
 echo "$(ts) run_complete overall_rc=${overall_rc} systema=${systema_status} samudra=${samudra_status} sftp=${sftp_agg} s3=${s3_status}" >>"$LOG"
 if [ "$overall_rc" != 0 ]; then
-    alert_fail run-summary "hourly restic run FAILED (rc=1) — see tail"
+    alert_fail run-summary "restic run FAILED (rc=1) — see tail"
 fi
 exit "$overall_rc"

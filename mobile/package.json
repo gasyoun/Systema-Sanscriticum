@@ -14,21 +14,23 @@
     "icons": "npx --yes @capacitor/assets generate"
   },
   "dependencies": {
-    "@capacitor/android": "^8.5.1",
-    "@capacitor/app": "^8.1.1",
-    "@capacitor/browser": "^8.0.4",
-    "@capacitor/cli": "^8.5.1",
-    "@capacitor/core": "^8.5.1",
-    "@capacitor/ios": "^8.5.1",
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/browser": "^8.0.5",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.6.0",
     "@capacitor/splash-screen": "^8.0.2",
-    "@capacitor/status-bar": "^8.0.3"
+    "@capacitor/status-bar": "^8.0.4"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
-    "dotenv": "^18.0.1",
+    "dotenv": "^18.0.9",
     "typescript": "^7.0.2"
   },
   "overrides": {
-    "uuid": "11.1.1"
+    "uuid": "11.1.1",
+    "glob": "^14.0.3",
+    "minimatch": "^11.0.3"
   }
 }

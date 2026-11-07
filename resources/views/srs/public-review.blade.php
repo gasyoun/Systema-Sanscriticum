@@ -5,6 +5,12 @@
 
 @push('head')
     <link rel="canonical" href="{{ route('srs.deck', ['slug' => $deck?->slug ?? $slug]) }}">
+
+    @include('partials.schema-breadcrumbs', ['crumbs' => array_values(array_filter([
+        ['name' => 'Главная', 'url' => url('/')],
+        ['name' => 'Колоды', 'url' => url('/koloda')],
+        ['name' => $deck?->seoTitle() ?? 'Карточки'],
+    ]))])
     @if($deck !== null && ! $deck->isSeoIndexable())
         {{-- SEO-META-1: generic "Level N" shells duplicate level 1; keep them crawlable but out of the index. --}}
         <meta name="robots" content="noindex, follow">

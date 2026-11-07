@@ -6,6 +6,11 @@
 
 @push('head')
     <link rel="canonical" href="{{ url('/prepodavately') }}">
+
+    @include('partials.schema-breadcrumbs', ['crumbs' => [
+        ['name' => 'Главная', 'url' => url('/')],
+        ['name' => 'Преподаватели'],
+    ]])
     <meta name="robots" content="index, follow">
 
     {{-- SEO: ItemList из персон — поисковики собирают из него «карусель» преподавателей --}}

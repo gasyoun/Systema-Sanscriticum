@@ -58,7 +58,7 @@ final class StoriesImportQueueCommand extends Command
                 continue;
             }
 
-            [$date, $text, $hour] = $parsed;
+            [$date, $text, $hour, $media] = $parsed;
             $exists = StoryPost::query()
                 ->where('source', StoryPost::SOURCE_QUEUE)
                 ->where('source_key', $basename)
@@ -69,16 +69,20 @@ final class StoriesImportQueueCommand extends Command
                 continue;
             }
 
+            // H6915: строка «Медиа» в шапке несёт ABSOLUTE путь к видео —
+            // пакет kind=video с media_path; без неё — обычный текст.
             StoryPost::query()->create([
-                'kind' => StoryPost::KIND_TEXT,
+                'kind' => $media !== null ? StoryPost::KIND_VIDEO : StoryPost::KIND_TEXT,
                 'payload' => $text,
+                'media_path' => $media,
                 'source' => StoryPost::SOURCE_QUEUE,
                 'source_key' => $basename,
                 'status' => StoryPost::STATUS_DRAFT,
                 'publish_at' => Carbon::parse($date)->setHour($hour ?? $defaultHour)->setMinute(0)->setSecond(0),
             ]);
             $imported++;
-            $this->line("Imported {$basename} → draft, publish {$date} ".sprintf('%02d', $hour ?? $defaultHour).':00');
+            $this->line('Imported '.$basename.' → '.($media !== null ? 'video' : 'draft')
+                .", publish {$date} ".sprintf('%02d', $hour ?? $defaultHour).':00');
         }
 
         $this->info("Import done: imported={$imported}, already={$skippedExisting}, unmatched_files={$skippedName}.");
@@ -87,7 +91,7 @@ final class StoriesImportQueueCommand extends Command
     }
 
     /**
-     * @return array{0: string, 1: string, 2: int|null}|null [YYYY-MM-DD, текст, час из слота]
+     * @return array{0: string, 1: string, 2: int|null, 3: string|null}|null [YYYY-MM-DD, текст, час из слота, media_path||null]
      */
     private function parseFile(string $file): ?array
     {
@@ -137,6 +141,12 @@ final class StoriesImportQueueCommand extends Command
             }
         }
 
-        return [$date, $text, $hour];
+        // H6915: «| Медиа | /abs/video.mp4 |» — видео-пакет (kind=video).
+        $media = null;
+        if (preg_match('/^\|\s*(?:Медиа|Media)\s*\|\s*(\S+)\s*\|/mu', $content, $m) === 1) {
+            $media = trim($m[1]);
+        }
+
+        return [$date, $text, $hour, $media];
     }
 }

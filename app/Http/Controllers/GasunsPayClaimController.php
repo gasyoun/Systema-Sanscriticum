@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\AttributionService;
 use App\Services\Consent\ConsentRecorder;
 use App\Services\CuratorNotifier;
+use App\Services\Payments\ClaimTrustGate;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -63,8 +64,8 @@ final class GasunsPayClaimController extends Controller
         // Зеркало PaypalClaimController (H5083): флаг читаем ДО resolveUser —
         // resolveUser логинит только что созданного гостя, и после него
         // auth()->check() уже не отличит устоявшегося ученика от новой сессии.
-        $trusted = auth()->check()
-            && auth()->user()->isEstablishedClaimStudent()
+        // H6395 lever 2 (WIC): предикат живёт в ClaimTrustGate (OFF = легаси).
+        $trusted = app(ClaimTrustGate::class)->trusts(auth()->user(), ClaimTrustGate::GASUNS_PAY)
             && (bool) config('services.gasuns_pay.trust_existing_students', true);
 
         $user = $this->resolveUser($request);

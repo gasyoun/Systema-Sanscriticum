@@ -25,6 +25,12 @@
 @push('head')
     <link rel="canonical" href="{{ url($canonicalPath) }}">
     <meta name="robots" content="index, follow">
+
+    @include('partials.schema-breadcrumbs', ['crumbs' => array_values(array_filter([
+        ['name' => 'Главная', 'url' => url('/')],
+        ['name' => 'Колоды', 'url' => url('/koloda')],
+        in_array($langWord, [null, '', 'sanskrit'], true) ? null : ['name' => $langH1],
+    ]))])
 @endpush
 
 @section('content')

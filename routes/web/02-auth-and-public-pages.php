@@ -13,6 +13,7 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PublicCabinetGuideController;
 use App\Http\Controllers\ReadingPackController;
 use App\Http\Controllers\RecordingGateController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\TransliterateController;
 use App\Http\Controllers\VisualDcsController;
@@ -96,6 +97,17 @@ Route::get('/help/kabinet', [PublicCabinetGuideController::class, 'show'])
 // Публичная «сайт жив?» для учеников (VPN vs наш сервер + @rusamskrtam).
 // До catch-all /{slug}. Зеркало на GitHub Pages: /uptime/ в корне репо.
 Route::view('/uptime', 'uptime')->name('uptime.show');
+
+// ═══════════════════════════════════════════════════════════════
+// ГЛОБАЛЬНЫЙ ПОИСК САЙТА (H7590) — страница полных результатов.
+// Канонический URL — path-style /poisk/{q}, БЕЗ ?q= (SEO-вердикт MG
+// 01-11-2026); GET /poisk?q=… (no-JS-форма) редиректится 301-м.
+// Клиентская половина (дропдаун в шапке, Fuse.js по public/search) —
+// partials/global-search.blade.php + resources/js/global-search*.js.
+// ВАЖНО: до catch-all /{slug}.
+// ═══════════════════════════════════════════════════════════════
+Route::get('/poisk', [SearchController::class, 'form'])->name('search.form');
+Route::get('/poisk/{q}', [SearchController::class, 'results'])->name('search.results');
 
 // ═══════════════════════════════════════════════════════════════
 // СТАТЬИ (блог) — ВАЖНО: должно быть до catch-all /{slug}

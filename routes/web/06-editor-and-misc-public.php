@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\CertificateRegistryController;
 use App\Http\Controllers\CertificateVerificationController;
+use App\Http\Controllers\ContentCalendarShareController;
 use App\Http\Controllers\Editor\LectureDraftController;
 use App\Http\Controllers\GiftCertificateController;
 use App\Http\Controllers\JoinClassController;
@@ -180,3 +181,11 @@ Route::post('/support/presence', [PublicPresenceController::class, 'ping'])
 Route::get('/chat/embed', [PublicChatController::class, 'embed'])
     ->middleware('throttle:30,1')
     ->name('chat.embed');
+
+// Карточка слота календаря контента для превью ссылки в VK (og:image —
+// картинка вложения): так картинка доходит до стены без права photos у
+// токена. Подпись в пути; без картинки — 404. Строго до catch-all.
+Route::get('/cc/{slot}/{sig}', [ContentCalendarShareController::class, 'show'])
+    ->whereNumber('slot')
+    ->middleware('throttle:60,1')
+    ->name('content-calendar.share');
