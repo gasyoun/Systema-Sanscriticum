@@ -29,6 +29,7 @@ class ContentCalendarRubric extends Model
     protected $fillable = [
         'name',
         'prefix',
+        'hashtags',
         'schedule',
         'channels',
         'with_story',
@@ -182,6 +183,40 @@ class ContentCalendarRubric extends Model
         }
 
         return $escaped.$html;
+    }
+
+    /**
+     * Хештеги рубрики одной строкой: «#a #b» — без дублей, решётка
+     * добавляется, разделители (пробел, запятая, перенос) схлопываются.
+     */
+    public function hashtagLine(): string
+    {
+        $tags = preg_split('/[\s,;]+/u', trim((string) $this->hashtags), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $tags = array_map(static fn (string $t): string => '#'.ltrim($t, '#'), $tags);
+
+        return implode(' ', array_values(array_unique(array_filter($tags, static fn (string $t): bool => $t !== '#'))));
+    }
+
+    /** Текст поста с хештегами рубрики последним абзацем (если их ещё нет в тексте). */
+    public function withHashtags(?string $html): ?string
+    {
+        $line = $this->hashtagLine();
+        if ($line === '' || blank($html) || str_contains(PostFormatter::toPlain($html), $line)) {
+            return $html;
+        }
+
+        return $html.'<p>'.e($line).'</p>';
+    }
+
+    /** Сколько символов (UTF-16) добавят хештеги к этому тексту: пустая строка + строка тегов. */
+    public function hashtagsLength(?string $html): int
+    {
+        $line = $this->hashtagLine();
+        if ($line === '' || str_contains(PostFormatter::toPlain($html), $line)) {
+            return 0;
+        }
+
+        return 2 + intdiv(strlen((string) mb_convert_encoding($line, 'UTF-16LE', 'UTF-8')), 2);
     }
 
     /** Сколько символов (UTF-16, как считает Bot API) добавит префикс к этому тексту. */
