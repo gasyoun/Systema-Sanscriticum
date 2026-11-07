@@ -64,6 +64,13 @@
             <figcaption class="text-sm text-gray-500 mt-2 text-center">С ноутбука</figcaption>
         </figure>
     </div>
+    <figure class="mb-3">
+        <video src="{{ asset('images/faq/dz-example-phone.mp4') }}" controls playsinline preload="none"
+               class="w-full max-w-[300px] mx-auto rounded-2xl border border-gray-200 shadow-sm"></video>
+        <figcaption class="text-sm text-gray-500 mt-2 text-center">
+            Видео: заполняем форму с телефона (~30 сек, без звука)
+        </figcaption>
+    </figure>
     <p class="text-gray-500 text-sm leading-relaxed mb-8">
         Куратору работу показывает только <strong>«Отправить на проверку»</strong> — «Сохранить черновик»
         оставляет её у вас.
