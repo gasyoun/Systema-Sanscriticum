@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Auth;
 
+use App\Http\Middleware\RequireTwoFactor;
 use App\Models\User;
 use App\Services\Auth\TwoFactorService;
 use App\Support\Roles;
@@ -14,10 +15,13 @@ use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 /**
- * H6352-r5 (рулинг 7 грилла 10-10): админ-роли (super_admin/admin/manager/
- * accountant) не проходят дальше страницы 2FA, пока не докажут второй фактор;
- * преподаватель и студент не гейтятся. Проверяем подключение, вход по коду,
- * одноразовость резервного кода и реальный маршрут панели.
+ * H6352-r7 (рулинг MG 07-11-2026): 2FA гейтит только Filament-панели
+ * (/admin, /editor) — поверхности изменения данных. Публичные страницы и
+ * кабинет для админ-роли открываются без второго фактора: RequireTwoFactor
+ * снят с группы `web` и живёт только в стеках панелей. Преподаватель и
+ * студент не гейтятся нигде. Проверяем подключение, вход по коду,
+ * одноразовость резервного кода, реальные маршруты панелей и то, что
+ * контент сайта не запирается.
  */
 class TwoFactorGateTest extends TestCase
 {
@@ -25,13 +29,20 @@ class TwoFactorGateTest extends TestCase
 
     private const TEST_ROUTE = '/__test/panel';
 
+    private const WEB_ROUTE = '/__test/web';
+
     protected function setUp(): void
     {
         parent::setUp();
         config()->set('security.two_factor_enforced', true);
 
-        // Лёгкий аналог страницы панели: тот же стек `web` (в нём живёт гейт) + auth.
-        Route::middleware(['web', 'auth'])->get(self::TEST_ROUTE, fn () => 'panel');
+        // Лёгкий аналог страницы панели: группа web (сессия) + auth + гейт —
+        // реальная панель несёт StartSession в собственном стеке middleware.
+        Route::middleware(['web', 'auth', RequireTwoFactor::class])
+            ->get(self::TEST_ROUTE, fn () => 'panel');
+
+        // Лёгкий аналог публичной страницы/кабинета: группа `web` без гейта.
+        Route::middleware(['web', 'auth'])->get(self::WEB_ROUTE, fn () => 'content');
     }
 
     private function staff(string $role = Roles::ADMIN): User
@@ -73,6 +84,21 @@ class TwoFactorGateTest extends TestCase
 
         $teacher = User::factory()->create(['role' => Roles::TEACHER, 'email' => 't@example.com']);
         $this->actingAs($teacher)->get(self::TEST_ROUTE)->assertOk();
+    }
+
+    public function test_web_content_is_not_gated_for_admin_role(): void
+    {
+        // Подключённая 2FA без пройденного челленджа — контент сайта всё равно открывается.
+        $admin = $this->staff();
+        $this->enrol($admin, Totp::randomSecret());
+
+        $this->actingAs($admin)
+            ->get(self::WEB_ROUTE)
+            ->assertOk();
+
+        $this->actingAs($admin)
+            ->get('/faq/dz')
+            ->assertOk();
     }
 
     public function test_enrollment_flow_issues_recovery_codes_and_passes_the_gate(): void
