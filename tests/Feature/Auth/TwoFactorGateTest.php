@@ -35,8 +35,9 @@ class TwoFactorGateTest extends TestCase
         parent::setUp();
         config()->set('security.two_factor_enforced', true);
 
-        // Лёгкий аналог страницы панели: стек панели (auth + гейт), без группы `web`.
-        Route::middleware(['auth', RequireTwoFactor::class])
+        // Лёгкий аналог страницы панели: группа web (сессия) + auth + гейт —
+        // реальная панель несёт StartSession в собственном стеке middleware.
+        Route::middleware(['web', 'auth', RequireTwoFactor::class])
             ->get(self::TEST_ROUTE, fn () => 'panel');
 
         // Лёгкий аналог публичной страницы/кабинета: группа `web` без гейта.
