@@ -2111,4 +2111,20 @@ return [
      | Включение в проде — отдельный ops-шаг (env + config:cache), не мерж PR.
      */
     'claim_trust_policy' => (bool) env('CLAIM_TRUST_POLICY_ENABLED', false),
+
+    /*
+     | H7803 — рантайм-флип топик-классификатора на синхронизированные правила
+     | пакета (support:rules-sync, pattern_hash NOT NULL). ВЫКЛЮЧЕН по умолчанию:
+     | OFF = ровно прежнее поведение (легаси mb_stripos, synced-строки невидимы).
+     | ON: SupportTopicClassifier матчит PCRE-паттерны в семантике reference-
+     | движка (нормализация, priority asc, negations, первый матч), синхронизи-
+     | рованный набор идёт первым, легаси-ключевые слова — фолбэк (на проде
+     | легаси-строк нет, поэтому ON = YAML-истина). Классификатор аналитика-
+     | только: автоответы/платежи/доступы не затрагиваются (H3529 фенс).
+     | Гейт включения — precision ≥0.93 на категорию при n≥30 на masked-корпусе
+     | (VERIFICATION_SELF_SERVE_CLASSIFIER_2026H2.md); процедура флипа —
+     | docs/IMPLEMENTATION_SELF_SERVE_WAVE1_2026H2.md §H7803.
+     | Включение: SUPPORT_TOPIC_SYNCED_RULES=true + php artisan config:cache.
+     */
+    'support_topic_synced_rules' => (bool) env('SUPPORT_TOPIC_SYNCED_RULES', false),
 ];

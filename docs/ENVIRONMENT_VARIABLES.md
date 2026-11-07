@@ -883,6 +883,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_TECH_ASSIGNEE_USER_ID` | required | `—` | config/services.php:298<br>config/services.php:299<br>config/support_tech.php:10<br>config/support_tech.php:11 |
 | `SUPPORT_TECH_KEYWORDS` | required | `—` | config/support_tech.php:36 |
 | `SUPPORT_TEMPLATE_DRAFTS` | optional | `true` | config/features.php:173 |
+| `SUPPORT_TOPIC_SYNCED_RULES` | optional | `false` | config/features.php:2129 |
 | `SUPPORT_UNIFIED_REPLY` | optional | `false` | config/features.php:57 |
 | `SUPPORT_UNLINKED_DM_THREADS` | optional | `false` | config/features.php:438 |
 | `SUPPORT_VISITOR_GEO` | optional | `false` | config/features.php:501 |
