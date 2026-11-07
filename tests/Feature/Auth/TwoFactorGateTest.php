@@ -28,6 +28,7 @@ class TwoFactorGateTest extends TestCase
     use RefreshDatabase;
 
     private const TEST_ROUTE = '/__test/panel';
+
     private const WEB_ROUTE = '/__test/web';
 
     protected function setUp(): void

@@ -13,7 +13,6 @@ use App\Http\Middleware\ImpersonationGuard;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\RedirectToCanonicalCourseSlug;
-use App\Http\Middleware\RequireTwoFactor;
 use App\Http\Middleware\StudentMaintenance;
 use App\Http\Middleware\ThrottleLivewireUpdates;
 use App\Http\Middleware\TrackUserActivity;
