@@ -119,6 +119,7 @@ Iterate with `--filter`; full suite (~11 min) before the PR. Pin time via
 | Area | Always-on fact | Essay |
 |---|---|---|
 | Filament | `AdminPanelProvider`(`is_admin`) vs `LectureEditorPanelProvider`(`is_lecture_editor`); `Filament/Resources/`+`Editor/`. | — |
+| 2FA (r7 + H7830) | Session gate `RequireTwoFactor` (SUPER_ADMIN/ADMIN/MANAGER/ACCOUNTANT) lives in BOTH panel stacks + per-route on non-panel data-mutation routes; Livewire updates of panel components re-gated via `Livewire::addPersistentMiddleware` (`AppServiceProvider`). **New mutation route outside panels ⇒ gate it**; reads/cabinet stay open (r7). | [AUDIT](docs/TWO_FACTOR_ROUTE_AUDIT_H7830_2026-11-08.md) |
 | Access | Payment-driven groups; tariff keys above | Money |
 | Finance screens | `RoleGate::finance()` pages; never hardcode thresholds. Scoreboard/forecast flags OFF, separate pages. | [RHYTHM](docs/FINANCE_REVIEW_RHYTHM.md) · [FORECAST](docs/CRM_SALES_FORECAST_METHODOLOGY_2026.md) |
 | Groups | `forming`/`active`/`archived`; curator flips status; `groups:notify-forming-shortfall`. | — |
