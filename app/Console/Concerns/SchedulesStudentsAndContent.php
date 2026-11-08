@@ -211,14 +211,37 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('lesson-banners-render');
 
-        // VK/ORS content calendar auto-pilot (H1568, Wave 5): hourly tick
-        // posts every due `scheduled` slot via n8n. No-op while
+        // Content calendar auto-pilot (H1568, Wave 5): the tick crossposts
+        // every due `scheduled` slot to TG + VK (PublishCalendarSlotJob). No-op while
         // features.content_calendar_autopilot is OFF (default).
+        // 02-11-2026: every 5 min, not hourly. systema-schedule-run.sh skips a
+        // whole minute while the previous schedule:run holds its flock, and
+        // telegram-support:sync (everyMinute, ~64 s since 01-11) holds it into
+        // the next minute — an hourly :00 tick was skipped 12 of 24 times on
+        // 01-11 and a rubric post sat unpublished for hours. The command only
+        // takes due slots and PublishCalendarSlotJob is unique per slot, so a
+        // denser tick is harmless and a skipped one costs 5 min, not 1 h.
         $schedule->command('content:publish-due')
-            ->hourly()
+            ->everyFiveMinutes()
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('publish-due-content-calendar');
+
+        // Рубрики календаря: пустой выход в ближайшие 24 ч → одно сообщение
+        // админам. No-op при выключенном features.content_calendar.
+        $schedule->command('content:rubric-gaps')
+            ->hourlyAt(5)
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('content-calendar-rubric-gaps');
+
+        // Часовой VK ID токен кросспостинга календаря: refresh ротирует пару,
+        // владелец один — прод. No-op, пока токен не импортирован.
+        $schedule->command('vk:token-refresh')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('vk-token-refresh');
 
         // Канал @rusamskrtam: автопилот очереди story_posts (H3930, Phase 1).
         // Ежечасный, как content:publish-due: точность слота «09:00/19:00»

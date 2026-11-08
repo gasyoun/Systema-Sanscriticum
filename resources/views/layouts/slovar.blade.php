@@ -30,6 +30,9 @@
 
     @vite('resources/css/fonts.css')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- H7590 — лоадер поиска в шапке. Alpine на словарных страницах нет:
+         бокс деградирует до GET-формы /poisk (редирект на path-style). --}}
+    @vite('resources/js/global-search.js')
 
     @stack('head')
 

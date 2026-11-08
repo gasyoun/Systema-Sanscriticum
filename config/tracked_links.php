@@ -189,6 +189,29 @@ foreach (['c', 't', 'h', 'p'] as $creative) {
 }
 
 /*
+ * ksh3 — обзорное занятие 3-го потока «Кашмирского шиваизма» (М. А. Ворошилов;
+ * 29-10-2026 чт 14:00 МСК, бесплатное, «не в счет 16»; курс — 16 занятий по
+ * чт 14:00 МСК с 05-11-2026, сбор голосов, оплата не открыта): /ga/-ключи ведут
+ * на карточку курса (голос «Намерен участвовать» + расписание), маршрут на само
+ * занятие — куратор. Креативы = гипотезы поста: c — предмет, t — преподаватель/
+ * история курса, h — время/слот. Слот p не минтуется, пока оплата закрыта.
+ */
+$ksh3Campaign = 'kashmir_shaivism_open_oct_2026';
+
+foreach (['c', 't', 'h'] as $creative) {
+    $links["ksh3-ors-{$creative}"] = [
+        'destination' => '/k/kasmirskii-sivaizm-3-potok-2026',
+        'utm' => [
+            'utm_source' => $channels['ors']['source'],
+            'utm_medium' => $channels['ors']['medium'],
+            'utm_campaign' => $ksh3Campaign,
+            'utm_content' => "ksh3_{$creative}",
+            'utm_term' => 'overview',
+        ],
+    ];
+}
+
+/*
  * Демо-кампания — постоянная смок-фикстура скилла anons-attribution-mint
  * (H5934): живые /ga/demo-* ключи, чтобы прогонять редирект + метки без
  * реального набора. Синтетические utm_source помечены demo_, поэтому
@@ -347,6 +370,30 @@ $links['dobrovolec'] = [
     ],
 ];
 
+/*
+ * kal26 — набор на «Каллиграфию деванагари (2026)» (курс 372, карточка ждуна 16
+ * в статусе collecting, старт по набору): расписания нет, при кворуме 8
+ * намерений автоматически открывается оплата (тарифы «весь курс» 9 600 ₽ и
+ * блоки 1–2 по 4 800 ₽ сейчас неактивны). Ждун-оверлей /ga/kalligrafiya-devanagari
+ * (zhdun_share → бот) — отдельная полоса шаринга, кампания ведёт на карточку
+ * курса. Креативы = гипотезы поста: c — программа, t — преподаватель
+ * (Ольга Литвиненко), v — механика голосования.
+ */
+$kal26Campaign = 'kalligrafia_devanagari_2026';
+
+foreach (['c', 't', 'v'] as $creative) {
+    $links["kal26-ors-{$creative}"] = [
+        'destination' => '/k/kalligrafiia-devanagari-2026',
+        'utm' => [
+            'utm_source' => $channels['ors']['source'],
+            'utm_medium' => $channels['ors']['medium'],
+            'utm_campaign' => $kal26Campaign,
+            'utm_content' => "kal26_{$creative}",
+            'utm_term' => 'devanagari',
+        ],
+    ];
+}
+
 return [
     'session_key' => 'tracked_link_attribution',
     'links' => $links,
@@ -365,6 +412,11 @@ return [
             'destination' => '/online',
             'utm_campaign' => $demoCampaign,
             'utm_term' => 'smoke',
+        ],
+        'ksh3' => [
+            'destination' => '/k/kasmirskii-sivaizm-3-potok-2026',
+            'utm_campaign' => $ksh3Campaign,
+            'utm_term' => 'overview',
         ],
         'lingq' => [
             'destination' => 'https://t.me/samskrtamru/4166',

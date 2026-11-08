@@ -173,7 +173,8 @@ $REAL_DIRTY
       fail "Рабочее дерево грязное (не только public/docs/*.pdf) — сначала разобраться с локальными изменениями (git status)"
     fi
     say "Стэшу прод-локальные PDF (public/docs) на время обновления кода"
-    # shellcheck disable=SC2086 — пути прошли allowlist-регэксп, пробелов нет
+    # пути прошли allowlist-регэксп, пробелов нет
+    # shellcheck disable=SC2086
     git stash push -m "deploy.sh auto-stash $(date '+%F %T')" -- $DIRTY_FILES
     STASHED=1
   fi
@@ -298,6 +299,12 @@ if [ -n "$ROLLBACK_TO" ]; then
 else
   php artisan migrate --force
 fi
+
+# H7590 — публичный JSON-индекс глобального поиска в шапке: регенерим на
+# каждом деплое от FPM-пользователя (владелец файлов = www-data). Soft-fail:
+# на откате команды может ещё не быть в старом коммите — деплой не ломаем,
+# индекс до следующего сохранения обновит наблюдатель.
+run_as_app_user php artisan search:index 2>/dev/null || { warn "search:index failed — индекс поиска не перегенерирован"; DEPLOY_SOFT_FAIL=1; }
 
 # ── 4. Прогрев кэшей под прод ────────────────────────────────────────────────
 say "Прогрев кэшей (config/route/view + filament) от ${APP_USER:-www-data}"

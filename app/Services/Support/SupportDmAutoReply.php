@@ -120,6 +120,16 @@ final class SupportDmAutoReply
     private const TRIAL_INTENT_PATTERN = '/пробн|попробоват|записатьс|записываюсь|запиш(?:усь|итесь|ись)/iu';
 
     /**
+     * H7642 (инцидент 01-11-2026, conv 240): «Потом же можно будет если что в
+     * записи приобрести?» — покупочное/записное намерение, а бот ответил
+     * canned-ссылкой на последнюю запись курса. Забор для recording-факта
+     * (там же, где денежный 19-09-2026): купить запись или записаться на курс
+     * решает куратор. Стемы узкие: «отправьте ссылку на запись» и «посмотреть
+     * в записи» легитимны и сюда не попадают (записать vs запись).
+     */
+    private const PURCHASE_INTENT_PATTERN = '/куп\p{L}*|приобр\p{L}*|записать\p{L}*|записыва(?:юсь|етесь)|запиш(?:усь|итесь|ись)|запис[ьи]\s+на\s+курс/iu';
+
+    /**
      * Просьба записать в группу / готовность оплатить / «дайте ссылку на
      * оплату» (20-10-2026). Узко: «запись урока» сюда не попадает.
      */
@@ -347,7 +357,13 @@ final class SupportDmAutoReply
                 // классификаторе: денежное намерение в тексте означает, что
                 // автоответить фактом LMS нельзя при ЛЮБОЙ категории — деньги
                 // решает человек (R3), ровно как в llmRefusalReason() ниже.
-                if ($this->factMayAutoSend($resolvedFacts) && ! $this->moneyIntent($text)) {
+                // H7642: у recording-факта тот же забор держит покупочное/
+                // записное намерение — вопрос о покупке записи или записи на
+                // курс уходит куратору, а не canned-ссылкой (01-11-2026).
+                if ($this->factMayAutoSend($resolvedFacts)
+                    && ! $this->moneyIntent($text)
+                    && ! $this->recordingBlockedByIntent($resolvedFacts, $text)
+                ) {
                     return $this->sendAuto(
                         $incoming,
                         $user,
@@ -763,7 +779,10 @@ final class SupportDmAutoReply
         // ответом, серия сообщений одного чата обновляет существующий хинт
         // (счётчик серии в мете), а не плодит второй. 🔥 с любого сообщения
         // серии прилипает к открытому хинту.
-        $fire = $this->moneyIntent($text) || $this->hasTrialIntent($text);
+        //
+        // H7642: покупочное намерение рядом с записью — тёплый лид, куратору
+        // нужен тот же 🔥, что у пробного.
+        $fire = $this->moneyIntent($text) || $this->hasTrialIntent($text) || $this->purchaseIntent($text);
 
         // $standalone: подсказка несёт новое действие (готовая ссылка на оплату),
         // её нельзя дописать в старую серию — та могла висеть неделями (21-10-2026).
@@ -1446,6 +1465,28 @@ final class SupportDmAutoReply
     private function moneyIntent(string $text): bool
     {
         return preg_match(self::MONEY_INTENT_PATTERN, $text) === 1;
+    }
+
+    /**
+     * H7642: recording-факт молчит на покупочном/записном намерении — вопрос
+     * «приобрести запись» или «записаться на курс» решает куратор. Остальные
+     * типы фактов (zoom/schedule) не трогаем: гасит только запись.
+     *
+     * @param  array{draft: string, facts: array<string, mixed>, confidence: float, send_policy: string}  $resolved
+     */
+    private function recordingBlockedByIntent(array $resolved, string $text): bool
+    {
+        if ((string) ($resolved['facts']['type'] ?? '') !== SupportAnswerFactResolver::TYPE_RECORDING) {
+            return false;
+        }
+
+        return $this->purchaseIntent($text);
+    }
+
+    /** Покупка/запись намерением — тот же список слов, что в заборе выше. */
+    private function purchaseIntent(string $text): bool
+    {
+        return preg_match(self::PURCHASE_INTENT_PATTERN, $text) === 1;
     }
 
     /**
