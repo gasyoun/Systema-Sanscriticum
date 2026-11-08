@@ -2,6 +2,23 @@
 @section('title', $course->meta_title ?: $course->title)
 
 @php
+    // SEO-META-1: meta_description was empty on courses without a description —
+    // Yandex then builds the snippet itself. Fall back to the body, then to a
+    // composed sentence, so every money page ships a description.
+    $courseMetaDescription = trim((string) ($course->meta_description ?? ''));
+    if ($courseMetaDescription === '') {
+        $courseMetaDescription = \Illuminate\Support\Str::limit(
+            trim(strip_tags((string) ($course->description ?? ''))),
+            160
+        );
+    }
+    if ($courseMetaDescription === '') {
+        $courseMetaDescription = 'Курс санскрита «'.$course->title.'» в Обществе ревнителей санскрита: программа, преподаватель, формат и стоимость.';
+    }
+@endphp
+@section('meta_description', $courseMetaDescription)
+
+@php
     // Ритм курса, выведенный из `schedules` (App\Support\CourseCadence).
     // Ручной бейдж формата отвечает «идет / в записи», но не «когда» и не
     // «сколько осталось» — эти три строки закрывают именно это.
@@ -52,8 +69,6 @@ document.addEventListener('DOMContentLoaded', function () {
 @endpush
 
 @push('head')
-    <meta name="description" content="{{ $course->meta_description ?: \Illuminate\Support\Str::limit(trim(strip_tags($course->description)), 160) }}">
-
     {{-- H3807: канон программы — живой курс. Для записи прошедшего потока это
          ЧУЖОЙ адрес: страница остается покупаемой, но в выдаче программу
          представляет одна карточка, а не две конкурирующие. --}}
@@ -65,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
     @php
         $courseUrl = route('shop.course.show', $course->slug);
         $courseDescription = $course->meta_description
-            ?: \Illuminate\Support\Str::limit(trim(strip_tags((string) $course->description)), 300);
+            ?: \Illuminate\Support\Str::limit($courseMetaDescription, 300);
 
         // Активные тарифы = покупаемые варианты участия. Каждый → отдельный Offer.
         $offerTariffs = $course->tariffs->where('is_active', true);

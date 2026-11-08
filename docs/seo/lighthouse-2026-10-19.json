@@ -1,0 +1,526 @@
+{
+ "captured_at": "2026-10-19",
+ "tool": "unlighthouse 0.13.5 (npx), mobile, simulate throttling, 1 sample/route",
+ "route_count": 49,
+ "perf_median": 0.78,
+ "perf_below_0_7": 15,
+ "lcp_median_s": 4.1,
+ "cls_over_0_1": [
+  [
+   "/webinar-osen-2026",
+   0.513
+  ],
+  [
+   "/webinar-grammatika",
+   0.153
+  ],
+  [
+   "/webinar-upanishady-2026",
+   0.153
+  ],
+  [
+   "/kashmirskii-shivaizm-3",
+   0.117
+  ],
+  [
+   "/sanskritorium",
+   0.175
+  ],
+  [
+   "/sertifikat",
+   0.174
+  ]
+ ],
+ "routes": [
+  {
+   "path": "/webinar-osen-2026",
+   "perf": 0.5,
+   "lcp_s": 5.05,
+   "cls": 0.513,
+   "tbt_ms": 0,
+   "total_mb": 0.96,
+   "images": 12,
+   "a11y": 0.91
+  },
+  {
+   "path": "/hindi",
+   "perf": 0.55,
+   "lcp_s": 33.06,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 7.44,
+   "images": 30,
+   "a11y": 0.78
+  },
+  {
+   "path": "/geography",
+   "perf": 0.57,
+   "lcp_s": 15.57,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 4.81,
+   "images": 22,
+   "a11y": 0.82
+  },
+  {
+   "path": "/hanuman",
+   "perf": 0.58,
+   "lcp_s": 11.63,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 4.3,
+   "images": 23,
+   "a11y": 0.81
+  },
+  {
+   "path": "/",
+   "perf": 0.6,
+   "lcp_s": 11.88,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 2.66,
+   "images": 23,
+   "a11y": 0.89
+  },
+  {
+   "path": "/s/zachem-sanskrit",
+   "perf": 0.61,
+   "lcp_s": 12.18,
+   "cls": 0.077,
+   "tbt_ms": 0,
+   "total_mb": 2.22,
+   "images": 6,
+   "a11y": 0.92
+  },
+  {
+   "path": "/s/sanskrit-mozg",
+   "perf": 0.62,
+   "lcp_s": 19.69,
+   "cls": 0.003,
+   "tbt_ms": 0,
+   "total_mb": 3.7,
+   "images": 6,
+   "a11y": 0.92
+  },
+  {
+   "path": "/sans",
+   "perf": 0.63,
+   "lcp_s": 30.8,
+   "cls": 0,
+   "tbt_ms": 9,
+   "total_mb": 7.06,
+   "images": 18,
+   "a11y": 0.82
+  },
+  {
+   "path": "/webinar-grammatika",
+   "perf": 0.64,
+   "lcp_s": 4.97,
+   "cls": 0.153,
+   "tbt_ms": 0,
+   "total_mb": 0.96,
+   "images": 12,
+   "a11y": 0.91
+  },
+  {
+   "path": "/s",
+   "perf": 0.65,
+   "lcp_s": 8.51,
+   "cls": 0.001,
+   "tbt_ms": 0,
+   "total_mb": 1.55,
+   "images": 4,
+   "a11y": 0.91
+  },
+  {
+   "path": "/s/rubrika/sanskrit",
+   "perf": 0.65,
+   "lcp_s": 7.24,
+   "cls": 0.074,
+   "tbt_ms": 0,
+   "total_mb": 1.55,
+   "images": 4,
+   "a11y": 0.91
+  },
+  {
+   "path": "/webinar-upanishady-2026",
+   "perf": 0.66,
+   "lcp_s": 4.97,
+   "cls": 0.153,
+   "tbt_ms": 0,
+   "total_mb": 0.94,
+   "images": 12,
+   "a11y": 0.91
+  },
+  {
+   "path": "/philosophy",
+   "perf": 0.66,
+   "lcp_s": 11.27,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 3.29,
+   "images": 17,
+   "a11y": 0.8
+  },
+  {
+   "path": "/online/kategoriya/sintaksis",
+   "perf": 0.68,
+   "lcp_s": 6.94,
+   "cls": 0.0,
+   "tbt_ms": 0,
+   "total_mb": 1.31,
+   "images": 6,
+   "a11y": 0.85
+  },
+  {
+   "path": "/prepodavately/leonov-maksim",
+   "perf": 0.69,
+   "lcp_s": 6.18,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 1.39,
+   "images": 3,
+   "a11y": 0.91
+  },
+  {
+   "path": "/Janvar-27",
+   "perf": 0.7,
+   "lcp_s": 3.92,
+   "cls": 0,
+   "tbt_ms": 190,
+   "total_mb": 0.57,
+   "images": 1,
+   "a11y": 0.92
+  },
+  {
+   "path": "/online/kategoriya/filosofiia",
+   "perf": 0.71,
+   "lcp_s": 6.03,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 1.13,
+   "images": 6,
+   "a11y": 0.85
+  },
+  {
+   "path": "/k/lingvistika-v-zadacax-s-elenoi-trefilovoi-2026",
+   "perf": 0.71,
+   "lcp_s": 4.06,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 0.6,
+   "images": 2,
+   "a11y": 0.93
+  },
+  {
+   "path": "/k/logika-2024",
+   "perf": 0.71,
+   "lcp_s": 4.09,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 0.62,
+   "images": 3,
+   "a11y": 0.91
+  },
+  {
+   "path": "/online",
+   "perf": 0.73,
+   "lcp_s": 21.35,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 5.46,
+   "images": 15,
+   "a11y": 0.85
+  },
+  {
+   "path": "/k/napevnyi-sanskrit-gimn-durge-2023-v-zapisi",
+   "perf": 0.73,
+   "lcp_s": 3.91,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 0.57,
+   "images": 2,
+   "a11y": 0.91
+  },
+  {
+   "path": "/prepodavately",
+   "perf": 0.74,
+   "lcp_s": 5.14,
+   "cls": 0.0,
+   "tbt_ms": 0,
+   "total_mb": 1.07,
+   "images": 4,
+   "a11y": 0.92
+  },
+  {
+   "path": "/online/kategoriya/grammatika",
+   "perf": 0.75,
+   "lcp_s": 8.93,
+   "cls": 0.0,
+   "tbt_ms": 0,
+   "total_mb": 3.88,
+   "images": 14,
+   "a11y": 0.85
+  },
+  {
+   "path": "/online/kategoriya/morfologiia",
+   "perf": 0.77,
+   "lcp_s": 6.34,
+   "cls": 0.0,
+   "tbt_ms": 0,
+   "total_mb": 1.57,
+   "images": 6,
+   "a11y": 0.85
+  },
+  {
+   "path": "/prepodavately/ivan-tolchelnikov",
+   "perf": 0.78,
+   "lcp_s": 4.08,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 1.61,
+   "images": 4,
+   "a11y": 0.91
+  },
+  {
+   "path": "/kashmirskii-shivaizm-3",
+   "perf": 0.78,
+   "lcp_s": 3.64,
+   "cls": 0.117,
+   "tbt_ms": 0,
+   "total_mb": 0.57,
+   "images": 1,
+   "a11y": 0.91
+  },
+  {
+   "path": "/online/kategoriya/lingvistika",
+   "perf": 0.78,
+   "lcp_s": 5.89,
+   "cls": 0.0,
+   "tbt_ms": 0,
+   "total_mb": 1.45,
+   "images": 6,
+   "a11y": 0.85
+  },
+  {
+   "path": "/koloda/sanskrit-cyrillic-only",
+   "perf": 0.79,
+   "lcp_s": 3.94,
+   "cls": 0.004,
+   "tbt_ms": 0,
+   "total_mb": 0.55,
+   "images": 1,
+   "a11y": 0.92
+  },
+  {
+   "path": "/k/napevnyi-sanskrit-gimn-sivy-2022-v-zapisi",
+   "perf": 0.79,
+   "lcp_s": 3.93,
+   "cls": 0.011,
+   "tbt_ms": 0,
+   "total_mb": 0.56,
+   "images": 2,
+   "a11y": 0.91
+  },
+  {
+   "path": "/k/kalligrafiia-devanagari-2026",
+   "perf": 0.79,
+   "lcp_s": 3.93,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 0.57,
+   "images": 2,
+   "a11y": 0.93
+  },
+  {
+   "path": "/konsultaciya-po-onlayn-kursam",
+   "perf": 0.8,
+   "lcp_s": 3.78,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 0.57,
+   "images": 1,
+   "a11y": 0.92
+  },
+  {
+   "path": "/prepodavately/edgar-leitan",
+   "perf": 0.8,
+   "lcp_s": 3.93,
+   "cls": 0.0,
+   "tbt_ms": 0,
+   "total_mb": 0.58,
+   "images": 2,
+   "a11y": 0.91
+  },
+  {
+   "path": "/koloda/sanskrit-roots-frequency",
+   "perf": 0.8,
+   "lcp_s": 3.94,
+   "cls": 0.003,
+   "tbt_ms": 0,
+   "total_mb": 0.57,
+   "images": 1,
+   "a11y": 0.92
+  },
+  {
+   "path": "/koloda/kosha-b1-demo",
+   "perf": 0.8,
+   "lcp_s": 3.88,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 0.57,
+   "images": 1,
+   "a11y": 0.92
+  },
+  {
+   "path": "/online/kategoriya/recitaciia",
+   "perf": 0.8,
+   "lcp_s": 5.3,
+   "cls": 0.0,
+   "tbt_ms": 0,
+   "total_mb": 1.79,
+   "images": 9,
+   "a11y": 0.85
+  },
+  {
+   "path": "/k/podgotovitelnaya-gruppa-sanskrita",
+   "perf": 0.8,
+   "lcp_s": 3.79,
+   "cls": 0.019,
+   "tbt_ms": 0,
+   "total_mb": 0.54,
+   "images": 1,
+   "a11y": 0.91
+  },
+  {
+   "path": "/koloda",
+   "perf": 0.81,
+   "lcp_s": 3.71,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 0.55,
+   "images": 1,
+   "a11y": 0.93
+  },
+  {
+   "path": "/koloda/sanskrit-core",
+   "perf": 0.81,
+   "lcp_s": 3.71,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 0.55,
+   "images": 1,
+   "a11y": 0.92
+  },
+  {
+   "path": "/koloda/memrise-6679375-level-1",
+   "perf": 0.81,
+   "lcp_s": 3.72,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 0.55,
+   "images": 1,
+   "a11y": 0.92
+  },
+  {
+   "path": "/k/deti-2025",
+   "perf": 0.81,
+   "lcp_s": 3.94,
+   "cls": 0.013,
+   "tbt_ms": 0,
+   "total_mb": 0.58,
+   "images": 2,
+   "a11y": 0.91
+  },
+  {
+   "path": "/koloda/kochergina-lesson-1",
+   "perf": 0.82,
+   "lcp_s": 3.64,
+   "cls": 0,
+   "tbt_ms": 0,
+   "total_mb": 0.55,
+   "images": 1,
+   "a11y": 0.92
+  },
+  {
+   "path": "/k/grammatika-po-kocerginoi-gr59",
+   "perf": 0.85,
+   "lcp_s": 3.72,
+   "cls": 0.0,
+   "tbt_ms": 0,
+   "total_mb": 0.56,
+   "images": 2,
+   "a11y": 0.92
+  },
+  {
+   "path": "/sanskritorium",
+   "perf": 0.86,
+   "lcp_s": 3.03,
+   "cls": 0.175,
+   "tbt_ms": 0,
+   "total_mb": 0.48,
+   "images": 1,
+   "a11y": 0.96
+  },
+  {
+   "path": "/sertifikat",
+   "perf": 0.87,
+   "lcp_s": 2.75,
+   "cls": 0.174,
+   "tbt_ms": 0,
+   "total_mb": 0.56,
+   "images": 1,
+   "a11y": 0.89
+  },
+  {
+   "path": "/koloda/anki-454628379-level-1",
+   "perf": 0.94,
+   "lcp_s": 2.89,
+   "cls": 0.003,
+   "tbt_ms": 0,
+   "total_mb": 0.55,
+   "images": 1,
+   "a11y": 0.92
+  },
+  {
+   "path": "/koloda/yazyk/vse",
+   "perf": 0.96,
+   "lcp_s": 2.73,
+   "cls": 0.002,
+   "tbt_ms": 0,
+   "total_mb": 0.55,
+   "images": 1,
+   "a11y": 0.93
+  },
+  {
+   "path": "/koloda/sanskrit-ligatures-frequency",
+   "perf": 0.96,
+   "lcp_s": 2.59,
+   "cls": 0.003,
+   "tbt_ms": 0,
+   "total_mb": 0.55,
+   "images": 1,
+   "a11y": 0.92
+  },
+  {
+   "path": "/online/put",
+   "perf": 0.96,
+   "lcp_s": 2.29,
+   "cls": 0.001,
+   "tbt_ms": 0,
+   "total_mb": 0.53,
+   "images": 1,
+   "a11y": 0.92
+  },
+  {
+   "path": "/koloda/yazyk/hindi",
+   "perf": 0.99,
+   "lcp_s": 1.7,
+   "cls": 0.001,
+   "tbt_ms": 0,
+   "total_mb": 0.55,
+   "images": 1,
+   "a11y": 0.93
+  }
+ ]
+}

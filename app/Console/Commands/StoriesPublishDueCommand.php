@@ -14,27 +14,33 @@ use Illuminate\Support\Facades\Http;
 use Throwable;
 
 /**
- * Издатель очереди story_posts в канал @rusamskrtam (H3930, Phase 1).
+ * Издатель очереди story_posts в канал (H3930, Phase 1).
  *
- * Только текстовые строки (kind=text) КАНАЛЬНОЙ полосы (lane=channel,
- * H3964: persona-полоса принадлежит stories:publish-story): Bot API
- * sendMessage магнит-ботом (MarketingSetting.tg_bot_token —
- * марафон-издатель; НЕ кабинетный бот и НЕ zapisi-бот, FINDINGS §651).
+ * Текстовые (kind=text) и видео (kind=video, H6915) строки КАНАЛЬНОЙ
+ * полосы (lane=channel): Bot API магнит-ботом (MarketingSetting.tg_bot_token
+ * — марафон-издатель; НЕ кабинетный бот и НЕ zapisi-бот, FINDINGS §651).
+ * Видео — sendVideo с подписью parse_mode=HTML; лимит Bot API 50 МБ и
+ * отсутствие файла — понятный отказ в журнале, слот НЕ закрывается
+ * (статус не published, повторный прогон дубля не создаёт — published
+ * строки выходят из approved+due области).
  * Перед первой реальной отправкой прогона — дешевая getChat-проба пары
  * «токен × chat_id»: «chat not found» на предположенном креденшале —
  * сигнал, а не повод для ретрая.
  *
- * Photo/video строки (persona-полоса, MTProto stories) скипаются с
- * журналом — издаваться молча не должны.
+ * Фото-строки (persona-полоса, MTProto stories) скипаются с журналом —
+ * издаваться молча не должны.
  *
  * Прод-инертен: features.telegram_story_publisher OFF (default) → ранний
  * возврат, ноль HTTP (та же форма флаг-гейта, что content:publish-due).
  */
 final class StoriesPublishDueCommand extends Command
 {
+    /** Bot API: максимальный размер файла при стандартной multipart-загрузке. */
+    private const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+
     protected $signature = 'stories:publish-due';
 
-    protected $description = 'Publish due approved story_posts (text) to the @rusamskrtam channel';
+    protected $description = 'Publish due approved story_posts (text, video) to the channel';
 
     public function handle(TelegramDeliveryChannel $telegram, StoryRepeatEngine $repeat, ContentProhibitionsChecklist $checklist): int
     {
@@ -78,7 +84,26 @@ final class StoriesPublishDueCommand extends Command
         $published = 0;
         $skipped = 0;
         $held = 0;
+        $refused = 0;
         foreach ($due as $post) {
+            if ($post->kind === StoryPost::KIND_VIDEO) {
+                $receipt = $this->publishVideo($telegram, $token, $chatId, $post);
+                if ($receipt === null) {
+                    $refused++;
+
+                    continue; // отказ в журнале, слот не закрыт — ретрай уместен
+                }
+
+                $repeat->markPublished($post, $receipt['message_id']);
+                $copy = $repeat->afterPublication($post);
+                $published++;
+                $this->info("Published video #{$post->id} (source={$post->source}, key={$post->source_key}) "
+                    ."message_id={$receipt['message_id']} permalink={$receipt['permalink']}."
+                    .($copy !== null ? " + repeat copy #{$copy->id} due {$copy->publish_at?->format('d-m-Y H:i')}" : ''));
+
+                continue;
+            }
+
             if ($post->kind !== StoryPost::KIND_TEXT) {
                 $post->forceFill([
                     'journal' => trim((string) $post->journal."\n".now()->toDateTimeString()
@@ -125,9 +150,88 @@ final class StoriesPublishDueCommand extends Command
                 .($copy !== null ? " + repeat copy #{$copy->id} due {$copy->publish_at?->format('d-m-Y H:i')}" : ''));
         }
 
-        $this->info("publish-due: published={$published}, skipped_media={$skipped}, held_prohibition={$held}.");
+        $this->info("publish-due: published={$published}, skipped_media={$skipped}, held_prohibition={$held}, refused_video={$refused}.");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * H6915: канальный видео-пост — sendVideo магнит-бота, подпись
+     * parse_mode=HTML (как у текстового лейна). Квитанция message_id
+     * + permalink возвращаются издателю; отказ выше лимита 50 МБ или
+     * с отсутствующим файлом пишется в журнал, слот НЕ закрывается
+     * (null → строка остаётся approved, дубля нет).
+     *
+     * @return array{message_id: string, permalink: string}|null
+     */
+    private function publishVideo(TelegramDeliveryChannel $telegram, string $token, string $chatId, StoryPost $post): ?array
+    {
+        $journal = (string) $post->journal;
+        $media = (string) ($post->media_path ?? '');
+        if ($media === '' || ! is_file($media) || ! is_readable($media)) {
+            $post->forceFill(['journal' => trim($journal."\n".now()->toDateTimeString()
+                ." video-refused: media_path missing/unreadable: {$media}")])->save();
+            $this->warn("Refused #{$post->id}: video media missing/unreadable: {$media}");
+
+            return null;
+        }
+        $bytes = (int) filesize($media);
+        if ($bytes > self::MAX_VIDEO_BYTES) {
+            $note = sprintf(
+                'video-refused: %.1f MB exceeds the Bot API 50MB upload limit — re-encode or trim the fragment, slot stays open.',
+                $bytes / 1024 / 1024
+            );
+            $post->forceFill(['journal' => trim($journal."\n".now()->toDateTimeString().' '.$note)])->save();
+            $this->warn("Refused #{$post->id}: {$note}");
+
+            return null;
+        }
+
+        $handle = fopen($media, 'rb');
+        if ($handle === false) {
+            $post->forceFill(['journal' => trim($journal."\n".now()->toDateTimeString()
+                ." video-refused: cannot open {$media}")])->save();
+
+            return null;
+        }
+
+        try {
+            $response = Http::asMultipart()->post("https://api.telegram.org/bot{$token}/sendVideo", [
+                ['name' => 'chat_id', 'contents' => $chatId],
+                ['name' => 'caption', 'contents' => $this->toTelegramHtml((string) $post->payload)],
+                ['name' => 'parse_mode', 'contents' => 'HTML'],
+                ['name' => 'video', 'contents' => $handle],
+            ]);
+        } finally {
+            if (is_resource($handle)) {
+                fclose($handle);
+            }
+        }
+
+        $messageId = (string) ($response->json('result.message_id') ?? '');
+        if ($messageId === '') {
+            $note = 'video-refused: sendVideo returned no message_id: '.mb_substr((string) $response->body(), 0, 200);
+            $post->forceFill(['journal' => trim((string) $post->journal."\n".now()->toDateTimeString().' '.$note)])->save();
+            $this->error("Failed #{$post->id}: {$note}");
+
+            return null;
+        }
+
+        $permalink = $this->permalink($chatId, $messageId);
+        $post->forceFill(['journal' => trim((string) $post->journal."\n".now()->toDateTimeString()
+            ." video-published: message_id={$messageId} permalink={$permalink}")])->save();
+
+        return ['message_id' => $messageId, 'permalink' => $permalink];
+    }
+
+    /** permalink канального поста: t.me работает только с @username-чатом. */
+    private function permalink(string $chatId, string $messageId): string
+    {
+        if (str_starts_with($chatId, '@')) {
+            return 'https://t.me/'.mb_substr($chatId, 1).'/'.$messageId;
+        }
+
+        return '(numeric chat_id — permalink unavailable, message_id only)';
     }
 
     /**

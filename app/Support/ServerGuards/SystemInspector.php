@@ -65,6 +65,13 @@ interface SystemInspector
     public function backupDestinations(): ?array;
 
     /**
+     * Дней до конца TLS-сертификата узла. null — сертификат не прочитался
+     * (нет сети, нет openssl, SNI не отдал цепочку): «не спросили», а не «всё
+     * хорошо», и проверка обязана сказать это вслух.
+     */
+    public function certificateDaysLeft(string $host, int $port): ?int;
+
+    /**
      * Пути tracked-файлов с локальными правками в $repoDir
      * (`git status --porcelain --untracked-files=no`). null — git недоступен.
      *

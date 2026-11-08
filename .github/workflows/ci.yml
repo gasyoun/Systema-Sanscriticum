@@ -15,6 +15,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   php-tests:
     name: PHP ${{ matrix.php }} — tests
@@ -30,7 +34,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: ${{ matrix.php }}
           extensions: mbstring, xml, pdo, sqlite, pdo_sqlite, redis, curl, zip, pcntl, posix
@@ -67,8 +71,9 @@ jobs:
       - name: Stub Vite manifest for tests
         # @vite() in views throws ManifestNotFoundException (→ 500) if
         # public/build/manifest.json is absent or missing required entry keys.
-        # Stub manifest with the two app entrypoints satisfies the Vite plugin
-        # without requiring an actual frontend build.
+        # Stub manifest with the app entrypoints satisfies the Vite plugin
+        # without requiring an actual frontend build. article.css — layouts.articles
+        # (блог), global-search.js — H7590 лоадер поиска в общих лейаутах.
         run: |
           mkdir -p public/build/assets
           cat > public/build/manifest.json << 'JSON'
@@ -76,10 +81,12 @@ jobs:
             "resources/css/app.css": { "file": "assets/app.css", "src": "resources/css/app.css", "isEntry": true },
             "resources/js/app.js":  { "file": "assets/app.js",  "src": "resources/js/app.js",  "isEntry": true },
             "resources/css/fonts.css": { "file": "assets/fonts.css", "src": "resources/css/fonts.css", "isEntry": true },
-            "resources/js/alpine-standalone.js": { "file": "assets/alpine-standalone.js", "src": "resources/js/alpine-standalone.js", "isEntry": true }
+            "resources/js/alpine-standalone.js": { "file": "assets/alpine-standalone.js", "src": "resources/js/alpine-standalone.js", "isEntry": true },
+            "resources/css/article.css": { "file": "assets/article.css", "src": "resources/css/article.css", "isEntry": true },
+            "resources/js/global-search.js": { "file": "assets/global-search.js", "src": "resources/js/global-search.js", "isEntry": true }
           }
           JSON
-          touch public/build/assets/app.css public/build/assets/app.js public/build/assets/fonts.css public/build/assets/alpine-standalone.js
+          touch public/build/assets/app.css public/build/assets/app.js public/build/assets/fonts.css public/build/assets/alpine-standalone.js public/build/assets/article.css public/build/assets/global-search.js
 
       - name: Laravel Pint format check
         # Scope = the commits THIS change adds, not everything that differs from
@@ -141,7 +148,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: "8.3"
           extensions: mbstring, xml, pdo, sqlite, pdo_sqlite, redis, curl, zip, pcntl, posix
@@ -180,7 +187,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v6
         with:
           node-version: "20.19"
           cache: npm
@@ -200,7 +207,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v6
         with:
           node-version: "20.19"
 
@@ -218,7 +225,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v6
         with:
           node-version: "20.19"
           cache: npm
@@ -258,7 +265,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: "8.3"
           extensions: mbstring, xml, pdo, pdo_mysql, redis, curl, zip, pcntl, posix

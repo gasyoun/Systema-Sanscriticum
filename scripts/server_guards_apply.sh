@@ -238,11 +238,11 @@ ensure_directive() { # ensure_directive <file> <key> <value> <sep> — прав�
   if grep -qxF "$line" "$file"; then ok "$file :: $line"; return 0; fi
   if [ "$DRY_RUN" = 1 ]; then chg "$file :: $line (dry-run)"; CHANGED+=("$file"); return 0; fi
   backup "$file"
-  if grep -qE "^[[:space:]]*$key[[:space:]]*=" "$file"; then
+  if grep -qE "^[[:space:]]*${key}[[:space:]]*=" "$file"; then
     # Заменяем ВСЕ активные вхождения: иначе последнее продолжит выигрывать и
     # правка окажется декоративной. Закомментированные примеры дистрибутива не
     # трогаем — они документация, а не значение.
-    sed -i -E "s|^[[:space:]]*$key[[:space:]]*=.*|$line|" "$file"
+    sed -i -E "s|^[[:space:]]*${key}[[:space:]]*=.*|$line|" "$file"
   else
     printf '%s\n' "$line" >> "$file"
   fi
@@ -384,10 +384,11 @@ fi
 rm -f "$CRON_TMP" "$CUR_CRON"
 
 # ── 3c. crontab hermes — нервная система (H5080-F2, 19-09-2026) ─────────────
-# Пять линий Hermes жили ТОЛЬКО в живом crontab: первый же guards re-apply или
+# Линии Hermes жили ТОЛЬКО в живом crontab: первый же guards re-apply или
 # опечатка в `crontab -e -u hermes` стирали их молча (класс H4155). Теперь
 # управляются этим файлом; вербатим-снимок живого crontab снят 19-09.
-say "crontab $HERMES_USER (пять линий нервной системы Hermes)"
+# 05-11-2026: weekly_sweep retired (MG verdict, H6119 card A) — 4 линии.
+say "crontab $HERMES_USER (линии нервной системы Hermes)"
 CRON_TMP=$(mktemp)
 render "$TPL_ROOT/cron/hermes.crontab" > "$CRON_TMP"
 CUR_CRON=$(mktemp)

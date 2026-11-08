@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     {{-- Title и meta — каждая страница (show/index) переопределяет через @section('meta') --}}
-    <title>@yield('title', 'Статьи — Общество ревнителей санскрита')</title>
+    <title>{{ \App\Support\SeoTitle::render($__env->yieldContent('title', 'Статьи')) }}</title>
     <meta name="description" content="@yield('meta_description', 'Статьи о санскрите, грамматике, философии и практике.')">
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
@@ -91,6 +91,9 @@ window.sendGoal = function(goalName) {
 
     {{-- Alpine — нужен для модалок/интерактива в шапке и футере --}}
     @vite('resources/js/alpine-standalone.js')
+
+    {{-- H7590 — лоадер поиска в шапке (Fuse.js лениво) --}}
+    @vite('resources/js/global-search.js')
 
     <style>
         body { font-family: 'Montserrat', sans-serif; }

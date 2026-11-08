@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 /**
  * Колода SRS. Владелец user_id NULL = системная колода. См. миграцию srs_decks (H211).
@@ -56,5 +57,48 @@ class SrsDeck extends Model
         return $this->belongsToMany(User::class, 'srs_deck_user', 'deck_id', 'user_id')
             ->withPivot(['new_per_day', 'direction', 'subscribed_at'])
             ->withTimestamps();
+    }
+
+    /**
+     * SEO-META-1: public deck pages are near-identical trial shells (~390 words), so
+     * only decks that stand for a whole deck get indexed. Generic "Level N"
+     * rows (N > 1) duplicate level 1 and stay out of the sitemap until they
+     * carry distinct content.
+     */
+    public function isSeoIndexable(): bool
+    {
+        $slug = trim((string) $this->slug);
+        if ($slug === '' || str_starts_with($slug, 'id-')) {
+            return false;
+        }
+
+        if (preg_match('/^level\s+(\d+)$/iu', trim((string) $this->name), $matches) === 1) {
+            return (int) $matches[1] === 1;
+        }
+
+        return true;
+    }
+
+    public function seoTitle(): string
+    {
+        // SeoTitle strips the brand and caps the result at 60 chars. Budget the
+        // quoted name here so truncation never leaves an unbalanced «…».
+        $name = trim((string) $this->name);
+        $stripped = trim((string) preg_replace('/\s*\([^)]*\)\s*$/u', '', $name));
+        if ($stripped !== '') {
+            $name = $stripped;
+        }
+
+        return 'Колода «'.Str::limit($name, 43, '…').'»';
+    }
+
+    public function seoDescription(): string
+    {
+        $description = trim(strip_tags((string) $this->description));
+        if ($description === '') {
+            $description = 'Публичная колода карточек «'.$this->name.'»: пробный режим без регистрации, интервальное повторение и разбор ошибок.';
+        }
+
+        return Str::limit(preg_replace('/\s+/u', ' ', $description) ?? $description, 160);
     }
 }

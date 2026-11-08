@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\MoneySli;
 
+use App\Support\Egress\EgressPinger;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -45,12 +46,18 @@ final class MoneySliAlerter
         }
 
         try {
-            $response = Http::timeout((int) config('money_sli.http_timeout_seconds', 15))
-                ->withBody($body, 'text/plain')
-                ->post($target);
+            // H7565: общий транспорт пульсов (config/egress.php) — прямая нога,
+            // при транспортном отказе нога через EGRESS_PING_PROXY.
+            $delivery = app(EgressPinger::class)->send($target, $body, (int) config('money_sli.http_timeout_seconds', 15));
 
-            if (! $response->successful()) {
-                Log::warning('money_sli: heartbeat non-2xx', ['status' => $response->status()]);
+            if ($delivery->delivered) {
+                return;
+            }
+
+            if ($delivery->status !== null) {
+                Log::warning('money_sli: heartbeat non-2xx', ['status' => $delivery->status, 'via' => $delivery->via]);
+            } else {
+                Log::warning('money_sli: heartbeat unreachable', ['error' => $delivery->detail, 'via' => $delivery->via]);
             }
         } catch (Throwable $e) {
             Log::warning('money_sli: heartbeat unreachable', ['error' => $e->getMessage()]);

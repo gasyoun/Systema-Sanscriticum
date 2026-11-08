@@ -164,7 +164,7 @@ class CuratorAi
      * @param  list<array{role: string, content: string}>  $messages
      * @return array{content: ?string, usage: ?array{prompt_tokens: int, completion_tokens: int}, model: ?string}
      */
-    public function localChatWithUsage(array $messages): array
+    public function localChatWithUsage(array $messages, ?int $timeout = null, float $temperature = 0.3, bool $think = true, int $maxTokens = 2000): array
     {
         $model = (string) config('knowledge.generation_model', 'qwen3:14b');
         $empty = ['content' => null, 'usage' => null, 'model' => $model];
@@ -175,12 +175,14 @@ class CuratorAi
         $endpoint = rtrim($base, '/').'/v1/chat/completions';
 
         try {
-            $response = Http::timeout((int) config('knowledge.generation_timeout', 120))
+            $response = Http::timeout($timeout ?? (int) config('knowledge.generation_timeout', 120))
                 ->post($endpoint, [
                     'model' => $model,
                     'messages' => $messages,
-                    'temperature' => 0.3,
-                    'max_tokens' => 2000,
+                    'temperature' => $temperature,
+                    'max_tokens' => $maxTokens,
+                    // qwen3 без рассуждений: ответ за 1–3 с вместо 30 (Ollama ≥ 0.9).
+                    ...($think ? [] : ['reasoning_effort' => 'none']),
                 ]);
 
             if (! $response->successful()) {
@@ -249,14 +251,22 @@ class CuratorAi
         // H6352-r3: во внешний провайдер уходит только замаскированный промпт.
         // Одна область псевдонимов на вызов — один человек = один тег во всех
         // сообщениях, ответ восстанавливается тем же словарём (unmask).
+        //
+        // H6918-2: сообщения — это ОДНА беседа, поэтому маскируем их одним
+        // проходом. maskAll() сначала собирает per-conversation словарь имён и
+        // ников по всем сообщениям, затем маскирует: «Мария Ковалёва» в
+        // системном/первом сообщении закрывает bare «Ковалёва» в следующем.
         try {
-            $this->piiMasker->begin();
+            $this->piiMasker->newConversation();
+            $maskedContents = $this->piiMasker->maskAll(array_map(
+                static fn (array $message): string => (string) ($message['content'] ?? ''),
+                $messages,
+            ));
             $maskedMessages = [];
-            foreach ($messages as $message) {
-                [$maskedContent] = $this->piiMasker->mask((string) ($message['content'] ?? ''));
+            foreach ($messages as $index => $message) {
                 $maskedMessages[] = [
                     'role' => (string) ($message['role'] ?? 'user'),
-                    'content' => $maskedContent,
+                    'content' => $maskedContents[$index] ?? '',
                 ];
             }
         } catch (\Throwable) {

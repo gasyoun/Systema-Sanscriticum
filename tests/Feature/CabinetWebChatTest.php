@@ -97,4 +97,98 @@ class CabinetWebChatTest extends TestCase
             ->assertSee('Намасте! Чем помочь?')
             ->assertSee('Куратор Маша');
     }
+
+    /** @test */
+    public function persistence_failure_retains_draft_and_writes_no_message(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        // H6300: сбой сохранения не должен съедать черновик студента.
+        $this->mock(StudentChatService::class)
+            ->shouldReceive('recordIncoming')
+            ->once()
+            ->andThrow(new \RuntimeException('db down'));
+
+        Livewire::test(StudentChat::class)
+            ->set('newMessage', 'Секретный черновик студента')
+            ->call('send')
+            ->assertSet('newMessage', 'Секретный черновик студента')
+            ->assertNotSet('sendError', null)
+            ->assertSeeHtml('aria-live="polite"');
+
+        $this->assertDatabaseCount('chat_messages', 0);
+    }
+
+    /** @test */
+    public function queue_dispatch_failure_exposes_retry_state_without_duplicating_incoming(): void
+    {
+        // Несуществующее соединение очереди → dispatch() бросает исключение.
+        config(['queue.default' => 'missing-connection']);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $component = Livewire::test(StudentChat::class)
+            ->set('newMessage', 'Где моя запись занятия?')
+            ->call('send')
+            ->assertSet('newMessage', '')
+            ->assertSet('replyPendingRetry', true)
+            ->assertSee('Повторить получение ответа');
+
+        // Сообщение сохранено ровно один раз — повтор не создаёт дубликат.
+        $this->assertDatabaseCount('chat_messages', 1);
+        $this->assertDatabaseHas('chat_messages', [
+            'user_id' => $user->id,
+            'role' => 'user',
+            'text' => 'Где моя запись занятия?',
+        ]);
+
+        Queue::fake();
+
+        $component->call('retryReply')
+            ->assertSet('replyPendingRetry', false);
+
+        Queue::assertPushed(ProcessStudentChatReply::class, fn ($job) => $job->userId === $user->id && $job->text === 'Где моя запись занятия?');
+        $this->assertDatabaseCount('chat_messages', 1);
+    }
+
+    /** @test */
+    public function retry_is_scoped_to_the_authenticated_user(): void
+    {
+        Queue::fake();
+
+        $alice = User::factory()->create();
+        ChatMessage::create([
+            'user_id' => $alice->id,
+            'role' => 'user',
+            'text' => 'Вопрос Алисы про сандхи',
+            'is_read' => false,
+        ]);
+
+        $bob = User::factory()->create();
+        $this->actingAs($bob);
+
+        Livewire::test(StudentChat::class)
+            ->assertDontSee('Вопрос Алисы про сандхи')
+            ->call('retryReply')
+            ->assertSet('replyPendingRetry', false);
+
+        // За Боба не диспетчеризуется ничего: у него нет сообщений, чужие недоступны.
+        Queue::assertNotPushed(ProcessStudentChatReply::class);
+        $this->assertSame(1, ChatMessage::where('user_id', $alice->id)->count());
+    }
+
+    /** @test */
+    public function composer_exposes_accessible_send_control_and_error_region(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        Livewire::test(StudentChat::class)
+            ->assertSeeHtml('aria-label="Отправить сообщение"')
+            ->assertSeeHtml('aria-label="Сообщение в чат поддержки"')
+            ->assertSeeHtml('aria-live="polite"')
+            ->assertSeeHtml('aria-hidden="true"');
+    }
 }
