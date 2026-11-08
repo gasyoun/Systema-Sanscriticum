@@ -154,12 +154,11 @@ def verify_key(*, host: str, key: str, key_location: str, timeout: float = 15.0)
     if not belongs_to_host(key_location, host):
         raise IndexNowError(f"key-location {key_location!r} is not on host {host!r}")
 
-    # key_location is operator-supplied and pre-validated by belongs_to_host
-    # (http/https scheme + host match) — no attacker-controlled scheme reaches
-    # urlopen here (Semgrep dynamic-urllib audit).
-    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+    # key_location is operator-supplied, pre-validated by belongs_to_host
+    # (http/https scheme + host match) — no attacker-controlled scheme here.
     try:
-        with urllib.request.urlopen(key_location, timeout=timeout) as response:
+        # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+        with urllib.request.urlopen(key_location, timeout=timeout) as response:  # noqa: S310 - validated https host
             status, body = _read_response(response)
     except urllib.error.HTTPError as exc:
         raise IndexNowError(f"key-location returned HTTP {exc.code}") from exc
@@ -189,11 +188,10 @@ def submit(
         headers={"Content-Type": "application/json; charset=utf-8"},
     )
 
-    # endpoint defaults to the https INDEXNOW_ENDPOINT constant; callers pass
-    # either it or an equally fixed production endpoint — never user data.
-    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+    # endpoint defaults to the fixed https INDEXNOW_ENDPOINT — never user data.
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+        with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - fixed https endpoint
             return _read_response(response)
     except urllib.error.HTTPError as exc:
         body = exc.read().decode("utf-8", errors="replace")
