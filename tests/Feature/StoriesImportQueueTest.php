@@ -113,4 +113,33 @@ MD);
 
         $this->assertSame(0, StoryPost::query()->count());
     }
+
+    /** H6915: строка «Медиа» в шапке делает пакет видео — kind=video с
+     * media_path; дедуп по source_key прежний, повторный импорт не дубль. */
+    /** @test */
+    public function media_header_imports_video_package_with_media_path(): void
+    {
+        file_put_contents($this->dir.'/2026-10-20-VID9.md', <<<'MD'
+# 20-10-2026 — видео-анонс #9
+
+| Поле | Значение |
+|---|---|
+| Слот | утро |
+| Медиа | /srv/anons/fragments/course-fragment.mp4 |
+
+- - - текст поста - - -
+
+Фрагмент занятия: как устроен курс. Запись: samskrte.ru/online
+MD);
+
+        $this->artisan('stories:import-queue', ['--path' => $this->dir])
+            ->expectsOutputToContain('→ video')
+            ->assertSuccessful();
+
+        $row = StoryPost::query()->sole();
+        $this->assertSame(StoryPost::KIND_VIDEO, $row->kind);
+        $this->assertSame('/srv/anons/fragments/course-fragment.mp4', $row->media_path);
+        $this->assertSame('2026-10-20-VID9.md', $row->source_key);
+        $this->assertSame(StoryPost::STATUS_DRAFT, $row->status);
+    }
 }

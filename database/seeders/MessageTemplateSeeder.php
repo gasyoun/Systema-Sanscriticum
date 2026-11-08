@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use App\Enums\ReactivationTemplate;
 use App\Models\MessageTemplate;
+use App\Models\SupportAnswerSuggestion;
 use Illuminate\Database\Seeder;
 
 /**
@@ -31,6 +32,7 @@ class MessageTemplateSeeder extends Seeder
                     'body' => $tpl['body'],
                     'category' => $tpl['category'],
                     'dozhim_step' => $tpl['dozhim_step'] ?? null,
+                    'suggester_category' => $tpl['suggester_category'] ?? null,
                     'is_active' => true,
                 ],
             );
@@ -65,6 +67,22 @@ class MessageTemplateSeeder extends Seeder
                 'title' => 'Поддержка · приняли в работу',
                 'body' => "Намасте, {name}!\n\nПолучили ваше сообщение и уже разбираемся. Обычно отвечаем в течение рабочего дня.",
                 'category' => MessageTemplate::CATEGORY_SUPPORT,
+            ],
+            // H7591 (рулинг MG 01-11-2026): D-привязанный шаблон «как оплатить» —
+            // единственная привязка сидера; автоответ студенту шлёт ТОЛЬКО этот
+            // текст, без сумм (R3 держится: цифры — на витрине). Остальные
+            // заготовки D/E/F — без привязки, оператор решает сам.
+            [
+                'title' => 'Поддержка · D — как оплатить курс (автоответ)',
+                'body' => "Намасте, {name}!\n\n"
+                    .'Курсы оплачиваются по блокам: 1 блок = 4 занятия — можно платить за блок или сразу за весь курс. '
+                    .'Тарифы курса — на витрине: samskrte.ru/online, запись автоматическая. '
+                    ."Если витрина не подошла — перевод по реквизитам: samskrtam.ru/u\n\n"
+                    .'При оплате напишите название курса и номер блока — так мы быстро отметим оплату, '
+                    ."чек или скриншот пришлите в этот чат.\n\n"
+                    .'Личный кабинет: {pay_link}',
+                'category' => MessageTemplate::CATEGORY_SUPPORT,
+                'suggester_category' => SupportAnswerSuggestion::CATEGORY_PAYMENT,
             ],
             // Заготовки под категории FAQ-суггестера D/E/F (H1876). Сеются без
             // привязки (suggester_category = null) — оператор привязывает сам.

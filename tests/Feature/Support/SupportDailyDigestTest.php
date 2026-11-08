@@ -65,7 +65,7 @@ class SupportDailyDigestTest extends TestCase
         $out = Artisan::output();
         $this->assertStringContainsString('Обращений: 1', $out);
         $this->assertStringContainsString('Неотвеченных: 0', $out);
-        $this->assertStringContainsString('Горбаченко', $out);
+        $this->assertStringNotContainsString('Горбаченко', $out);
         $this->assertStringContainsString('Иван '.SupportOutgoingAttribution::TURTLE_MARKER.': 1', $out);
         $this->assertStringContainsString('Гасунс: 1', $out);
         $this->assertStringContainsString('telegram-support/telegram-support-analytics', $out);
@@ -87,8 +87,7 @@ class SupportDailyDigestTest extends TestCase
                 && (string) $request['chat_id'] === '111'
                 && (string) $request['parse_mode'] === 'HTML'
                 && str_contains($text, 'Сводка поддержки за')
-                && str_contains($text, 'Горбаченко')
-                && str_contains($text, SupportOutgoingAttribution::APPLE_MARKER.': 1')
+                && ! str_contains($text, 'Горбаченко')
                 && str_contains($text, 'Иван '.SupportOutgoingAttribution::TURTLE_MARKER.': 1')
                 && str_contains($text, 'Гасунс: 1')
                 && str_contains($text, 'ИИ отправил: 1')

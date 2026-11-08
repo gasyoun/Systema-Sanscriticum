@@ -43,6 +43,40 @@
         <li>Ниже видео — блок <strong>«Домашнее задание»</strong></li>
     </ol>
 
+    <h2 class="text-xl font-bold text-gray-900 mb-3">Пример: сдаём первый урок</h2>
+    <p class="text-gray-700 leading-relaxed mb-4">
+        В <strong>уроке 1</strong> учебника Кочергиной задание — выполнить все упражнения к занятию.
+        Ниже — как выглядит заполненная форма сдачи <strong>с телефона</strong> и <strong>с ноутбука</strong>:
+        короткий текст ответа, прикреплённые файлы (фото тетради и аудио с чтением алфавита) — и кнопка
+        «Отправить на проверку».
+    </p>
+    <div class="grid grid-cols-1 sm:grid-cols-5 gap-6 mb-3">
+        <figure class="sm:col-span-2">
+            <img src="{{ asset('images/faq/dz-example-phone.png') }}"
+                 alt="Форма домашнего задания урока 1 на телефоне: задание, ответ, два прикреплённых файла и кнопка «Отправить на проверку»"
+                 class="w-full max-h-[620px] object-contain rounded-2xl border border-gray-200 shadow-sm" loading="lazy">
+            <figcaption class="text-sm text-gray-500 mt-2 text-center">С телефона</figcaption>
+        </figure>
+        <figure class="sm:col-span-3">
+            <img src="{{ asset('images/faq/dz-example-laptop.png') }}"
+                 alt="Форма домашнего задания урока 1 на ноутбуке: та же форма целиком — задание, ответ, файлы и обе кнопки отправки"
+                 class="w-full rounded-2xl border border-gray-200 shadow-sm" loading="lazy">
+            <figcaption class="text-sm text-gray-500 mt-2 text-center">С ноутбука</figcaption>
+        </figure>
+    </div>
+    <figure class="mb-3">
+        <video src="{{ asset('images/faq/dz-example-phone.mp4') }}" controls playsinline preload="none"
+               class="w-full max-w-[300px] mx-auto rounded-2xl border border-gray-200 shadow-sm"></video>
+        <figcaption class="text-sm text-gray-500 mt-2 text-center">
+            Видео: заполняем форму с телефона
+        </figcaption>
+    </figure>
+    <p class="text-xs text-gray-400 text-center mb-3">~30 сек, без звука</p>
+    <p class="text-gray-500 text-sm leading-relaxed mb-8">
+        Куратору работу показывает только <strong>«Отправить на проверку»</strong> — «Сохранить черновик»
+        оставляет её у вас.
+    </p>
+
     <h2 class="text-xl font-bold text-gray-900 mb-3">Когда есть форма</h2>
     <ul class="space-y-3 mb-8 text-gray-700 leading-relaxed">
         <li><span class="font-bold text-emerald-700">Форма</span> — прием открыт: текст и/или файлы, затем «Отправить на проверку».</li>
@@ -55,8 +89,12 @@
         До <strong>10 файлов</strong> за отправку, каждый до <strong>30 МБ</strong>, все вместе до ~90 МБ.
         Фото, PDF, Word, аудио, короткое видео.
     </p>
-    <p class="text-gray-500 text-sm leading-relaxed mb-8">
+    <p class="text-gray-500 text-sm leading-relaxed mb-2">
         Можно выбирать файлы по одному (сначала фото, потом аудио) — они копятся в списке.
+    </p>
+    <p class="text-gray-500 text-sm leading-relaxed mb-8">
+        <span class="font-bold text-emerald-700">Можно сдавать прямо с телефона</span> — интерфейс тот же,
+        фото тетради (в том числе HEIC с iPhone), аудио или короткое видео прикладываются как обычно.
     </p>
 
     <h2 class="text-xl font-bold text-gray-900 mb-3">Статусы</h2>

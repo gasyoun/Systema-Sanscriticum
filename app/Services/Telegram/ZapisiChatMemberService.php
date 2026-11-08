@@ -282,6 +282,62 @@ class ZapisiChatMemberService
     }
 
     /**
+     * Постоянная ссылка-заявка в чат группы (creates_join_request), 20-10-2026.
+     * Создаётся один раз и хранится в groups.telegram_join_link: вход по ней
+     * — только через одобрение ботом (ChatJoinRequestApprover).
+     *
+     * @throws ZapisiChatMemberException
+     */
+    public function joinRequestLink(Group $group): string
+    {
+        $existing = trim((string) $group->telegram_join_link);
+        if ($existing !== '') {
+            return $existing;
+        }
+
+        $chatId = trim((string) $group->telegram_chat_id);
+        if ($chatId === '') {
+            throw new ZapisiChatMemberException("У группы #{$group->id} не привязан Telegram-чат.");
+        }
+
+        $res = $this->api('createChatInviteLink', [
+            'chat_id' => $chatId,
+            'name' => mb_substr('Оплатившие · '.$group->name, 0, 32),
+            'creates_join_request' => true,
+        ]);
+
+        $link = (string) ($res['result']['invite_link'] ?? '');
+        if (! ($res['ok'] ?? false) || $link === '') {
+            throw new ZapisiChatMemberException('Telegram createChatInviteLink: '.($res['description'] ?? 'unknown'));
+        }
+
+        $group->forceFill(['telegram_join_link' => $link])->save();
+
+        return $link;
+    }
+
+    /** @return bool true — Telegram одобрил заявку */
+    public function approveJoinRequest(string $chatId, int|string $telegramUserId): bool
+    {
+        $res = $this->api('approveChatJoinRequest', [
+            'chat_id' => $chatId,
+            'user_id' => (string) $telegramUserId,
+        ]);
+
+        if (! ($res['ok'] ?? false)) {
+            Log::warning('ZapisiChatMemberService: approveChatJoinRequest failed', [
+                'chat_id' => $chatId,
+                'user_id' => (string) $telegramUserId,
+                'body' => $res,
+            ]);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * @param  array<string, mixed>  $params
      * @return array<string, mixed>
      */

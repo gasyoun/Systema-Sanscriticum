@@ -94,9 +94,15 @@ _Created: 02-07-2026 · Last updated: 24-09-2026_
    хоть один файл под `storage/framework/views` остался не нашим.
 7. **`systemctl reload php{ver}-fpm`** — сброс OPcache (версия PHP определяется
    автоматически, переживет апгрейд 8.1 → 8.3).
-8. `supervisorctl restart horizon` — `horizon:terminate` на этом проде воркеры
-   не циклит (PID-ы не меняются, старый код продолжает крутиться); фолбэк на
-   terminate только там, где supervisor отсутствует.
+8. `supervisorctl stop` + `start horizon` с потолком по времени —
+   `horizon:terminate` на этом проде воркеры не циклит (PID-ы не меняются,
+   старый код продолжает крутиться); фолбэк на terminate только там, где
+   supervisor отсутствует. Голый `restart` ждал `stopwaitsecs=3600` на
+   воркере, не выходящем по SIGTERM (19-10 и 22-10-2026: деплой висел, бот
+   молчал). Теперь: пока есть зарезервированные задачи — ждём до
+   `HORIZON_STOP_MAX_SECONDS` (660), без задач — `HORIZON_STOP_IDLE_SECONDS`
+   (30), затем `pkill` процессов `artisan horizon` (заодно осиротевших
+   воркеров) и `supervisorctl start`.
 8b. `supervisorctl restart zapisi-poll` — **только если он сейчас `RUNNING`**.
    Это аварийный поллер @zapisi_ORSbot (штатно апдейты приходят вебхуком), и он
    стоит с `autostart=false`. Условие важно: `supervisorctl restart` на

@@ -312,4 +312,16 @@ return [
         ))),
         'dedup_enabled' => (bool) env('SUPPORT_HINT_DEDUP_ENABLED', true),
     ],
+
+    /*
+     | 22-10-2026: разбор разговора об оплате/записи локальной LLM
+     | (features.support_pay_dialog_llm). Модель только выбирает вариант из
+     | каталога; сумма, ссылка и текст — код. Ниже порога уверенности или при
+     | сбое узла — прежний путь на регулярках.
+     */
+    'pay_llm' => [
+        'min_confidence' => (float) env('SUPPORT_PAY_LLM_MIN_CONFIDENCE', 0.7),
+        'timeout' => (int) env('SUPPORT_PAY_LLM_TIMEOUT', 60),
+        'history' => (int) env('SUPPORT_PAY_LLM_HISTORY', 20),
+    ],
 ];
