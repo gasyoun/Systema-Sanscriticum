@@ -24,12 +24,15 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/../../vendor/autoload.php';
-$app = require __DIR__ . '/../../bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+use App\Services\Support\Faq\Bm25FaqRetriever;
+use Illuminate\Contracts\Console\Kernel;
+
+require __DIR__.'/../../vendor/autoload.php';
+$app = require __DIR__.'/../../bootstrap/app.php';
+$app->make(Kernel::class)->bootstrap();
 
 /** @var App\Services\Support\Faq\Bm25FaqRetriever $retriever */
-$retriever = $app->make(App\Services\Support\Faq\Bm25FaqRetriever::class);
+$retriever = $app->make(Bm25FaqRetriever::class);
 
 while (($line = fgets(STDIN)) !== false) {
     $line = trim($line);
@@ -39,7 +42,7 @@ while (($line = fgets(STDIN)) !== false) {
     $req = json_decode($line, true);
     $text = is_array($req) ? (string) ($req['text'] ?? '') : '';
     if ($text === '') {
-        fwrite(STDOUT, json_encode(['error' => 'empty text'], JSON_UNESCAPED_UNICODE) . "\n");
+        fwrite(STDOUT, json_encode(['error' => 'empty text'], JSON_UNESCAPED_UNICODE)."\n");
         continue;
     }
     $hits = $retriever->retrieve($text, 5); // top-k mirrors knowledge:eval default
@@ -50,5 +53,5 @@ while (($line = fgets(STDIN)) !== false) {
     fwrite(STDOUT, json_encode(
         ['retrieved_chunk_ids' => array_values(array_filter($chunkIds)), 'refusal' => $chunkIds === []],
         JSON_UNESCAPED_UNICODE
-    ) . "\n");
+    )."\n");
 }
