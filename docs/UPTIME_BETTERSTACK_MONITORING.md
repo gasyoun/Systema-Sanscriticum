@@ -1,6 +1,6 @@
 # Uptime monitoring — Better Stack (for agents)
 
-_Created: 30-07-2026 · Last updated: 14-09-2026_
+_Created: 30-07-2026 · Last updated: 31-10-2026_ (§2.3 cologne systemd-timer backfill + 15m/20m grace; monitor 4751491 regions → eu+us; new §2.6 notification-wiring state; §2.4 token census)
 
 **Audience: agents** (Claude / Codex / ops automation). Env keys, cron paths,
 smoke commands, inventory table — operate without re-deriving from chat.
@@ -149,15 +149,17 @@ Site: `https://sanskrit-lexicon.uni-koeln.de/` (Universität zu Köln).
 |---|---|
 | `/usr/local/sbin/cologne-cdsl-heartbeat.sh` | curl homepage + keyword → POST heartbeat or `/fail` |
 | `/etc/default/cologne-cdsl-heartbeat` | `COLOGNE_HEARTBEAT_URL` (+ optional CHECK_URL / KEYWORD / TIMEOUT) — **not in git** |
-| root crontab | `*/5 * * * * . /etc/default/cologne-cdsl-heartbeat; /usr/local/sbin/cologne-cdsl-heartbeat.sh >> /var/log/cologne-cdsl-heartbeat.log 2>&1` |
+| `cologne-cdsl-heartbeat.{service,timer}` | systemd timer `OnUnitActiveSec=600s` (~10 min), `Persistent=true` — **fixed 18-09-2026 (H4245 add. 3): the 30-07 install created the script but NO scheduler ever existed**, and `/etc/default` held the ping URL of a since-deleted heartbeat — the monitor sat red ~7 weeks while the site was up |
 
-Heartbeat UI: period **5 min**, grace **~10 min**.
+Heartbeat UI: period **15 min**, grace **20 min** (H4245). 31-10-2026 liveness evidence: journal `OK: https://sanskrit-lexicon.uni-koeln.de/` at 14:54Z, timer active.
 
 When Cologne is down, also update
 [SERVER_OUTAGES.md](https://github.com/gasyoun/Uprava/blob/main/SERVER_OUTAGES.md)
 so scrapers stop re-probing blindly.
 
 We **cannot** install cron on `uni-koeln.de`.
+
+HTTP monitor [4751491](https://uptime.betterstack.com/team/t576984/monitors/4751491/edit) check regions: **eu+us only** since 31-10-2026 (was eu/us/as/au) — same false-alarm trim as the other HTTP monitors on 18-09 (H4245): single-region route blips fired site-wide "Timeout" incidents.
 
 ### 2.4 `.91` samskrtam50 — n8n / Caddy (**we own the host**) — W3a, PARTLY PENDING
 
@@ -178,11 +180,12 @@ died, nothing would have said so. That is what W3a closes.
 | `.92 peer-probe → .91` | Heartbeat | silence / explicit `/fail` | **5 min** / **10 min** | ⏳ **not created yet — human** |
 
 **Why these four are still open.** Creating a Better Stack object needs the team
-UI or an API token, and there is **no** Better Stack API token on either box —
-measured 26-08-2026: prod env holds only heartbeat *ping* URLs
-(`HEARTBEAT_PING_URL`, `CABINET_PROBE_PING_URL`, `COLOGNE_HEARTBEAT_URL`,
-`SAMSKRTAM_HEARTBEAT_URL`), no admin credential. An agent cannot create them and
-must not invent a way to.
+UI or an API token. The token exists since 18-09-2026 (`~/.secrets/betterstack-login.env`
+on the Mac, H4245; copied to Windows-msi 31-10-2026) — the blocker is no longer credential
+absence, it is that nobody created the four objects: API census 31-10-2026 shows 4 HTTP
+monitors + 6 heartbeats, none for `.91`. Prod env still holds only heartbeat *ping* URLs,
+no admin credential. An agent with the token may create them (free-tier monitor count
+permitting) and must still not invent credentials.
 
 **Free-tier check first (S4/R6).** Count existing monitors against the tier
 before creating four more. If short, **create the heartbeats and skip the HTTP
@@ -240,6 +243,55 @@ Timers, not cron lines. On 18-08-2026 `cron.service` hit its shared 2 GiB cgroup
 budget and strangled every cron job at once (H3121 — ledger row №10, MTTD
 7 h 33 m, `guard = none`). A watchdog in that cgroup shares the fate of what it
 watches.
+
+---
+
+### 2.6 Notification wiring — how an alert actually reaches MG (state 31-10-2026)
+
+Measured 31-10-2026 via the API token (ZCode `GLM-5.3-Flash`, direct MG chat; token in
+`~/.secrets/betterstack-login.env`, **never** into git):
+
+- Account t576984 = **4 HTTP monitors + 6 heartbeats, 0 escalation policies**. Creating one
+  is **plan-gated**: `POST /api/v2/policies` (both `uptime.betterstack.com/api/v2` and
+  `incidents.betterstack.com/api/v3`) → **403 «Cannot create escalation policy. Please
+  upgrade your account.»** The H4245 "0 escalation policies / 0 on-call users" gap is
+  therefore not a config miss — the free tier cannot close it. Incidents reach MG via the
+  **account-owner default email only** (proven live 19-09: burn-rate incident email
+  forwarded verbatim).
+- **Better Stack → Telegram is designed but not wired.** The H7063 `hermes-alert-sink` on
+  .92 is live (systemd unit, `127.0.0.1:8093`) and has a `betterstack` source adapter — but
+  **0 betterstack deliveries in the last 7 days**: no Better Stack webhook integration
+  exists, and the sink binds loopback only (no public route, no auth on `/ingest/*`).
+  Wiring needs an MG ruling: **(a)** paid plan → escalation policies; **(b)** Better Stack
+  native Telegram integration (UI, MG's TG auth); **(c)** public authenticated route to the
+  sink (nginx + shared secret — the sink has no auth, do not expose it as-is).
+
+**RULING 31-10-2026 (MG, direct chat): option (b) — Better Stack native Telegram
+integration, wired in the UI.** Agent-side prep is complete (this § is the state of
+record). What remains is MG's own Telegram authorization, which no API token can do:
+
+1. Open `https://uptime.betterstack.com/team/t576984` from a box where the UI loads
+   (Windows-msi and Mac both reach the domain; **not** .92/.91 — RU-upstream Cloudflare
+   filter, H7556; magenta-duck exit node is the proven fallback).
+2. **Integrations → Add integration → Telegram** → connect via the Better Stack bot
+   (Telegram opens; press Start/approve). Expected to work on the free tier — escalation
+   policies are the gated piece (403), basic alerting integrations are not. If the UI
+   gates it too, that single click settles (a)-vs-(b) definitively.
+3. Attach the integration to **all 4 HTTP monitors + 6 heartbeats** (or "all current and
+   future monitors"), keeping email as the second channel.
+4. **Receipt drill (H4195 pattern):** fire `/fail` on heartbeat **477230**
+   (`samskrte heartbeat:ping`, 5-min period — the next scheduled OK ping auto-resolves
+   the incident, so the drill window is <5 min):
+   `ssh root@193.232.229.92 "grep -oP '^HEARTBEAT_PING_URL=\K.*' /var/www/html/.env | xargs -I{} curl -s -m 15 {}/fail"`
+   Expect: Better Stack incident + TG message from the Better Stack bot within ~a minute.
+
+Until the drill receipt lands, **email remains the only proven Better Stack → MG leg**.
+The `hermes-alert-sink` `betterstack` adapter stays idle as fallback (no public route —
+deliberately).
+
+Until one of (a)–(c) lands, **email is the only Better Stack → MG leg**; TG coverage of
+infra alerts comes from the other producers (beszel relay, lane pages), not from Better
+Stack.
 
 ---
 
@@ -363,6 +415,7 @@ Order matters: **confirm → classify → fix only what you own**.
 | Where are secrets? | Prod `.env` and `/etc/default/*-heartbeat` on VPS only — not git. |
 | healthchecks.io? | Obsolete; same env keys, Better Stack URLs. |
 | Soft TG every 15 min? | Should be cooled (fingerprint); if not, check deployed probe version / soft cooldown config. |
+| Escalation policy / TG page from Better Stack? | Plan-gated on the free tier (403, §2.6); TG leg unwired — MG ruling pending (§2.6). |
 
 ---
 

@@ -50,6 +50,17 @@ _Создано: 08-07-2026 · Обновлено: 12-10-2026 (№91 — кам�
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
 
+### №92 — Telegram разовый перенос занятия: пилот группы 63 + replay message 93
+
+После merge и обычного авто-деплоя выполнить [RUNBOOK_TELEGRAM_ANNOUNCE_RESCHEDULE_2026-10-28](docs/RUNBOOK_TELEGRAM_ANNOUNCE_RESCHEDULE_2026-10-28.md):
+
+1. `php artisan migrate --force` — создать журнал `telegram_schedule_reschedules` (идемпотентность + Undo).
+2. Связать Telegram `5487293147` (@rusamskrtam) со staff user `6755` через `social_accounts`; коллизию проверить повторно, не перезаписывать чужую идентичность.
+3. Только для пилота: `TELEGRAM_ZAPISI_ANNOUNCE_RESCHEDULE_DETECT=true`, `TELEGRAM_ZAPISI_ANNOUNCE_RESCHEDULE_GROUP_IDS=150`, затем `config:clear` + `config:cache`.
+4. Ровно один раз вызвать `AnnounceRescheduleService` для chat `-1003994169966`, message `93` с исходным timestamp 27-10-2026 08:24:54 MSK. Цель: #2856 → 30-10-2026 08:00–10:00 MSK; #2857 не меняется.
+5. Проверить одну action-строку, один reply с Undo, отсутствие дублей и новый слот напоминаний. Undo на нужном боевом переносе не нажимать — он вернёт вторник; live-smoke Undo только в Sandbox.
+6. 04-11-2026 расширить allowlist только после 7 чистых дней без неверного переноса, дубля квитанции или дефекта напоминаний.
+
 ### H3312 — superadmin email вычищен из кода: прод .env получает ADMIN_EMAIL (fail-closed)
 
 Личный email суперадмина больше не захардкожен в коде ([PR #1988](https://github.com/gasyoun/Systema-Sanscriticum/pull/1988)): Horizon gate, получатель backup-уведомлений и `services.admin.email` теперь читают единый `ADMIN_EMAIL`; пусто = все три функции отключены (Horizon deny + backup notify skip, с warning в логе, без крашей). До выката PR на прод:

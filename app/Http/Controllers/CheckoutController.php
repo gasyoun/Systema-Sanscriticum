@@ -16,6 +16,7 @@ use App\Services\Membership\MembershipFunnelAnalytics;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use App\Support\Consent\ConsentRules;
+use App\Support\EnrollmentGroupLink;
 use App\Support\FlagshipExperiments;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -91,10 +92,24 @@ class CheckoutController extends Controller
 
         $state = $this->computeState($tariff, $prana);
 
+        // 20-10-2026: ссылка бота лички несёт выбранную группу (подписанную).
+        // Флаг OFF → параметр игнорируется, страница прежняя.
+        $chosenGroup = config('features.grant_chosen_group')
+            ? EnrollmentGroupLink::resolve($tariff, $request->query('group'), $request->query('gsig'))
+            : null;
+
+        // 21-10-2026: контакт лички без привязки едет дальше в форму (подпись
+        // проверит PaymentController); на странице его не показываем.
+        $chosenContact = $chosenGroup !== null
+            ? EnrollmentGroupLink::resolveContact($tariff, $chosenGroup, $request->query('tgc'), $request->query('csig'))
+            : null;
+
         return view('checkout.show', array_merge([
             'tariff' => $tariff,
             'page' => $page,
             'isGift' => $isGift,
+            'chosenGroup' => $chosenGroup,
+            'chosenContact' => $chosenContact,
         ], $state));
     }
 

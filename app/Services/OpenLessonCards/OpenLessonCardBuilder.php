@@ -111,12 +111,17 @@ class OpenLessonCardBuilder
     }
 
     /** Текст сообщения со ссылкой на подключение (стадия zoom). */
-    public function zoomText(Schedule $schedule): string
+    public function zoomText(Schedule $schedule, bool $hasZoom = true, bool $hasStreams = false): string
     {
         $start = $schedule->start->copy()->timezone(config('app.timezone'));
 
-        return '🔔 Скоро начинаем: «'.e($this->title($schedule)).'», в '.$start->format('H:i')." (МСК).\n\n"
-            .'Подключайтесь по кнопке ниже — ждём вас!';
+        $how = match (true) {
+            $hasZoom && $hasStreams => 'Подключайтесь в Zoom или смотрите трансляцию — кнопки ниже. Ждём вас!',
+            $hasStreams => 'Смотрите трансляцию по кнопкам ниже — ждём вас!',
+            default => 'Подключайтесь по кнопке ниже — ждём вас!',
+        };
+
+        return '🔔 Скоро начинаем: «'.e($this->title($schedule)).'», в '.$start->format('H:i')." (МСК).\n\n".$how;
     }
 
     /**

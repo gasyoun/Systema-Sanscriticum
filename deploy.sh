@@ -173,7 +173,8 @@ $REAL_DIRTY
       fail "Рабочее дерево грязное (не только public/docs/*.pdf) — сначала разобраться с локальными изменениями (git status)"
     fi
     say "Стэшу прод-локальные PDF (public/docs) на время обновления кода"
-    # shellcheck disable=SC2086 — пути прошли allowlist-регэксп, пробелов нет
+    # пути прошли allowlist-регэксп, пробелов нет
+    # shellcheck disable=SC2086
     git stash push -m "deploy.sh auto-stash $(date '+%F %T')" -- $DIRTY_FILES
     STASHED=1
   fi
@@ -299,6 +300,12 @@ else
   php artisan migrate --force
 fi
 
+# H7590 — публичный JSON-индекс глобального поиска в шапке: регенерим на
+# каждом деплое от FPM-пользователя (владелец файлов = www-data). Soft-fail:
+# на откате команды может ещё не быть в старом коммите — деплой не ломаем,
+# индекс до следующего сохранения обновит наблюдатель.
+run_as_app_user php artisan search:index 2>/dev/null || { warn "search:index failed — индекс поиска не перегенерирован"; DEPLOY_SOFT_FAIL=1; }
+
 # ── 4. Прогрев кэшей под прод ────────────────────────────────────────────────
 say "Прогрев кэшей (config/route/view + filament) от ${APP_USER:-www-data}"
 # H4848: прогрев идёт ОТ FPM-ПОЛЬЗОВАТЕЛЯ, не от root. Раньше здесь стоял
@@ -323,9 +330,51 @@ systemctl reload "php${PHP_VER}-fpm" || fail "Не удалось перезаг
 # horizon:terminate на этом проде воркеры НЕ циклит (PID-ы не меняются — они
 # продолжают крутить старый код/кеш); работает только supervisorctl restart.
 # Фолбэк на terminate — для окружений без supervisor (dev-бокс).
+#
+# Рестарт ограничен по времени: `supervisorctl restart` ждёт stopwaitsecs
+# (3600 с), а простаивающий воркер redis-long порой не выходит на SIGTERM —
+# деплой висел, Horizon стоял в STOPPING, бот и рассылки молчали
+# (19-10 и 22-10-2026, оба раза — ручной kill). Ждём, пока идёт хоть одна
+# зарезервированная задача (до HORIZON_STOP_MAX_SECONDS — потолок задачи
+# timeout=600 + запас), без задач — HORIZON_STOP_IDLE_SECONDS; потом добиваем
+# процессы Horizon (вместе с осиротевшими воркерами) и стартуем заново.
+HORIZON_STOP_IDLE_SECONDS=${HORIZON_STOP_IDLE_SECONDS:-30}
+HORIZON_STOP_MAX_SECONDS=${HORIZON_STOP_MAX_SECONDS:-660}
+# Только сами php-процессы Horizon — не shell/ssh, где «artisan horizon» в тексте команды.
+HORIZON_PROC_RE='^[^ ]*php[0-9.]* [^ ]*artisan horizon'
+
+horizon_reserved_jobs() {
+  command -v redis-cli >/dev/null 2>&1 || { echo 1; return; }
+  local total=0 key n
+  for key in $(redis-cli --scan --pattern '*queues:*:reserved' 2>/dev/null); do
+    n=$(redis-cli zcard "$key" 2>/dev/null || echo 0)
+    total=$((total + ${n:-0}))
+  done
+  echo "$total"
+}
+
+restart_horizon_bounded() {
+  supervisorctl stop horizon >/dev/null 2>&1 &
+  local stopper=$! waited=0
+  while pgrep -f "$HORIZON_PROC_RE" >/dev/null 2>&1; do
+    if [ "$waited" -ge "$HORIZON_STOP_MAX_SECONDS" ] \
+      || { [ "$waited" -ge "$HORIZON_STOP_IDLE_SECONDS" ] && [ "$(horizon_reserved_jobs)" -eq 0 ]; }; then
+      warn "Horizon не остановился за ${waited} с — добиваю процессы"
+      pkill -TERM -f "$HORIZON_PROC_RE" || true
+      sleep 5
+      pkill -KILL -f "$HORIZON_PROC_RE" || true
+      break
+    fi
+    sleep 5
+    waited=$((waited + 5))
+  done
+  wait "$stopper" 2>/dev/null || true
+  supervisorctl start horizon || fail "supervisorctl start horizon провалился — очереди стоят!"
+}
+
 say "Рестарт Horizon"
 if command -v supervisorctl >/dev/null 2>&1; then
-  supervisorctl restart horizon || fail "supervisorctl restart horizon провалился — очереди крутят старый код!"
+  restart_horizon_bounded
   sleep 2
   supervisorctl status horizon || true
 else

@@ -56,6 +56,19 @@ use App\Models\User;
  * PASS гейта H5562 по-прежнему требует нового 30-кейсового сэмпла: вердикт
  * FAIL 18-10-2026 этим слоем не переписывается.
  *
+ * H5562, класс 2 (22-10-2026, канарейка вердикта): платёжные/заказные
+ * идентификаторы. Метод гейта требует для класса 2 плейсхолдер `[ORDER]`, а в
+ * маскере не было НИ ОДНОГО слоя класса 2: «заказ № 482913» уходил в LLM
+ * сырым (канарейка: телефон и e-mail закрыты, номер заказа — нет). Зелёный
+ * «класс 2 — 3/3» в сэмпле 18-10 держался на over-redaction сумм (совпадения
+ * с числовыми личностями и телефонными фигурами), а не на покрытии номеров.
+ * Поэтому слой намеренно CUE-якорный и даёт тег `<PII:order:N>` (рантайм-вид
+ * `[ORDER]`): (а) «существительное идентификатора + номер» — заказ, платёж,
+ * счёт, транзакция, инвойс, чек, order/payment/invoice/receipt; (б) голый
+ * «№ 482913». Голая сумма без такого якоря («3 500 ₽», «оплатил 12000») НЕ
+ * маскируется — сумма не идентификатор, и в следующем сэмпле она не должна
+ * считаться попаданием класса 2, иначе вердикт снова станет ложным.
+ *
  * Fail-closed: если identity-сет недоступен (БД упала), maskOrFail() бросает —
  * вызывающий ОБЯЗАН исключить текст из промпта (черновик собирается из одних
  * фактов), а не отправлять сырой текст. Чистоту нельзя доказать → вызова нет.
@@ -75,6 +88,17 @@ class SupportStudentPiiMasker
 
     /** Значение состоит только из цифр и телефонных разделителей. */
     private const PHONE_LIKE = '/^[+\d \x{00A0}\t.()+\-]+$/u';
+
+    /**
+     * Класс 2 (H5562, метод: `[ORDER]`): cue-якорь — существительное
+     * идентификатора (заказ/платёж/счёт/транзакция/инвойс/чек, order/payment/
+     * invoice/receipt) + разделители + номер 4–12 цифр. `(*SKIP)(*F)` держит
+     * уже поставленные `<PII:…>`-теги вне матча.
+     */
+    private const STRUCT_ORDER_CUE = '/(?:<PII:[a-z\-]+:\d+>(*SKIP)(*F))|(?<!\p{L})(?:заказ\p{L}*|плат[её]ж\p{L}*|сч[её]т\p{L}*|транзакци\p{L}*|инвойс\p{L}*|чек\p{L}*|orders?|payments?|invoices?|receipts?)(?:[ \t]+(?:id|no\.?|number))?[^\d\p{L}]{0,24}(?P<id>\d{4,12})(?!\d)/iu';
+
+    /** Класс 2: голый номер со знаком № — «оплата № 4812». */
+    private const STRUCT_ORDER_NO = '/(?:<PII:[a-z\-]+:\d+>(*SKIP)(*F))|(?<!\p{L})№[ \t]*(?P<id>\d{4,12})(?!\d)/u';
 
     /** Класс 1, слой 1: @-хэндл любой (не только из users) — контакт. */
     private const STRUCT_HANDLE = '/(?<![\w@])@([A-Za-z][A-Za-z0-9_]{2,})(?!\w)/u';
@@ -302,6 +326,12 @@ class SupportStudentPiiMasker
             }, $text);
         }
 
+        // H5562, класс 2: платёжные/заказные идентификаторы — cue-якорь
+        // («заказ», «счёт», «order»…) или голый «№ 482913». Голая сумма без
+        // якоря не маскируется: она не идентификатор, и её over-redaction уже
+        // один раз дала ложный зелёный по классу 2 (см. docblock).
+        $text = $this->maskOrderIdentifiers($text, $substitutions);
+
         // H6918, слой 1: @-хэндл-shaped фигура — контакт, независимо от users.
         // H6918-2: ник запоминается без @ — bare «masha_v» в следующих
         // сообщениях беседы закроет словарь.
@@ -384,6 +414,10 @@ class SupportStudentPiiMasker
         if (preg_match(self::STRUCT_PHONE, $text) === 1) {
             return true;
         }
+        if (preg_match(self::STRUCT_ORDER_CUE, $text) === 1
+            || preg_match(self::STRUCT_ORDER_NO, $text) === 1) {
+            return true;
+        }
         if (preg_match(self::STRUCT_HANDLE, $text, $handle) === 1 && ! in_array($handle[1], self::ALLOW, true)) {
             return true;
         }
@@ -401,6 +435,29 @@ class SupportStudentPiiMasker
         }
 
         return false;
+    }
+
+    /**
+     * Класс 2 (H5562): заменить ТОЛЬКО цифровую часть идентификатора — cue-слово
+     * и «№» остаются, как префикс «меня зовут» в слое 2. Канонический ключ тега —
+     * цифры, поэтому «заказ № 482913» и «заказ №482913» дают ОДИН псевдоним.
+     */
+    private function maskOrderIdentifiers(string $text, int &$substitutions): string
+    {
+        foreach ([self::STRUCT_ORDER_CUE, self::STRUCT_ORDER_NO] as $pattern) {
+            $text = (string) preg_replace_callback($pattern, function (array $m) use (&$substitutions): string {
+                $substitutions++;
+                $tag = $this->tag('order', $m['id']);
+                $pos = strpos($m[0], $m['id']);
+                if ($pos === false) {
+                    return $m[0];
+                }
+
+                return substr($m[0], 0, $pos).$tag.substr($m[0], $pos + strlen($m['id']));
+            }, $text);
+        }
+
+        return $text;
     }
 
     /**
