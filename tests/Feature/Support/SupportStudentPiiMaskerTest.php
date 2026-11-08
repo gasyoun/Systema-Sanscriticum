@@ -166,6 +166,88 @@ class SupportStudentPiiMaskerTest extends TestCase
     }
 
     /**
+     * H5562, класс 2 (канарейка 22-10-2026): платёжный/заказной идентификатор.
+     * Метод гейта требует `[ORDER]`, а слоя класса 2 в маскере не было вовсе —
+     * «заказ № 482913» уходил в LLM сырым. Тег рантайма — `<PII:order:N>`,
+     * unmask() возвращает номер студенту в ответе модели.
+     */
+    public function test_payment_order_identifier_is_masked_as_order(): void
+    {
+        User::factory()->create(['name' => 'gasyoun']);
+        $masker = new SupportStudentPiiMasker;
+
+        $text = 'Оплатил, заказ № 482913 — доступа нет. Второй: оплата №4812 от 12.10. '
+            .'И ещё order #482913 и invoice no. 778899.';
+        [$masked, $n] = $masker->maskOrFail($text);
+
+        foreach (['482913', '4812', '778899'] as $secret) {
+            $this->assertStringNotContainsString($secret, $masked, $masked);
+        }
+        $this->assertSame(4, $n, $masked);
+        $this->assertStringContainsString('заказ № <PII:order:1>', $masked);
+        // 482913 встречается дважды (русский заказ + order #) — ОДИН псевдоним;
+        // 4812 и 778899 — другие номера, у каждого свой тег.
+        $this->assertSame(2, substr_count($masked, '<PII:order:1>'), $masked);
+        $this->assertSame(4, preg_match_all('/<PII:order:\d+>/u', $masked), $masked);
+        $this->assertSame($text, $masker->unmask($masked), 'ответ модели восстанавливает номера как были');
+        $this->assertFalse($masker->containsIdentity($masked), $masked);
+        $this->assertTrue($masker->containsIdentity('заказ № 482913'), 'сырой номер обязан видеться как класс 2');
+    }
+
+    /**
+     * Канарейка 22-10-2026 (ровно тот текст, на котором класс 2 был найден
+     * незакрытым): телефон и e-mail закрыты, номер заказа — нет. После слоя
+     * класса 2 все три фигуры обязаны уйти из промпта.
+     */
+    public function test_canary_phone_email_and_order_are_all_masked_together(): void
+    {
+        $this->seedStudents();
+        $masker = new SupportStudentPiiMasker;
+
+        [$masked, $n] = $masker->maskOrFail('Пишите на ivan.petrov@example.com, тел. +79161234567, заказ № 482913.');
+
+        foreach (['ivan.petrov@example.com', '+79161234567', '482913'] as $secret) {
+            $this->assertStringNotContainsString($secret, $masked, $masked);
+        }
+        $this->assertSame(3, $n, $masked);
+        $this->assertStringContainsString('заказ № <PII:order:', $masked);
+        $this->assertFalse($masker->containsIdentity($masked), $masked);
+    }
+
+    /**
+     * H5562, класс 2, контроль over-redaction: голая сумма без cue-якоря —
+     * НЕ идентификатор и маскироваться не должна. Именно на таких совпадениях
+     * держался ложный «класс 2 — 3/3» в сэмпле 18-10-2026.
+     */
+    public function test_plain_sums_survive_the_order_lane(): void
+    {
+        User::factory()->create(['name' => 'gasyoun']);
+        $masker = new SupportStudentPiiMasker;
+
+        [$masked, $n] = $masker->maskOrFail('Перевёл 3 500 ₽ и ещё 12000 рублей, итого 15 500 ₽ за блок.');
+
+        $this->assertSame(0, $n, $masked);
+        $this->assertStringContainsString('3 500', $masked);
+        $this->assertStringContainsString('12000', $masked);
+        $this->assertStringContainsString('15 500', $masked);
+        $this->assertFalse($masker->containsIdentity($masked), $masked);
+    }
+
+    /** H5562, класс 2: голый «№» — тоже идентификатор, но слишком короткий номер — ещё нет. */
+    public function test_bare_number_sign_is_masked_but_short_number_survives(): void
+    {
+        User::factory()->create(['name' => 'gasyoun']);
+        $masker = new SupportStudentPiiMasker;
+
+        [$masked, $n] = $masker->maskOrFail('Ваш номер № 482913, продублировали №482913. Осталось № 42.');
+
+        $this->assertSame(2, $n, $masked);
+        $this->assertSame(2, substr_count($masked, '<PII:order:1>'), $masked);
+        $this->assertStringContainsString('№ 42', $masked, 'короче 4 цифр — не идентификатор');
+        $this->assertFalse($masker->containsIdentity($masked), $masked);
+    }
+
+    /**
      * H6918/гейт H5562 (вердикт FAIL 18-10-2026, 15 пропусков класса 1 из 24):
      * имя нелинкованного студента в свободном тексте — самая частая форма
      * пропуска. В users такого человека НЕТ: ловить обязан name-aware слой,

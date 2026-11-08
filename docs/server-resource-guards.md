@@ -676,21 +676,42 @@ cat /var/www/html/storage/framework/auto-deploy-retries              # скол�
 обёртки: против до-H2149 копии он падает 5 из 14 — тест, зелёный на сломанном и
 на починенном коде, не доказывает ничего.
 
-> **Правка managed-файла: код выкладывается, apply — отдельный шаг (issue #1143).**
-> `deploy.sh` в конце зовёт `guards:verify` и **никогда** не зовёт
-> `server_guards_apply.sh` (выкладка кода не должна молча менять системный
-> конфиг). После merge копии РАЗНЫЕ (в git — новая, на машине — старая) — это
-> честный drift. С 06-08-2026 `deploy.sh` в этом случае выходит с кодом **0** (код жив; раньше был exit 1 → rollback)
-> (код уже жив), а `systema-auto-deploy-run.sh` **не откатывает** HEAD. До фикса
-> exit 1 вызывал цикл «накат → rollback → soft fuse» (05-08-2026, #1143).
+> **Правка managed-файла: код выкладывается, а дрейф чинит сам деплой — громко (H7060, 19-10-2026; история #1143 ниже).**
+> До H7060 `deploy.sh` звал `guards:verify` и **никогда** не звал
+> `server_guards_apply.sh`: дрейф от легитимного коммита жил вечно, баннер
+> «Вернуть: sudo bash …» висел до человека, 26 алертов за 36 часов ничего не
+> починили. Теперь при дрейфе деплой делает три шага **в этом порядке**:
 >
-> Apply по-прежнему нужен руками (или осознанным ops-шагом):
+> 1. **Объявляет** — печатает unified diff каждого расходящегося managed-файла
+>    (`server_guards_apply.sh --dry-run --diff`); выкладка кода по-прежнему не
+>    меняет системный конфиг молча — в `deploys.log` попадает каждая строка.
+> 2. **Применяет** — тот же санкционированный идемпотентный
+>    [`scripts/server_guards_apply.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards_apply.sh);
+>    второй деплой подряд — no-op (0 файлов разошлись).
+> 3. **Перепроверяет** — apply заканчивается на `guards:verify`; его код и есть
+>    вердикт. Дрейф, переживший apply, остаётся громким, и срабатывает прежний
+>    баннер + `exit 0` (#1143 — отката хорошего коммита нет).
+>
+> Шаг живёт в
+> [`scripts/server_guards/sbin/managed-guards-apply-on-deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/sbin/managed-guards-apply-on-deploy.sh)
+> и отказывает **именованно**: `3` — apply упал/дрейф остался, `4` — не root
+> (diff напечатан, apply не запускался), `5` — apply-скрипта нет в дереве.
+> Любой не-ноль означает «дрейф остался видимым», а не «деплой провален».
+>
+> Ручной apply остаётся для случаев вне деплоя (не-root прогон, apply упал,
+> машина без нового дерева):
 >
 > ```sh
-> cd /var/www/html && bash deploy.sh           # код доехал; exit 0 при drift — ОЖИДАЕМО
-> bash scripts/server_guards_apply.sh          # ставит новый managed-файл
+> cd /var/www/html && bash deploy.sh           # код доехал; apply — внутри, до баннера
+> bash scripts/server_guards_apply.sh          # если деплой сказал rc=3/4/5
 > sudo -u www-data env HOME=/tmp php artisan guards:verify   # «все проверки пройдены»
 > ```
+>
+> Регрессия закреплена
+> [`scripts/server_guards/sbin/test_managed_guards_apply_on_deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/sbin/test_managed_guards_apply_on_deploy.sh)
+> (24 проверки: row-9 replay, идемпотентный второй прогон, не-root отказ, упавший
+> apply, отсутствующий apply-скрипт, и позиция вызова ДО баннера). Тест проверен
+> на обеих версиях `deploy.sh`: против до-H7060 копии падают 3 проверки проводки.
 >
 > `ops:soft-remediate` **не** предлагает снять fuse, если в причине есть
 > GUARDS DRIFT / managed-file / предохранители — сначала apply, иначе цикл
@@ -1195,3 +1216,80 @@ H4848) нашла 543 файла не-`www-data`; 532 переведены на 
 www-data) можно в любой момент, решение за MG, ряд 0A71 закрыт этим выбором.
 
 _Dr. Mārcis Gasūns_
+
+## 16. Три проверки, закрывающие `guard = none` (H7059, 18-10-2026)
+
+`guards:verify` несёт три вида проверок, каждый — с selftest'ом, который
+**отказывает** на синтетическом нарушении (зелёный на пустом входе не
+доказательство):
+
+| Проверка | Что утверждает | Ряд журнала инцидентов |
+|---|---|---|
+| `backup-fresh` | свежий архив существует **в назначении**, а не только локально; локальная копия не закрывает off-site вопрос | **L3** — ложно-зелёный off-site (два обрезка 11.7 МиБ против 1.33 ГиБ) |
+| `cgroup-budget` | `memory.current` каждой настроенной группы против её `MemoryHigh`/`MemoryMax`; `current ≥ max` называется OOM внутри cgroup, а не «медленный сайт» | **L10** — 7 ч 33 мин троттлинга `cron.service` отцепившимся MadelineProto |
+| `cert-expiry` | дни до конца каждого сертификата из `CERT_EXPIRY_HOSTS`; непрочитанный сертификат — warning, а не тишина | **L2** по форме: отказ виден только снаружи (сегодня — только Better Stack), внутренний verify молчит |
+
+На `.91` те же три вида едут в `scripts/server_guards_n8n_verify.sh`;
+решающие функции вынесены в `scripts/server_guards_n8n/sbin/guard_checks.sh`,
+deliberate-fail selftest — `scripts/server_guards_n8n/sbin/test_guard_checks_refuse.sh`.
+
+## 17. Паки уроков LYW: контент из пина, а не ручная копия (H7069, 19-10-2026)
+
+Девять паков зан1 (`storage/app/lesson-packs/zan1/…`) живут вне git: 18-10-2026
+их залили на `.92` руками, потому что `storage/` не в репозитории. Конфиг при
+этом говорит `LYW_ENABLED=true`, и первое же восстановление storage, пересборка
+сервера или второй бокс оставляли фичу включённой без содержимого — вкладка на
+месте, каждый урок 404. Ручная копия не воспроизводима: её нельзя повторить на
+другом боксе и нечем доказать, что залито именно то, что голосовали 14-10-2026.
+
+Деплой закрывает это шагом **7b** — `scripts/server_guards/sbin/lesson-packs-sync.sh`
+— и ставит его ДО `guards:verify`, чтобы проверка видела уже свежие паки.
+
+| Свойство | Как обеспечено |
+|---|---|
+| Пин | тег `kochergina-uchebnik-v0.19.0` **и** коммит `d270693e…`: зеркало с тем же именем тега на другом коммите отвергается (код 2) |
+| Офлайн | `git archive` из локального bare-зеркала на боксе; сеть в пути деплоя не нужна |
+| Идемпотентность | решение «менять/не менять» принимает `rsync --no-owner --no-group --dry-run --itemize-changes`; владельца решает финальный `chown` — иначе root-овый прогон видел «владелец не тот» у каждого файла и переписывал все 36 на каждом деплое (поймано живым прогоном 19-10-2026); второй прогон подряд — no-op, stamp не переписывается |
+| Объявление | перед записью печатается unified diff (≤120 строк) и уходит в `deploys.log` |
+| Границы | только `storage/app/lesson-packs/zan1`; `--delete` ограничен целью |
+| Коды | 0 ok/no-op · 2 нет зеркала/тега или чужой коммит · 3 не девять манифестов · 4 rsync упал · 5 нет прав |
+| Деплой не роняет | сбой шага = красный баннер + строка `LYW PACKS rc=…` в `deploys.log`; `exit 1` завернул бы хороший код в откат (#1143) |
+
+**Лицензия.** Рядом с паками шаг пишет
+`storage/app/lesson-packs/LYW_PACKS_NOTICE.md` — источник, тег, коммит и
+лицензия (MIT репозитория SanskritGrammar). Записка лежит ВНЕ `zan1`, потому
+что `--delete` ограничен деревом паков и снёс бы её вместе с ними.
+
+**Страж.** `guards:verify` и `cabinet:probe` несут проверку `lyw-packs`: при
+`LYW_ENABLED=true` пак каждой **включённой** группы обязан существовать и
+читаться тем же `LessonPackRepository::load()`, которым его отдаёт контроллер
+(манифест, схема, zan, quizzes, текст, mindmap); иначе — critical с именем
+группы, ожидаемым путём и командой починки. Выключенный рубильник и группа,
+отклонённая голосованием, находок не дают: их 404 — решение, а не авария.
+
+**Зеркало ставится один раз** — это провижининг бокса, а не шаг деплоя:
+
+```sh
+install -d -m 0755 /var/lib/systema/lyw-packs
+git clone --bare --depth 1 --branch kochergina-uchebnik-v0.19.0 \
+  https://github.com/gasyoun/SanskritGrammar.git \
+  /var/lib/systema/lyw-packs/SanskritGrammar.git
+```
+
+**Проверить руками:**
+
+```sh
+bash scripts/server_guards/sbin/lesson-packs-sync.sh --dry-run   # что изменится
+php artisan guards:verify                                        # проверка lyw-packs
+find storage/app/lesson-packs/zan1 -name manifest.json | wc -l    # 9
+```
+
+**Откат.** Паки — контент, а не схема: откатываются выкладкой прежнего тега
+(`LYW_PACKS_TAG=… LYW_PACKS_TAG_COMMIT=… bash …/lesson-packs-sync.sh`) или
+выключением `LYW_ENABLED`; код, миграции и путь `deploy.sh --rollback` паки не
+затрагивают.
+
+**Регрессия.** `scripts/server_guards/sbin/test_lesson_packs_sync.sh` — 27/27:
+девять манифестов приезжают, второй прогон не пишет, dry-run не создаёт цель,
+ручная правка объявляется диффом и снимается, чужой тег/коммит и неполный
+архив отвергаются, проводка в `deploy.sh` стоит до `guards:verify`.

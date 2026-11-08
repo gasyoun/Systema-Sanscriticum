@@ -371,6 +371,54 @@ final class ShellSystemInspector implements SystemInspector
         ];
     }
 
+    public function certificateDaysLeft(string $host, int $port): ?int
+    {
+        if (! \function_exists('stream_socket_client') || ! \function_exists('openssl_x509_parse')) {
+            return null;
+        }
+
+        $context = stream_context_create([
+            'ssl' => [
+                'capture_peer_cert' => true,
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'SNI_enabled' => true,
+                'peer_name' => $host,
+            ],
+        ]);
+
+        $client = @stream_socket_client(
+            'ssl://'.$host.':'.$port,
+            $errno,
+            $errstr,
+            max(3, $this->timeout),
+            STREAM_CLIENT_CONNECT,
+            $context,
+        );
+        if ($client === false) {
+            return null;
+        }
+
+        try {
+            $params = stream_context_get_params($client);
+            $certificate = $params['options']['ssl']['peer_certificate'] ?? null;
+            if (! \is_resource($certificate) && ! $certificate instanceof \OpenSSLCertificate) {
+                return null;
+            }
+            $parsed = openssl_x509_parse($certificate);
+            $validTo = $parsed['validTo_time_t'] ?? null;
+            if (! \is_int($validTo)) {
+                return null;
+            }
+
+            return (int) floor(($validTo - time()) / 86400);
+        } catch (Throwable) {
+            return null;
+        } finally {
+            @fclose($client);
+        }
+    }
+
     public function trackedDirtyPaths(string $repoDir): ?array
     {
         if (! is_dir($repoDir)) {

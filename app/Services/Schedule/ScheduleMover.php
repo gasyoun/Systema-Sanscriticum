@@ -54,8 +54,12 @@ final class ScheduleMover
             $newEnd = $newStart->copy()->addMinutes(max(1, (int) $minutes));
         }
 
+        $oldStart = $schedule->start?->copy();
         $schedule->start = $newStart;
         $schedule->end = $newEnd;
+        if ($oldStart !== null) {
+            $this->rewriteEmbeddedDates($schedule, $oldStart, $newStart);
+        }
         // Обычный save: model updating() сбросит lifecycle; observer уйдёт в n8n (одно событие).
         $schedule->save();
 
