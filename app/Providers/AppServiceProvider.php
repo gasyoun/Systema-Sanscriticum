@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Middleware\RequireTwoFactor;
 use App\Models\Article;
 use App\Models\ArticleView;
 use App\Models\ContentCandidate;
@@ -58,6 +59,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 use League\Flysystem\Filesystem;
 use League\Flysystem\WebDAV\WebDAVAdapter;
 use Sabre\DAV\Client;
@@ -166,6 +168,17 @@ class AppServiceProvider extends ServiceProvider
         // H4663 (аудит периметра 14-09, п.7): CSP-Report-Only живёт отдельным
         // middleware AddCspReportOnly в web-группе (Kernel.php) — closure в
         // middleware-группе не резолвится MiddlewareNameResolver'ом.
+
+        // H7830 (r7 residual, 08-11-2026): Livewire-обновления компонентов идут
+        // через вендорный POST /livewire/update, который несёт только группу
+        // `web` — гейты из стеков панелей там не выполняются. Регистрация
+        // RequireTwoFactor как persistent-middleware заставляет Livewire
+        // повторно прогонять его для тех компонентов, чей ИСХОДНЫЙ маршрут
+        // рендера его нёс (страницы панелей /admin и /editor). Публичные и
+        // кабинетные компоненты (Shop, StudentChat, StudentPayments, SrsReview,
+        // …) рендерятся через маршруты без гейта — их обновления не
+        // затрагиваются: р7 (MG 07-11) держит кабинет для админ-роли открытым.
+        Livewire::addPersistentMiddleware(RequireTwoFactor::class);
 
         // 2. Наблюдатель
         Schedule::observe(ScheduleObserver::class);
