@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 # H7690 — nightly disaster-recovery pack for the n8n stack on vps91 (context-ai.ru)
 # Created: 07-11-2026
+# H7832 — hardening: partial-archive retention + remote checksum proof
+#   * tar writes to a .part- staging name and is atomically renamed only after
+#     tar -tzf sanity passes; a kill / ENOSPC mid-write can therefore never
+#     leave a file that retention would count as the newest good archive.
+#   * every verified archive gets a .sha256 sidecar; retention verifies before
+#     counting (sidecar match, or tar -tzf probe for legacy sidecar-less files)
+#     and removes corrupt/partial files instead of evicting the oldest GOOD one.
+#   * the off-box copy is proven by size + fresh mtime AND a far-side sha256
+#     comparison before any remote pruning happens.
 #
 # Nightly (default): one small tar with everything a rebuild needs — compose files,
 # .env (N8N_ENCRYPTION_KEY lives there; without it credentials never decrypt again),
@@ -12,9 +21,9 @@
 # the box never holds two copies of it. Weekly tar is pushed and then removed locally.
 #
 # After every run the fresh tar is pushed off-box to duck (US, geo-separated) and the
-# copy is PROVEN by size + fresh-mtime probe on the far side — logs are not trusted.
+# copy is PROVEN by size + fresh-mtime + sha256 probe on the far side — logs are not trusted.
 #
-# Retention: 14 archives, locally and on the off-box (never the one just written).
+# Retention: 14 good archives, locally and on the off-box (never the one just written).
 # Restore procedure: docs/runbooks/n8n-vps91-migration.md (Systema-Sanscriticum).
 set -euo pipefail
 
@@ -44,9 +53,12 @@ DAY=$(date +%Y%m%d)
 NAME="n8n-migration-$DAY.tar.gz"
 [ -e "$BK/$NAME" ] && NAME="n8n-migration-$DAY-$(date +%H%M%S).tar.gz"
 OUT="$BK/$NAME"
+TMP_OUT=""   # staging name during tar; renamed to $OUT only after integrity passes
 
 STAGE=$(mktemp -d "$BK/.stage.XXXXXX")
-cleanup() { rm -rf "$STAGE"; }
+# H7832: the trap must also kill a partial staging archive on EVERY failure path —
+# a $OUT with the final name is only ever created by the atomic mv after verification.
+cleanup() { rm -rf "$STAGE"; [ -z "$TMP_OUT" ] || rm -f -- "$TMP_OUT"; }
 trap cleanup EXIT
 
 AVAIL=$(free_mb "$BK")
@@ -96,32 +108,77 @@ fi
   echo "restore=docs/runbooks/n8n-vps91-migration.md"
 } > "$STAGE/MANIFEST.txt"
 
-# -h: follow the binaryData link (full mode); binaryData/backups/ never in nightly
-tar -C "$STAGE" -czhf "$OUT" .
-SIZE=$(stat -c %s "$OUT"); SIZE_MB=$((SIZE/1024/1024))
-log "tar written $OUT ${SIZE_MB}MB"
+# -h: follow the binaryData link (full mode); binaryData/backups/ never in nightly.
+# H7832: tar targets the .part staging name — a final-name file never exists until
+# the integrity checks below pass and the atomic rename runs.
+TMP_OUT="$BK/.part-$NAME"
+tar -C "$STAGE" -czhf "$TMP_OUT" .
+SIZE=$(stat -c %s "$TMP_OUT"); SIZE_MB=$((SIZE/1024/1024))
+log "tar written (staging) $TMP_OUT ${SIZE_MB}MB"
 if [ "$FULL" = 0 ] && [ "$SIZE_MB" -gt "$MAX_NIGHTLY_MB" ]; then
   log "WARN: nightly tar ${SIZE_MB}MB exceeds ${MAX_NIGHTLY_MB}MB budget"
 fi
 LIST="$STAGE/.listing"
-tar -tzf "$OUT" > "$LIST"
+tar -tzf "$TMP_OUT" > "$LIST"
 grep -qx './.env' "$LIST"              || die "tar sanity: .env missing"
 grep -qx './db/database.sqlite' "$LIST" || die "tar sanity: db snapshot missing"
 grep -qx './docker-compose.yml' "$LIST" || die "tar sanity: docker-compose.yml missing"
 [ "$FULL" = 1 ] && { grep -qx './binaryData/' "$LIST" || die "tar sanity: binaryData missing in full run"; }
 
-# --- retention: 14 local, never the archive just written -------------------
-while IFS= read -r f; do
-  [ "$f" = "$OUT" ] || { rm -f -- "$f"; log "retention: removed $f"; }
-done < <(ls -1t "$BK"/n8n-migration-*.tar.gz 2>/dev/null | tail -n +$((KEEP+1)))
+# H7832: checksum before the archive earns its final name; sidecar travels with it
+# so retention and restore-time verification never need to unpack the tar.
+SHA=$(sha256sum "$TMP_OUT" | cut -d' ' -f1)
+mv -f -- "$TMP_OUT" "$OUT"
+printf '%s  %s\n' "$SHA" "$NAME" > "$OUT.sha256"
+TMP_OUT=""   # renamed cleanly; nothing left for the trap to remove
+log "archive verified + atomically named $OUT sha256=$SHA"
 
-# --- push off-box and PROVE it (size + fresh mtime on the far side) --------
+# --- retention: KEEP good archives, never the one just written --------------
+# H7832: verify BEFORE counting — a corrupt/partial file is removed as suspect
+# (it must not occupy a KEEP slot and push out the oldest good archive), not kept
+# as "newest by mtime". Files without a sidecar (pre-H7832 archives) fall back to
+# a full tar -tzf integrity probe.
+prune_local() {
+  local good=0 f base verdict
+  while IFS= read -r f; do
+    base=$(basename "$f")
+    if [ "$f" = "$OUT" ]; then log "retention: keep just-written $base"; continue; fi
+    verdict=good
+    if [ -f "$BK/$base.sha256" ]; then
+      (cd "$BK" && sha256sum -c "$base.sha256" >/dev/null 2>&1) || verdict=suspect
+    elif ! tar -tzf "$f" >/dev/null 2>&1; then
+      verdict=suspect
+    fi
+    if [ "$verdict" = suspect ]; then
+      rm -f -- "$f" "$BK/$base.sha256"
+      log "retention: REMOVED corrupt/partial $base"
+      continue
+    fi
+    good=$((good+1))
+    if [ "$good" -gt "$KEEP" ]; then
+      rm -f -- "$f" "$BK/$base.sha256"
+      log "retention: removed $base (keep=$KEEP)"
+    fi
+  done < <(ls -1t "$BK"/n8n-migration-*.tar.gz 2>/dev/null)
+  # leftovers from a SIGKILLed run: staging partials and sidecars without archives
+  rm -f -- "$BK"/.part-n8n-migration-*.tar.gz 2>/dev/null || true
+  for s in "$BK"/n8n-migration-*.tar.gz.sha256; do
+    [ -e "$s" ] || continue
+    [ -e "${s%.sha256}" ] || { rm -f -- "$s"; log "retention: removed orphan sidecar $(basename "$s")"; }
+  done
+  return 0   # never let a non-matching glob turn into a set -e failure
+}
+prune_local
+
+# --- push off-box and PROVE it (size + fresh mtime + sha256 on the far side) -
 push() { # $1 host  $2 key (may be empty)  $3 label
-  local host="$1" key="$2" label="$3" rsize rmtime age
+  local host="$1" key="$2" label="$3" rsize rmtime age rsha
   local -a SSHK=()
   [ -n "$key" ] && SSHK=(-i "$key")
   ssh "${SSHK[@]}" -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new "$host" "mkdir -p $OFF_DIR" || return 1
   scp -q "${SSHK[@]}" -o BatchMode=yes -o ConnectTimeout=20 -o StrictHostKeyChecking=accept-new "$OUT" "$host:$OFF_DIR/" || return 1
+  scp -q "${SSHK[@]}" -o BatchMode=yes -o ConnectTimeout=20 -o StrictHostKeyChecking=accept-new "$OUT.sha256" "$host:$OFF_DIR/" \
+    || log "WARN offbox($label): sidecar copy failed (archive sha still proven below)"
   rsize=$(ssh "${SSHK[@]}" -o BatchMode=yes -o ConnectTimeout=15 "$host" \
       "stat -c '%s %Y' '$OFF_DIR/$NAME' 2>/dev/null") || return 1
   rsize=${rsize:-}
@@ -130,9 +187,19 @@ push() { # $1 host  $2 key (may be empty)  $3 label
   [ "$rsize" = "$SIZE" ] || { log "offbox($label): size mismatch ${rsize} != $SIZE"; return 1; }
   age=$(( $(date +%s) - rmtime ))
   [ "$age" -le 900 ] || { log "offbox($label): copy mtime ${age}s old"; return 1; }
-  log "offbox($label) OK $host:$OFF_DIR/$NAME size=$rsize mtime_age=${age}s"
+  # H7832: checksum proof before this host's retention prunes anything — a corrupt
+  # same-size copy must never be accepted as the off-box backup.
+  rsha=$(ssh "${SSHK[@]}" -o BatchMode=yes -o ConnectTimeout=15 "$host" \
+      "sha256sum '$OFF_DIR/$NAME' 2>/dev/null" | cut -d' ' -f1) || rsha=""
+  if [ -n "$rsha" ]; then
+    [ "$rsha" = "$SHA" ] || { log "offbox($label): sha256 mismatch ${rsha:0:12}… != ${SHA:0:12}…"; return 1; }
+    log "offbox($label) OK $host:$OFF_DIR/$NAME size=$rsize mtime_age=${age}s sha256=${SHA:0:12}…"
+  else
+    log "WARN offbox($label): remote sha256sum unavailable; proved by size+mtime only"
+    log "offbox($label) OK $host:$OFF_DIR/$NAME size=$rsize mtime_age=${age}s"
+  fi
   ssh "${SSHK[@]}" -o BatchMode=yes -o ConnectTimeout=15 "$host" \
-    "ls -1t $OFF_DIR/n8n-migration-*.tar.gz 2>/dev/null | tail -n +$((KEEP+1)) | while read -r r; do [ \"\$r\" = \"$OFF_DIR/$NAME\" ] || rm -f -- \"\$r\"; done" || true
+    "ls -1t $OFF_DIR/n8n-migration-*.tar.gz 2>/dev/null | tail -n +$((KEEP+1)) | while read -r r; do [ \"\$r\" = \"$OFF_DIR/$NAME\" ] || { rm -f -- \"\$r\" \"\$r.sha256\"; }; done" || true
   return 0
 }
 
@@ -151,5 +218,5 @@ fi
 [ "$PUSHED" = 1 ] || die "no off-box copy landed (duck and .92 both failed)"
 
 # weekly full archive is transient: it exists to get off-box, not to sit on a 89%-full disk
-if [ "$FULL" = 1 ]; then rm -f -- "$OUT"; log "full archive removed locally after verified push"; fi
+if [ "$FULL" = 1 ]; then rm -f -- "$OUT" "$OUT.sha256"; log "full archive removed locally after verified push"; fi
 log "done name=$NAME size_mb=$SIZE_MB"
