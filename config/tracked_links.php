@@ -149,6 +149,23 @@ foreach (['c', 't', 'h', 'p'] as $creative) {
 }
 
 /*
+ * Креатив r — рекап открытого урока 22-10 (как у san26-ors-r): маршрут ведет
+ * на WP-статью записи урока на samskrtam.ru (rutube/vk/youtube + стенограмма),
+ * а не на карточку курса. Внешний destination — как у t.me-хопов ниже:
+ * флеш-цель Метрики на нем не ставится, клик пишется в anons_link_clicks.
+ */
+$links['vas26-ors-r'] = [
+    'destination' => 'https://samskrtam.ru/kurs-joga-vasishtha/',
+    'utm' => [
+        'utm_source' => $channels['ors']['source'],
+        'utm_medium' => $channels['ors']['medium'],
+        'utm_campaign' => $vas26Campaign,
+        'utm_content' => 'vas26_r',
+        'utm_term' => 'slow_reading',
+    ],
+];
+
+/*
  * syn26 — открытое занятие «Синтаксиса санскрита» (курс 266, занятие #268
  * 25-10-2026 17:00 МСК; вс 17:00, блоки по 4 занятия 4 800 ₽, аудитория с
  * базой санскрита): маршрут попадания — куратор, /ga/-ключи ведут на карточку
@@ -167,6 +184,29 @@ foreach (['c', 't', 'h', 'p'] as $creative) {
             'utm_campaign' => $syn26Campaign,
             'utm_content' => "syn26_{$creative}",
             'utm_term' => 'advanced',
+        ],
+    ];
+}
+
+/*
+ * ksh3 — обзорное занятие 3-го потока «Кашмирского шиваизма» (М. А. Ворошилов;
+ * 29-10-2026 чт 14:00 МСК, бесплатное, «не в счет 16»; курс — 16 занятий по
+ * чт 14:00 МСК с 05-11-2026, сбор голосов, оплата не открыта): /ga/-ключи ведут
+ * на карточку курса (голос «Намерен участвовать» + расписание), маршрут на само
+ * занятие — куратор. Креативы = гипотезы поста: c — предмет, t — преподаватель/
+ * история курса, h — время/слот. Слот p не минтуется, пока оплата закрыта.
+ */
+$ksh3Campaign = 'kashmir_shaivism_open_oct_2026';
+
+foreach (['c', 't', 'h'] as $creative) {
+    $links["ksh3-ors-{$creative}"] = [
+        'destination' => '/k/kasmirskii-sivaizm-3-potok-2026',
+        'utm' => [
+            'utm_source' => $channels['ors']['source'],
+            'utm_medium' => $channels['ors']['medium'],
+            'utm_campaign' => $ksh3Campaign,
+            'utm_content' => "ksh3_{$creative}",
+            'utm_term' => 'overview',
         ],
     ];
 }
@@ -330,6 +370,30 @@ $links['dobrovolec'] = [
     ],
 ];
 
+/*
+ * kal26 — набор на «Каллиграфию деванагари (2026)» (курс 372, карточка ждуна 16
+ * в статусе collecting, старт по набору): расписания нет, при кворуме 8
+ * намерений автоматически открывается оплата (тарифы «весь курс» 9 600 ₽ и
+ * блоки 1–2 по 4 800 ₽ сейчас неактивны). Ждун-оверлей /ga/kalligrafiya-devanagari
+ * (zhdun_share → бот) — отдельная полоса шаринга, кампания ведёт на карточку
+ * курса. Креативы = гипотезы поста: c — программа, t — преподаватель
+ * (Ольга Литвиненко), v — механика голосования.
+ */
+$kal26Campaign = 'kalligrafia_devanagari_2026';
+
+foreach (['c', 't', 'v'] as $creative) {
+    $links["kal26-ors-{$creative}"] = [
+        'destination' => '/k/kalligrafiia-devanagari-2026',
+        'utm' => [
+            'utm_source' => $channels['ors']['source'],
+            'utm_medium' => $channels['ors']['medium'],
+            'utm_campaign' => $kal26Campaign,
+            'utm_content' => "kal26_{$creative}",
+            'utm_term' => 'devanagari',
+        ],
+    ];
+}
+
 return [
     'session_key' => 'tracked_link_attribution',
     'links' => $links,
@@ -348,6 +412,11 @@ return [
             'destination' => '/online',
             'utm_campaign' => $demoCampaign,
             'utm_term' => 'smoke',
+        ],
+        'ksh3' => [
+            'destination' => '/k/kasmirskii-sivaizm-3-potok-2026',
+            'utm_campaign' => $ksh3Campaign,
+            'utm_term' => 'overview',
         ],
         'lingq' => [
             'destination' => 'https://t.me/samskrtamru/4166',

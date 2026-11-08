@@ -169,7 +169,8 @@ return [
      | байт-в-байт как до H1838, даже если привязки уже расставлены в админке.
      | Включение — SUPPORT_TEMPLATE_DRAFTS=true + config:cache после ревью.
      */
-    'support_template_drafts' => (bool) env('SUPPORT_TEMPLATE_DRAFTS', false),
+    // H7591: суггестер-полоса (черновик-подсказка куратору по шаблону) — on.
+    'support_template_drafts' => (bool) env('SUPPORT_TEMPLATE_DRAFTS', true),
 
     /*
      | FAQ RAG for Helpdesk suggester (H2448 Track B): BM25 top-3 chunks from
@@ -345,7 +346,9 @@ return [
      | разрешены владельцем на срок испытания; откат — false + config:cache,
      | либо auto_reply_enabled=false на аккаунте.
      */
-    'support_auto_reply_templates' => (bool) env('SUPPORT_AUTO_REPLY_TEMPLATES', false),
+    // H7591 (рулинг MG 01-11-2026): включено по умолчанию — бот отвечает
+    // «как оплатить» шаблоном без человека; откат: SUPPORT_AUTO_REPLY_TEMPLATES=0.
+    'support_auto_reply_templates' => (bool) env('SUPPORT_AUTO_REPLY_TEMPLATES', true),
 
     /*
      | H3380: ack «приняли, ответим» когда автоответить нечем. Не чаще одного
@@ -2064,6 +2067,25 @@ return [
     'support_enroll_pay_link' => (bool) env('SUPPORT_ENROLL_PAY_LINK', false),
 
     /*
+     | 22-10-2026: «как оплатить? / не могу оплатить через кабинет» в личке →
+     | бот спрашивает, что именно и какой блок (варианты с ценой из Tariff),
+     | по ответу — ссылка на чекаут; неразборчивый ответ — подсказка куратору.
+     | Пилотный список enroll_pilot_telegram_ids действует и здесь.
+     | ВЫКЛ по умолчанию (денежный контур): SUPPORT_PAY_CLARIFY=true.
+     */
+    'support_pay_clarify' => (bool) env('SUPPORT_PAY_CLARIFY', false),
+
+    /*
+     | 22-10-2026: разговор об оплате/записи понимает локальная LLM (Ollama),
+     | читая весь диалог (студент, бот, куратор). off — нет; shadow — модель
+     | решает, решение пишется событием dm_pay_llm_shadow, отвечают регулярки;
+     | live — отвечает решение модели (суммы и ссылки — всё равно из Tariff).
+     */
+    'support_pay_dialog_llm' => in_array(env('SUPPORT_PAY_DIALOG_LLM', 'off'), ['shadow', 'live'], true)
+        ? (string) env('SUPPORT_PAY_DIALOG_LLM')
+        : 'off',
+
+    /*
      | Выбранная группа в платеже: чекаут пишет payments.group_id из
      | подписанной ссылки, grantAccess() на курсе с НЕСКОЛЬКИМИ группами
      | выдаёт только её. Курс с одной группой — поведение прежнее.
@@ -2089,4 +2111,32 @@ return [
      | Пример: ENROLL_PILOT_TELEGRAM_IDS=123456789
      */
     'enroll_pilot_telegram_ids' => array_values(array_filter(array_map('trim', explode(',', (string) env('ENROLL_PILOT_TELEGRAM_IDS', ''))))),
+
+    /*
+     | H6395 lever 2 (GTD WIC) — доверие заявки через ClaimTrustPolicy.
+     | ВЫКЛ (default): легаси User::isEstablishedClaimStudent() — возраст
+     |   ≥ CLAIM_TRUST_MIN_AGE_DAYS (7) сут ИЛИ проведённый платёж.
+     | ВКЛ: ClaimTrustPolicy::isPreexistingVerified() с порогом ИЗ КОНФИГА КАНАЛА
+     |   (services.{paypal,bank_claim,gasuns_pay}.trust_min_account_age_hours).
+     |   Дефолт 168 ч = 7 сут, поэтому включение без env-тюнинга семантику НЕ
+     |   меняет; понижение порога — сознательное решение по денежному контуру.
+     | Включение в проде — отдельный ops-шаг (env + config:cache), не мерж PR.
+     */
+    'claim_trust_policy' => (bool) env('CLAIM_TRUST_POLICY_ENABLED', false),
+
+    /*
+     | H7803 — рантайм-флип топик-классификатора на синхронизированные правила
+     | пакета (support:rules-sync, pattern_hash NOT NULL). ВЫКЛЮЧЕН по умолчанию:
+     | OFF = ровно прежнее поведение (легаси mb_stripos, synced-строки невидимы).
+     | ON: SupportTopicClassifier матчит PCRE-паттерны в семантике reference-
+     | движка (нормализация, priority asc, negations, первый матч), синхронизи-
+     | рованный набор идёт первым, легаси-ключевые слова — фолбэк (на проде
+     | легаси-строк нет, поэтому ON = YAML-истина). Классификатор аналитика-
+     | только: автоответы/платежи/доступы не затрагиваются (H3529 фенс).
+     | Гейт включения — precision ≥0.93 на категорию при n≥30 на masked-корпусе
+     | (VERIFICATION_SELF_SERVE_CLASSIFIER_2026H2.md); процедура флипа —
+     | docs/IMPLEMENTATION_SELF_SERVE_WAVE1_2026H2.md §H7803.
+     | Включение: SUPPORT_TOPIC_SYNCED_RULES=true + php artisan config:cache.
+     */
+    'support_topic_synced_rules' => (bool) env('SUPPORT_TOPIC_SYNCED_RULES', false),
 ];

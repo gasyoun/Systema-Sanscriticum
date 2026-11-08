@@ -191,6 +191,20 @@ class TrackedLinkTest extends TestCase
     }
 
     /** @test */
+    public function vas26_recap_key_routes_to_the_open_lesson_recording_article(): void
+    {
+        $this->get('/ga/vas26-ors-r')
+            ->assertRedirect('https://samskrtam.ru/kurs-joga-vasishtha/');
+
+        $attribution = session(config('tracked_links.session_key'));
+        $this->assertSame('telegram_samskrte', $attribution['utm_source'], 'source');
+        $this->assertSame('owned_channel', $attribution['utm_medium'], 'medium');
+        $this->assertSame('vasishtha_open_oct_2026', $attribution['utm_campaign'], 'campaign');
+        $this->assertSame('vas26_r', $attribution['utm_content'], 'content');
+        $this->assertSame('slow_reading', $attribution['utm_term'], 'term');
+    }
+
+    /** @test */
     public function syn26_open_lesson_keys_route_to_the_syntax_course_card(): void
     {
         foreach ([
@@ -209,6 +223,63 @@ class TrackedLinkTest extends TestCase
             $this->assertSame($content, $attribution['utm_content'], "{$token} content");
             $this->assertSame('advanced', $attribution['utm_term'], "{$token} term");
         }
+    }
+
+    /** @test */
+    public function kal26_waitlist_keys_route_to_the_calligraphy_course_card(): void
+    {
+        foreach ([
+            'kal26-ors-c' => 'kal26_c',
+            'kal26-ors-t' => 'kal26_t',
+            'kal26-ors-v' => 'kal26_v',
+        ] as $token => $content) {
+            $this->flushSession();
+            $this->get('/ga/'.$token)->assertRedirect('/k/kalligrafiia-devanagari-2026');
+
+            $attribution = session(config('tracked_links.session_key'));
+            $this->assertSame('telegram_samskrte', $attribution['utm_source'], "{$token} source");
+            $this->assertSame('owned_channel', $attribution['utm_medium'], "{$token} medium");
+            $this->assertSame('kalligrafia_devanagari_2026', $attribution['utm_campaign'], "{$token} campaign");
+            $this->assertSame($content, $attribution['utm_content'], "{$token} content");
+            $this->assertSame('devanagari', $attribution['utm_term'], "{$token} term");
+        }
+    }
+
+    /** @test */
+    public function ksh3_overview_lesson_keys_route_to_the_kashmir_shaivism_course_card(): void
+    {
+        foreach ([
+            'ksh3-ors-c' => 'ksh3_c',
+            'ksh3-ors-t' => 'ksh3_t',
+            'ksh3-ors-h' => 'ksh3_h',
+        ] as $token => $content) {
+            $this->flushSession();
+            $this->get('/ga/'.$token)->assertRedirect('/k/kasmirskii-sivaizm-3-potok-2026');
+
+            $attribution = session(config('tracked_links.session_key'));
+            $this->assertSame('telegram_samskrte', $attribution['utm_source'], "{$token} source");
+            $this->assertSame('owned_channel', $attribution['utm_medium'], "{$token} medium");
+            $this->assertSame('kashmir_shaivism_open_oct_2026', $attribution['utm_campaign'], "{$token} campaign");
+            $this->assertSame($content, $attribution['utm_content'], "{$token} content");
+            $this->assertSame('overview', $attribution['utm_term'], "{$token} term");
+        }
+
+        $this->get('/ga/ksh3-ors-p')->assertNotFound();
+    }
+
+    /** @test */
+    public function ksh3_story_key_routes_to_the_course_card_with_story_attribution(): void
+    {
+        $this->get('/ga/ksh3-rs-st-v-20261029-01')
+            ->assertRedirect('/k/kasmirskii-sivaizm-3-potok-2026');
+
+        $this->assertSame([
+            'utm_source' => 'telegram_rusamskrtam',
+            'utm_medium' => 'story',
+            'utm_campaign' => 'kashmir_shaivism_open_oct_2026',
+            'utm_content' => 'v_story_20261029_01',
+            'utm_term' => 'overview',
+        ], session(config('tracked_links.session_key')));
     }
 
     /** @test */

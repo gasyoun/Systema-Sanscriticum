@@ -135,12 +135,26 @@ class SendOpenLessonCards extends Command
             return $stage === OpenLessonCardSend::STAGE_ZOOM ? $chatIds->intersect([$only])->values() : collect([$only]);
         }
         if ($testChats !== []) {
-            return $stage === OpenLessonCardSend::STAGE_ZOOM
-                ? $chatIds->intersect($testChats)->values()
-                : collect($testChats)->map(fn ($id): string => (string) $id)->values();
+            $chatIds = $stage === OpenLessonCardSend::STAGE_ZOOM
+                ? $chatIds->intersect($testChats)
+                : collect($testChats);
         }
 
-        return $chatIds->map(fn ($id): string => (string) $id)->unique()->values();
+        $chatIds = $chatIds->map(fn ($id): string => (string) $id)->unique();
+
+        // Анонс и утро крутятся каждые 5 минут в своём часе (пропущенная минута
+        // schedule:run не теряет рассылку) — уже получившие в очередь не ставим.
+        // Zoom отсеян выше по zoom_sent_at.
+        if ($stage !== OpenLessonCardSend::STAGE_ZOOM) {
+            $claimed = OpenLessonCardSend::query()
+                ->where('schedule_id', $schedule->id)
+                ->where('stage', $stage)
+                ->pluck('chat_id')
+                ->map(fn ($id): string => (string) $id);
+            $chatIds = $chatIds->diff($claimed);
+        }
+
+        return $chatIds->values();
     }
 
     private function alertNoLink(Schedule $schedule): void

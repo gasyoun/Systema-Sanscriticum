@@ -8,6 +8,8 @@ use App\Models\Group;
 use App\Models\Payment;
 use App\Models\TelegramSupportContact;
 use App\Services\Access\TelegramAdminNotifier;
+use App\Services\Support\EnrollContactBinder;
+use App\Services\Support\SupportDmAutoReply;
 use App\Services\Support\SupportReplyService;
 use App\Services\Telegram\ZapisiChatMemberException;
 use App\Services\Telegram\ZapisiChatMemberService;
@@ -40,7 +42,7 @@ final class SendGroupChatInviteJob implements ShouldQueue
 
     public function __construct(public readonly int $paymentId) {}
 
-    public function handle(ZapisiChatMemberService $zapisi, SupportReplyService $replies, TelegramAdminNotifier $admins): void
+    public function handle(ZapisiChatMemberService $zapisi, SupportReplyService $replies, TelegramAdminNotifier $admins, EnrollContactBinder $binder): void
     {
         if (! config('features.paid_chat_join_request')) {
             return;
@@ -53,9 +55,20 @@ final class SendGroupChatInviteJob implements ShouldQueue
 
         $user = $payment->user;
 
+        // Студент без привязки платил по ссылке бота как гость: привязываем
+        // контакт лички к плательщику ДО проверок — по нему пилот и одобритель
+        // узнают студента, а ссылка уходит в ту же личку.
+        $contact = $binder->bind($payment);
+
         $telegramIds = TelegramSupportContact::query()->where('linked_user_id', $user->id)
             ->pluck('telegram_user_id')->push($user->telegram_id);
         if (! EnrollPilot::allows($telegramIds)) {
+            return;
+        }
+
+        // Продолжающий студент (курс уже оплачивал раньше) в чате уже есть:
+        // ссылку на каждый новый блок не шлём (22-10-2026, оплата по уточнению).
+        if ($this->paidThisCourseBefore($payment)) {
             return;
         }
 
@@ -95,9 +108,13 @@ final class SendGroupChatInviteJob implements ShouldQueue
         $text = "Оплата получена, спасибо!\n\nСсылка для входа в чат группы «{$group->name}»: {$link}"
             ."\n\nНажмите «Подать заявку» — бот одобрит её автоматически.";
 
-        $queued = $replies->activeChannel($user) === SupportReplyService::CHANNEL_TELEGRAM_SUPPORT
-            ? $replies->queueAiReply($user, $text)
-            : null;
+        if ($contact?->chat !== null) {
+            $queued = $replies->queueUnlinkedDmMessage($contact->chat, $text, null, SupportDmAutoReply::VIA);
+        } else {
+            $queued = $replies->activeChannel($user) === SupportReplyService::CHANNEL_TELEGRAM_SUPPORT
+                ? $replies->queueAiReply($user, $text)
+                : null;
+        }
 
         if ($queued === null) {
             if (empty($user->telegram_id)) {
@@ -114,6 +131,17 @@ final class SendGroupChatInviteJob implements ShouldQueue
             'group_id' => $group->id,
             'via' => $queued !== null ? 'support' : 'student_bot',
         ]);
+    }
+
+    private function paidThisCourseBefore(Payment $payment): bool
+    {
+        return Payment::query()
+            ->where('user_id', $payment->user_id)
+            ->where('course_id', $payment->course_id)
+            ->where('id', '<', $payment->id)
+            ->whereIn('status', Payment::PAID_STATUSES)
+            ->where('is_conditional', false)
+            ->exists();
     }
 
     /** @return Collection<int, Group> */

@@ -80,3 +80,16 @@ review/
 # H5135 V4: MG-pasted ops-bot token, never commit
 .env.ops_bot
 .env.testing
+
+# H6306: реальный секрет шифрования spatie-архива — только шаблон
+# ops/backup/archive-encryption.env.example в git
+/ops/backup/archive-encryption.env
+
+# H7712 — MadelineProto session state: LIVE auth-key material must never enter
+# git (rescue commit e018fcf2 pushed stub-local/safe.php carrying a 256-byte
+# MTProto authKey to this PUBLIC repo). These are machine-local surfaces;
+# dirty-tree rescue sweeps must never ingest them.
+/stub-local/
+*.session
+*.session-journal
+MadelineProto.log

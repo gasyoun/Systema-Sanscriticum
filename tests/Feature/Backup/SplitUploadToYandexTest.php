@@ -22,6 +22,9 @@ class SplitUploadToYandexTest extends TestCase
 
         config([
             'backup.backup.name' => self::NAME,
+            // H6306: off-site нога отказывает без пароля архива, поэтому
+            // механика разбиения тестируется ПОД заданным паролем.
+            'backup.backup.password' => 'test-backup-archive-password',
             'backup.backup.split_upload.disk' => 'yandex_disk',
             // 1 МиБ — мелкие части, чтобы тест гонял быстро.
             'backup.backup.split_upload.max_part_mb' => 1,

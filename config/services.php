@@ -128,11 +128,6 @@ return [
         // webhook-forward паттерн, что monthly_schedule/clip_extract.
         'social_post_webhook' => env('N8N_SOCIAL_POST_WEBHOOK'),
         'social_post_secret' => env('N8N_SOCIAL_POST_SECRET'),
-        // VK/ORS content calendar Wave 5 auto-pilot (H1568): content:publish-due
-        // posts one due ContentCalendarSlot at a time — same webhook-forward
-        // pattern as monthly_schedule/social_post, VK-only (D10, no TG mirror).
-        'calendar_post_webhook' => env('N8N_CALENDAR_POST_WEBHOOK'),
-        'calendar_post_secret' => env('N8N_CALENDAR_POST_SECRET'),
     ],
 
     // Входящий email-канал поддержки (H3462): секрет пути вебхука
@@ -471,6 +466,13 @@ return [
         // H4519: детект анонсов отмены обычными словами → кнопка-подтверждение.
         // Default false: включается на проде после live-smoke (Sandbox-чат).
         'announce_cancel_detect' => (bool) env('TELEGRAM_ZAPISI_ANNOUNCE_CANCEL_DETECT', false),
+        // Разовый перенос занятия обычными словами. Оба гейта fail-closed:
+        // флаг OFF и пустой список групп означают полную инертность.
+        'announce_reschedule_detect' => (bool) env('TELEGRAM_ZAPISI_ANNOUNCE_RESCHEDULE_DETECT', false),
+        'announce_reschedule_group_ids' => array_values(array_filter(array_map(
+            'intval',
+            explode(',', (string) env('TELEGRAM_ZAPISI_ANNOUNCE_RESCHEDULE_GROUP_IDS', '')),
+        ))),
         // Рубильник АВАРИЙНОГО поллинга. Штатно апдейты приходят вебхуком через
         // входной узел; поллинг нужен, только когда узел недоступен. Дефолт
         // false осознанно: команда снимает вебхук, и случайный запуск иначе
@@ -688,7 +690,9 @@ return [
         // PAID-платеж (см. App\Services\Payments\ClaimTrustPolicy). Иначе
         // сессия, сама mintившая аккаунт первым POST'ом, доверяла бы себе на
         // втором POST'е (auto-paid без сверки).
-        'trust_min_account_age_hours' => (int) env('PAYPAL_TRUST_MIN_ACCOUNT_AGE_HOURS', 24),
+        // H6395 lever 2: 168 ч = 7 сут = легаси CLAIM_TRUST_MIN_AGE_DAYS, чтобы
+        // включение features.claim_trust_policy без env-тюнинга не меняло поведение.
+        'trust_min_account_age_hours' => (int) env('PAYPAL_TRUST_MIN_ACCOUNT_AGE_HOURS', 168),
         // MG 23-08-2026: в PayPal платят только EUR (предпочтительно) и USD,
         // и дороже рублевых — рублевую цену тарифа на форме НЕ показываем.
         // Валютная цена за БЛОК по course_id; показывается только блочным
@@ -728,7 +732,8 @@ return [
         'trust_existing_students' => (bool) env('BANK_TRUST_EXISTING_STUDENTS', true),
         // H5083: зеркало PayPal-канала — auto-trust требует дозагрузочный
         // аккаунт (возраст ≥ N часов ИЛИ один PAID-платеж). ClaimTrustPolicy.
-        'trust_min_account_age_hours' => (int) env('BANK_TRUST_MIN_ACCOUNT_AGE_HOURS', 24),
+        // H6395 lever 2: дефолт = легаси-окно 7 сут (см. paypal-канал).
+        'trust_min_account_age_hours' => (int) env('BANK_TRUST_MIN_ACCOUNT_AGE_HOURS', 168),
         // Реквизиты для шага 1 формы (показываются ученику).
         'recipient_name' => env('BANK_RECIPIENT_NAME', ''),
         'iban' => env('BANK_RECIPIENT_IBAN', ''),
@@ -754,6 +759,9 @@ return [
         // ученик — сразу paid (зеркало paypal.trust_existing_students).
         // Kill-switch на случай волны спама/ошибок — false → все заявки pending.
         'trust_existing_students' => (bool) env('GASUNS_PAY_TRUST_EXISTING', true),
+        // H6395 lever 2: порог канала для features.claim_trust_policy=ON
+        // (168 ч = 7 сут — как у легаси-предиката).
+        'trust_min_account_age_hours' => (int) env('GASUNS_PAY_TRUST_MIN_ACCOUNT_AGE_HOURS', 168),
     ],
 
     // H4462 — аудит-след перезаписи паролей (инцидент 09-09-2026: smoke-студент
