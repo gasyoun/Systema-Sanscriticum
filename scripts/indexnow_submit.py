@@ -154,6 +154,10 @@ def verify_key(*, host: str, key: str, key_location: str, timeout: float = 15.0)
     if not belongs_to_host(key_location, host):
         raise IndexNowError(f"key-location {key_location!r} is not on host {host!r}")
 
+    # key_location is operator-supplied and pre-validated by belongs_to_host
+    # (http/https scheme + host match) — no attacker-controlled scheme reaches
+    # urlopen here (Semgrep dynamic-urllib audit).
+    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
     try:
         with urllib.request.urlopen(key_location, timeout=timeout) as response:
             status, body = _read_response(response)
@@ -185,6 +189,9 @@ def submit(
         headers={"Content-Type": "application/json; charset=utf-8"},
     )
 
+    # endpoint defaults to the https INDEXNOW_ENDPOINT constant; callers pass
+    # either it or an equally fixed production endpoint — never user data.
+    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             return _read_response(response)
