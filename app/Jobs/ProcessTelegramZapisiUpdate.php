@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Models\MarketingSetting;
 use App\Services\Anons\VideoAnons\VideoAnonsService;
+use App\Services\Content\CalendarIngestRouting;
 use App\Services\HomeworkTelegramTagService;
 use App\Services\Telegram\AnnounceCancelCallbackService;
 use App\Services\Telegram\AnnounceCancelService;
@@ -97,6 +98,11 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
 
         $homeworkTag = app(HomeworkTelegramTagService::class);
         if (isset($this->update['callback_query']) && is_array($this->update['callback_query'])) {
+            // Календарь контента: выбор площадок для поста из канала — ccr:.
+            if (app(CalendarIngestRouting::class)->handleCallback($this->update['callback_query'])) {
+                return;
+            }
+
             // Разовый перенос: кнопка отмены переноса — свой префикс arsu:.
             if (app(AnnounceRescheduleCallbackService::class)->handle($this->update['callback_query'])) {
                 return;

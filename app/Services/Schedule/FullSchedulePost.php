@@ -506,9 +506,13 @@ final class FullSchedulePost
      */
     public static function formatDateWithTimestamp(Carbon $start): string
     {
+        // timezone() у Carbon мутирует объект НА МЕСТЕ: dateTime-атрибут переводил
+        // Carbon в UTC ДО formatDate() — и московский фолбэк-текст печатался по UTC
+        // («11:00» вместо «14:00» для МСК-устройств, которым JS-конверсию
+        // сознательно не делают). МСК-строка в тексте — дизайн H4434.
         return '<time data-msk-timestamp="'.$start->timestamp.'" datetime="'
-            .$start->timezone('UTC')->toIso8601String().'">'
-            .htmlspecialchars(self::formatDate($start), ENT_QUOTES, 'UTF-8').'</time>';
+            .$start->copy()->timezone('UTC')->toIso8601String().'">'
+            .htmlspecialchars(self::formatDate($start->copy()->timezone('Europe/Moscow')), ENT_QUOTES, 'UTF-8').'</time>';
     }
 
     private const MONTHS_GENITIVE = [

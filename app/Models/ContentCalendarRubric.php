@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Services\Content\PostFormatter;
+use App\Services\Content\RubricScheduler;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -15,6 +16,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * content:publish-due.
  *
  * schedule: [{"days": [1, 3, 5], "time": "18:00"}, …], дни ISO (1 = пн).
+ *
+ * is_active (05-11-2026): выключенная рубрика на паузе — её посты стоят в
+ * календаре, но не публикуются (publish-due их пропускает). Включение
+ * пересобирает очередь вместе с просроченными за паузу постами: они встают
+ * на ближайшие выходы, а не выходят пачкой.
  */
 class ContentCalendarRubric extends Model
 {
@@ -23,6 +29,7 @@ class ContentCalendarRubric extends Model
     protected $fillable = [
         'name',
         'prefix',
+        'hashtags',
         'schedule',
         'channels',
         'with_story',
@@ -42,6 +49,18 @@ class ContentCalendarRubric extends Model
         'with_story' => true,
         'is_active' => true,
     ];
+
+    /** Сколько постов получили новое время при последнем включении. */
+    public int $reflowedOnActivation = 0;
+
+    protected static function booted(): void
+    {
+        static::updated(function (self $rubric): void {
+            if ($rubric->wasChanged('is_active') && $rubric->is_active) {
+                $rubric->reflowedOnActivation = app(RubricScheduler::class)->reflow($rubric, includeOverdue: true);
+            }
+        });
+    }
 
     public function slots(): HasMany
     {
@@ -75,6 +94,36 @@ class ContentCalendarRubric extends Model
         }
 
         return array_values(array_intersect(array_keys(ContentCalendarSlot::enabledDestinations()), $keys));
+    }
+
+    /**
+     * Площадки рубрики → её ещё не вышедшие посты (ни одной публикации).
+     * Площадки слота задаются при выборе рубрики в форме; без этого смена
+     * каналов рубрики не доходила бы до уже стоящих в ней постов.
+     *
+     * @return int сколько постов получили новые площадки
+     */
+    public function syncSlotDestinations(): int
+    {
+        $keys = $this->destinationKeys();
+        $changed = 0;
+        $this->slots()
+            ->whereIn('status', [
+                ContentCalendarSlot::STATUS_SCHEDULED,
+                ContentCalendarSlot::STATUS_DRAFT,
+                ContentCalendarSlot::STATUS_EMPTY,
+                ContentCalendarSlot::STATUS_KEPT,
+            ])
+            ->whereDoesntHave('publications')
+            ->get()
+            ->each(function (ContentCalendarSlot $slot) use ($keys, &$changed): void {
+                if ($slot->destinations !== $keys) {
+                    $slot->forceFill(['destinations' => $keys])->save();
+                    $changed++;
+                }
+            });
+
+        return $changed;
     }
 
     /** «Оповещение, ОРС» */
@@ -134,6 +183,40 @@ class ContentCalendarRubric extends Model
         }
 
         return $escaped.$html;
+    }
+
+    /**
+     * Хештеги рубрики одной строкой: «#a #b» — без дублей, решётка
+     * добавляется, разделители (пробел, запятая, перенос) схлопываются.
+     */
+    public function hashtagLine(): string
+    {
+        $tags = preg_split('/[\s,;]+/u', trim((string) $this->hashtags), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $tags = array_map(static fn (string $t): string => '#'.ltrim($t, '#'), $tags);
+
+        return implode(' ', array_values(array_unique(array_filter($tags, static fn (string $t): bool => $t !== '#'))));
+    }
+
+    /** Текст поста с хештегами рубрики последним абзацем (если их ещё нет в тексте). */
+    public function withHashtags(?string $html): ?string
+    {
+        $line = $this->hashtagLine();
+        if ($line === '' || blank($html) || str_contains(PostFormatter::toPlain($html), $line)) {
+            return $html;
+        }
+
+        return $html.'<p>'.e($line).'</p>';
+    }
+
+    /** Сколько символов (UTF-16) добавят хештеги к этому тексту: пустая строка + строка тегов. */
+    public function hashtagsLength(?string $html): int
+    {
+        $line = $this->hashtagLine();
+        if ($line === '' || str_contains(PostFormatter::toPlain($html), $line)) {
+            return 0;
+        }
+
+        return 2 + intdiv(strlen((string) mb_convert_encoding($line, 'UTF-16LE', 'UTF-8')), 2);
     }
 
     /** Сколько символов (UTF-16, как считает Bot API) добавит префикс к этому тексту. */

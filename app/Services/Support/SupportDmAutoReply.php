@@ -120,6 +120,16 @@ final class SupportDmAutoReply
     private const TRIAL_INTENT_PATTERN = '/пробн|попробоват|записатьс|записываюсь|запиш(?:усь|итесь|ись)/iu';
 
     /**
+     * H7642 (инцидент 01-11-2026, conv 240): «Потом же можно будет если что в
+     * записи приобрести?» — покупочное/записное намерение, а бот ответил
+     * canned-ссылкой на последнюю запись курса. Забор для recording-факта
+     * (там же, где денежный 19-09-2026): купить запись или записаться на курс
+     * решает куратор. Стемы узкие: «отправьте ссылку на запись» и «посмотреть
+     * в записи» легитимны и сюда не попадают (записать vs запись).
+     */
+    private const PURCHASE_INTENT_PATTERN = '/куп\p{L}*|приобр\p{L}*|записать\p{L}*|записыва(?:юсь|етесь)|запиш(?:усь|итесь|ись)|запис[ьи]\s+на\s+курс/iu';
+
+    /**
      * Просьба записать в группу / готовность оплатить / «дайте ссылку на
      * оплату» (20-10-2026). Узко: «запись урока» сюда не попадает.
      */
@@ -206,6 +216,10 @@ final class SupportDmAutoReply
         private readonly EnrollmentGroupResolver $enrollGroups,
         private readonly PayChoiceOptions $payChoices,
         private readonly PayDialogInterpreter $payDialog,
+        // H6767: сэмплер вариантов ответа (флаг support_reply_variant_sampling,
+        // default OFF). RNG инъекцируется — сеемый в тестах. Опциональный
+        // параметр — строго ПОСЛЕ обязательных (PHP: default после required).
+        private readonly ReplyVariantSampler $variants = new ReplyVariantSampler,
     ) {}
 
     public function isEnabled(): bool
@@ -347,7 +361,13 @@ final class SupportDmAutoReply
                 // классификаторе: денежное намерение в тексте означает, что
                 // автоответить фактом LMS нельзя при ЛЮБОЙ категории — деньги
                 // решает человек (R3), ровно как в llmRefusalReason() ниже.
-                if ($this->factMayAutoSend($resolvedFacts) && ! $this->moneyIntent($text)) {
+                // H7642: у recording-факта тот же забор держит покупочное/
+                // записное намерение — вопрос о покупке записи или записи на
+                // курс уходит куратору, а не canned-ссылкой (01-11-2026).
+                if ($this->factMayAutoSend($resolvedFacts)
+                    && ! $this->moneyIntent($text)
+                    && ! $this->recordingBlockedByIntent($resolvedFacts, $text)
+                ) {
                     return $this->sendAuto(
                         $incoming,
                         $user,
@@ -454,10 +474,21 @@ final class SupportDmAutoReply
             && ! $this->recentOutgoingInChat($incoming)
             && ! $this->moneyReport($text)
         ) {
-            $template = MessageTemplate::query()
-                ->boundToSuggesterCategory($category)
-                ->orderByDesc('updated_at')
-                ->first();
+            // H6767: флаг support_reply_variant_sampling меняет «последний
+            // updated_at выигрывает» на равномерный выбор из ВСЕХ строк пула
+            // категории (осознанное изменение — см. policy/sufler.policy.yml,
+            // блок sampling). Флаг OFF — прежний детерминированный выбор.
+            $templateQuery = MessageTemplate::query()->boundToSuggesterCategory($category);
+
+            $variantMeta = [];
+
+            if ($this->variantSamplingEnabled()) {
+                $pool = $templateQuery->get()->all();
+                $template = $this->variants->pickTemplate($pool);
+                $variantMeta = $template === null ? [] : $this->variantMeta('template', (int) $template->id, count($pool));
+            } else {
+                $template = $templateQuery->orderByDesc('updated_at')->first();
+            }
 
             if ($template !== null) {
                 $draft = $template->renderForSupport($user, $text);
@@ -466,6 +497,7 @@ final class SupportDmAutoReply
                     return $this->sendAuto($incoming, $user, $category, $draft, 'template', [
                         'template_id' => $template->id,
                         'template_title' => $template->title,
+                        ...$variantMeta,
                     ]);
                 }
             }
@@ -475,15 +507,26 @@ final class SupportDmAutoReply
         // cooldown-окно на чат: серия сообщений студента не плодит серию болванок.
         // Без linked-пользователя очередь не построить — только hint.
         if ($mayReachStudent && $user !== null && $this->ackEnabledFor($incoming)) {
+            // H6767: при support_reply_variant_sampling ack берётся из пула
+            // services.telegram_support.auto_ack_variants (равномерно, RNG);
+            // пустой пул — прежний единственный auto_ack_text (вариант 0 из
+            // пула размера 1). Флаг OFF — байт-в-байт прежняя строка.
+            $fallbackAck = (string) config(
+                'services.telegram_support.auto_ack_text',
+                "Намасте!\n\nПолучили ваше сообщение и уже разбираемся. Ответим в течение рабочего дня.",
+            );
+
+            $ack = $this->variantSamplingEnabled()
+                ? $this->variants->pickText($this->ackPool(), $fallbackAck)
+                : ['text' => $fallbackAck, 'variant_id' => null, 'pool_size' => null];
+
             return $this->sendAuto(
                 $incoming,
                 $user,
                 $category,
-                (string) config(
-                    'services.telegram_support.auto_ack_text',
-                    "Намасте!\n\nПолучили ваше сообщение и уже разбираемся. Ответим в течение рабочего дня.",
-                ),
+                $ack['text'],
                 'ack',
+                $ack['variant_id'] === null ? [] : $this->variantMeta('ack', $ack['variant_id'], $ack['pool_size']),
             );
         }
 
@@ -543,6 +586,51 @@ final class SupportDmAutoReply
         }
 
         return ! $this->recentOutgoingInChat($incoming);
+    }
+
+    /**
+     * H6767: включён ли сэмплинг вариантов ответа (один флаг на обе ветки —
+     * ack и template). Default OFF (дисциплина флагов дома).
+     */
+    private function variantSamplingEnabled(): bool
+    {
+        return (bool) config('features.support_reply_variant_sampling', false);
+    }
+
+    /**
+     * H6767: пул одобренных парафраз ack'а. Нормализуем к list<string> без
+     * пустых строк: пустой/нестрочный мусор в конфиге = fallback на
+     * единственный auto_ack_text, а не исключение в проде.
+     *
+     * @return list<string>
+     */
+    private function ackPool(): array
+    {
+        $pool = config('services.telegram_support.auto_ack_variants', []);
+
+        if (! is_array($pool)) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            array_map(static fn ($text): string => (string) $text, $pool),
+            static fn (string $text): bool => trim($text) !== '',
+        ));
+    }
+
+    /**
+     * H6767: провенанс варианта в meta dm_auto_sent — только id и размер
+     * пула, НИКОГДА тексты (privacy-забор handoff H6767).
+     *
+     * @return array{variant_kind: string, variant_id: int|string, variant_pool_size: int}
+     */
+    private function variantMeta(string $kind, int|string $variantId, int $poolSize): array
+    {
+        return [
+            'variant_kind' => $kind,
+            'variant_id' => $variantId,
+            'variant_pool_size' => $poolSize,
+        ];
     }
 
     /**
@@ -763,7 +851,10 @@ final class SupportDmAutoReply
         // ответом, серия сообщений одного чата обновляет существующий хинт
         // (счётчик серии в мете), а не плодит второй. 🔥 с любого сообщения
         // серии прилипает к открытому хинту.
-        $fire = $this->moneyIntent($text) || $this->hasTrialIntent($text);
+        //
+        // H7642: покупочное намерение рядом с записью — тёплый лид, куратору
+        // нужен тот же 🔥, что у пробного.
+        $fire = $this->moneyIntent($text) || $this->hasTrialIntent($text) || $this->purchaseIntent($text);
 
         // $standalone: подсказка несёт новое действие (готовая ссылка на оплату),
         // её нельзя дописать в старую серию — та могла висеть неделями (21-10-2026).
@@ -1446,6 +1537,28 @@ final class SupportDmAutoReply
     private function moneyIntent(string $text): bool
     {
         return preg_match(self::MONEY_INTENT_PATTERN, $text) === 1;
+    }
+
+    /**
+     * H7642: recording-факт молчит на покупочном/записном намерении — вопрос
+     * «приобрести запись» или «записаться на курс» решает куратор. Остальные
+     * типы фактов (zoom/schedule) не трогаем: гасит только запись.
+     *
+     * @param  array{draft: string, facts: array<string, mixed>, confidence: float, send_policy: string}  $resolved
+     */
+    private function recordingBlockedByIntent(array $resolved, string $text): bool
+    {
+        if ((string) ($resolved['facts']['type'] ?? '') !== SupportAnswerFactResolver::TYPE_RECORDING) {
+            return false;
+        }
+
+        return $this->purchaseIntent($text);
+    }
+
+    /** Покупка/запись намерением — тот же список слов, что в заборе выше. */
+    private function purchaseIntent(string $text): bool
+    {
+        return preg_match(self::PURCHASE_INTENT_PATTERN, $text) === 1;
     }
 
     /**

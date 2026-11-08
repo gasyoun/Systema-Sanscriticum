@@ -119,8 +119,9 @@ class PollTelegramZapisiUpdates extends Command
         // allowed_updates те же, что регистрировал вебхук (ZapisiSetWebhook):
         // группа шлет message, канал — channel_post, my_chat_member —
         // приветственная карточка (H4314), chat_join_request — заявка в чат
-        // группы после оплаты (features.paid_chat_join_request).
-        $updates = $client->getUpdates($offset, $pollTimeout, ['message', 'channel_post', 'my_chat_member', 'chat_join_request']);
+        // группы после оплаты (features.paid_chat_join_request), callback_query —
+        // кнопки бота.
+        $updates = $client->getUpdates($offset, $pollTimeout, ['message', 'channel_post', 'my_chat_member', 'chat_join_request', 'callback_query']);
 
         foreach ($updates as $update) {
             if (! is_array($update) || ! isset($update['update_id'])) {

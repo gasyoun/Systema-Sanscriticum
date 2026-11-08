@@ -169,7 +169,8 @@ return [
      | байт-в-байт как до H1838, даже если привязки уже расставлены в админке.
      | Включение — SUPPORT_TEMPLATE_DRAFTS=true + config:cache после ревью.
      */
-    'support_template_drafts' => (bool) env('SUPPORT_TEMPLATE_DRAFTS', false),
+    // H7591: суггестер-полоса (черновик-подсказка куратору по шаблону) — on.
+    'support_template_drafts' => (bool) env('SUPPORT_TEMPLATE_DRAFTS', true),
 
     /*
      | FAQ RAG for Helpdesk suggester (H2448 Track B): BM25 top-3 chunks from
@@ -345,7 +346,9 @@ return [
      | разрешены владельцем на срок испытания; откат — false + config:cache,
      | либо auto_reply_enabled=false на аккаунте.
      */
-    'support_auto_reply_templates' => (bool) env('SUPPORT_AUTO_REPLY_TEMPLATES', false),
+    // H7591 (рулинг MG 01-11-2026): включено по умолчанию — бот отвечает
+    // «как оплатить» шаблоном без человека; откат: SUPPORT_AUTO_REPLY_TEMPLATES=0.
+    'support_auto_reply_templates' => (bool) env('SUPPORT_AUTO_REPLY_TEMPLATES', true),
 
     /*
      | H3380: ack «приняли, ответим» когда автоответить нечем. Не чаще одного
@@ -353,6 +356,18 @@ return [
      | linked-пользователя не шлём (некуда ставить очередь). Откат: false.
      */
     'support_auto_ack' => (bool) env('SUPPORT_AUTO_ACK', false),
+
+    /*
+     | H6767: сэмплинг вариантов ответа суфлёра. При ON ветки ack и template
+     | берут текст из одобренного пула (ack — services.telegram_support.
+     | auto_ack_variants с fallback на auto_ack_text; template — ВСЕ строки
+     | MessageTemplate категории, равномерный выбор вместо «последний
+     | updated_at выигрывает»), выбор — RNG в момент отправки, провенанс —
+     | в meta dm_auto_sent (variant_id/variant_pool_size/variant_kind).
+     | ВЫКЛ по умолчанию: пулы сначала проходят ревью человека (GTD,
+     | Отдел заботы / MG), включение — отдельным решением. Откат: false.
+     */
+    'support_reply_variant_sampling' => (bool) env('SUPPORT_REPLY_VARIANT_SAMPLING', false),
 
     /*
      | H5450: мгновенный ack вебчата samskrte.ru. Посетитель виджета получает
@@ -2108,4 +2123,20 @@ return [
      | Включение в проде — отдельный ops-шаг (env + config:cache), не мерж PR.
      */
     'claim_trust_policy' => (bool) env('CLAIM_TRUST_POLICY_ENABLED', false),
+
+    /*
+     | H7803 — рантайм-флип топик-классификатора на синхронизированные правила
+     | пакета (support:rules-sync, pattern_hash NOT NULL). ВЫКЛЮЧЕН по умолчанию:
+     | OFF = ровно прежнее поведение (легаси mb_stripos, synced-строки невидимы).
+     | ON: SupportTopicClassifier матчит PCRE-паттерны в семантике reference-
+     | движка (нормализация, priority asc, negations, первый матч), синхронизи-
+     | рованный набор идёт первым, легаси-ключевые слова — фолбэк (на проде
+     | легаси-строк нет, поэтому ON = YAML-истина). Классификатор аналитика-
+     | только: автоответы/платежи/доступы не затрагиваются (H3529 фенс).
+     | Гейт включения — precision ≥0.93 на категорию при n≥30 на masked-корпусе
+     | (VERIFICATION_SELF_SERVE_CLASSIFIER_2026H2.md); процедура флипа —
+     | docs/IMPLEMENTATION_SELF_SERVE_WAVE1_2026H2.md §H7803.
+     | Включение: SUPPORT_TOPIC_SYNCED_RULES=true + php artisan config:cache.
+     */
+    'support_topic_synced_rules' => (bool) env('SUPPORT_TOPIC_SYNCED_RULES', false),
 ];

@@ -6,6 +6,8 @@ namespace Tests\Feature\Content;
 
 use App\Filament\Resources\ContentCalendarRubricResource;
 use App\Filament\Resources\ContentCalendarSlotResource;
+use App\Jobs\PublishCalendarSlotJob;
+use App\Models\ContentCalendarPublication;
 use App\Models\ContentCalendarRubric;
 use App\Models\ContentCalendarSlot;
 use App\Models\User;
@@ -15,6 +17,7 @@ use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Mockery\MockInterface;
@@ -217,6 +220,81 @@ class ContentCalendarRubricTest extends TestCase
         $this->assertSame('2026-10-29 10:00', $slot->refresh()->publish_at->format('Y-m-d H:i'));
     }
 
+    public function test_rubric_channels_change_reaches_its_unpublished_posts(): void
+    {
+        $this->schoolDestinations();
+        $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
+        $rubric = $this->rubric(['channels' => ['institut'], 'with_story' => false]);
+        $waiting = $this->rubricPost($rubric, '2026-10-30 18:00:00');
+        $waiting->forceFill(['destinations' => ['tg_institut']])->save();
+        $sent = $this->rubricPost($rubric, '2026-10-28 12:00:00', ContentCalendarSlot::STATUS_PUBLISHED);
+        $sent->forceFill(['destinations' => ['tg_institut']])->save();
+        ContentCalendarPublication::create([
+            'content_calendar_slot_id' => $sent->id,
+            'destination' => 'tg_institut',
+            'status' => ContentCalendarPublication::STATUS_PUBLISHED,
+            'attempts' => 1,
+        ]);
+
+        Livewire::test(ContentCalendarRubricResource\Pages\EditContentCalendarRubric::class, ['record' => $rubric->getRouteKey()])
+            ->set('data.channels', ['opoveshchenie', 'institut'])
+            ->call('save')
+            ->assertHasNoFormErrors()
+            ->assertNotified('Площадки рубрики применены к постам: 1');
+
+        $this->assertSame(['tg_opoveshchenie', 'tg_institut', 'vk_opoveshchenie'], $waiting->refresh()->destinations);
+        $this->assertSame(['tg_institut'], $sent->refresh()->destinations);
+    }
+
+    public function test_paused_rubric_posts_are_not_published(): void
+    {
+        config(['features.content_calendar_autopilot' => true]);
+        Bus::fake();
+        $paused = $this->rubric(['is_active' => false]);
+        $active = $this->rubric(['name' => 'Слово']);
+        $held = $this->rubricPost($paused, '2026-10-28 12:00:00');
+        $due = $this->rubricPost($active, '2026-10-28 12:00:00');
+
+        $this->artisan('content:publish-due')->assertSuccessful();
+
+        Bus::assertDispatched(PublishCalendarSlotJob::class, fn ($job) => $job->slotId === $due->id);
+        Bus::assertNotDispatched(PublishCalendarSlotJob::class, fn ($job) => $job->slotId === $held->id);
+        $this->assertSame(ContentCalendarSlot::STATUS_SCHEDULED, $held->refresh()->status);
+        $this->assertTrue($held->isRubricPaused());
+    }
+
+    public function test_activation_moves_posts_missed_during_pause_to_next_runs(): void
+    {
+        $rubric = $this->rubric(['is_active' => false]); // пн/ср/пт 18:00
+        $missed1 = $this->rubricPost($rubric, '2026-10-23 18:00:00');
+        $missed2 = $this->rubricPost($rubric, '2026-10-26 18:00:00');
+        $future = $this->rubricPost($rubric, '2026-11-02 18:00:00');
+
+        $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
+        Livewire::test(ContentCalendarRubricResource\Pages\ListContentCalendarRubrics::class)
+            ->call('updateTableColumnState', 'is_active', (string) $rubric->getKey(), true)
+            ->assertNotified('«Анонс курсов» включена — новое время получили постов: 2');
+
+        $this->assertTrue($rubric->refresh()->is_active);
+        $this->assertSame('2026-10-28 18:00', $missed1->refresh()->publish_at->format('Y-m-d H:i'));
+        $this->assertSame('2026-10-30 18:00', $missed2->refresh()->publish_at->format('Y-m-d H:i'));
+        $this->assertSame('2026-11-02 18:00', $future->refresh()->publish_at->format('Y-m-d H:i'));
+    }
+
+    public function test_deactivation_from_list_keeps_dates(): void
+    {
+        $rubric = $this->rubric();
+        $slot = $this->rubricPost($rubric, '2026-10-30 18:00:00');
+
+        $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
+        Livewire::test(ContentCalendarRubricResource\Pages\ListContentCalendarRubrics::class)
+            ->call('updateTableColumnState', 'is_active', (string) $rubric->getKey(), false)
+            ->assertNotified('«Анонс курсов» на паузе — её посты не публикуются');
+
+        $this->assertFalse($rubric->refresh()->is_active);
+        $this->assertSame('2026-10-30 18:00', $slot->refresh()->publish_at->format('Y-m-d H:i'));
+    }
+
     public function test_rubric_list_renders(): void
     {
         $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
@@ -279,6 +357,90 @@ class ContentCalendarRubricTest extends TestCase
         Livewire::test(ContentCalendarSlotResource\Pages\ListContentCalendarSlots::class)
             ->assertSuccessful()
             ->assertSee('ОРС: TG');
+    }
+
+    private function draft(ContentCalendarRubric $rubric, string $date, array $attrs = []): ContentCalendarSlot
+    {
+        return ContentCalendarSlot::create($attrs + [
+            'slot_date' => $date,
+            'slot_type' => ContentCalendarSlot::TYPE_EVERGREEN,
+            'rubric_id' => $rubric->id,
+            'status' => ContentCalendarSlot::STATUS_DRAFT,
+            'source_kind' => 'copy_packet',
+            'title' => 'черновик '.$date,
+            'body' => '<p><strong>Ловушка</strong></p>',
+        ]);
+    }
+
+    /** Импортированные черновики рубрики (copy_packet, 31-10-2026) — в очередь кнопкой рубрики. */
+    public function test_rubric_drafts_are_enqueued_in_slot_date_order_with_prefix_and_story(): void
+    {
+        Storage::fake(ContentCalendarSlot::MEDIA_DISK);
+        $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
+        $rubric = $this->rubric();
+        $this->rubricPost($rubric, '2026-10-28 18:00:00');
+        $cover = UploadedFile::fake()->image('cover.jpg', 1080, 1350)->store('content-calendar', ContentCalendarSlot::MEDIA_DISK);
+        $late = $this->draft($rubric, '2026-11-25', ['media_path' => $cover]);
+        $early = $this->draft($rubric, '2026-11-11');
+        $done = $this->rubricPost($rubric, '2026-10-26 18:00:00', ContentCalendarSlot::STATUS_PUBLISHED);
+
+        Livewire::test(ContentCalendarRubricResource\Pages\ListContentCalendarRubrics::class)
+            ->assertSee('Ждут (черновики)')
+            ->callTableAction('enqueueDrafts', $rubric)
+            ->assertNotified('Поставлено в очередь: 2');
+
+        $early->refresh();
+        $this->assertSame(ContentCalendarSlot::STATUS_SCHEDULED, $early->status);
+        $this->assertSame('2026-10-30 18:00', $early->publish_at->format('Y-m-d H:i'));
+        $this->assertSame('2026-10-30', $early->slot_date->toDateString());
+        $this->assertStringStartsWith('<p>🗣 Анонс курсов · ', (string) $early->body);
+        $this->assertNull($early->story_media_path);
+
+        $late->refresh();
+        $this->assertSame('2026-11-02 18:00', $late->publish_at->format('Y-m-d H:i'));
+        $this->assertStringStartsWith('content-calendar/stories/', (string) $late->story_media_path);
+
+        $this->assertSame(ContentCalendarSlot::STATUS_PUBLISHED, $done->refresh()->status);
+    }
+
+    public function test_single_and_bulk_enqueue_from_the_slot_list(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
+        $rubric = $this->rubric();
+        $a = $this->draft($rubric, '2026-11-11');
+        $b = $this->draft($rubric, '2026-11-12');
+        $c = $this->draft($rubric, '2026-11-13');
+        $noRubric = ContentCalendarSlot::create(['slot_date' => '2026-11-14', 'status' => ContentCalendarSlot::STATUS_DRAFT, 'title' => 'без рубрики']);
+
+        $list = Livewire::test(ContentCalendarSlotResource\Pages\ListContentCalendarSlots::class)
+            ->assertTableActionHidden('enqueue', $noRubric)
+            ->callTableAction('enqueue', $b)
+            ->assertNotified('Пост в очереди: 28.10.2026 18:00');
+        $list->assertTableActionHidden('enqueue', $b->refresh())
+            ->callTableBulkAction('enqueue', [$c, $a, $noRubric])
+            ->assertNotified('Поставлено в очередь: 2');
+
+        $this->assertSame('2026-10-30 18:00', $a->refresh()->publish_at->format('Y-m-d H:i'));
+        $this->assertSame('2026-11-02 18:00', $c->refresh()->publish_at->format('Y-m-d H:i'));
+        $this->assertSame(ContentCalendarSlot::STATUS_DRAFT, $noRubric->refresh()->status);
+    }
+
+    public function test_gap_alert_points_to_waiting_drafts(): void
+    {
+        $sent = [];
+        $this->mock(TelegramAdminNotifier::class, function (MockInterface $mock) use (&$sent): void {
+            $mock->shouldReceive('notifyAdmins')->andReturnUsing(function (string $text) use (&$sent): array {
+                $sent[] = $text;
+
+                return [];
+            });
+        });
+        $rubric = $this->rubric();
+        $this->draft($rubric, '2026-11-11');
+
+        $this->artisan('content:rubric-gaps')->assertSuccessful();
+
+        $this->assertStringContainsString('1 черновиков', $sent[0]);
     }
 
     public function test_gap_alert_is_sent_once_per_run(): void

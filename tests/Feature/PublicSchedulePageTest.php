@@ -40,9 +40,10 @@ class PublicSchedulePageTest extends TestCase
             ->assertSee('Расписание занятий')
             ->assertSee('Введение в индийскую философию')
             // H4434: даты обёрнуты в <time data-msk-timestamp> (client_tz).
-            // NB: до JS-конверсии подпись внутри time показывает UTC-время —
-            // дефект H4434, вне скоупа H4435; время в ассерт не включаем.
-            ->assertSee('<strong>1-е занятие</strong>: <time data-msk-timestamp="1804320000"', false)
+            // Фолбэк-текст внутри time — московская строка: дефект «UTC-текст до
+            // JS-конверсии», отложенный при H4434, закрыт (timezone() у Carbon
+            // мутирует на месте — см. FullSchedulePost::formatDateWithTimestamp).
+            ->assertSee('<strong>1-е занятие</strong>: <time data-msk-timestamp="1804320000" datetime="2027-03-06T08:00:00+00:00">6 марта 2027 (суббота), 11:00</time>', false)
             ->assertSee('Еженедельно по субботам в 11:00 (по МСК)')
             ->assertSee('/k/fiya')
             ->assertSee('/online/prepodavatel/')
