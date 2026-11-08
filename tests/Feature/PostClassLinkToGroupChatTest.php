@@ -211,4 +211,47 @@ class PostClassLinkToGroupChatTest extends TestCase
         Queue::assertNothingPushed();
         $this->assertNull($b->fresh()->group_link_posted_at);
     }
+
+    /**
+     * Инцидент 04-11-2026 (гр.62): протухшая метка @zapisi_ORSbot от прежней даты
+     * строки не должна выключать автопостинг ссылки через дубль-гвардию.
+     */
+    public function test_stale_zapisi_mark_from_previous_date_does_not_block_post(): void
+    {
+        Queue::fake();
+        $this->enable();
+
+        $group = Group::create(['name' => 'гр.62', 'telegram_chat_id' => '-100062']);
+        $schedule = Schedule::create([
+            'title' => 'Грамматика гр.62',
+            'start' => now()->addMinutes(10),
+            'group_id' => $group->id,
+            'zoom_join_url' => 'https://zoom.us/j/62',
+            'zapisi_reminded_at' => now()->subDays(14),
+        ]);
+
+        $this->artisan('classes:post-group-link')->assertSuccessful();
+
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
+        $this->assertNotNull($schedule->fresh()->group_link_posted_at);
+    }
+
+    public function test_stale_own_mark_from_previous_date_does_not_suppress_post(): void
+    {
+        Queue::fake();
+        $this->enable();
+
+        $group = Group::create(['name' => 'гр.62', 'telegram_chat_id' => '-100062']);
+        Schedule::create([
+            'title' => 'Грамматика гр.62',
+            'start' => now()->addMinutes(10),
+            'group_id' => $group->id,
+            'zoom_join_url' => 'https://zoom.us/j/62',
+            'group_link_posted_at' => now()->subDays(14),
+        ]);
+
+        $this->artisan('classes:post-group-link')->assertSuccessful();
+
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
+    }
 }
