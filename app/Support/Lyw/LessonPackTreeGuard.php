@@ -73,7 +73,7 @@ final class LessonPackTreeGuard
             if (is_file($quizzesPath)) {
                 $quizzes = self::readJson($quizzesPath, $group, $problems);
                 if ($quizzes !== null && ($quizzes['schema'] ?? null) !== 'lyw-quiz-v1') {
-                    $problems[] = "group {$group}: quizzes schema=".var_export($quizzes['schema'] ?? null, true).", ожидался lyw-quiz-v1";
+                    $problems[] = "group {$group}: quizzes schema=".var_export($quizzes['schema'] ?? null, true).', ожидался lyw-quiz-v1';
                 }
             }
         }
