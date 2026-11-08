@@ -226,6 +226,26 @@ class TrackedLinkTest extends TestCase
     }
 
     /** @test */
+    public function kal26_waitlist_keys_route_to_the_calligraphy_course_card(): void
+    {
+        foreach ([
+            'kal26-ors-c' => 'kal26_c',
+            'kal26-ors-t' => 'kal26_t',
+            'kal26-ors-v' => 'kal26_v',
+        ] as $token => $content) {
+            $this->flushSession();
+            $this->get('/ga/'.$token)->assertRedirect('/k/kalligrafiia-devanagari-2026');
+
+            $attribution = session(config('tracked_links.session_key'));
+            $this->assertSame('telegram_samskrte', $attribution['utm_source'], "{$token} source");
+            $this->assertSame('owned_channel', $attribution['utm_medium'], "{$token} medium");
+            $this->assertSame('kalligrafia_devanagari_2026', $attribution['utm_campaign'], "{$token} campaign");
+            $this->assertSame($content, $attribution['utm_content'], "{$token} content");
+            $this->assertSame('devanagari', $attribution['utm_term'], "{$token} term");
+        }
+    }
+
+    /** @test */
     public function ksh3_overview_lesson_keys_route_to_the_kashmir_shaivism_course_card(): void
     {
         foreach ([

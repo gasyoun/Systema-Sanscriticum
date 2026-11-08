@@ -10,6 +10,7 @@ use App\Models\ContentCalendarPublication;
 use App\Models\ContentCalendarRubric;
 use App\Models\ContentCalendarSlot;
 use App\Services\Content\PostFormatter;
+use App\Services\Content\RubricQueue;
 use App\Support\RoleGate;
 use Closure;
 use Filament\Forms;
@@ -263,12 +264,12 @@ class ContentCalendarSlotResource extends Resource
         return is_string($state) ? $state : null;
     }
 
-    /** Длина поста в Telegram вместе с префиксом рубрики, который добавится при сохранении. */
+    /** Длина поста в Telegram вместе с префиксом (добавится при сохранении) и хештегами рубрики (при публикации). */
     private static function postLength(?string $html, mixed $rubricId): int
     {
         $rubric = filled($rubricId) ? ContentCalendarRubric::find($rubricId) : null;
 
-        return PostFormatter::telegramLength($html) + ($rubric?->prefixLength($html) ?? 0);
+        return PostFormatter::telegramLength($html) + ($rubric?->prefixLength($html) ?? 0) + ($rubric?->hashtagsLength($html) ?? 0);
     }
 
     private static function publicationsReport(ContentCalendarSlot $record): HtmlString
@@ -307,7 +308,9 @@ class ContentCalendarSlotResource extends Resource
                 Tables\Columns\TextColumn::make('slot_date')->label('Дата')->date('d.m.Y')->sortable(),
                 Tables\Columns\TextColumn::make('slot_type')->label('Тип')->badge(),
                 Tables\Columns\TextColumn::make('status')->label('Статус')->badge(),
-                Tables\Columns\TextColumn::make('rubric.name')->label('Рубрика')->placeholder('—')->toggleable(),
+                Tables\Columns\TextColumn::make('rubric.name')->label('Рубрика')->placeholder('—')->toggleable()
+                    ->description(fn (ContentCalendarSlot $record): ?string => $record->isRubricPaused() ? 'пауза' : null)
+                    ->color(fn (ContentCalendarSlot $record): ?string => $record->isRubricPaused() ? 'gray' : null),
                 Tables\Columns\TextColumn::make('title')->label('Заголовок')->limit(40)->wrap(),
                 Tables\Columns\TextColumn::make('body')
                     ->label('Текст')
@@ -394,6 +397,20 @@ class ContentCalendarSlotResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('enqueue')
+                    ->label('В очередь')
+                    ->icon('heroicon-o-queue-list')
+                    ->color('success')
+                    ->visible(fn (ContentCalendarSlot $record): bool => RubricQueue::canEnqueue($record))
+                    ->requiresConfirmation()
+                    ->modalDescription('Пост встанет на ближайший свободный выход рубрики и будет опубликован автоматически.')
+                    ->action(function (ContentCalendarSlot $record): void {
+                        $result = app(RubricQueue::class)->enqueue($record);
+                        $note = Notification::make()
+                            ->title($result['ok'] ? 'Пост в очереди: '.$result['at']?->format('d.m.Y H:i') : 'Не поставлен в очередь')
+                            ->body($result['note']);
+                        ($result['ok'] ? $note->success() : $note->danger())->send();
+                    }),
                 Tables\Actions\Action::make('keep')
                     ->label('Keep')
                     ->icon('heroicon-o-check')
@@ -420,6 +437,32 @@ class ContentCalendarSlotResource extends Resource
                     }),
             ])
             ->bulkActions([
+                Tables\Actions\BulkAction::make('enqueue')
+                    ->label('В очередь рубрики')
+                    ->icon('heroicon-o-queue-list')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalDescription('Черновики рубрик встанут на ближайшие свободные выходы своих рубрик — по порядку даты слота. Остальные выбранные слоты не меняются.')
+                    ->action(function (Collection $records): void {
+                        $queue = app(RubricQueue::class);
+                        $done = 0;
+                        $notes = [];
+                        foreach ($records->sortBy([['slot_date', 'asc'], ['id', 'asc']]) as $record) {
+                            /** @var ContentCalendarSlot $record */
+                            if (! RubricQueue::canEnqueue($record)) {
+                                continue;
+                            }
+                            $result = $queue->enqueue($record);
+                            $done += $result['ok'] ? 1 : 0;
+                            if ($result['note'] !== null) {
+                                $notes[] = $result['note'];
+                            }
+                        }
+                        Notification::make()->title("Поставлено в очередь: {$done}")
+                            ->body($notes === [] ? null : implode("\n", array_unique($notes)))
+                            ->success()->send();
+                    })
+                    ->deselectRecordsAfterCompletion(),
                 Tables\Actions\BulkAction::make('keep')
                     ->label('Keep')
                     ->icon('heroicon-o-check')

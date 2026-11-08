@@ -8,6 +8,7 @@ use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\ContentCalendarRubricResource\Pages;
 use App\Models\ContentCalendarRubric;
 use App\Models\ContentCalendarSlot;
+use App\Services\Content\RubricQueue;
 use App\Services\Content\RubricScheduler;
 use App\Support\RoleGate;
 use Filament\Forms;
@@ -67,6 +68,13 @@ class ContentCalendarRubricResource extends Resource
                 ->label('Префикс первой строки (необязательно)')
                 ->helperText('Добавится в начало текста каждого поста рубрики, если текст с него ещё не начинается. Например: «🗣 Анонс курсов · ».')
                 ->maxLength(100),
+            Forms\Components\TextInput::make('hashtags')
+                ->label('Хештеги')
+                ->maxLength(500)
+                ->placeholder('#санскрит #неделя_в_группах')
+                ->helperText('Через пробел. Встанут последней строкой каждого поста рубрики в TG и VK — и у уже запланированных постов. '
+                    .'Входят в лимит 1024 знака подписи к картинке.')
+                ->columnSpanFull(),
             Forms\Components\Repeater::make('schedule')
                 ->label('Расписание (MSK)')
                 ->schema([
@@ -99,7 +107,8 @@ class ContentCalendarRubricResource extends Resource
                 ->default(true),
             Forms\Components\Toggle::make('is_active')
                 ->label('Активна')
-                ->helperText('Выключенную рубрику нельзя выбрать для нового поста, и о пустой очереди она не предупреждает. Уже стоящие посты выйдут.')
+                ->helperText('Выключенная рубрика на паузе: её посты не публикуются, о пустой очереди она не предупреждает. '
+                    .'При включении пропущенные посты встанут на ближайшие выходы по расписанию.')
                 ->default(true),
         ]);
     }
@@ -122,6 +131,11 @@ class ContentCalendarRubricResource extends Resource
                 Tables\Columns\TextColumn::make('queue')
                     ->label('В очереди')
                     ->state(fn (ContentCalendarRubric $record): int => self::queue($record)->count()),
+                Tables\Columns\TextColumn::make('drafts')
+                    ->label('Ждут (черновики)')
+                    ->state(fn (ContentCalendarRubric $record): int => $record->slots()->whereIn('status', RubricQueue::ENQUEUEABLE)->count())
+                    ->color(fn (int $state): ?string => $state > 0 ? 'warning' : null)
+                    ->tooltip('Черновики автопилот не публикует — кнопка «Черновики в очередь».'),
                 Tables\Columns\TextColumn::make('queue_until')
                     ->label('Постов хватит до')
                     ->state(fn (ContentCalendarRubric $record): ?string => self::queue($record)->max('publish_at')
@@ -132,10 +146,32 @@ class ContentCalendarRubricResource extends Resource
                     ->label('Следующий пост встанет на')
                     ->state(fn (ContentCalendarRubric $record): ?string => app(RubricScheduler::class)->nextFreeAt($record)?->format('d.m.Y H:i')),
                 Tables\Columns\IconColumn::make('with_story')->label('Сторис')->boolean(),
-                Tables\Columns\IconColumn::make('is_active')->label('Активна')->boolean(),
+                Tables\Columns\ToggleColumn::make('is_active')
+                    ->label('Активна')
+                    ->tooltip('Выключенная рубрика на паузе: посты не публикуются')
+                    ->afterStateUpdated(function (ContentCalendarRubric $record, bool $state): void {
+                        Notification::make()
+                            ->title($state
+                                ? "«{$record->name}» включена".($record->reflowedOnActivation > 0 ? " — новое время получили постов: {$record->reflowedOnActivation}" : '')
+                                : "«{$record->name}» на паузе — её посты не публикуются")
+                            ->success()->send();
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('enqueueDrafts')
+                    ->label('Черновики в очередь')
+                    ->icon('heroicon-o-queue-list')
+                    ->color('success')
+                    ->visible(fn (ContentCalendarRubric $record): bool => $record->slots()->whereIn('status', RubricQueue::ENQUEUEABLE)->exists())
+                    ->requiresConfirmation()
+                    ->modalDescription('Все черновики рубрики встанут на ближайшие свободные выходы по расписанию — по порядку даты слота — и будут опубликованы автоматически.')
+                    ->action(function (ContentCalendarRubric $record): void {
+                        $result = app(RubricQueue::class)->enqueueDrafts($record);
+                        Notification::make()->title("Поставлено в очередь: {$result['done']}")
+                            ->body($result['notes'] === [] ? null : implode("\n", $result['notes']))
+                            ->success()->send();
+                    }),
                 Tables\Actions\Action::make('reflow')
                     ->label('Пересобрать очередь')
                     ->icon('heroicon-o-arrow-path')

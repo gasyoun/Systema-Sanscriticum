@@ -45,7 +45,7 @@ class CalendarTelegramPublisher
             return $this->copy($api, $chatId, (string) $source['chat_id'], array_map('intval', (array) $source['message_ids']));
         }
 
-        $text = PostFormatter::toTelegramHtml($slot->body);
+        $text = PostFormatter::toTelegramHtml($slot->publishBody());
 
         $response = match ($slot->mediaType()) {
             ContentCalendarSlot::MEDIA_PHOTO => $this->sendFile($api.'/sendPhoto', 'photo', $slot, $chatId, $text),

@@ -1,9 +1,16 @@
 name: Environment inventory
 
+# pull_request вернул 31-10-2026: #3628 урезал триггеры до weekly+dispatch,
+# а контекст «Environment inventory» остался в required checks ветки main —
+# каждый PR висел «Waiting for status to be reported». Джоб дешёвый
+# (информационный снапшот окружения), на PR гонялся зелёным до #3628.
 on:
   schedule:
     - cron: '0 5 * * 1'
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read

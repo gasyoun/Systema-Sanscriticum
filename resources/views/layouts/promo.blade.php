@@ -64,6 +64,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @vite('resources/js/alpine-standalone.js')
+    @vite('resources/js/global-search.js') {{-- H7590 — лоадер поиска в шапке (Fuse.js лениво) --}}
 
     <style>
         body { font-family: 'Montserrat', sans-serif; }

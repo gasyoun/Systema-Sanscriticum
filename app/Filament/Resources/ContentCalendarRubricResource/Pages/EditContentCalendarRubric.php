@@ -12,7 +12,8 @@ use Filament\Resources\Pages\EditRecord;
 
 /**
  * Смена расписания пересобирает очередь: невышедшие посты встают на новые
- * моменты подряд.
+ * моменты подряд. Каналы и сторис рубрики при сохранении переносятся в
+ * площадки её невышедших постов.
  */
 class EditContentCalendarRubric extends EditRecord
 {
@@ -31,7 +32,17 @@ class EditContentCalendarRubric extends EditRecord
     protected function afterSave(): void
     {
         /** @var ContentCalendarRubric $rubric */
-        $rubric = $this->getRecord()->refresh();
+        $rubric = $this->getRecord();
+        if ($rubric->reflowedOnActivation > 0) {
+            Notification::make()->title("Рубрика включена — новое время получили постов: {$rubric->reflowedOnActivation}")->success()->send();
+        }
+        $rubric->refresh();
+
+        $synced = $rubric->syncSlotDestinations();
+        if ($synced > 0) {
+            Notification::make()->title("Площадки рубрики применены к постам: {$synced}")->success()->send();
+        }
+
         if ($rubric->scheduleEntries() === $this->scheduleBefore) {
             return;
         }
