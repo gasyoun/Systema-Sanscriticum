@@ -195,7 +195,10 @@ class TwoFactorGateTest extends TestCase
             ->post("/editor/lectures/{$draft->id}/patch", ['patches' => []])
             ->assertRedirect(route('two-factor.show'));
 
-        $plainAdmin = $this->staff();
+        $plainAdmin = User::factory()->create([
+            'role' => Roles::ADMIN,
+            'email' => 'patch-no-2fa@example.com',
+        ]);
         $this->actingAs($plainAdmin)
             ->post("/editor/lectures/{$draft->id}/patch", ['patches' => []])
             ->assertRedirect(route('two-factor.show'));
