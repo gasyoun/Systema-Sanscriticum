@@ -31,7 +31,7 @@ require __DIR__.'/../../vendor/autoload.php';
 $app = require __DIR__.'/../../bootstrap/app.php';
 $app->make(Kernel::class)->bootstrap();
 
-/** @var App\Services\Support\Faq\Bm25FaqRetriever $retriever */
+/** @var Bm25FaqRetriever $retriever */
 $retriever = $app->make(Bm25FaqRetriever::class);
 
 while (($line = fgets(STDIN)) !== false) {
@@ -43,6 +43,7 @@ while (($line = fgets(STDIN)) !== false) {
     $text = is_array($req) ? (string) ($req['text'] ?? '') : '';
     if ($text === '') {
         fwrite(STDOUT, json_encode(['error' => 'empty text'], JSON_UNESCAPED_UNICODE)."\n");
+
         continue;
     }
     $hits = $retriever->retrieve($text, 5); // top-k mirrors knowledge:eval default
