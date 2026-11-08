@@ -221,6 +221,35 @@ class OpenLessonCardsTest extends TestCase
         $this->assertStringContainsString('Сегодня открытое занятие', (string) $this->sent('sendMessage', '1001')[0]['text']);
     }
 
+    public function test_morning_rerun_reaches_only_chats_without_the_card(): void
+    {
+        $this->fakeTelegram();
+        $schedule = $this->lesson('2026-10-14 19:00');
+        BotSubscriber::create(['chat_id' => '1001', 'menu_sent_at' => now()]);
+
+        Carbon::setTestNow(Carbon::parse('2026-10-14 09:05:00', 'Europe/Moscow'));
+        $this->artisan('open-lessons:cards --stage=morning')->assertSuccessful();
+
+        BotSubscriber::create(['chat_id' => '1002', 'menu_sent_at' => now()]);
+        Carbon::setTestNow(Carbon::parse('2026-10-14 09:10:00', 'Europe/Moscow'));
+        $this->artisan('open-lessons:cards --stage=morning')
+            ->expectsOutputToContain('получателей: 1')
+            ->assertSuccessful();
+
+        $this->assertCount(1, $this->sent('sendMessage', '1001'));
+        $this->assertCount(1, $this->sent('sendMessage', '1002'));
+        $this->assertSame(2, OpenLessonCardSend::query()->where('schedule_id', $schedule->id)->where('stage', 'morning')->count());
+    }
+
+    public function test_cards_are_scheduled_across_the_hour_not_one_minute(): void
+    {
+        $events = collect(app(\Illuminate\Console\Scheduling\Schedule::class)->events())
+            ->keyBy(fn ($event) => $event->description);
+
+        $this->assertSame('*/5 12 * * *', $events['open-lesson-cards-announce']->expression);
+        $this->assertSame('*/5 9,19 * * *', $events['open-lesson-cards-morning']->expression);
+    }
+
     public function test_early_lesson_gets_its_morning_card_the_evening_before(): void
     {
         $this->fakeTelegram();
@@ -252,6 +281,46 @@ class OpenLessonCardsTest extends TestCase
         $this->assertSame('https://zoom.us/j/123', $markup['inline_keyboard'][0][0]['url']);
         $this->assertSame([], $this->sent('sendMessage', '1002'));
         $this->assertNotNull(OpenLessonRsvp::query()->where('chat_id', '1001')->value('zoom_sent_at'));
+    }
+
+    public function test_stream_links_go_as_buttons_under_zoom(): void
+    {
+        $this->fakeTelegram();
+        $schedule = $this->lesson('2026-10-14 12:25', ['stream_links' => [
+            'rutube.ru/video/4834fe5da0ae9b02eb3ffe955351060b',
+            'vkvideo.ru/live-88831040_456240535',
+            'https://youtube.com/live/lD2LZPrz5tM',
+            '  ',
+        ]]);
+        OpenLessonRsvp::create(['schedule_id' => $schedule->id, 'chat_id' => '1001', 'going_at' => now()]);
+
+        $this->artisan('open-lessons:cards --stage=zoom')->assertSuccessful();
+
+        $zoom = $this->sent('sendMessage', '1001');
+        $this->assertCount(1, $zoom);
+        $this->assertStringContainsString('смотрите трансляцию', (string) $zoom[0]['text']);
+        $keyboard = json_decode((string) $zoom[0]['reply_markup'], true)['inline_keyboard'];
+        $this->assertSame('https://zoom.us/j/123', $keyboard[0][0]['url']);
+        $this->assertSame([
+            ['text' => '📺 Rutube', 'url' => 'https://rutube.ru/video/4834fe5da0ae9b02eb3ffe955351060b'],
+            ['text' => '📺 VK Видео', 'url' => 'https://vkvideo.ru/live-88831040_456240535'],
+            ['text' => '📺 YouTube', 'url' => 'https://youtube.com/live/lD2LZPrz5tM'],
+        ], $keyboard[1]);
+    }
+
+    public function test_stream_only_lesson_still_sends_links_without_admin_alert(): void
+    {
+        $this->fakeTelegram();
+        $schedule = $this->lesson('2026-10-14 12:25', ['link' => null, 'stream_links' => ['rutube.ru/video/abc']]);
+        OpenLessonRsvp::create(['schedule_id' => $schedule->id, 'chat_id' => '1001', 'going_at' => now()]);
+
+        $this->artisan('open-lessons:cards --stage=zoom')->assertSuccessful();
+
+        $zoom = $this->sent('sendMessage', '1001');
+        $this->assertCount(1, $zoom);
+        $keyboard = json_decode((string) $zoom[0]['reply_markup'], true)['inline_keyboard'];
+        $this->assertSame([[['text' => '📺 Rutube', 'url' => 'https://rutube.ru/video/abc']]], $keyboard);
+        Http::assertNotSent(fn (Request $r) => str_contains($r->url(), '/botADMIN-BOT/sendMessage'));
     }
 
     public function test_missing_join_link_alerts_admin_and_sends_nothing_to_people(): void

@@ -64,4 +64,31 @@ _Created: 25-08-2026 · Last updated: 25-08-2026_
 Прогнать [VERIFICATION_SELF_SERVE_CLASSIFIER_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VERIFICATION_SELF_SERVE_CLASSIFIER_2026H2.md)
 полностью; CHANGELOG пакета и Systema; handoff-close по каждому H; GTD-остатки (В2 human-шаги).
 
+## Шаг 7 — H7803: рантайм-флип топик-классификатора (за флагом, default OFF)
+
+1. **Что включает флаг.** `features.support_topic_synced_rules`
+   (`SUPPORT_TOPIC_SYNCED_RULES=true`) переводит `SupportTopicClassifier` на
+   синхронизированные правила пакета (`support_topic_rules.pattern_hash NOT NULL`):
+   нормализация текста (mb_lower, ё→е, whitespace fold), порядок priority asc,
+   `negations` блокируют правило, первый матч выигрывает — та же семантика, по
+   которой меряется precision reference-движка. Синхронизированный набор идёт
+   первым; легаси-ключевые слова (`pattern_hash IS NULL`) остаются фолбэком.
+   На проде легаси-строк нет, поэтому ON = ровно YAML-истина.
+2. **Что флаг НЕ трогает.** Автоответы, шаблоны, платежи, доступы, webhooks —
+   классификатор пишет только `support_topic_assignments` (фенс H3529/H7803).
+3. **Процедура флипа (после гейта).**
+   `php artisan support:rules-sync` (первый прогон; повторный — пустой diff:
+   `created=updated=disabled=0`) → `SUPPORT_TOPIC_SYNCED_RULES=true` в `.env` →
+   `php artisan config:cache` → `php artisan support:topic-ranking --days=14`
+   до/после: uncategorized share должен упасть. Откат — флаг `false` +
+   `config:cache` (назначения пересчитываются на следующем rollup-е).
+4. **Гейт включения (H3529, не снят).** precision ≥0.93 на категорию при n≥30 на
+   masked eval-корпусе. Корпус `corpora/eval/2026-07-05-masked.jsonl` в репозитории
+   отсутствует: H3527 закрыт 05-09-2026 как GATED-FOREVER (raw ORS-диалоги
+   невосстановимы), поэтому гейт в этой поставке не прогонялся. Доказательство
+   поставки — `tools/message-intent-classifier/reports/h7803-synced-rules-gate.md`:
+   coverage-прогон на 50 реальных masked-сообщениях (34% topic-null против 100% на
+   пустом рантайм-наборе прода) + процедура повторного прогона, когда корпус
+   появится. Без живого гейта флаг остаётся OFF; решение о включении — за MG.
+
 _Dr. Mārcis Gasūns_

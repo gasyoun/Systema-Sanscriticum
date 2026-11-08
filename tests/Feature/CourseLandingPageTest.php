@@ -89,7 +89,7 @@ class CourseLandingPageTest extends TestCase
 
         $response = $this->get(route('shop.course.show', $course->slug));
 
-        $response->assertSee('<title>Грамматика санскрита | Общество ревнителей санскрита</title>', false);
+        $response->assertSee('<title>Грамматика санскрита | ОРС</title>', false);
         $response->assertSee('Полный курс грамматики с нуля.', false);
     }
 
@@ -104,7 +104,7 @@ class CourseLandingPageTest extends TestCase
 
         $response = $this->get(route('shop.course.show', $course->slug));
 
-        $response->assertSee('<title>Учить санскрит онлайн | Общество ревнителей санскрита</title>', false);
+        $response->assertSee('<title>Учить санскрит онлайн | ОРС</title>', false);
         $response->assertSee('content="Лучший курс санскрита."', false);
     }
 }

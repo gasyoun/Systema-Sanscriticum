@@ -35,9 +35,7 @@ class SupportAnswerFactChecker
         SupportAnswerSuggestion::CATEGORY_ACCESS => ['courses'],
     ];
 
-    public function __construct(private readonly SupportAnswerFactResolver $resolver)
-    {
-    }
+    public function __construct(private readonly SupportAnswerFactResolver $resolver) {}
 
     /**
      * @return array{ok: bool, checked: bool, mismatches: list<string>}

@@ -1,8 +1,17 @@
 @extends('layouts.articles')
 
-@section('title', 'Статьи о санскрите — Общество ревнителей санскрита')
-@section('meta_description', 'Статьи о санскрите: грамматика, философия, практика, культура. Честный разбор без мистики и пафоса.')
+@section('title', $categoryName ? 'Статьи по рубрике «'.$categoryName.'»' : 'Статьи о санскрите — Общество ревнителей санскрита')
+@section('meta_description', $categoryName ? 'Статьи по рубрике «'.$categoryName.'»: разборы, практика и философия санскрита.' : 'Статьи о санскрите: грамматика, философия, практика, культура. Честный разбор без мистики и пафоса.')
 @section('canonical', url($canonicalPath))
+@section('canonical', url($canonicalPath))
+
+@push('head')
+    @include('partials.schema-breadcrumbs', ['crumbs' => array_values(array_filter([
+        ['name' => 'Главная', 'url' => url('/')],
+        ['name' => 'Статьи', 'url' => url('/s')],
+        $categoryName ? ['name' => $categoryName] : null,
+    ]))])
+@endpush
 @section('robots', $indexable ? 'index, follow' : 'noindex, follow')
 
 @section('content')

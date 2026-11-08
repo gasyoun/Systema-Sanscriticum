@@ -1,0 +1,66 @@
+name: Composer security update (symfony/*)
+
+# Dispatch-only repair lane: the nightly box has no PHP/composer, so when
+# `composer audit --locked` blocks CI on new advisories, this lane updates the
+# flagged packages inside the existing composer.json constraints, commits the
+# refreshed composer.lock to a bot branch and opens an auto-merge PR.
+# ADDITIONS/UPDATES ONLY within constraint ranges; no major bumps, no vendor
+# directory committed.
+
+on:
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: 'Comma-separated packages to update (default: symfony/*)'
+        required: false
+        default: 'symfony/*'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea # 2.40.0
+        with:
+          php-version: "8.3"
+
+      - name: Composer update (flagged packages, within constraints)
+        env:
+          PKGS: ${{ github.event.inputs.packages }}
+        run: |
+          composer update $PKGS --with-dependencies --no-interaction --no-progress
+
+      - name: Verify audit
+        run: composer audit --locked
+
+      - name: Commit refreshed lock
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # github.ref_name — только через env, не подстановкой в run: (semgrep run-shell-injection).
+          CURRENT_REF: ${{ github.ref_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add composer.lock
+          if git diff --cached --quiet; then
+            echo "lockfile already up to date"
+            exit 0
+          fi
+          git commit -m "chore(deps): composer update for security advisories (audit gate)"
+          # main is protected (GH006-class): ship via bot PR; fix-branch
+          # dispatches push onward.
+          if [ "$CURRENT_REF" = "main" ]; then
+            BRANCH="bot/composer-security-update"
+            git push -f origin "HEAD:$BRANCH"
+            gh pr create --head "$BRANCH" --base main \
+              --title "chore(deps): composer update for security advisories" \
+              --body "Automated composer update of the flagged packages. Auto-merges when required checks pass." 2>/dev/null || true
+            gh pr merge "$BRANCH" --squash --auto || gh pr merge "$BRANCH" --squash
+          else
+            git push origin "HEAD:$CURRENT_REF"
+          fi

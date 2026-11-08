@@ -48,7 +48,7 @@ use Throwable;
 class KnowledgeCoverage extends Command
 {
     protected $signature = 'knowledge:coverage
-        {--path= : только этот файл корпуса (по умолчанию основной + extra_paths)}
+        {--path= : только этот файл корпуса (по умолчанию resources/knowledge/faq.md)}
         {--require-embedded : ненулевой код возврата, если чанк не проэмбедлен или устарел}
         {--json : машинный вывод вместо таблиц}';
 
@@ -134,12 +134,7 @@ class KnowledgeCoverage extends Command
             return is_file($explicit) ? [$explicit] : [];
         }
 
-        $files = [$parser->path()];
-        foreach ($parser->extraPaths() as $extra) {
-            $files[] = $extra;
-        }
-
-        return array_values(array_filter($files, static fn (string $f): bool => is_file($f)));
+        return is_file($parser->path()) ? [$parser->path()] : [];
     }
 
     private function explicitPath(): ?string
@@ -250,7 +245,6 @@ class KnowledgeCoverage extends Command
         // комментарии-шапки в несколько строк, и построчный скип «строка
         // начинается с <!--» оставлял бы хвост комментария в «тексте до
         // заголовка» — отчет показывал бы 134 символа шапки там, где шапки нет
-        // (faq_from_lectures.md — ровно такой случай).
         $inComment = false;
 
         $flush = function () use (&$out, &$h2, &$h3, &$body, $parser): void {

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services\Cabinet;
 
+use App\Console\Commands\ExpireStaleCheckouts;
 use App\Models\Course;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
+use App\Models\PromoCode;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -25,6 +27,12 @@ use Illuminate\Support\Collection;
  *  - plain «next block due» debt without a failed payment/expired promise
  *    (that stays a continue-band debt CTA, not a home-mode switch);
  *  - ancient failures after a later paid recovery on the same course;
+ *  - an abandoned checkout that `payments:expire-stale-checkouts` flipped
+ *    pending → failed once its window closed (see
+ *    {@see isExpiredAbandonedCheckout()}). The reaper stamps `updated_at = now`
+ *    on a weeks-old row, so without this exclusion every abandoned link showed up
+ *    as a fresh «declined payment» 30 days later — even right after the student
+ *    paid that very course;
  *  - an expired promise the student has since settled off the linked-payment
  *    path, which leaves the row at STATUS_EXPIRED forever (see
  *    {@see latestExpiredPromise()} — that clearance was missing until H1481's
@@ -96,6 +104,11 @@ final class RecoveryStateResolver
             ->get();
 
         foreach ($candidates as $payment) {
+            // Nobody declined anything — the student just never paid that link.
+            if ($this->isExpiredAbandonedCheckout($payment)) {
+                continue;
+            }
+
             // Later successful payment on the same course clears the fault
             // (by time, or by id when timestamps collide).
             $recovered = Payment::query()
@@ -118,6 +131,34 @@ final class RecoveryStateResolver
         }
 
         return null;
+    }
+
+    /**
+     * A `failed` row whose last change happened only after its checkout window had
+     * already closed — i.e. the stale-checkout reaper's flip, not a bank decline.
+     *
+     * Mirrors {@see ExpireStaleCheckouts} criteria exactly:
+     * timed links die at `payment_link_expires_at` + webhook buffer, untimed ones
+     * after `checkout.legacy_pending_days`. A real decline (bank webhook, Tochka
+     * unavailable at checkout) lands inside that window and keeps counting.
+     */
+    private function isExpiredAbandonedCheckout(Payment $payment): bool
+    {
+        if ($payment->status !== 'failed' || $payment->updated_at === null) {
+            return false;
+        }
+
+        if ($payment->payment_link_expires_at !== null) {
+            $windowClosedAt = $payment->payment_link_expires_at->copy()
+                ->addMinutes(PromoCode::WEBHOOK_BUFFER_MINUTES);
+        } elseif ($payment->created_at !== null) {
+            $windowClosedAt = $payment->created_at->copy()
+                ->addDays((int) config('checkout.legacy_pending_days', 30));
+        } else {
+            return false;
+        }
+
+        return $payment->updated_at->gte($windowClosedAt);
     }
 
     /**

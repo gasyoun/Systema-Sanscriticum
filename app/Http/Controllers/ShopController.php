@@ -23,6 +23,7 @@ use App\Support\CourseHeroSchedule;
 use App\Support\CoursePageContent;
 use App\Support\FlagshipExperiments;
 use App\Support\FlagshipLanding;
+use App\Support\InternalAccounts;
 use App\Support\ProductLadderAnchors;
 use App\Support\ShopCatalogUrl;
 use App\Support\TrajectoryPathway;
@@ -52,6 +53,7 @@ class ShopController extends Controller
         ];
         $categorySlugs = [];
         $indexable = true;
+        $category = null;
 
         if ($facets !== null) {
             $parsed = ShopCatalogUrl::parse($facets);
@@ -92,6 +94,12 @@ class ShopController extends Controller
             $indexable = array_keys($parsed) === ['kategoriya'] && count($categorySlugs) === 1;
         }
 
+        // SEO-META-1: a single-category facet is a real landing page (self-canonical),
+        // so the view needs its name for a unique title/H1/description.
+        if ($indexable && count($categorySlugs) === 1) {
+            $category = Category::where('slug', $categorySlugs[0])->first(['name', 'slug']);
+        }
+
         $canonicalPath = ShopCatalogUrl::build($indexable ? $categorySlugs : array_slice($categorySlugs, 0, 1));
 
         $deposit = MarketingSetting::cached();
@@ -109,7 +117,7 @@ class ShopController extends Controller
         $ladder = ProductLadderAnchors::resolve();
 
         return view('shop.index', array_merge($initial, compact(
-            'deposit', 'featuredTestimonials', 'ladder', 'canonicalPath', 'indexable'
+            'deposit', 'featuredTestimonials', 'ladder', 'canonicalPath', 'indexable', 'category'
         )) + [
             // H5134 — мои сердечки в каталоге (Livewire-проп, flag OFF / гость — []).
             'favoriteCourseIds' => CourseFavorite::favoritedCourseIdsForCurrentViewer(),
@@ -289,12 +297,8 @@ class ShopController extends Controller
         abort_unless((bool) config('features.waitlist_voting', false), 404);
 
         $items = CourseWaitlistItem::query()
-            ->where('is_listed', true)
-            ->whereNotIn('status', [
-                CourseWaitlistItem::STATUS_CLOSED,
-                CourseWaitlistItem::STATUS_SCHEDULED,
-            ])
-            ->withCount('votes')
+            ->onShowcase()
+            ->withCount(['votes as votes_count' => fn ($q) => $q->whereNotIn('user_id', InternalAccounts::ids())])
             ->with([
                 // Обложка карточки ждуна — витринная плашка курса
                 // (Course::catalogBadgeUrl()): ассет 4:3, фолбэк image_path.
@@ -546,7 +550,7 @@ class ShopController extends Controller
                     CourseWaitlistItem::STATUS_CLOSED,
                     CourseWaitlistItem::STATUS_SCHEDULED,
                 ])
-                ->withCount('votes')
+                ->withCount(['votes as votes_count' => fn ($q) => $q->whereNotIn('user_id', InternalAccounts::ids())])
                 ->first();
 
             if ($waitlistItem !== null && Auth::check()) {

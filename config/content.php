@@ -22,19 +22,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Lecture-sourced FAQ knowledge file (H1549 Wave 3 / CAI5 target)
-    |--------------------------------------------------------------------------
-    |
-    | Accepted faq_draft candidates are appended here — NOT into
-    | resources/knowledge/faq.md (that file is regenerated from ORS-FAQ wiki).
-    | Override in tests with a temp path under storage/framework.
-    |
-    */
-    'lecture_faq_path' => env('CONTENT_LECTURE_FAQ_PATH')
-        ?: resource_path('knowledge/faq_from_lectures.md'),
-
-    /*
-    |--------------------------------------------------------------------------
     | VK/ORS content calendar — Wave 4 forward drafts (H1567)
     |--------------------------------------------------------------------------
     | Cost cap: max ForwardDraftGenerator fills (and therefore CuratorAi calls)

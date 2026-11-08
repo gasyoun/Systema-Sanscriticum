@@ -1,6 +1,6 @@
 # Systema Sanscriticum — платформа онлайн-обучения санскриту
 
-_Created: 13-02-2026 · Last updated: 10-10-2026_
+_Created: 13-02-2026 · Last updated: 05-11-2026_
 
 Laravel-приложение для школы санскрита: учебный кабинет со словарем, домашними
 заданиями и интервальными повторениями (SRS), магазин курсов с гибкими тарифами,
@@ -405,7 +405,7 @@ LandingPage ──> JSON-блоки
 
 - [AdminPanelProvider.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Providers/Filament/AdminPanelProvider.php) — полная
   админка `/admin`, доступ по `is_admin` (ресурсы автообнаружением из
-  `app/Filament/Resources`, сейчас 62).
+  `app/Filament/Resources`, сейчас 64).
 - [LectureEditorPanelProvider.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Providers/Filament/LectureEditorPanelProvider.php)
   — редактор лекций `/editor`, доступ по `is_lecture_editor`.
 
@@ -442,7 +442,7 @@ LandingPage ──> JSON-блоки
 
 ### 3. Конструктор лендингов (`/{slug}`)
 
-Лендинги из JSON-блоков (~20 типов: hero, форма заявки, цены, программа, FAQ,
+Лендинги из JSON-блоков (27 типов: hero, форма заявки, цены, программа, FAQ,
 отзывы и др.). Последний маршрут в [routes/web.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/routes/web.php) перехватывает
 любой slug и ищет `LandingPage`.
 
@@ -461,7 +461,7 @@ HTML (микросервис `lecture-builder`) → публикация. Ест
 
 ### 5. Панель администратора (`/admin`)
 
-Filament v3, 62 автообнаруживаемых CRUD-ресурса: пользователи, курсы, уроки, платежи, тарифы,
+Filament v3, 64 автообнаруживаемых CRUD-ресурса: пользователи, курсы, уроки, платежи, тарифы,
 промокоды, словари, преподаватели, расписание, объявления, статьи и т.д. Плюс
 медиа (Filament Curator), экспорт в Excel, мониторинг очередей (`/horizon`),
 резервное копирование БД (Spatie Backup).
@@ -623,7 +623,7 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
 - **Hardening / техдолг.** Продолжить покрытие денежно- и доступно-критичных
   путей: `Tariff::upgradeCreditForUser()`, loyalty/deposit в
   `calculateFinalPriceForUser()`, ключи `block_N_hH`, webhook-подписи и
-  fail-policy для Tochka/Telegram/VK/MAX/Zoom. В Laravel 12 допустимы и свойство
+  fail-policy для Tochka/Telegram/VK/MAX/Zoom. В Laravel 13 допустимы и свойство
   `protected $casts`, и защищённый метод `casts(): array`; сохранять локальную
   конвенцию модели.
 - **UX / polish.** Проход по `/dvaram`, helpdesk, Telegram support analytics,
@@ -834,4 +834,4 @@ Systema — Tier-0 репозиторий и **не только приложе�
 
 ---
 
-_Dr. Mārcis Gasūns_
+_к.ф.н. М.Ю. Гасунс_

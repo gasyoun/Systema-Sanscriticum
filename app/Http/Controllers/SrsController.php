@@ -70,7 +70,14 @@ class SrsController extends Controller
     {
         abort_unless((bool) config('srs.enabled'), 404);
 
-        return view('srs.public-review', ['slug' => $slug]);
+        // SEO-META-1: the page title/description used to be one hardcoded string for
+        // every deck. Resolve the deck here so the shell can emit per-deck meta.
+        $deck = SrsDeck::query()
+            ->where('slug', $slug)
+            ->whereIn('visibility', ['system', 'public'])
+            ->first();
+
+        return view('srs.public-review', ['slug' => $slug, 'deck' => $deck]);
     }
 
     /**
