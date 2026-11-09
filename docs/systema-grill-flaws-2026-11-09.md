@@ -45,4 +45,8 @@ Scope: prod app only (`Systema-Sanscriticum`, Laravel 13, `origin/main e67bf0a9`
 
 `docs/adr/0001-grant-access-fail-closed-default.md`, `0002-payment-fix-wave1-flag.md`, `0003-teacher-rates-generated-canon.md`.
 
+## Addendum 09-11-2026 (H7929 close-out)
+
+Human ruling "flip both" applied live on prod `.92`: `GRANT_ACCESS_FAIL_CLOSED=true` (appended + `config:cache`, tinker `bool(true)`), `PAYMENT_FIX_WAVE1=true` (already ON, re-confirmed). HEAD `9d653d1b`. ADR-0001 status superseded with ledger row (no secrets). Verifier re-probe is the same tinker output above.
+
 _Dr. Mārcis Gasūns_
