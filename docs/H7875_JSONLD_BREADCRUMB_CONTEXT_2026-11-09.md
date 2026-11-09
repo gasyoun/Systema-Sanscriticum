@@ -57,7 +57,9 @@ Failed asserting that '<!DOCTYPE html> ...' [UTF-8](length: 29243) does not cont
 Tests: 1, Assertions: 2, Failures: 1
 ```
 
-Скомпилированный кэш до правки (`storage/framework/views/9679c26f…php`):
+Скомпилированный кэш до правки (воспроизводимо: скомпилировать партиал из `HEAD~1`
+через `BladeCompiler::compileString()`; хэш-имя кэш-файла переиспользуется и после
+правки уже содержит исправленный вывод):
 
 ```php
 <?php echo json_encode([
