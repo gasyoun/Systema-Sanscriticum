@@ -1,0 +1,9 @@
+# 2FA спрашивается только при входе в админ-панели, контент сайта открывается без кода (H7807)
+
+_Created: 07-11-2026 · Last updated: 07-11-2026_
+
+- **Рулинг MG 07-11-2026: страница /two-factor не должна запирать публичный сайт.** Раньше гейт `RequireTwoFactor` стоял в общей группе `web` — админ-сессия после логина упиралась в код 2FA на любой странице (даже на публичном FAQ), хотя менять данные админ может только в панелях. Теперь [app/Http/Kernel.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Kernel.php) не несёт гейта в `web` вовсе; гейт живёт в собственных стеках обеих Filament-панелей `/admin` и `/editor` — surfaces изменения данных, код спрашивается один раз за сессию при входе. Преподаватели и студенты не гейтились и не гейтятся.
+- **Панель-контракт закреплён тестом.** [TwoFactorGateTest](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Auth/TwoFactorGateTest.php) 9/9: панельный тест-роут переведён на стек панели (`web`+`auth`+гейт — панель несёт `StartSession` в собственном стеке), новый тест `test_web_content_is_not_gated_for_admin_role` доказывает, что админ с подключённой, но не пройденной 2FA читает web-контент (тест-роут + реальный `/faq/dz`) без редиректа; гейт панели, enrollment, резервные коды, kill-switch `TWO_FACTOR_ENFORCED` и `two-factor:reset` покрыты как раньше. Pint чист.
+- **Лендинг и верификация.** [PR #3933](https://github/gasyoun/Systema-Sanscriticum/pull/3933) (ZCode GLM-5.3-Flash `account:zai-individual-coding-plan/GLM-5.3-Flash`, 07-11-2026), squash-merge 37aef2d6, все чеки зелёные; прод поднял 37aef2d6 по авто-деплой-крону 11:04Z (Kernel: 0 вхождений `RequireTwoFactor`, панели 2+2). Кросс-семейный верификатор DeepSeek (`deepseek-chat`, прямой ключ) — `verdict: pass` по шести пунктам evidence на origin/main. Живые пробы: `/faq/dz` 200, `/admin` → `/admin/login`, анонимный `/two-factor` → `/login`.
+
+_к.ф.н. М.Ю. Гасунс_
