@@ -37,6 +37,16 @@
     $cadenceStreams = $cadence?->streamLines() ?? [];
     // Ручные часы приоритетны; пусто — считаем астрономические по календарю.
     $heroHours = $course->hours_count ?: $cadence?->hours();
+
+    // Контроль оплаты на первом экране (план «маркетинговые акценты» 10-11-2026):
+    // сильнейший рычаг H1291 («оплата по блокам») до тарифной сетки, а не только
+    // у нее. Те же калитки честности, что у objection-price-microcopy: покупаемый
+    // целый блок, курс не в режиме записей, полный курс не куплен. Эхо строки
+    // принципа (H1291/H1293), не дубль — см. решения лейна.
+    $heroControlLine = $course->tariffs->where('type', 'block')
+            ->contains(fn ($t): bool => $t->block_half === null)
+        && ! $course->sellsRecordings()
+        && ! in_array('full', $purchasedKeys, true);
 @endphp
 
 @push('scripts')
@@ -360,6 +370,16 @@ document.addEventListener('DOMContentLoaded', function () {
                             </a>
                         @endif
                     </div>
+
+                    {{-- Контроль оплаты на первом экране: рычаг H1291 до тарифов.
+                         Калитки — в $heroControlLine (верх файла); в ветке waitlist
+                         оплата не открыта, строка не показывается. --}}
+                    @if($heroControlLine)
+                        <p class="mt-4 text-sm text-slate-400 max-w-lg" data-analytics="hero-control-line">
+                            Платить за весь курс сразу не нужно: оплачиваете ближайший блок — обычно это
+                            4 занятия — и решаете о продолжении после него.
+                        </p>
+                    @endif
                     @endif
 
                     {{-- Кликабельный бейдж преподавателя — visual continuity with card teacher line.
