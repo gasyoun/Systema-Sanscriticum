@@ -673,13 +673,14 @@ PEM;
      * another course's block-1 lesson sharing the SAME group stay denied;
      * replaying the confirmation preserves access and stable
      * payment/group_user/course_user counts. Fakes never suppress model events.
+     * Portable across the CI SQLite and MySQL8.4 runs of this class.
      */
     public function test_confirmed_block_one_purchase_reaches_grouped_lesson_and_replay_is_safe(): void
     {
-        // H8001: effective SQLite :memory: + HTTP/mail/queue fakes that do NOT
-        // suppress payment model events (no Event::fake anywhere).
-        $this->assertSame('sqlite', config('database.default'));
-        $this->assertSame(':memory:', config('database.connections.sqlite.database'));
+        // H8001: testing mode + HTTP/mail/queue fakes that do NOT suppress
+        // payment model events (no Event::fake anywhere). The external local
+        // runner, outside this test, guarantees SQLite :memory: for local runs.
+        $this->assertSame('testing', config('app.env'));
         Http::preventStrayRequests();
         Http::fake();
         $this->useTestKey();
