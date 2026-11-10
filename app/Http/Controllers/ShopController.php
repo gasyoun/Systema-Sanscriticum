@@ -27,6 +27,7 @@ use App\Support\InternalAccounts;
 use App\Support\ProductLadderAnchors;
 use App\Support\ShopCatalogUrl;
 use App\Support\TrajectoryPathway;
+use App\Support\UpcomingIntake;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -539,12 +540,14 @@ class ShopController extends Controller
         // «Набор закрыт» на странице превращается в голосование. Тот же скоуп,
         // что на /online/zhdun (is_listed, без closed/scheduled). Флаг OFF —
         // null'ы, страница живёт по-старому.
+        $intake = UpcomingIntake::for($course->slug);
         $waitlistItem = null;
         $waitlistVoted = false;
         $waitlistPref = null;
-        if ((bool) config('features.waitlist_voting', false)) {
+        if ((bool) config('features.waitlist_voting', false) && ($intake === null || $intake['upcoming'])) {
             $waitlistItem = CourseWaitlistItem::query()
                 ->where('course_id', $course->id)
+                ->when($intake !== null, fn ($query) => $query->where('slug', $intake['waitlist_slug']))
                 ->where('is_listed', true)
                 ->whereNotIn('status', [
                     CourseWaitlistItem::STATUS_CLOSED,
@@ -571,7 +574,7 @@ class ShopController extends Controller
         // описание/буллеты/видео-ссылки/FAQ; null — курсу не заведено.
         $pageContent = CoursePageContent::for($course->slug);
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb', 'canonicalUrl', 'recordingOffers', 'fullSchedulePosts', 'waitlistItem', 'waitlistVoted', 'waitlistPref', 'heroSchedule', 'pageContent') + [
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb', 'canonicalUrl', 'recordingOffers', 'fullSchedulePosts', 'waitlistItem', 'waitlistVoted', 'waitlistPref', 'heroSchedule', 'pageContent', 'intake') + [
             // H5134 — сердечко на /k/{slug}: отмечен ли этот курс зрителем.
             'favoriteKeys' => CourseFavorite::heartKeysForCurrentViewer(),
         ]);
