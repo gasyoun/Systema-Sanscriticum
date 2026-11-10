@@ -28,6 +28,18 @@ _Avoid_: salary (reserved for contract terms), refund
 A scoped support instruction visible to helpdesk agents.
 _Avoid_: prompt, pilot rule
 
-_Created: 09-11-2026 · Last updated: 09-11-2026_
+**course**:
+A teaching program that may have multiple intakes and student groups.
+_Avoid_: intake when referring to the whole program
+
+**intake**:
+A new group entering an existing course at a stated start date and regular lesson time.
+_Avoid_: course when referring only to a new start of the same program
+
+**application**:
+A recorded intention to participate in a specific intake. It does not establish payment, course access or a guaranteed place.
+_Avoid_: paid enrollment, confirmed reservation
+
+_Created: 09-11-2026 · Last updated: 10-11-2026_
 
 _Dr. Mārcis Gasūns_
