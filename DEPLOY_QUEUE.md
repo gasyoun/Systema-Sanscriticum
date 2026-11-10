@@ -1,4 +1,4 @@
-_Created: 08-07-2026 · Last updated: 05-10-2026_
+_Created: 08-07-2026 · Last updated: 10-11-2026_
 
 # Очередь деплоя — для Ивана
 
@@ -49,6 +49,15 @@ _Создано: 08-07-2026 · Обновлено: 12-10-2026 (№91 — кам�
 >
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
+
+### №93 — H7966 — таксономия колод + сегментация мега-деков: разовые сеятели после авто-деплоя (10-11-2026)
+
+После merge ([PR #4025](https://github.com/gasyoun/Systema-Sanscriticum/pull/4025), `5c35b078`) и обычного авто-деплоя:
+
+1. `php artisan migrate --force` — аддитивная `add_taxonomy_to_srs_decks` (колонки таксономии в `srs_decks`).
+2. `php artisan db:seed --class=SrsTaxonomySeeder --force` — таксономия (тема/размер/сложность) на системные колоды.
+3. `php artisan db:seed --class=SrsMegaDeckSegmentationSeeder --force` — раскладка `sanskrit-core` / `sanskrit-cyrillic-only` по частотным сегментам; инвариант card_id/`srs_review_states` закреплён `SrsMegaDeckSegmentationTest`.
+4. Смоук: публичный `/koloda` — фильтры таксономии и сегменты видны; в кабинете «Мои колоды» — те же фильтры; `php artisan test --filter=Srs` зелёный на прод-стенде не требуется (CI уже зелёный).
 
 ### №92 — Telegram разовый перенос занятия: пилот группы 63 + replay message 93
 
