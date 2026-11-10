@@ -98,7 +98,7 @@ case "$last_page" in ''|*[!0-9]*) last_page=0 ;; esac
 
 paged=0
 if [ $((NOW - last_page)) -ge "$PAGE_EVERY" ]; then
-  page_or_queue "P1" "внешний свидетель .91 (H4929): $reason. Значит либо остановлен systema-deadman.timer на .91, либо .91 целиком умер — сам deadman_check.py об этом сообщить о себе не может. Проверь .91 (ssh root@193.232.229.91), затем: systemctl status systema-deadman.timer."
+  page_or_queue "P1" "внешний свидетель .91: $reason — systema-deadman.timer остановлен или .91 умер; подробности: brief/deadman91_watch_latest.md (ssh root@193.232.229.91)"
   printf '%s' "$NOW" > "$PAGEF" 2>/dev/null || true
   paged=1
 fi
