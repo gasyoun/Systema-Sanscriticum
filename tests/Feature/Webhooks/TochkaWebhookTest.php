@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Webhooks;
 
+use App\Http\Controllers\StudentController;
 use App\Models\Course;
 use App\Models\Group;
+use App\Models\Lesson;
 use App\Models\Payment;
 use App\Models\PaymentWebhookEvent;
 use App\Models\User;
 use Firebase\JWT\JWT;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
@@ -660,5 +664,135 @@ PEM;
 
         // Покупателю доступ НЕ открывается — только выпуск сертификата.
         $this->assertSame(0, $buyer->groups()->count());
+    }
+
+    /**
+     * H8001 — grouped-lesson access regression: a confirmed (APPROVED) block_1
+     * payment unlocks the purchased course's grouped lesson through the real
+     * student.lesson view with its unique content, while unpaid block 2 and
+     * another course's block-1 lesson sharing the SAME group stay denied;
+     * replaying the confirmation preserves access and stable
+     * payment/group_user/course_user counts. Fakes never suppress model events.
+     */
+    public function test_confirmed_block_one_purchase_reaches_grouped_lesson_and_replay_is_safe(): void
+    {
+        // H8001: effective SQLite :memory: + HTTP/mail/queue fakes that do NOT
+        // suppress payment model events (no Event::fake anywhere).
+        $this->assertSame('sqlite', config('database.default'));
+        $this->assertSame(':memory:', config('database.connections.sqlite.database'));
+        Http::preventStrayRequests();
+        Http::fake();
+        $this->useTestKey();
+
+        // Synthetic non-admin learner with no memberships or enrollments.
+        $user = User::factory()->create();
+        $this->assertFalse($user->isAdminLike());
+
+        // Purchased course + its access group; paid, non-preview, available lessons.
+        $course = Course::factory()->create(['slug' => 'h8001-paid-access-primary']);
+        $group = Group::create(['name' => 'H8001-paid-access-group']);
+        $course->groups()->attach($group->id);
+
+        $base = [
+            'course_id' => $course->id,
+            'group_id' => $group->id,
+            'is_free' => false,
+            'is_preview' => false,
+            'is_published' => true,
+            'block_half' => null,
+            'lesson_date' => now()->subDay(),
+        ];
+        $lessonOne = Lesson::factory()->create(array_merge($base, [
+            'block_number' => 1,
+            'content_html' => '<p>PAID_ACCESS_PURCHASED_CONTENT</p>',
+        ]));
+        $lessonTwo = Lesson::factory()->create(array_merge($base, [
+            'block_number' => 2,
+            'content_html' => '<p>UNPAID_BLOCK_TWO_CONTENT</p>',
+        ]));
+
+        // Another course shares the SAME group (group-visible), but the learner
+        // owns no payment key for that course.
+        $other = Course::factory()->create(['slug' => 'h8001-paid-access-other']);
+        $other->groups()->attach($group->id);
+        $foreign = Lesson::factory()->create(array_merge($base, [
+            'course_id' => $other->id,
+            'block_number' => 1,
+            'content_html' => '<p>OTHER_COURSE_SECRET_CONTENT</p>',
+        ]));
+
+        // Nonzero, nonconditional pending block_1 payment.
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 4800,
+            'tariff' => 'block_1',
+            'status' => 'pending',
+            'is_conditional' => false,
+        ]);
+
+        $this->assertSame(0, $user->groups()->count());
+        $this->assertSame(0, $user->courses()->count());
+
+        // Before the signed APPROVED webhook the purchased lesson is denied.
+        $this->actingAs($user)
+            ->get(route('student.lesson', [$course->slug, $lessonOne->id]))
+            ->assertRedirect()
+            ->assertDontSee('PAID_ACCESS_PURCHASED_CONTENT');
+
+        $jwt = $this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'APPROVED']);
+
+        $assertAccess = function () use ($user, $course, $lessonOne, $lessonTwo, $other, $foreign): void {
+            // Purchased grouped lesson: real student.lesson view, right lesson,
+            // block_1 key and unique content.
+            $this->actingAs($user->fresh())
+                ->get(route('student.lesson', [$course->slug, $lessonOne->id]))
+                ->assertOk()
+                ->assertViewIs('student.lesson')
+                ->assertViewHas('lesson', fn ($actual) => $actual->id === $lessonOne->id)
+                ->assertViewHas('unlockedTariffs', fn ($keys) => in_array('block_1', $keys, true))
+                ->assertSee('PAID_ACCESS_PURCHASED_CONTENT');
+
+            // Unpaid block 2 stays denied.
+            $this->actingAs($user->fresh())
+                ->get(route('student.lesson', [$course->slug, $lessonTwo->id]))
+                ->assertRedirect()
+                ->assertDontSee('UNPAID_BLOCK_TWO_CONTENT');
+
+            // Same group and group-visible, but no payment key for the other course.
+            $this->assertTrue($foreign->isVisibleToGroupsOf($user->fresh()));
+            $this->assertSame(
+                [],
+                StudentController::getUserUnlockedTariffs($user->id, $other->slug)
+            );
+            $this->actingAs($user->fresh())
+                ->get(route('student.lesson', [$other->slug, $foreign->id]))
+                ->assertRedirect()
+                ->assertDontSee('OTHER_COURSE_SECRET_CONTENT');
+        };
+
+        // Confirmation: pending -> paid, grouped access granted.
+        $this->postJwt($jwt)->assertOk();
+        $this->assertSame('paid', $payment->fresh()->status);
+        $assertAccess();
+
+        $counts = [
+            Payment::count(),
+            DB::table('group_user')->count(),
+            DB::table('course_user')->count(),
+        ];
+        $this->assertSame(1, $user->fresh()->groups()->count());
+        $this->assertSame(1, $user->fresh()->courses()->count());
+
+        // Replaying the confirmation preserves access and stable counts.
+        $this->postJwt($jwt)->assertOk();
+        $assertAccess();
+        $this->assertSame($counts, [
+            Payment::count(),
+            DB::table('group_user')->count(),
+            DB::table('course_user')->count(),
+        ]);
+
+        Http::assertNothingSent();
     }
 }
