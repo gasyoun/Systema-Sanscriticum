@@ -103,6 +103,11 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CHAT_REMOVAL_MIN_DAYS_OVERDUE` | optional | `30` | config/chat_removal.php:20 |
 | `CHAT_REMOVAL_MIN_UNANSWERED_CONTACTS` | optional | `2` | config/chat_removal.php:27 |
 | `CHAT_REMOVAL_REINSTATEMENT_FEE` | optional | `1000` | config/chat_removal.php:34 |
+| `CHAT_SILENCE_REMOVAL_ACCESS_GRACE_DAYS` | optional | `3` | config/chat_silence_removal.php:30 |
+| `CHAT_SILENCE_REMOVAL_ENABLED` | feature-flag | `false` | config/chat_silence_removal.php:21 |
+| `CHAT_SILENCE_REMOVAL_PROPOSE_REPEAT_DAYS` | optional | `7` | config/chat_silence_removal.php:33 |
+| `CHAT_SILENCE_REMOVAL_SILENCE_DAYS` | optional | `7` | config/chat_silence_removal.php:24 |
+| `CHAT_SILENCE_REMOVAL_SNOOZE_DAYS` | optional | `14` | config/chat_silence_removal.php:36 |
 | `CHECKOUT_DEPOSIT_REVERSAL` | optional | `true` | config/features.php:741 |
 | `CHECKOUT_INACTIVE_TARIFF_GUARD` | optional | `true` | config/features.php:724 |
 | `CHECKOUT_INTEGRITY_SAFE_REPAIRS` | optional | `false` | config/features.php:716 |
