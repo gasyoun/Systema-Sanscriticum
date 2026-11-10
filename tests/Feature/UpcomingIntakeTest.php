@@ -6,6 +6,8 @@ namespace Tests\Feature;
 
 use App\Models\Course;
 use App\Models\CourseWaitlistItem;
+use App\Models\Group;
+use App\Models\Schedule;
 use App\Models\User;
 use App\Support\UpcomingIntake;
 use Carbon\CarbonImmutable;
@@ -113,7 +115,34 @@ class UpcomingIntakeTest extends TestCase
         $this->item($course);
         config(['features.waitlist_voting' => false]);
         $this->get(route('shop.course.show', $course->slug))->assertOk()
-            ->assertSee('16 января 2027')->assertDontSee('Подать заявку');
+            ->assertSee('16 января 2027')->assertDontSee('Подать заявку')
+            ->assertSee('https://t.me/rusamskrtam', false);
+    }
+
+    public function test_existing_cohort_calendar_is_retained_and_clearly_separated(): void
+    {
+        $course = $this->course();
+        $course->update(['format' => 'live']);
+        $this->item($course);
+        $group = Group::create(['name' => 'Другой поток']);
+        $course->groups()->attach($group->id);
+        $schedule = Schedule::create([
+            'title' => 'Занятие другого потока',
+            'course_id' => $course->id,
+            'group_id' => $group->id,
+            'start' => '2026-11-14 12:00:00',
+            'end' => '2026-11-14 13:30:00',
+        ]);
+        $before = $schedule->fresh()->getRawOriginal();
+
+        $this->get(route('shop.course.show', $course->slug))->assertOk()
+            ->assertSee('16 января 2027')
+            ->assertSee('По субботам в 09:00 (МСК, UTC+3)')
+            ->assertSee('Расписание других потоков')
+            ->assertSee('День и время другого потока')
+            ->assertSee('Ближайшее занятие другого потока')
+            ->assertSee('Полное расписание других потоков');
+        $this->assertSame($before, $schedule->fresh()->getRawOriginal());
     }
 
     public function test_application_uses_existing_guest_login_and_records_the_exact_intake(): void

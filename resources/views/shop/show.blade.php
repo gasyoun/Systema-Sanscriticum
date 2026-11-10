@@ -242,7 +242,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             <p class="text-white font-semibold">{{ $intake['weekly_label'] }}</p>
                             <p class="text-sm text-slate-300 mt-2">Онлайн-курс с нуля. Программа, преподаватель и варианты оплаты — на этой странице.</p>
                             @if(! $waitlistItem)
-                                <p class="text-sm text-slate-300 mt-2">Уточнить подачу заявки можно <a href="{{ route('shop.waitlist') }}" class="underline">в списке будущих курсов</a>.</p>
+                                @if(config('features.waitlist_voting', false))
+                                    <p class="text-sm text-slate-300 mt-2">Уточнить подачу заявки можно <a href="{{ route('shop.waitlist') }}" class="underline">в списке будущих курсов</a>.</p>
+                                @else
+                                    <p class="text-sm text-slate-300 mt-2">Уточнить подачу заявки можно <a href="https://t.me/rusamskrtam" class="underline">у куратора</a>.</p>
+                                @endif
                             @endif
                         </section>
                     @endif
@@ -506,13 +510,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     ? ['icon' => 'far fa-clock', 'label' => 'Длительность', 'value' => $heroHours.' '.\App\Support\Plural::ru((int) $heroHours, 'час', 'часа', 'часов')]
                     : null,
                 $cadenceSlot
-                    ? ['icon' => 'fas fa-calendar-day', 'label' => 'День и время', 'value' => $cadenceSlot.' МСК']
+                    ? ['icon' => 'fas fa-calendar-day', 'label' => $upcomingIntake ? 'День и время другого потока' : 'День и время', 'value' => $cadenceSlot.' МСК']
                     : null,
                 $courseStart
-                    ? ['icon' => 'far fa-calendar-alt', 'label' => 'Даты проведения', 'value' => $courseStart->translatedFormat('F Y').($courseEnd && $courseEnd->format('Y-m') !== $courseStart->format('Y-m') ? ' – '.$courseEnd->translatedFormat('F Y') : '')]
+                    ? ['icon' => 'far fa-calendar-alt', 'label' => $upcomingIntake ? 'Даты других потоков' : 'Даты проведения', 'value' => $courseStart->translatedFormat('F Y').($courseEnd && $courseEnd->format('Y-m') !== $courseStart->format('Y-m') ? ' – '.$courseEnd->translatedFormat('F Y') : '')]
                     : null,
                 $cadenceNext
-                    ? ['icon' => 'fas fa-hourglass-half', 'label' => 'Ближайшее занятие', 'value' => $cadenceNext.($cadenceProgress ? ', '.$cadenceProgress : '')]
+                    ? ['icon' => 'fas fa-hourglass-half', 'label' => $upcomingIntake ? 'Ближайшее занятие другого потока' : 'Ближайшее занятие', 'value' => $cadenceNext.($cadenceProgress ? ', '.$cadenceProgress : '')]
                     : null,
             ])->filter()->values();
         @endphp
@@ -807,7 +811,7 @@ document.addEventListener('DOMContentLoaded', function () {
         @endif
 
         {{-- ───── 1.6 ПОЛНОЕ РАСПИСАНИЕ (H4328: обзорное + занятия 1–N) ───── --}}
-        @include('shop.partials.full-schedule')
+        @include('shop.partials.full-schedule', ['fullScheduleTitle' => $upcomingIntake ? 'Полное расписание других потоков' : 'Полное расписание курса'])
 
         {{-- ───── 2. ТАРИФЫ ───── --}}
         @php
