@@ -457,8 +457,11 @@ class ShopController extends Controller
 
         // H4328: полное расписание (обзорное + занятия 1–N) тем же билдером,
         // что и Telegram-пост. За тем же флагом, что и отправка в чаты.
+        // H7977: заголовок поста получает evergreen-титул набора (titleMapper),
+        // иначе в блоке светится старое «— набор 2026» из названия курса.
+        $intake = UpcomingIntake::for($course->slug);
         $fullSchedulePosts = config('features.schedule_full_post', false)
-            ? FullSchedulePost::forCourse($course)
+            ? FullSchedulePost::forCourse($course, static fn (string $courseTitle): string => $intake['title'] ?? $courseTitle)
             : [];
 
         // Ритм курса из календаря: день/время, ближайшее занятие, сколько
@@ -540,7 +543,6 @@ class ShopController extends Controller
         // «Набор закрыт» на странице превращается в голосование. Тот же скоуп,
         // что на /online/zhdun (is_listed, без closed/scheduled). Флаг OFF —
         // null'ы, страница живёт по-старому.
-        $intake = UpcomingIntake::for($course->slug);
         $waitlistItem = null;
         $waitlistVoted = false;
         $waitlistPref = null;

@@ -1316,6 +1316,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             'item' => $waitlistItem,
                             'voted' => $waitlistVoted,
                             'myPref' => $waitlistPref,
+                            'application' => $upcomingIntake,
                         ])
                     </div>
                     <a href="{{ route('shop.waitlist') }}#wl-{{ $waitlistItem->slug }}"

@@ -24,6 +24,9 @@ class UpcomingIntakeTest extends TestCase
         parent::setUp();
         CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-11-10 09:00:00', 'Europe/Moscow'));
         config(['features.waitlist_voting' => true]);
+        // H7977: блок «Полное расписание других потоков» за флагом
+        // features.schedule_full_post (дефолт OFF) — флаг ставим сами (phpunit.xml, H7606).
+        config(['features.schedule_full_post' => true]);
     }
 
     protected function tearDown(): void
