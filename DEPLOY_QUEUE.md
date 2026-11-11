@@ -1,6 +1,6 @@
-_Created: 08-07-2026 · Last updated: 05-10-2026_
+_Created: 08-07-2026 · Last updated: 10-11-2026_
 
-# Очередь деплоя — для Ивана
+# Очередь деплоя — агентский чек-лист выката (MG 10-11-2026: «все выкатки делай сам, никогда не жди Ивана»)
 
 _Создано: 08-07-2026 · Обновлено: 12-10-2026 (№91 — кампанийный пиксель VK «мини-курс» 3800959: ✅ ВКЛЮЧЕН 12-10-2026 — деплой 81fac435 (PR #3198), `VK_PIXEL_MINIKURS_ENABLED=true` в прод `.env` №571, бэкап `/root/.env.bak-vk-minikurs-pixel-20261012-0845`, `config:clear`+`config:cache`, проверено живым рендером лендинга; №90 H5776/K3 — потолок токенов суфлёра АРМИРОВАН: `SUFLER_TOKENS_PER_TICKET=20000`, прод-проба 05-10; №89 H5020 — автопилоты контента ВКЛ 16-09 → 30-09, чек-лист §2.8 + понедельничный дайджест; №87 H4325 — «Мои материалы»/очередь куратора, часть 3/3, миграция без флага, стек поверх PR #2412+#2417; №86 H4313 — сид программы «учителя+истории» 07-09, автопилот stay OFF; №85 H4162 W1 `KOCHERGINA_GR61_COHORT_ENABLED` ON 06-09 — реверанс-когорта Кочергиной гр.61 в реестре когорт, без студен-видимой поверхности; №84 H3648 `MEMBERSHIP_CLUB_STREAMS_ONLY` stay OFF; №83 H3579 — 4 объекта Better Stack для `.91` + строка пульса на обеих машинах; таймер лестницы восстановления НЕ включать до учений D13; №81 H3314 — закат мобильных токенов 90 дней после деплоя, throttle ON; №80 H3247 `CRM_TRIAL_BOOKING` stay OFF; №79 H3233 `SUPPORT_DM_AUTO_REPLY` ON) (H2758 №77 `HINDI_YOUTUBE_NOVA3_DRILLS` stay OFF; H2762 Kochergina next-step/CTA A/B flags stay OFF; №73 H2444 `HINDI_ATTACHMENT_DRILLS` ON; №76 H2731 sidecar 1723 applied; №75 H2446 `HINDI_TG_CURATED_PRACTICE` stay OFF; №74 H2445 `HINDI_MY_SRS_DECK` stay OFF; H2645+H2644 клуб: `CLUB_MEMBERSHIP` к 28-08, порядок трёх флагов; №72 H2485 `CRM_SALES_FORECAST` ON; №71 H2443 `HINDI_TRANSCRIPT_DRILLS` ON; №70 H2441 `HINDI_PROGRAMME_PLAYLIST` ON; H2493 Grammar Lab G2 flags stay OFF; H2484 lifecycle flag OFF as №69; H2483 CRM 360 flag OFF as №68; H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
 
@@ -36,7 +36,9 @@ _Создано: 08-07-2026 · Обновлено: 12-10-2026 (№91 — кам�
 
 Всё, что **влито в `main`, но еще не выкачено на прод**, с точными командами для
 сервера. Прод — **root-VPS (Ubuntu, Beget)**. Код из `main` выкатывает **авто-деплой** (H1933, каждые 30 мин); человеку — только флаги/разовые artisan/внешние шаги. При сбое авто-деплоя — `storage/auto_deploy.disabled` + TG-тревога ([docs/server-resource-guards.md §8](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md)). Ручной fallback: `sudo bash deploy.sh`. _Исправлено 10-07-2026 (H478): прежняя формулировка «по FTP, без SSH» неверна — SSH/root есть._
-Это список-передача для Ивана: что и в каком порядке запустить.
+Это агентский чек-лист: агент исполняет шаги с известным рецептом сам (ssh, тот же
+проход); Ивану достаётся только то, что явно помечено human-only (внешние консоли,
+секреты, решения по деньгам).
 
 **Обозначения**
 - 🚀 **Приоритет** — после этого деплоя можно запускать проверку/сверку на реальных данных или следующий этап. Делать в первую очередь.
@@ -49,6 +51,15 @@ _Создано: 08-07-2026 · Обновлено: 12-10-2026 (№91 — кам�
 >
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
+
+### №93 — H7966 — таксономия колод + сегментация мега-деков — ✅ ИСПОЛНЕНО 10-11-2026 (агент, без участия Ивана)
+
+Выполнено на `.92` тем же днём (рул. MG 10-11-2026 «все выкатки делай сам»):
+
+1. `php artisan migrate --force` → `Nothing to migrate` (авто-деплой уже применил `add_taxonomy_to_srs_decks`).
+2. `php artisan db:seed --class=SrsTaxonomySeeder --force` → DONE (62 ms).
+3. `php artisan db:seed --class=SrsMegaDeckSegmentationSeeder --force` → DONE: `sanskrit-core` → топ-500: 71 · 500–2000: 50 · остальное: 11 564; `sanskrit-cyrillic-only` → остальное: 11 325 (частотный ранг этого дека не покрыт источником — все карточки в «остальном», ожидаемо).
+4. Смоук: `https://samskrte.ru/koloda` → HTTP 200, `data-testid="srs-taxonomy-filters"` на странице, сегмент-колоды «топ-500 / 500–2000 / остальное» видны; `?topic=lexicon` → HTTP 200. Сегменты в БД: ids 42–47, родительские мега-деки скрыты фильтром `whereDoesntHave('children')`.
 
 ### №92 — Telegram разовый перенос занятия: пилот группы 63 + replay message 93
 

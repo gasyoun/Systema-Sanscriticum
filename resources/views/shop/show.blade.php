@@ -1,11 +1,17 @@
 @extends('layouts.shop')
-@section('title', $course->meta_title ?: $course->title)
+@section('title', isset($intake) ? ($intake['upcoming'] ? $intake['meta_title'] : $intake['title'].' — онлайн-курс') : ($course->meta_title ?: $course->title))
 
 @php
     // SEO-META-1: meta_description was empty on courses without a description —
     // Yandex then builds the snippet itself. Fall back to the body, then to a
     // composed sentence, so every money page ships a description.
-    $courseMetaDescription = trim((string) ($course->meta_description ?? ''));
+    $displayCourseTitle = $intake['title'] ?? $course->title;
+    $upcomingIntake = isset($intake) && $intake['upcoming'];
+    $courseMetaDescription = isset($intake)
+        ? ($upcomingIntake
+            ? 'Грамматика санскрита с нуля онлайн. Новая группа с 16 января 2027 года: по субботам в 09:00 МСК. Программа, стоимость и заявка на участие.'
+            : 'Грамматика санскрита с нуля онлайн: программа, преподаватель, стоимость и варианты участия.')
+        : trim((string) ($course->meta_description ?? ''));
     if ($courseMetaDescription === '') {
         $courseMetaDescription = \Illuminate\Support\Str::limit(
             trim(strip_tags((string) ($course->description ?? ''))),
@@ -13,7 +19,7 @@
         );
     }
     if ($courseMetaDescription === '') {
-        $courseMetaDescription = 'Курс санскрита «'.$course->title.'» в Обществе ревнителей санскрита: программа, преподаватель, формат и стоимость.';
+        $courseMetaDescription = 'Курс санскрита «'.$displayCourseTitle.'» в Обществе ревнителей санскрита: программа, преподаватель, формат и стоимость.';
     }
 @endphp
 @section('meta_description', $courseMetaDescription)
@@ -117,8 +123,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     '@type' => 'VirtualLocation',
                     'url' => $courseUrl,
                 ],
-                'startDate' => $ciStart ? $ciStart->toDateString() : null,
-                'endDate' => $ciEnd ? $ciEnd->toDateString() : null,
+                'startDate' => $upcomingIntake ? $intake['starts_at']->toIso8601String() : ($ciStart ? $ciStart->toDateString() : null),
+                'endDate' => $upcomingIntake ? null : ($ciEnd ? $ciEnd->toDateString() : null),
                 'instructor' => $course->teacher
                     ? ['@type' => 'Person', 'name' => $course->teacher->name]
                     : null,
@@ -133,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $courseSchema = array_filter([
             '@context' => 'https://schema.org',
             '@type' => 'Course',
-            'name' => $course->title,
+            'name' => $displayCourseTitle,
             'description' => $courseDescription,
             'url' => $courseUrl,
             'inLanguage' => 'ru-RU',
@@ -155,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function () {
     @include('partials.schema-breadcrumbs', ['crumbs' => [
         ['name' => 'Главная', 'url' => url('/')],
         ['name' => 'Курсы', 'url' => route('shop.index')],
-        ['name' => $course->title],
+        ['name' => $displayCourseTitle],
     ]])
 @endpush
 
@@ -218,7 +224,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     {{-- H5134 — сердечко «Избранное» на странице курса --}}
                     <div class="flex items-start justify-between gap-4">
                         <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-8 leading-tight">
-                            {{ $course->title }}
+                            {{ $displayCourseTitle }}
                         </h1>
                         @include('shop.partials.favorite-heart', [
                             'favoriteKey' => 'c:'.$course->id,
@@ -230,7 +236,25 @@ document.addEventListener('DOMContentLoaded', function () {
                     {{-- Когда именно «идет сейчас»: день, время, ближайшее занятие,
                          сколько осталось. Все выведено из `schedules` — бейдж
                          формата ручной и об этом ничего не знает. --}}
+                    @if($upcomingIntake)
+                        <section id="upcoming-intake" class="mb-8 max-w-xl rounded-xl border border-brand/40 bg-brand/10 p-5" data-testid="upcoming-intake">
+                            <h2 class="text-xl font-bold text-white mb-2">Новая группа с {{ $intake['starts_at']->locale('ru')->isoFormat('D MMMM YYYY') }} года</h2>
+                            <p class="text-white font-semibold">{{ $intake['weekly_label'] }}</p>
+                            <p class="text-sm text-slate-300 mt-2">Онлайн-курс с нуля. Программа, преподаватель и варианты оплаты — на этой странице.</p>
+                            @if(! $waitlistItem)
+                                @if(config('features.waitlist_voting', false))
+                                    <p class="text-sm text-slate-300 mt-2">Уточнить подачу заявки можно <a href="{{ route('shop.waitlist') }}" class="underline">в списке будущих курсов</a>.</p>
+                                @else
+                                    <p class="text-sm text-slate-300 mt-2">Уточнить подачу заявки можно <a href="https://t.me/rusamskrtam" class="underline">у куратора</a>.</p>
+                                @endif
+                            @endif
+                        </section>
+                    @endif
+
                     @if($cadenceSlot || $cadenceNext || $cadenceProgress || $cadenceStreams)
+                        @if($upcomingIntake)
+                            <p class="text-sm text-slate-400 mb-2">Расписание других потоков:</p>
+                        @endif
                         <p class="-mt-4 mb-8 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-300"
                            data-testid="course-hero-cadence">
                             @if($cadenceSlot)
@@ -276,7 +300,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     </span>
                                 </summary>
                                 <div class="mt-4 border-t border-[#1F2636] pt-4 text-sm text-slate-300 leading-relaxed">
-                                    <p class="font-bold text-white">{{ $course->title }}</p>
+                                    <p class="font-bold text-white">{{ $displayCourseTitle }}</p>
                                     <p class="mb-3">{{ $heroSchedule['cadence'] }}</p>
                                     @foreach($heroSchedule['rows'] as $row)
                                         @if($row['n'] > 1 && ($row['n'] - 1) % 4 === 0)
@@ -302,6 +326,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 'voted' => $waitlistVoted,
                                 'myPref' => $waitlistPref,
                                 'variant' => 'hero',
+                                'application' => $upcomingIntake,
                             ])
                         </div>
                     @else
@@ -370,9 +395,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     {{-- Cover: real photo OR typographic fallback matching catalogue card --}}
                     <div class="relative w-full aspect-video md:aspect-[4/3] rounded-3xl overflow-hidden bg-gradient-to-br from-[#111622] to-[#0A0D14] border border-[#1F2636] shadow-2xl shadow-indigo-900/20 flex items-center justify-center group">
                         @if($courseVideoEmbedUrl = $course->videoAnnounceEmbedUrl())
-                            <iframe src="{{ $courseVideoEmbedUrl }}" title="{{ $course->title }}" class="absolute inset-0 w-full h-full" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            <iframe src="{{ $courseVideoEmbedUrl }}" title="{{ $displayCourseTitle }}" class="absolute inset-0 w-full h-full" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                         @elseif($course->image_path)
-                            <img src="{{ Storage::url($course->image_path) }}" alt="{{ $course->title }}" class="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 transition-all duration-700">
+                            <img src="{{ Storage::url($course->image_path) }}" alt="{{ $displayCourseTitle }}" class="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 transition-all duration-700">
                             <div class="absolute inset-0 bg-gradient-to-t from-[#0A0D14]/80 via-transparent to-transparent"></div>
                         @else
                             @php $heroCoverColor = $course->categories->first()?->color ?: '#E85C24'; @endphp
@@ -383,7 +408,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     {{ $course->teacher?->name ?? 'Онлайн-программа' }}
                                 </span>
                                 <div class="relative flex-grow flex items-center">
-                                    <span class="text-2xl md:text-3xl font-extrabold text-white leading-tight line-clamp-4">{{ $course->title }}</span>
+                                    <span class="text-2xl md:text-3xl font-extrabold text-white leading-tight line-clamp-4">{{ $displayCourseTitle }}</span>
                                 </div>
                             </div>
                         @endif
@@ -437,7 +462,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 $cohortLessons = (int) ($course->lessons_count ?: 0);
                 $cohortModules = $course->blocks->filter(fn ($b) => filled($b->title))->count();
                 $cohortLevel = $course->levelLabel();
-                preg_match('/гр\.\s*\d+/u', $course->title, $cohortMatch);
+                preg_match('/гр\.\s*\d+/u', $displayCourseTitle, $cohortMatch);
                 $cohortLabel = $cohortMatch[0] ?? null;
             @endphp
             @if($cohortStart && $cohortLessons > 0)
@@ -485,13 +510,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     ? ['icon' => 'far fa-clock', 'label' => 'Длительность', 'value' => $heroHours.' '.\App\Support\Plural::ru((int) $heroHours, 'час', 'часа', 'часов')]
                     : null,
                 $cadenceSlot
-                    ? ['icon' => 'fas fa-calendar-day', 'label' => 'День и время', 'value' => $cadenceSlot.' МСК']
+                    ? ['icon' => 'fas fa-calendar-day', 'label' => $upcomingIntake ? 'День и время другого потока' : 'День и время', 'value' => $cadenceSlot.' МСК']
                     : null,
                 $courseStart
-                    ? ['icon' => 'far fa-calendar-alt', 'label' => 'Даты проведения', 'value' => $courseStart->translatedFormat('F Y').($courseEnd && $courseEnd->format('Y-m') !== $courseStart->format('Y-m') ? ' – '.$courseEnd->translatedFormat('F Y') : '')]
+                    ? ['icon' => 'far fa-calendar-alt', 'label' => $upcomingIntake ? 'Даты других потоков' : 'Даты проведения', 'value' => $courseStart->translatedFormat('F Y').($courseEnd && $courseEnd->format('Y-m') !== $courseStart->format('Y-m') ? ' – '.$courseEnd->translatedFormat('F Y') : '')]
                     : null,
                 $cadenceNext
-                    ? ['icon' => 'fas fa-hourglass-half', 'label' => 'Ближайшее занятие', 'value' => $cadenceNext.($cadenceProgress ? ', '.$cadenceProgress : '')]
+                    ? ['icon' => 'fas fa-hourglass-half', 'label' => $upcomingIntake ? 'Ближайшее занятие другого потока' : 'Ближайшее занятие', 'value' => $cadenceNext.($cadenceProgress ? ', '.$cadenceProgress : '')]
                     : null,
             ])->filter()->values();
         @endphp
@@ -684,7 +709,7 @@ document.addEventListener('DOMContentLoaded', function () {
         @if(!empty($scheduleGroups) && $scheduleGroups->isNotEmpty())
         <section id="schedule" class="mb-16 lg:mb-20" x-data="{ open: false }" data-collapse-section>
             @include('shop.partials.collapse-header', [
-                'title' => ! empty($flagship) ? 'Ближайшие занятия' : 'Расписание',
+                'title' => $upcomingIntake ? 'Расписание других потоков' : (! empty($flagship) ? 'Ближайшие занятия' : 'Расписание'),
                 'caption' => empty($flagship) ? 'ближайшие занятия' : null,
                 'bodyId' => 'schedule-body',
             ])
@@ -730,7 +755,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                             @endif
                                         </div>
                                         <span class="text-base font-bold text-white truncate">
-                                            {{ $session->title ?: $course->title }}
+                                            {{ $session->title ?: $displayCourseTitle }}
                                         </span>
                                         <span class="text-sm font-bold text-indigo-400 mt-1">
                                             <i class="far fa-clock mr-1"></i>{{ $session->start->format('H:i') }}@if($session->end)–{{ $session->end->format('H:i') }}@endif
@@ -748,7 +773,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     @endphp
                                     @if($isTrialSession && ! empty($showTrialCta))
                                         <button type="button"
-                                                onclick="window.dispatchEvent(new CustomEvent('open-trial-modal', { detail: { action: @js(route('trial.create', $course->slug)), title: @js($course->title), amount: {{ (float) $course->trial_price }}, isRecording: {{ ! empty($trialIsRecording) ? 'true' : 'false' }}, date: @js($session->start->translatedFormat('d F, H:i')) } }))"
+                                                onclick="window.dispatchEvent(new CustomEvent('open-trial-modal', { detail: { action: @js(route('trial.create', $course->slug)), title: @js($displayCourseTitle), amount: {{ (float) $course->trial_price }}, isRecording: {{ ! empty($trialIsRecording) ? 'true' : 'false' }}, date: @js($session->start->translatedFormat('d F, H:i')) } }))"
                                                 class="shrink-0 inline-flex items-center gap-1.5 py-2.5 px-4 rounded-xl bg-[#38BDF8] hover:bg-[#2da4dd] text-white text-xs font-bold transition-all whitespace-nowrap">
                                             <i class="fas fa-graduation-cap text-[11px]"></i>
                                             Купить пробное
@@ -786,7 +811,7 @@ document.addEventListener('DOMContentLoaded', function () {
         @endif
 
         {{-- ───── 1.6 ПОЛНОЕ РАСПИСАНИЕ (H4328: обзорное + занятия 1–N) ───── --}}
-        @include('shop.partials.full-schedule')
+        @include('shop.partials.full-schedule', ['fullScheduleTitle' => $upcomingIntake ? 'Полное расписание других потоков' : 'Полное расписание курса'])
 
         {{-- ───── 2. ТАРИФЫ ───── --}}
         @php
@@ -882,7 +907,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         </p>
                     </div>
                     <button type="button"
-                            onclick="window.dispatchEvent(new CustomEvent('open-deposit-modal', { detail: { action: @js(route('deposit.create', $course->slug)), title: @js($course->title), amount: {{ $courseDepositAmount }} } }))"
+                            onclick="window.dispatchEvent(new CustomEvent('open-deposit-modal', { detail: { action: @js(route('deposit.create', $course->slug)), title: @js($displayCourseTitle), amount: {{ $courseDepositAmount }} } }))"
                             class="md:flex-shrink-0 flex justify-center items-center py-3 px-5 bg-brand hover:bg-brand-hover text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-brand/20">
                         <i class="fas fa-bookmark mr-2 text-xs"></i>
                         Забронировать
@@ -920,7 +945,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         </p>
                     </div>
                     <button type="button"
-                            onclick="window.dispatchEvent(new CustomEvent('open-trial-modal', { detail: { action: @js(route('trial.create', $course->slug)), title: @js($course->title), amount: {{ $trialAmount }}, isRecording: {{ ! empty($trialIsRecording) ? 'true' : 'false' }}, date: @js($course->trialSchedule?->start?->translatedFormat('d F, H:i')) } }))"
+                            onclick="window.dispatchEvent(new CustomEvent('open-trial-modal', { detail: { action: @js(route('trial.create', $course->slug)), title: @js($displayCourseTitle), amount: {{ $trialAmount }}, isRecording: {{ ! empty($trialIsRecording) ? 'true' : 'false' }}, date: @js($course->trialSchedule?->start?->translatedFormat('d F, H:i')) } }))"
                             class="md:flex-shrink-0 flex justify-center items-center py-3 px-5 bg-[#38BDF8] hover:bg-[#2da4dd] text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-[#38BDF8]/20">
                         <i class="fas fa-graduation-cap mr-2 text-xs"></i>
                         Купить пробное
@@ -1291,6 +1316,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             'item' => $waitlistItem,
                             'voted' => $waitlistVoted,
                             'myPref' => $waitlistPref,
+                            'application' => $upcomingIntake,
                         ])
                     </div>
                     <a href="{{ route('shop.waitlist') }}#wl-{{ $waitlistItem->slug }}"
