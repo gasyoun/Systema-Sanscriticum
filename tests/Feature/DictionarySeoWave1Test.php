@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\Dictionary;
 use App\Models\DictionaryWord;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -291,6 +292,7 @@ class DictionarySeoWave1Test extends TestCase
     public function test_sitemap_withholds_dictionary_urls_when_index_disabled(): void
     {
         config(['dictionary_seo.index_enabled' => false]);
+        Cache::forget('sitemap.xml');
 
         $this->word(['is_indexable' => true, 'slug' => 'dharma']);
 
@@ -307,6 +309,7 @@ class DictionarySeoWave1Test extends TestCase
             'dictionary_seo.gate.curated_only' => true,
             'dictionary_seo.gate.min_translation_length' => 5,
         ]);
+        Cache::forget('sitemap.xml');
 
         $indexable = $this->word(['is_indexable' => true, 'slug' => 'dharma']);
         $notIndexable = $this->word(['iast' => 'gaja', 'devanagari' => 'गज', 'is_indexable' => false, 'translation' => 'слон']);
