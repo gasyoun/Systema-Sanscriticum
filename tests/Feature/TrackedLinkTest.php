@@ -390,4 +390,39 @@ class TrackedLinkTest extends TestCase
         $this->assertSame('telegram_samskrte', $click->utm['utm_source'], 'площадка «Оповещений» несёт свой источник, не zhdun_share');
         $this->assertSame('sanskrit_volunteer_evergreen', $click->utm['utm_campaign']);
     }
+
+    /** @test */
+    public function bf11_black_friday_recordings_keys_route_each_course_to_its_own_card(): void
+    {
+        $destinations = [
+            'zach' => '/k/blagopriyatnyye-zachiny-yogicheskoy-traditsii-2025',
+            'astr' => '/k/astronomiia-dlia-astrologov-2-potok-osen-2025',
+            'mol' => '/k/ezednevnye-molitvy-s-usei-sankoi-1-e-v-zapisi',
+            'han' => '/k/razbor-xanuman-calisy-2026',
+            'cal' => '/k/vostocnye-kalendari-2026',
+            'ved' => '/k/likbez-po-vedante-2025',
+            'p' => '/online',
+        ];
+        $channels = [
+            'ors' => ['telegram_samskrte', 'owned_channel'],
+            'samskrtam' => ['samskrtam', 'crosslink'],
+        ];
+
+        foreach ($channels as $channel => [$source, $medium]) {
+            foreach ($destinations as $creative => $destination) {
+                $token = "bf11-{$channel}-{$creative}";
+                $this->flushSession();
+                $this->get('/ga/'.$token)->assertRedirect($destination);
+
+                $attribution = session(config('tracked_links.session_key'));
+                $this->assertSame($source, $attribution['utm_source'], "{$token} source");
+                $this->assertSame($medium, $attribution['utm_medium'], "{$token} medium");
+                $this->assertSame('black_friday_recordings_nov_2026', $attribution['utm_campaign'], "{$token} campaign");
+                $this->assertSame("bf11_{$creative}", $attribution['utm_content'], "{$token} content");
+                $this->assertSame('recordings', $attribution['utm_term'], "{$token} term");
+            }
+        }
+
+        $this->get('/ga/bf11-ors-unknown')->assertNotFound();
+    }
 }
