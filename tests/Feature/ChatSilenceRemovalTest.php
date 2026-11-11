@@ -139,6 +139,15 @@ class ChatSilenceRemovalTest extends TestCase
         $this->assertSame(0, $this->sent('banChatMember'), 'без нажатия админа Telegram не трогаем');
     }
 
+    public function test_forming_group_is_checked_archived_is_not(): void
+    {
+        $this->group->forceFill(['status' => 'forming'])->save();
+        $this->assertBlocker([]);
+
+        $this->group->forceFill(['status' => 'archived'])->save();
+        $this->assertCount(0, app(ChatSilenceRemovalEligibility::class)->candidates());
+    }
+
     public function test_disabled_switch_sends_nothing_but_dry_run_reports(): void
     {
         config(['chat_silence_removal.enabled' => false]);

@@ -1,6 +1,6 @@
 # Исключение из учебного TG-чата: молчит + урок закрыт
 
-_Created: 10-11-2026 · Last updated: 10-11-2026_
+_Created: 10-11-2026 · Last updated: 11-11-2026_
 
 Opus 5.5 (`claude-opus-5-5`). Бот **предлагает**, админ **жмёт**, банит
 **Почтальон** (@zapisi_ORSbot). Обратный путь (разбан, возврат) ручной.
@@ -17,6 +17,7 @@ Opus 5.5 (`claude-opus-5-5`). Бот **предлагает**, админ **жм
 
 | # | Условие | Откуда |
 |---|---|---|
+| 0 | группа `active` или `forming` (идущие группы часто так и остаются `forming`; `archived` не трогаем) | `groups.status` |
 | 1 | он есть в чате | ростер юзербота `{store}/roster/{chat}.json` (`telegram-harvest:roster-groups`, раз в час) |
 | 2 | аккаунт однозначно сопоставлен с учёткой | [`TelegramAccountResolver`](../app/Services/Telegram/TelegramAccountResolver.php): `users.telegram_id`, затем контакт лички |
 | 3 | не персонал | `users.role` пуст или `student`, нет `is_admin` / `teacher_id` |
