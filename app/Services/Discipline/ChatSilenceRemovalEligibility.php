@@ -67,6 +67,9 @@ class ChatSilenceRemovalEligibility
         return max(1, (int) config('chat_silence_removal.silence_days', 7));
     }
 
+    /** Статусы групп, чьи чаты проверяем. */
+    public const GROUP_STATUSES = ['active', 'forming'];
+
     public function graceDays(): int
     {
         return max(0, (int) config('chat_silence_removal.access_grace_days', 3));
@@ -81,7 +84,10 @@ class ChatSilenceRemovalEligibility
         $this->skippedChats = [];
 
         $groupsByChat = Group::query()
-            ->where('status', 'active')
+            // Идущие группы на проде часто так и остаются `forming` — куратор не
+            // переключает статус. Не начавшуюся группу отсеет условие «есть
+            // прошедший платный урок»; архивные чаты не трогаем.
+            ->whereIn('status', self::GROUP_STATUSES)
             ->whereNotNull('telegram_chat_id')
             ->where('telegram_chat_id', '!=', '')
             ->when($onlyChatId !== null, fn ($q) => $q->where('telegram_chat_id', $onlyChatId))
