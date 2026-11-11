@@ -254,4 +254,67 @@ class DictionarySeoWave1Test extends TestCase
         Http::assertNothingSent();
         $this->assertSame('Q9174', $word->fresh()->wikidata_qid);
     }
+
+    // ─────────── DefinedTermSet JSON-LD on /slovar (H7876) ───────────
+
+    public function test_slovar_index_emits_defined_term_set_jsonld(): void
+    {
+        $dict = Dictionary::create(['name' => 'Словарь Кочергиной', 'is_active' => true]);
+
+        $response = $this->get(route('slovar.index'));
+
+        $response->assertOk();
+
+        $html = $response->getContent();
+        preg_match_all('#<script type="application/ld\+json">(.*?)</script>#s', $html, $matches);
+
+        $found = false;
+        foreach ($matches[1] as $raw) {
+            $data = json_decode($raw, true);
+            if (($data['@type'] ?? null) === 'ItemList' && ($data['name'] ?? null) === 'Санскритско-русские словари') {
+                $found = true;
+                $this->assertSame('https://schema.org', $data['@context']);
+                $this->assertSame('sa', $data['inLanguage']);
+                $this->assertNotEmpty($data['itemListElement']);
+                $first = $data['itemListElement'][0]['item'];
+                $this->assertSame('DefinedTermSet', $first['@type']);
+                $this->assertSame('Словарь Кочергиной', $first['name']);
+                break;
+            }
+        }
+
+        $this->assertTrue($found, 'DefinedTermSet JSON-LD block not found on /slovar');
+    }
+
+    // ─────────── Sitemap inclusion gated by index_enabled (H7876) ───────────
+
+    public function test_sitemap_withholds_dictionary_urls_when_index_disabled(): void
+    {
+        config(['dictionary_seo.index_enabled' => false]);
+
+        $this->word(['is_indexable' => true, 'slug' => 'dharma']);
+
+        $response = $this->get(route('sitemap'));
+        $xml = $response->getContent();
+
+        $this->assertStringNotContainsString('/slovar/dharma', $xml);
+    }
+
+    public function test_sitemap_includes_only_indexable_dictionary_urls_when_enabled(): void
+    {
+        config([
+            'dictionary_seo.index_enabled' => true,
+            'dictionary_seo.gate.curated_only' => true,
+            'dictionary_seo.gate.min_translation_length' => 5,
+        ]);
+
+        $indexable = $this->word(['is_indexable' => true, 'slug' => 'dharma']);
+        $notIndexable = $this->word(['iast' => 'gaja', 'devanagari' => 'गज', 'is_indexable' => false, 'translation' => 'слон']);
+
+        $response = $this->get(route('sitemap'));
+        $xml = $response->getContent();
+
+        $this->assertStringContainsString('/slovar/dharma', $xml);
+        $this->assertStringNotContainsString('/slovar/gaja', $xml);
+    }
 }
