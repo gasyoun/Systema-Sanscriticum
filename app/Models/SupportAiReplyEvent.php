@@ -20,6 +20,13 @@ class SupportAiReplyEvent extends Model
     /** H3234 (этап 5): теневой ответ локальной модели (qwen3:14b) рядом с онлайн-логом OpenRouter. */
     public const EVENT_OLLAMA_SHADOW = 'ollama_shadow';
 
+    /**
+     * H6176: агрегат счётчика обращений пилотного потока 341/79. meta строки —
+     * только счётчики и идентификаторы окна/потока, без текста учеников;
+     * одна строка на окно (повторное сохранение обновляет ту же строку).
+     */
+    public const EVENT_PILOT_INQUIRY_AGGREGATE = 'pilot_inquiry_aggregate';
+
     protected $fillable = [
         'telegram_support_message_id',
         'event_type',
