@@ -18,6 +18,9 @@
         </include>
     </source>
     <php>
+        <!-- Сют-лоадер грузит 1000+ тест-файлов; дефолт CLI 128M роняет
+             построение сюиты ДО фильтра (тест-инфра, не тесты). -->
+        <ini name="memory_limit" value="-1"/>
         <env name="APP_ENV" value="testing"/>
         <!-- Worktree .env often has empty APP_KEY; Livewire list-page smokes need encrypt. -->
         <env name="APP_KEY" value="base64:2fl+KtvkdphvQyEfjOzf3mJCEJnA8otCLK5LpM/V8Xw="/>
