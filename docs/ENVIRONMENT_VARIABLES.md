@@ -752,6 +752,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SANCTUM_TOKEN_EXPIRATION` | secret | `60 * 24 * 90` | config/sanctum.php:58 |
 | `SANCTUM_TOKEN_PREFIX` | secret | `''` | config/sanctum.php:73 |
 | `SCHEDULE_FULL_POST_ENABLED` | feature-flag | `false` | config/features.php:1806 |
+| `SCHOOL_ROLE_QUOTA_ENABLED` | feature-flag | `false` | config/school_role_quota.php:29 |
 | `SEASON1_NOTIFY_ENABLED` | feature-flag | `false` | config/season.php:11 |
 | `SENTINEL_BREAKER_BIN` | optional | `'/usr/local/lib/sentinel-breaker/sentinel_breaker.py'` | config/services.php:328 |
 | `SENTINEL_BREAKER_ENABLED` | feature-flag | `true` | config/services.php:327 |
