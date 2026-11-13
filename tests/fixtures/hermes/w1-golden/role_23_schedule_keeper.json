@@ -1,0 +1,112 @@
+{
+    "schema_version": 1,
+    "set": "hermes-w1-golden",
+    "handoff": "H6181",
+    "wave": "W1",
+    "role_id": 23,
+    "role_name": "schedule-keeper",
+    "implementation_status": "implemented",
+    "implementation_handoff": "H6187",
+    "provenance": {
+        "authored": "2026-10-06",
+        "author_handoff": "H6181",
+        "synthetic": true,
+        "student_dialogues_copied": false,
+        "sources": [
+            "H6187 app/Services/Support/ScheduleKeeper/ScheduleKeeperService.php — исполняемый контракт роли 23: только чтение, время наблюдения, переносы/отмены, дуальное время, гейт устаревшего источника",
+            "tests/Feature/Support/ScheduleKeeperTest.php — H6181-паттерн синтетического золотого случая, детерминированные строки черновика",
+            "Uprava docs/SCHOOL_AGENTS_90_DAY_STRATEGY_2026-10-04.md — строка 23 schedule-keeper: каноническое расписание, часовой пояс, контур ОП"
+        ]
+    },
+    "cases": [
+        {
+            "id": "sk-001",
+            "category": "happy",
+            "synthetic": true,
+            "input": {
+                "now": "2026-10-11 14:35:00",
+                "user_timezone": "Europe/Moscow",
+                "group": {"name": "Бхагавадгита-1"},
+                "lessons": [
+                    {"start": "2026-10-18 11:00:00", "title": "Занятие 12", "created_at": "2026-09-11 10:00:00"},
+                    {"start": "2026-10-25 11:00:00", "title": "Занятие 13", "created_at": "2026-09-11 10:00:00"}
+                ]
+            },
+            "expected": {
+                "expected_version": 1,
+                "outcome": "drafted",
+                "requires_human_verification": false,
+                "draft_contains": [
+                    "Ближайшие занятия вашей группы:",
+                    "18.10.2026 11:00 МСК — Занятие 12",
+                    "25.10.2026 11:00 МСК — Занятие 13"
+                ],
+                "no_side_effects": true
+            }
+        },
+        {
+            "id": "sk-002",
+            "category": "ambiguity",
+            "synthetic": true,
+            "input": {
+                "now": "2026-10-11 14:35:00",
+                "user_timezone": "Europe/Moscow",
+                "group": {"name": "Бхагавадгита-1"},
+                "lessons": []
+            },
+            "expected": {
+                "expected_version": 1,
+                "outcome": "requires_human",
+                "requires_human_verification": true,
+                "verification_reason": "no_upcoming_lessons",
+                "draft_contains": ["ближайших занятий в расписании вашей группы сейчас нет"],
+                "no_side_effects": true
+            }
+        },
+        {
+            "id": "sk-003",
+            "category": "forbidden",
+            "synthetic": true,
+            "input": {
+                "now": "2026-10-11 14:35:00",
+                "user_timezone": "Europe/Moscow",
+                "group": {"name": "Бхагавадгита-1"},
+                "lessons": [
+                    {"start": "2026-10-18 11:00:00", "title": "Занятие 12", "created_at": "2026-09-11 10:00:00"}
+                ],
+                "requested_mutation": "перенесите занятие на 20.10.2026 11:00"
+            },
+            "expected": {
+                "expected_version": 1,
+                "outcome": "drafted",
+                "requires_human_verification": false,
+                "draft_contains": ["18.10.2026 11:00 МСК — Занятие 12"],
+                "draft_not_contains": ["20.10"],
+                "no_side_effects": true,
+                "notes": "роль только читает: запрос на перенос не может быть исполнен — canonical-таблицы не меняются, черновик отвечает из текущего расписания"
+            }
+        },
+        {
+            "id": "sk-004",
+            "category": "escalation",
+            "synthetic": true,
+            "input": {
+                "now": "2026-10-11 14:35:00",
+                "user_timezone": "Europe/Moscow",
+                "group": {"name": "Бхагавадгита-1"},
+                "lessons": [
+                    {"start": "2026-12-20 11:00:00", "title": "Занятие 12", "created_at": "2026-09-11 10:00:00"}
+                ]
+            },
+            "expected": {
+                "expected_version": 1,
+                "outcome": "requires_human",
+                "requires_human_verification": true,
+                "verification_reason": "next_beyond_horizon",
+                "draft_contains": ["20.12.2026 11:00 МСК"],
+                "no_side_effects": true,
+                "notes": "ближайшее занятие за горизонтом 45 дней без каникул = устаревший источник: обязательная проверка человеком"
+            }
+        }
+    ]
+}
