@@ -9,6 +9,7 @@ use App\Models\BookClubOrder;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
@@ -164,6 +165,7 @@ class BookClubCheckoutTest extends TestCase
     public function test_abroad_checkout_creates_paypal_claim_and_notifies(): void
     {
         $this->enableFlag();
+        config(['services.admin.email' => 'admin@example.test']);
         Http::fake(); // Tochka вызываться НЕ должна
 
         $this->post(route('book-club.submit'), $this->abroadPayload())
@@ -187,7 +189,7 @@ class BookClubCheckoutTest extends TestCase
             'planeta_order_number' => '20241121-4433387',
         ]);
 
-        Mail::assertSent(PaypalClaimReceivedMail::class);
+        Mail::assertQueued(PaypalClaimReceivedMail::class);
     }
 
     public function test_other_country_pays_6600(): void
@@ -286,26 +288,53 @@ class BookClubCheckoutTest extends TestCase
         $this->assertDatabaseCount('users', 1);
     }
 
-    public function test_failed_payment_allows_resubmit(): void
+    public function test_tochka_unavailable_marks_payment_failed(): void
     {
         $this->enableFlag();
 
-        // Первая попытка: Tochka недоступна → платёж failed.
-        Http::fake(['*' => fn () => throw new \Illuminate\Http\Client\ConnectionException('down')]);
+        // Tochka недоступна (сетевой сбой) → платёж failed, мягкая ошибка.
+        Http::fake(['*' => fn () => throw new ConnectionException('down')]);
 
         $this->post(route('book-club.submit'), $this->rfPayload())
             ->assertRedirect()
             ->assertSessionHas('error');
 
         $this->assertDatabaseHas('payments', ['tariff' => 'book_club_delivery', 'status' => 'failed']);
+    }
+
+    public function test_failed_payment_allows_resubmit(): void
+    {
+        $this->enableFlag();
+
+        // Первая попытка «до нас»: платёж failed (см. тест выше) — заказ висит.
+        $user = User::factory()->create(['email' => 'first@example.test']);
+        $failed = Payment::create([
+            'user_id' => $user->id,
+            'course_id' => null,
+            'amount' => 300,
+            'tariff' => 'book_club_delivery',
+            'status' => 'failed',
+        ]);
+        BookClubOrder::create([
+            'payment_id' => $failed->id,
+            'user_id' => $user->id,
+            'planeta_email' => 'backer@mozmail.com',
+            'planeta_order_number' => '20241121-4433387',
+            'recipient_name' => 'Иванов Иван Иванович',
+            'country_code' => 'RU',
+            'city' => 'Москва',
+            'postal_code' => '119019',
+            'address_line' => 'Арбат, д. 1, кв. 1',
+            'amount' => 300,
+        ]);
 
         // Повтор разрешён: failed не считается активным заказом.
-        $this->clearRateLimit();
         $this->fakeTochka();
 
         $this->post(route('book-club.submit'), $this->rfPayload(['email' => 'retry@example.test']))
             ->assertRedirect('https://pay.tochka/bookclub');
 
         $this->assertDatabaseCount('payments', 2);
+        $this->assertDatabaseCount('book_club_orders', 2);
     }
 }
