@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\HeartbeatController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BookClubController;
 use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\CertificateVerificationController;
 use App\Http\Controllers\CheckoutController;
@@ -112,6 +113,15 @@ Route::get('/online/materialy', [MaterialsController::class, 'index'])->name('sh
 // «Консультация по онлайн-курсам ОРС» — 3-дневный диагностический марафон,
 // верхний вход воронки (H440, Phase 1: landing + capture). Evergreen —
 // личные дни-0..3 от day0_started_at, НЕ общий календарь потока.
+// «Книжный клуб» — оплата доставки книг кампании planeta 219924 (H8195).
+// Книги уже оплачены на кампании; за фича-флагом BOOK_CLUB_DELIVERY
+// (дефолт OFF — контроллер отдаёт 404, прод-сборка не меняется).
+Route::get('/knizhny-klub/dostavka', [BookClubController::class, 'show'])
+    ->name('book-club.show');
+Route::post('/knizhny-klub/dostavka', [BookClubController::class, 'submit'])
+    ->middleware('throttle:10,1')
+    ->name('book-club.submit');
+
 Route::get('/online/konsultaciya', [MarathonController::class, 'show'])->name('marathon.show');
 Route::post('/online/konsultaciya', [MarathonController::class, 'register'])->name('marathon.register');
 // H471 Phase 4 — ₽500 «с проверкой» track checkout.
