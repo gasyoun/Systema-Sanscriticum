@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Content;
 
 use App\Models\ContentCalendarPublication;
+use App\Models\ContentCalendarRubric;
 use App\Models\ContentCalendarSlot;
 use App\Models\ContentCandidate;
 use App\Models\VkUserToken;
@@ -132,6 +133,36 @@ class PublishDueContentCommandTest extends TestCase
         $this->assertSame(ContentCalendarSlot::STATUS_SCHEDULED, $slot->fresh()->status);
     }
 
+    // 07-11-2026: хештеги рубрики — последней строкой поста в TG и VK.
+    public function test_rubric_hashtags_close_the_post_in_telegram_and_vk(): void
+    {
+        $this->fakeApis();
+        $rubric = ContentCalendarRubric::create([
+            'name' => 'Слово с историей',
+            'hashtags' => 'санскрит, #слово_с_историей  #санскрит',
+            'schedule' => [['days' => [1], 'time' => '19:00']],
+        ]);
+        $slot = $this->slot(['rubric_id' => $rubric->id, 'body' => '<p>Первый</p><p>Второй</p>', 'destinations' => ['tg_a', 'vk_a']]);
+
+        $this->artisan('content:publish-due')->assertSuccessful();
+
+        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'sendMessage')
+            && $r['text'] === "Первый\n\nВторой\n\n#санскрит #слово_с_историей");
+        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'wall.post')
+            && $r['message'] === "Первый\n\nВторой\n\n#санскрит #слово_с_историей");
+        $this->assertSame('<p>Первый</p><p>Второй</p>', $slot->refresh()->body, 'текст поста в базе не меняется');
+    }
+
+    public function test_hashtags_already_in_the_text_are_not_repeated(): void
+    {
+        $rubric = new ContentCalendarRubric(['hashtags' => '#санскрит']);
+
+        $this->assertSame('<p>x</p><p>#санскрит</p>', $rubric->withHashtags('<p>x</p><p>#санскрит</p>'));
+        $this->assertSame(0, $rubric->hashtagsLength('<p>x</p><p>#санскрит</p>'));
+        $this->assertSame(11, $rubric->hashtagsLength('<p>x</p>'));
+        $this->assertSame('<p>x</p>', (new ContentCalendarRubric)->withHashtags('<p>x</p>'));
+    }
+
     public function test_crossposts_due_slot_to_every_enabled_destination(): void
     {
         $this->fakeApis();
@@ -172,6 +203,44 @@ class PublishDueContentCommandTest extends TestCase
         $this->assertSame(ContentCalendarSlot::STATUS_SCHEDULED, $notYetDue->fresh()->status);
         $this->assertSame(0, $alreadyPublished->publications()->count());
         $this->assertSame([], $this->notified);
+    }
+
+    public function test_destinations_go_out_one_by_one_with_a_gap(): void
+    {
+        config(['content_calendar.crosspost_gap_minutes' => 10]);
+        $this->fakeApis();
+        $slot = $this->slot();
+
+        // Первый тик: только первая площадка, старт разноса запомнен.
+        $this->artisan('content:publish-due')->assertSuccessful();
+        $this->assertSame(1, self::sentTo('sendMessage'));
+        $this->assertSame(0, self::sentTo('wall.post'));
+        $slot->refresh();
+        $this->assertSame(ContentCalendarSlot::STATUS_SCHEDULED, $slot->status);
+        $this->assertNotNull($slot->meta['crosspost_started_at'] ?? null);
+
+        // Через 5 минут пауза ещё не вышла — тик ничего не шлёт.
+        $this->travel(5)->minutes();
+        $this->artisan('content:publish-due')->assertSuccessful();
+        $this->assertSame(1, self::sentTo('sendMessage'));
+
+        // 10 минут от старта — вторая площадка, 20 — третья.
+        $this->travel(5)->minutes();
+        $this->artisan('content:publish-due')->assertSuccessful();
+        $this->assertSame(2, self::sentTo('sendMessage'));
+        $this->assertSame(0, self::sentTo('wall.post'));
+
+        $this->travel(10)->minutes();
+        $this->artisan('content:publish-due')->assertSuccessful();
+        $this->assertSame(1, self::sentTo('wall.post'));
+        $this->assertSame(ContentCalendarSlot::STATUS_SCHEDULED, $slot->fresh()->status);
+
+        // Пропущенный тик не копит площадки: опоздавшие выходят разом, но не раньше своего часа.
+        $this->travel(15)->minutes();
+        $this->artisan('content:publish-due')->assertSuccessful();
+        $this->assertSame(2, self::sentTo('wall.post'));
+        $this->assertSame(ContentCalendarSlot::STATUS_PUBLISHED, $slot->fresh()->status);
+        $this->assertSame(4, $slot->publications()->where('status', 'published')->count());
     }
 
     public function test_unchecked_destinations_are_skipped(): void

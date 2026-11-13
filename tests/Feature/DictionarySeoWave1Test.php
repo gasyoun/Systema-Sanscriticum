@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\Dictionary;
 use App\Models\DictionaryWord;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -253,5 +254,70 @@ class DictionarySeoWave1Test extends TestCase
         // No HTTP hit should have been needed for an already-populated row.
         Http::assertNothingSent();
         $this->assertSame('Q9174', $word->fresh()->wikidata_qid);
+    }
+
+    // ─────────── DefinedTermSet JSON-LD on /slovar (H7876) ───────────
+
+    public function test_slovar_index_emits_defined_term_set_jsonld(): void
+    {
+        $dict = Dictionary::create(['name' => 'Словарь Кочергиной', 'is_active' => true]);
+
+        $response = $this->get(route('slovar.index'));
+
+        $response->assertOk();
+
+        $html = $response->getContent();
+        preg_match_all('#<script type="application/ld\+json">(.*?)</script>#s', $html, $matches);
+
+        $found = false;
+        foreach ($matches[1] as $raw) {
+            $data = json_decode($raw, true);
+            if (($data['@type'] ?? null) === 'ItemList' && ($data['name'] ?? null) === 'Санскритско-русские словари') {
+                $found = true;
+                $this->assertSame('https://schema.org', $data['@context']);
+                $this->assertSame('sa', $data['inLanguage']);
+                $this->assertNotEmpty($data['itemListElement']);
+                $first = $data['itemListElement'][0]['item'];
+                $this->assertSame('DefinedTermSet', $first['@type']);
+                $this->assertSame('Словарь Кочергиной', $first['name']);
+                break;
+            }
+        }
+
+        $this->assertTrue($found, 'DefinedTermSet JSON-LD block not found on /slovar');
+    }
+
+    // ─────────── Sitemap inclusion gated by index_enabled (H7876) ───────────
+
+    public function test_sitemap_withholds_dictionary_urls_when_index_disabled(): void
+    {
+        config(['dictionary_seo.index_enabled' => false]);
+        Cache::forget('sitemap.xml');
+
+        $this->word(['is_indexable' => true, 'slug' => 'dharma']);
+
+        $response = $this->get(route('sitemap'));
+        $xml = $response->getContent();
+
+        $this->assertStringNotContainsString('/slovar/dharma', $xml);
+    }
+
+    public function test_sitemap_includes_only_indexable_dictionary_urls_when_enabled(): void
+    {
+        config([
+            'dictionary_seo.index_enabled' => true,
+            'dictionary_seo.gate.curated_only' => true,
+            'dictionary_seo.gate.min_translation_length' => 5,
+        ]);
+        Cache::forget('sitemap.xml');
+
+        $indexable = $this->word(['is_indexable' => true, 'slug' => 'dharma']);
+        $notIndexable = $this->word(['iast' => 'gaja', 'devanagari' => 'गज', 'is_indexable' => false, 'translation' => 'слон']);
+
+        $response = $this->get(route('sitemap'));
+        $xml = $response->getContent();
+
+        $this->assertStringContainsString('/slovar/dharma', $xml);
+        $this->assertStringNotContainsString('/slovar/gaja', $xml);
     }
 }

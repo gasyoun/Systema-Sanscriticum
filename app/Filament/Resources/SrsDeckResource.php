@@ -156,6 +156,33 @@ class SrsDeckResource extends Resource
                     ->columnSpanFull(),
             ])->columns(2),
 
+            Forms\Components\Section::make('Таксономия (H7966)')->schema([
+                Forms\Components\Select::make('topic')
+                    ->label('Тема')
+                    ->options(SrsDeck::TOPICS)
+                    ->placeholder('— не задана —')
+                    ->native(false)
+                    ->helperText('Заполняется офлайн-проходом, учитель утверждает до публикации (Q9).'),
+
+                Forms\Components\Select::make('difficulty')
+                    ->label('Сложность')
+                    ->options(SrsDeck::DIFFICULTIES)
+                    ->placeholder('— не задана —')
+                    ->native(false),
+
+                Forms\Components\Select::make('size_tier')
+                    ->label('Размер')
+                    ->options(SrsDeck::SIZE_TIERS)
+                    ->placeholder('— считается по числу карточек —')
+                    ->native(false)
+                    ->helperText('Пересчитывается сидерами SrsTaxonomySeeder / SrsMegaDeckSegmentationSeeder.'),
+
+                Forms\Components\TagsInput::make('tags')
+                    ->label('Теги')
+                    ->placeholder('band:top500, …')
+                    ->helperText('Свободные метки (json), например band:top500 у сегментов мега-деков.'),
+            ])->columns(2),
+
             Forms\Components\Section::make('Привязка к курсу / уроку')->schema([
                 Forms\Components\Select::make('course_id')
                     ->label('Курс')
@@ -211,6 +238,27 @@ class SrsDeckResource extends Resource
                         default => 'gray',
                     }),
 
+                Tables\Columns\TextColumn::make('topic')
+                    ->label('Тема')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => SrsDeck::TOPICS[$state] ?? (string) $state)
+                    ->placeholder('—')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('difficulty')
+                    ->label('Сложность')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => SrsDeck::DIFFICULTIES[$state] ?? (string) $state)
+                    ->placeholder('—')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('size_tier')
+                    ->label('Размер')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => SrsDeck::SIZE_TIERS[$state] ?? (string) $state)
+                    ->placeholder('—')
+                    ->toggleable(),
+
                 Tables\Columns\TextColumn::make('noteType.name')
                     ->label('Тип')
                     ->toggleable(),
@@ -237,6 +285,15 @@ class SrsDeckResource extends Resource
             ])
             ->defaultSort('updated_at', 'desc')
             ->filters([
+                Tables\Filters\SelectFilter::make('topic')
+                    ->label('Тема')
+                    ->options(SrsDeck::TOPICS),
+                Tables\Filters\SelectFilter::make('difficulty')
+                    ->label('Сложность')
+                    ->options(SrsDeck::DIFFICULTIES),
+                Tables\Filters\SelectFilter::make('size_tier')
+                    ->label('Размер')
+                    ->options(SrsDeck::SIZE_TIERS),
                 Tables\Filters\SelectFilter::make('language')
                     ->label('Язык')
                     ->options(['sa' => 'Санскрит', 'hi' => 'Хинди']),

@@ -1,0 +1,147 @@
+{
+  "schema": "lyw-quiz-v1",
+  "items": [
+    {
+      "id": "zan1-prodolzhayushchiy-ayurveda-01",
+      "type": "mcq",
+      "concept": [
+        "sparśa",
+        "varga"
+      ],
+      "prompt": "Сколько варг (рядов) образуют группу sparśa?",
+      "options": [
+        "Три",
+        "Четыре",
+        "Пять",
+        "Десять"
+      ],
+      "answer_index": 2
+    },
+    {
+      "id": "zan1-prodolzhayushchiy-ayurveda-02",
+      "type": "mcq",
+      "concept": [
+        "ka"
+      ],
+      "prompt": "Какой присущий гласный несёт каждая согласная графема (ср. ka, ga, pa)?",
+      "options": [
+        "i",
+        "a",
+        "u",
+        "никакой"
+      ],
+      "answer_index": 1
+    },
+    {
+      "id": "zan1-prodolzhayushchiy-ayurveda-03",
+      "type": "mcq",
+      "concept": [
+        "ca"
+      ],
+      "prompt": "वर्ग какой: च ca открывает ряд…",
+      "options": [
+        "заднеязычного",
+        "палатального",
+        "церебрального",
+        "зубного"
+      ],
+      "answer_index": 1
+    },
+    {
+      "id": "zan1-prodolzhayushchiy-ayurveda-04",
+      "type": "mcq",
+      "concept": [
+        "daṇḍa"
+      ],
+      "prompt": "Двойной daṇḍa ॥ маркирует…",
+      "options": [
+        "запятую",
+        "конец раздела или стиха",
+        "вопрос",
+        "перенос звука"
+      ],
+      "answer_index": 1
+    },
+    {
+      "id": "zan1-prodolzhayushchiy-ayurveda-05",
+      "type": "mcq",
+      "concept": [
+        "j"
+      ],
+      "prompt": "Рефлекс палатального j в чтении:",
+      "options": [
+        "как русское й",
+        "как русское ж",
+        "как слитное дж",
+        "как английское g"
+      ],
+      "answer_index": 2
+    },
+    {
+      "id": "zan1-prodolzhayushchiy-ayurveda-06",
+      "type": "mcq",
+      "concept": [
+        "ṭ",
+        "ḍ"
+      ],
+      "prompt": "Артикуляционная база ретрофлексных ṭ/ḍ:",
+      "options": [
+        "ничем, это разные записи одного звука",
+        "произносятся тише",
+        "кончик языка завёрнут назад и касается нёба",
+        "произносятся с придыханием всегда"
+      ],
+      "answer_index": 2
+    },
+    {
+      "id": "zan1-prodolzhayushchiy-ayurveda-07",
+      "type": "mcq",
+      "concept": [
+        "dhana"
+      ],
+      "prompt": "«Богатство» по-санскритски (урок):",
+      "options": [
+        "bhaga",
+        "dhana",
+        "dama",
+        "khana"
+      ],
+      "answer_index": 1
+    }
+  ],
+  "answer_keys": {
+    "zan1-prodolzhayushchiy-ayurveda-01": "C",
+    "zan1-prodolzhayushchiy-ayurveda-02": "B",
+    "zan1-prodolzhayushchiy-ayurveda-03": "B",
+    "zan1-prodolzhayushchiy-ayurveda-04": "B",
+    "zan1-prodolzhayushchiy-ayurveda-05": "C",
+    "zan1-prodolzhayushchiy-ayurveda-06": "C",
+    "zan1-prodolzhayushchiy-ayurveda-07": "B"
+  },
+  "glows_grows": {
+    "scale": {
+      "min_score": 0,
+      "max_score": 7
+    },
+    "bands": [
+      {
+        "min_score": 6,
+        "max_score": 7,
+        "kind": "glow",
+        "message": "Отлично! Графика и звуковой состав занятия освоены — можно читать упражнение III без подсказок."
+      },
+      {
+        "min_score": 3,
+        "max_score": 5,
+        "kind": "grow",
+        "message": "Хорошее начало: базу видите, но перепутаны детали рядов. Перечитайте таблицу пяти рядов и повторите попытку."
+      },
+      {
+        "min_score": 0,
+        "max_score": 2,
+        "kind": "grow",
+        "message": "Нормально для первого захода: вернитесь к разделу про varga и произнесение, прочитайте текст вслух — и снова сюда."
+      }
+    ]
+  }
+}

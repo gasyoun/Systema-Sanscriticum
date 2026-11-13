@@ -1,6 +1,6 @@
 # SEO P2 — dictionary indexation wave log (2026)
 
-_Created: 15-08-2026 · Last updated: 16-08-2026_
+_Created: 15-08-2026 · Last updated: 11-11-2026 (H7876: DefinedTermSet JSON-LD + sitemap test coverage)_
 
 Wave-1 **activation packet** (command, ~805-row expectation, `--reset`, Webmaster steps):
 [SEO_P2_WAVE1_ACTIVATION_PACKET_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SEO_P2_WAVE1_ACTIVATION_PACKET_2026.md).
@@ -76,6 +76,37 @@ is default-closed exactly as designed.
 | Wave | Date | `--limit` | Rows promoted | Sitemap submitted | Yandex.Webmaster reading | Verdict |
 |---|---|---|---|---|---|---|
 | — | — | — | — | — | — | _none executed yet_ |
+
+## H7876 build (11-11-2026)
+
+Prerequisite H7875 (BreadcrumbList @context fix) is merged (PR #4004, commit e67bf0a9).
+The following code-level changes are delivered but **not deployed** (gate: human:MG):
+
+- **DefinedTermSet JSON-LD** on `/slovar` — new partial
+  `resources/views/partials/schema-defined-term-set.blade.php`, included from
+  `slovar/index.blade.php`. Emits an `ItemList` wrapping one `DefinedTermSet` per
+  active dictionary, each with a stable `@id` matching the `inDefinedTermSet`
+  reference in `schema-defined-term.blade.php`.
+- **Sitemap test coverage** — two new tests in `DictionarySeoWave1Test`:
+  `test_sitemap_withholds_dictionary_urls_when_index_disabled` and
+  `test_sitemap_includes_only_indexable_dictionary_urls_when_enabled`. The sitemap
+  controller already filtered by `isIndexable()` (unchanged); the tests pin the
+  contract.
+- **DefinedTermSet test** — `test_slovar_index_emits_defined_term_set_jsonld`
+  renders `/slovar`, extracts `application/ld+json`, `json_decode`s, and asserts
+  `@context`, `ItemList` wrapper, and `DefinedTermSet` child entries.
+
+### Wave-1 activation (still pending human:MG + Yandex.Webmaster)
+
+The infrastructure is unchanged and ready. Once MG approves and can watch Webmaster:
+
+```
+php artisan dictionary:mark-core-indexable database/data/seo/seo_core_headwords_dcs_lexical_cores.txt --limit=435
+```
+
+Expected: 805 rows promoted (394 slugs resolving). Then submit the sitemap chunk
+to Yandex.Webmaster, wait for a reading, and add the row to the table above.
+Reversal: `--reset` clears every flag.
 
 ## ⛔ Why an agent stops here
 

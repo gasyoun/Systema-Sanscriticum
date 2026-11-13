@@ -25,14 +25,24 @@ class PostFormatterTest extends TestCase
             .'<p>Курс <a href="https://samskrte.ru/c?a=1&b=2" target="_blank" rel="noopener">здесь</a></p>';
 
         $this->assertSame(
-            "Первая строка\nвторая\n\n<blockquote>Цитата</blockquote>\n"
+            "Первая строка\nвторая\n\n<blockquote>Цитата</blockquote>\n\n"
             .'Курс <a href="https://samskrte.ru/c?a=1&amp;b=2">здесь</a>',
             PostFormatter::toTelegramHtml($html)
         );
         $this->assertSame(
-            "Первая строка\nвторая\n\nЦитата\nКурс здесь (https://samskrte.ru/c?a=1&b=2)",
+            "Первая строка\nвторая\n\nЦитата\n\nКурс здесь (https://samskrte.ru/c?a=1&b=2)",
             PostFormatter::toPlain($html)
         );
+    }
+
+    // 07-11-2026: абзацы разделяет пустая строка (пост не идёт «простынёй»),
+    // <br> внутри абзаца — одиночный перенос, пустые абзацы не множат отступ.
+    public function test_paragraphs_are_separated_by_a_blank_line(): void
+    {
+        $html = '<p>Раз<br>строка</p><p>Два</p><p></p><p></p><p>Три</p>';
+
+        $this->assertSame("Раз\nстрока\n\nДва\n\nТри", PostFormatter::toTelegramHtml($html));
+        $this->assertSame("Раз\nстрока\n\nДва\n\nТри", PostFormatter::toPlain($html));
     }
 
     public function test_text_special_chars_are_escaped_for_telegram(): void

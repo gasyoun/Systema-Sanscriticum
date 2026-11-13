@@ -19,6 +19,9 @@
 #   sudo bash scripts/server_guards_apply.sh --no-install     # не ставить пакеты
 #   sudo bash scripts/server_guards_apply.sh --restart-supervisor
 #   sudo bash scripts/server_guards_apply.sh --profile n8n    # машина .91, см. ниже
+#   bash scripts/server_guards_apply.sh --files-only --root /tmp/root
+#                                                             # только managed-файлы
+#                                                             # в песочницу (H7060)
 #
 # ПРОФИЛИ (H3182, 25-08-2026). Предохранители понадобились на ВТОРОЙ машине —
 # .91 (samskrtam50): n8n и Caddy в Docker, ни PHP, ни nginx, ни supervisor.
@@ -36,8 +39,10 @@
 # Разделы, осмысленные только для n8n (daemon.json, потолки контейнеров),
 # симметрично пропускаются под app.
 #
-# ДЕПЛОЙ ЭТОГО НЕ ЗОВЁТ. deploy.sh делает только `guards:verify` — выкладка кода
-# не должна молча менять системный конфиг.
+# H7060: deploy.sh ЗОВЁТ этот скрипт, если `guards:verify` видит drift — но
+# только после dry-run diff и с записью каждого `changed` в deploys.log, чтобы
+# выкладка кода не меняла системный конфиг МОЛЧА. `--rollback` остаётся
+# verify-only и apply не зовёт.
 
 set -euo pipefail
 
@@ -47,6 +52,8 @@ DRY_RUN=0
 SHOW_DIFF=0
 INSTALL_PACKAGES=1
 RESTART_SUPERVISOR=0
+FILES_ONLY=0
+FS_ROOT=""
 PROFILE="${SERVER_GUARDS_PROFILE:-app}"
 
 while [ $# -gt 0 ]; do
@@ -57,7 +64,10 @@ while [ $# -gt 0 ]; do
     --restart-supervisor) RESTART_SUPERVISOR=1 ;;
     --profile) shift; [ $# -gt 0 ] || { echo "--profile требует имя (app|n8n)" >&2; exit 2; }; PROFILE="$1" ;;
     --profile=*) PROFILE="${1#--profile=}" ;;
-    -h|--help) sed -n '2,46p' "${BASH_SOURCE[0]}"; exit 0 ;;
+    --files-only) FILES_ONLY=1 ;;
+    --root) shift; [ $# -gt 0 ] || { echo "--root требует каталог" >&2; exit 2; }; FS_ROOT="${1%/}" ;;
+    --root=*) FS_ROOT="${1#--root=}"; FS_ROOT="${FS_ROOT%/}" ;;
+    -h|--help) sed -n '2,51p' "${BASH_SOURCE[0]}"; exit 0 ;;
     *) echo "Неизвестный аргумент: $1" >&2; exit 2 ;;
   esac
   shift
@@ -86,7 +96,10 @@ die()  { printf '\n%s✖ %s%s\n' "$RED" "$*" "$OFF" >&2; exit 1; }
 
 [ -f "$CONF_FILE" ] || die "нет файла значений: $CONF_FILE"
 [ -d "$TPL_ROOT" ] || die "нет каталога шаблонов: $TPL_ROOT"
-if [ "$DRY_RUN" = 0 ] && [ "$(id -u)" != 0 ]; then
+if [ -n "$FS_ROOT" ] && [ "$FILES_ONLY" = 0 ]; then
+  die "--root допустим только с --files-only: песочница не должна трогать crontab/systemd"
+fi
+if [ "$DRY_RUN" = 0 ] && [ "$FILES_ONLY" = 0 ] && [ "$(id -u)" != 0 ]; then
   die "нужен root (или --dry-run): sudo bash $0"
 fi
 
@@ -182,7 +195,7 @@ render() { # render <template-path> → stdout
 
 # ── Бэкап: каталог создаётся ЛЕНИВО, только если что-то реально меняется ────
 STAMP=$(date -u '+%Y%m%dT%H%M%SZ')
-BACKUP_DIR="/root/preflight-backup-$STAMP"
+BACKUP_DIR="${FS_ROOT}/root/preflight-backup-$STAMP"
 CHANGED=()
 backup() { # backup <existing-path>
   [ -e "$1" ] || return 0
@@ -239,7 +252,9 @@ ensure_directive() { # ensure_directive <file> <key> <value> <sep> — прав�
 
 # ── 1. Пакеты ───────────────────────────────────────────────────────────────
 MISSING_PKGS=()
-if [ "$PROFILE" = app ]; then
+if [ "$FILES_ONLY" = 1 ]; then
+  ok "files-only: пакеты не проверяются"
+elif [ "$PROFILE" = app ]; then
   say "Пакеты предохранителей (earlyoom, rsyslog, sysstat, util-linux/flock)"
   command -v earlyoom  >/dev/null 2>&1 || MISSING_PKGS+=(earlyoom)
   command -v rsyslogd  >/dev/null 2>&1 || MISSING_PKGS+=(rsyslog)
@@ -276,8 +291,20 @@ while IFS='|' read -r m_tpl m_dest m_mode m_sev || [ -n "$m_tpl" ]; do
   [ -n "$m_dest" ] && [ -n "$m_mode" ] || die "$MANIFEST: битая строка «$m_tpl»"
   for k in "${!G[@]}"; do m_dest=${m_dest//@@$k@@/${G[$k]}}; done
   case "$m_dest" in *@@*) die "$MANIFEST: неподставленная @@…@@ в пути $m_dest" ;; esac
-  install_file "$m_tpl" "$m_dest" "$m_mode"
+  install_file "$m_tpl" "${FS_ROOT}${m_dest}" "$m_mode"
 done < "$MANIFEST"
+
+# H7060: песочница для фикстуры. --files-only останавливается здесь: crontab,
+# systemd и проверка guards:verify относятся к живой машине, а не к корню --root.
+if [ "$FILES_ONLY" = 1 ]; then
+  say "Итог (files-only)"
+  if [ "$DRY_RUN" = 1 ]; then
+    printf '  dry-run: %d файлов разошлись с репозиторием\n' "${#CHANGED[@]}"
+  else
+    printf '  files-only: %d изменённых файлов\n' "${#CHANGED[@]}"
+  fi
+  exit 0
+fi
 
 # ═══ РАЗДЕЛЫ 3–5, ОСМЫСЛЕННЫЕ ТОЛЬКО ДЛЯ ПРОФИЛЯ app ════════════════════════
 # Планировщик Laravel, авто-деплой, инвариант memory-cap на cron/supervisor и

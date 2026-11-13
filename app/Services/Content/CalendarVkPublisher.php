@@ -68,7 +68,7 @@ class CalendarVkPublisher
         $response = $this->call('wall.post', $token, [
             'owner_id' => -$groupId,
             'from_group' => 1,
-            'message' => PostFormatter::toPlain($slot->body),
+            'message' => PostFormatter::toPlain($slot->publishBody()),
             'attachments' => implode(',', $attachments),
         ]);
 

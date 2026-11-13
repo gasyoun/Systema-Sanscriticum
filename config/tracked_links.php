@@ -5,8 +5,18 @@ declare(strict_types=1);
 /*
  * Публичные короткие ссылки кампаний. Контроллер сохраняет метки в сессии и
  * переводит посетителя на чистый адрес; параметры не показываются в URL.
+ *
+ * Разбивка на модули (YBQ, рулинг MG 11-11-2026 «разбить»): после блока bf11
+ * файл вырос до 21 586 Б (5 397 токенов при лимите 5000) и пересёк бюджет
+ * token-size-gate. Теперь файл — тонкий сборщик: общая таблица каналов,
+ * явные require'ы модулей и return. Модули кампаний лежат в
+ * resources/tracked_links/ — вне config/, иначе лоадер конфигов Laravel
+ * (Finder, рекурсивный) подхватил бы их как tracked_links.<имя> и выполнил
+ * без общей области видимости ($channels и пр.). Каждый модуль дописывает
+ * свои ключи в $links / $storyCampaigns; новая кампания = новый модуль
+ * в resources/tracked_links/ + строка require ниже.
  */
-$campaign = 'grammar_gasuns_autumn_2026';
+
 $channels = [
     'ors' => ['source' => 'telegram_samskrte', 'medium' => 'owned_channel'],
     'mg' => ['source' => 'telegram_marcisgasuns', 'medium' => 'owned_channel'],
@@ -16,419 +26,29 @@ $channels = [
     'samskrte' => ['source' => 'samskrte', 'medium' => 'crosslink'],
     'samskrtam' => ['source' => 'samskrtam', 'medium' => 'crosslink'],
 ];
+
 $links = [];
+$storyCampaigns = [];
 
-foreach ($channels as $channel => $attribution) {
-    foreach (['s', 'v', 'c', 't', 'h'] as $creative) {
-        $links["m26-{$channel}-{$creative}"] = [
-            'destination' => '/online/kursy/grammatika-gasuns-2026',
-            'utm' => [
-                'utm_source' => $attribution['source'],
-                'utm_medium' => $attribution['medium'],
-                'utm_campaign' => $campaign,
-                'utm_content' => "g26_{$creative}",
-                'utm_term' => 'beginner',
-            ],
-        ];
-    }
-}
-
-$links['m26-schedule-c'] = [
-    'destination' => '/online/kursy/grammatika-gasuns-2026',
-    'utm' => [
-        'utm_source' => 'samskrte_schedule',
-        'utm_medium' => 'onsite_cta',
-        'utm_campaign' => $campaign,
-        'utm_content' => 'g26_schedule',
-        'utm_term' => 'beginner',
-    ],
-];
-
-/*
- * up26 — волна вебинара «Традиции толкования упанишад» (вводное бесплатное
- * 05-10-2026 18:00 МСК): -c — запись на эфир, -p — страница курса с тарифами.
- * Пост канала несёт только /ga/up26-* под человеческой анкор-фразой (H6078).
- */
-$up26Campaign = 'upanishady_webinar_oct_2026';
-$up26Destinations = [
-    'c' => '/webinar-upanishady-2026',
-    'p' => '/k/tolkovaniia-upanisad-2-potok-2026',
-];
-
-foreach ($up26Destinations as $creative => $up26Destination) {
-    $links["up26-ors-{$creative}"] = [
-        'destination' => $up26Destination,
-        'utm' => [
-            'utm_source' => $channels['ors']['source'],
-            'utm_medium' => $channels['ors']['medium'],
-            'utm_campaign' => $up26Campaign,
-            'utm_content' => "u26_{$creative}",
-            'utm_term' => 'philosophy',
-        ],
-    ];
-}
-
-/*
- * san26 — волна набора «Философия санкхьи» (курс 459). С 18-10-2026 кампания
- * переведена из кворума в rolling: кворум 8 намерений снят как условие старта
- * (остался исторической записью ждуна — карточка 19 в статусе scheduled),
- * группа 154 стартует 19-10 в 18:00, оплата открыта по блокам (тарифы
- * 5126–5129, 6 000 ₽ за блок) и остаётся открытой после старта — в режиме
- * донабора, пока идут занятия. Креативы = гипотезы поста: c — программа,
- * t — преподаватель, h — время/слот; платёжного креатива -p пока нет.
- */
-$san26Campaign = 'sankhya_kurs_oct_2026';
-
-foreach (['c', 't', 'h'] as $creative) {
-    $links["san26-ors-{$creative}"] = [
-        'destination' => '/k/filosofiia-sankhi',
-        'utm' => [
-            'utm_source' => $channels['ors']['source'],
-            'utm_medium' => $channels['ors']['medium'],
-            'utm_campaign' => $san26Campaign,
-            'utm_content' => "san26_{$creative}",
-            'utm_term' => 'philosophy',
-        ],
-    ];
-}
-
-/*
- * Креатив r — рекап открытой лекции 19-10 (старт группы 154): маршрут ведет
- * на WP-статью записи лекции на samskrtam.ru (rutube/vk/youtube + стенограмма),
- * а не на карточку курса. Внешний destination — как у t.me-хопов ниже:
- * флеш-цель Метрики на нем не ставится, клик пишется в anons_link_clicks.
- */
-$links['san26-ors-r'] = [
-    'destination' => 'https://samskrtam.ru/kurs-filosofiya-sankhi/',
-    'utm' => [
-        'utm_source' => $channels['ors']['source'],
-        'utm_medium' => $channels['ors']['medium'],
-        'utm_campaign' => $san26Campaign,
-        'utm_content' => 'san26_r',
-        'utm_term' => 'philosophy',
-    ],
-];
-
-/*
- * bi26 — бесплатное самостоятельное знакомство с санскритом: отдельный
- * текстовый анонс @samskrte 13-10-2026. Проверка за 500 ₽ закрыта;
- * единственный читательский маршрут ведет на страницу с честными условиями.
- */
-$links['bi26-ors-c'] = [
-    'destination' => '/online/poprobovat',
-    'utm' => [
-        'utm_source' => $channels['ors']['source'],
-        'utm_medium' => $channels['ors']['medium'],
-        'utm_campaign' => 'beginner_intro_oct_2026',
-        'utm_content' => 'bi26_c',
-        'utm_term' => 'beginner',
-    ],
-];
-
-/*
- * vas26 — открытый урок «Медленного чтения Йога-васиштхи» (курс 334, занятие
- * #49 22-10-2026 12:00 МСК; чт 12:00, блоки по 4 занятия 4 800 ₽): маршрут
- * попадания на занятие — куратор (@rusamskrtam), /ga/-ключи ведут на карточку
- * курса. Креативы = гипотезы поста: c — программа, t — преподаватель/формат
- * занятия, h — время/слот; p — отдельный слот «условия/оплата» для поста,
- * где рядом стоит второй ключ (каноническая пара c+p, правило up26).
- */
-$vas26Campaign = 'vasishtha_open_oct_2026';
-
-foreach (['c', 't', 'h', 'p'] as $creative) {
-    $links["vas26-ors-{$creative}"] = [
-        'destination' => '/k/yoga-vasistha',
-        'utm' => [
-            'utm_source' => $channels['ors']['source'],
-            'utm_medium' => $channels['ors']['medium'],
-            'utm_campaign' => $vas26Campaign,
-            'utm_content' => "vas26_{$creative}",
-            'utm_term' => 'slow_reading',
-        ],
-    ];
-}
-
-/*
- * Креатив r — рекап открытого урока 22-10 (как у san26-ors-r): маршрут ведет
- * на WP-статью записи урока на samskrtam.ru (rutube/vk/youtube + стенограмма),
- * а не на карточку курса. Внешний destination — как у t.me-хопов ниже:
- * флеш-цель Метрики на нем не ставится, клик пишется в anons_link_clicks.
- */
-$links['vas26-ors-r'] = [
-    'destination' => 'https://samskrtam.ru/kurs-joga-vasishtha/',
-    'utm' => [
-        'utm_source' => $channels['ors']['source'],
-        'utm_medium' => $channels['ors']['medium'],
-        'utm_campaign' => $vas26Campaign,
-        'utm_content' => 'vas26_r',
-        'utm_term' => 'slow_reading',
-    ],
-];
-
-/*
- * syn26 — открытое занятие «Синтаксиса санскрита» (курс 266, занятие #268
- * 25-10-2026 17:00 МСК; вс 17:00, блоки по 4 занятия 4 800 ₽, аудитория с
- * базой санскрита): маршрут попадания — куратор, /ga/-ключи ведут на карточку
- * курса. Креативы = гипотезы поста: c — программа, t — преподаватель/формат
- * занятия, h — время/слот; p — отдельный слот «условия/оплата» для поста,
- * где рядом стоит второй ключ (каноническая пара c+p, правило up26).
- */
-$syn26Campaign = 'syntax_open_oct_2026';
-
-foreach (['c', 't', 'h', 'p'] as $creative) {
-    $links["syn26-ors-{$creative}"] = [
-        'destination' => '/k/sintaksis-sanskrita',
-        'utm' => [
-            'utm_source' => $channels['ors']['source'],
-            'utm_medium' => $channels['ors']['medium'],
-            'utm_campaign' => $syn26Campaign,
-            'utm_content' => "syn26_{$creative}",
-            'utm_term' => 'advanced',
-        ],
-    ];
-}
-
-/*
- * ksh3 — обзорное занятие 3-го потока «Кашмирского шиваизма» (М. А. Ворошилов;
- * 29-10-2026 чт 14:00 МСК, бесплатное, «не в счет 16»; курс — 16 занятий по
- * чт 14:00 МСК с 05-11-2026, сбор голосов, оплата не открыта): /ga/-ключи ведут
- * на карточку курса (голос «Намерен участвовать» + расписание), маршрут на само
- * занятие — куратор. Креативы = гипотезы поста: c — предмет, t — преподаватель/
- * история курса, h — время/слот. Слот p не минтуется, пока оплата закрыта.
- */
-$ksh3Campaign = 'kashmir_shaivism_open_oct_2026';
-
-foreach (['c', 't', 'h'] as $creative) {
-    $links["ksh3-ors-{$creative}"] = [
-        'destination' => '/k/kasmirskii-sivaizm-3-potok-2026',
-        'utm' => [
-            'utm_source' => $channels['ors']['source'],
-            'utm_medium' => $channels['ors']['medium'],
-            'utm_campaign' => $ksh3Campaign,
-            'utm_content' => "ksh3_{$creative}",
-            'utm_term' => 'overview',
-        ],
-    ];
-}
-
-/*
- * Демо-кампания — постоянная смок-фикстура скилла anons-attribution-mint
- * (H5934): живые /ga/demo-* ключи, чтобы прогонять редирект + метки без
- * реального набора. Синтетические utm_source помечены demo_, поэтому
- * смок-клики не смешиваются с отчётной атрибуцией. Убирается, когда первая
- * реальная кампания этого скилла уедет в прод.
- */
-$demoCampaign = 'attribution_smoke_demo';
-$demoChannels = [
-    'ors' => ['source' => 'demo_ors', 'medium' => 'owned_channel'],
-    'mg' => ['source' => 'demo_mg', 'medium' => 'owned_channel'],
-    'is' => ['source' => 'demo_is', 'medium' => 'paid_post'],
-    'it' => ['source' => 'demo_it', 'medium' => 'partner_post'],
-    'vk' => ['source' => 'demo_vk', 'medium' => 'broadcast'],
-    'samskrte' => ['source' => 'demo_samskrte', 'medium' => 'crosslink'],
-    'samskrtam' => ['source' => 'demo_samskrtam', 'medium' => 'crosslink'],
-];
-
-foreach ($demoChannels as $channel => $demoAttribution) {
-    foreach (['s', 'v', 'c', 't', 'h'] as $creative) {
-        $links["demo-{$channel}-{$creative}"] = [
-            'destination' => '/online',
-            'utm' => [
-                'utm_source' => $demoAttribution['source'],
-                'utm_medium' => $demoAttribution['medium'],
-                'utm_campaign' => $demoCampaign,
-                'utm_content' => "demo_{$creative}",
-                'utm_term' => 'smoke',
-            ],
-        ];
-    }
-}
-
-/*
- * zhdun — трекинговые прослойки для deep-links бота на один курс ждуна
- * (H6466/H6467, MG 11-10-2026: «отслеживать кто вообще шёл, пусть и не
- * дошёл»): /ga/zhdun-<slug> → t.me/samskrte_bot?start=wl_<slug>. Каждый
- * клик пишется в anons_link_clicks с utm_content = <slug>, даже если
- * человек бота не открыл. Список курсов синхронизируется с is_listed
- * course_waitlist_items; utm_source помечен zhdun_, чтобы клики прослойки
- * не смешивались с сайт-атрибуцией.
- */
-$zhdunCourses = [
-    'likbez-po-lingvistike',
-    'lingvisticheskie-zadachi',
-    'kalligrafiya-devanagari',
-    'nachalnyi-sanskrit-litvinenko',
-    'gitarthasangraha-abhinavagputy',
-    'filosofiya-sankhyi',
-    'indiiskii-epos',
-    'kashmirskii-shivaizm',
-    'putevoditel-po-buddizmu',
-    'bxagavadgita-po-rukopisyam',
-    'arkhitektura-i-iskusstvo-buddizma',
-    'yoga-i-tantra',
-    'grammatika-sanskrita-jan2027',
-    'kosmografiya',
-];
-
-foreach ($zhdunCourses as $zhdunSlug) {
-    // H6489 (MG 11-10-2026): ключ = голый <slug> без префикса zhdun- —
-    // «чересчур длинные» ссылки; коллизий с m26-/up26-/demo-/story-ключами
-    // нет (слаги курсов на эти префиксы не начинаются и story-regex не
-    // матчатся).
-    $links[$zhdunSlug] = [
-        'destination' => 'https://t.me/samskrte_bot?start=wl_'.$zhdunSlug,
-        'utm' => [
-            'utm_source' => 'zhdun_share',
-            'utm_medium' => 'bot_deeplink',
-            'utm_campaign' => 'zhdun_waitlist_evergreen',
-            'utm_content' => $zhdunSlug,
-            'utm_term' => 'waitlist',
-        ],
-    ];
-}
-
-/*
- * vanons — вечнозелёный ключ видео-анонса (H6547): сторис персоны с видео из
- * учебных чатов (лейн H6546) ведут сюда. Один стоящий ключ, не кампания —
- * пер-видео креативы только если MG попросит разбивку атрибуции.
- */
-$links['vanons-tg-v1'] = [
-    'destination' => '/online',
-    'utm' => [
-        'utm_source' => 'telegram_story_rusamskrtam',
-        'utm_medium' => 'persona_story',
-        'utm_campaign' => 'video_anons_evergreen',
-        'utm_content' => 'vanons_v1',
-        'utm_term' => 'video',
-    ],
-];
-
-/*
- * H6574: видео-анонс на YouTube Shorts (канал записей) — раздельная
- * атрибуция сёрфейса, тот же вечнозелёный паттерн, что vanons-tg-v1.
- */
-$links['vanons-yt-v1'] = [
-    'destination' => '/online',
-    'utm' => [
-        'utm_source' => 'youtube_shorts',
-        'utm_medium' => 'shorts_description',
-        'utm_campaign' => 'video_anons_evergreen',
-        'utm_content' => 'vanons_yt_v1',
-        'utm_term' => 'video',
-    ],
-];
-
-/*
- * H6574: видео-анонс на VK-стене — раздельная атрибуция сёрфейса.
- */
-$links['vanons-vk-v1'] = [
-    'destination' => '/online',
-    'utm' => [
-        'utm_source' => 'vk_wall',
-        'utm_medium' => 'wall_post',
-        'utm_campaign' => 'video_anons_evergreen',
-        'utm_content' => 'vanons_vk_v1',
-        'utm_term' => 'video',
-    ],
-];
-
-/*
- * H6566 (MG 12-10-2026): «Стать добровольцем» — разметка санскритских
- * словарей Кёльна, вход через закрытую TG-группу. Кнопка ждун-бота ведёт
- * на прослойку /ga/volunteer, чтобы клик считался даже без входа в группу
- * (паттерн H6466/H6489); utm_source помечен zhdun_ — не сайт-атрибуция.
- */
-$links['volunteer'] = [
-    'destination' => 'https://t.me/+zl3hUJ632t03OGY6',
-    'utm' => [
-        'utm_source' => 'zhdun_share',
-        'utm_medium' => 'bot_deeplink',
-        'utm_campaign' => 'zhdun_volunteer_evergreen',
-        'utm_content' => 'volunteer',
-        'utm_term' => 'volunteer',
-    ],
-];
-
-/*
- * vol — набор научных добровольцев (H6594; рулинг MG 13-10-2026: слаг
- * dobrovolec): анонс в «Оповещениях санскритян» ведёт в закрытую TG-группу
- * «Корпус: подготовка текстов» через пер-площадочный ключ — канон атрибуции
- * anons, каждая площадка свой источник (standing volunteer выше остаётся за
- * ждун-ботом). Ключ переименован из vol-ors-a до публикации — ленд по
- * рулингу MG 13-10-2026 «ленди без минта» (минт-клейм 9 отказов в утренней
- * волне Uprava); H### дополнить пост-минтом. Креатив — пост T1-стиля
- * (обновка 👻-поста 367 от 29-01-2025).
- */
-$links['dobrovolec'] = [
-    'destination' => 'https://t.me/+zl3hUJ632t03OGY6',
-    'utm' => [
-        'utm_source' => 'telegram_samskrte',
-        'utm_medium' => 'owned_channel',
-        'utm_campaign' => 'sanskrit_volunteer_evergreen',
-        'utm_content' => 'volunteers_t1',
-        'utm_term' => 'volunteer',
-    ],
-];
-
-/*
- * kal26 — набор на «Каллиграфию деванагари (2026)» (курс 372, карточка ждуна 16
- * в статусе collecting, старт по набору): расписания нет, при кворуме 8
- * намерений автоматически открывается оплата (тарифы «весь курс» 9 600 ₽ и
- * блоки 1–2 по 4 800 ₽ сейчас неактивны). Ждун-оверлей /ga/kalligrafiya-devanagari
- * (zhdun_share → бот) — отдельная полоса шаринга, кампания ведёт на карточку
- * курса. Креативы = гипотезы поста: c — программа, t — преподаватель
- * (Ольга Литвиненко), v — механика голосования.
- */
-$kal26Campaign = 'kalligrafia_devanagari_2026';
-
-foreach (['c', 't', 'v'] as $creative) {
-    $links["kal26-ors-{$creative}"] = [
-        'destination' => '/k/kalligrafiia-devanagari-2026',
-        'utm' => [
-            'utm_source' => $channels['ors']['source'],
-            'utm_medium' => $channels['ors']['medium'],
-            'utm_campaign' => $kal26Campaign,
-            'utm_content' => "kal26_{$creative}",
-            'utm_term' => 'devanagari',
-        ],
-    ];
-}
+require __DIR__.'/../resources/tracked_links/m26.php';
+require __DIR__.'/../resources/tracked_links/up26.php';
+require __DIR__.'/../resources/tracked_links/san26.php';
+require __DIR__.'/../resources/tracked_links/bi26.php';
+require __DIR__.'/../resources/tracked_links/vas26.php';
+require __DIR__.'/../resources/tracked_links/syn26.php';
+require __DIR__.'/../resources/tracked_links/ksh3.php';
+require __DIR__.'/../resources/tracked_links/demo.php';
+require __DIR__.'/../resources/tracked_links/zhdun.php';
+require __DIR__.'/../resources/tracked_links/vanons.php';
+require __DIR__.'/../resources/tracked_links/volunteer.php';
+require __DIR__.'/../resources/tracked_links/kal26.php';
+require __DIR__.'/../resources/tracked_links/bf11.php';
+require __DIR__.'/../resources/tracked_links/ling_stories.php';
 
 return [
     'session_key' => 'tracked_link_attribution',
     'links' => $links,
-    'story_campaigns' => [
-        'vanons' => [
-            'destination' => '/online',
-            'utm_campaign' => 'video_anons_evergreen',
-            'utm_term' => 'video',
-        ],
-        'm26' => [
-            'destination' => '/online/kursy/grammatika-gasuns-2026',
-            'utm_campaign' => $campaign,
-            'utm_term' => 'beginner',
-        ],
-        'demo' => [
-            'destination' => '/online',
-            'utm_campaign' => $demoCampaign,
-            'utm_term' => 'smoke',
-        ],
-        'ksh3' => [
-            'destination' => '/k/kasmirskii-sivaizm-3-potok-2026',
-            'utm_campaign' => $ksh3Campaign,
-            'utm_term' => 'overview',
-        ],
-        'lingq' => [
-            'destination' => 'https://t.me/samskrtamru/4166',
-            'utm_campaign' => 'linguistics_tasks_evergreen',
-            'utm_term' => 'puzzle',
-        ],
-        'linga' => [
-            'destination' => 'https://t.me/samskrtamru/4169',
-            'utm_campaign' => 'linguistics_tasks_evergreen',
-            'utm_term' => 'answer',
-        ],
-    ],
+    'story_campaigns' => $storyCampaigns,
     'story_accounts' => [
         'mg' => 'telegram_marcisgasuns',
         'rs' => 'telegram_rusamskrtam',

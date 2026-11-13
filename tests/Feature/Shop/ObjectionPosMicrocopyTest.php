@@ -51,6 +51,69 @@ class ObjectionPosMicrocopyTest extends TestCase
     }
 
     /** @test */
+    public function hero_control_line_moves_block_principle_to_first_screen(): void
+    {
+        $course = $this->makeCourseWithBlockTariff('hero-control-course');
+
+        // Тот же принцип, что у #tariffs, но на первом экране (план 10-11-2026).
+        $this->get('/k/'.$course->slug)
+            ->assertOk()
+            ->assertSee('data-analytics="hero-control-line"', false)
+            ->assertSee('Платить за весь курс сразу не нужно');
+    }
+
+    /** @test */
+    public function hero_control_line_hidden_for_full_only_course(): void
+    {
+        $course = Course::factory()->create(['slug' => 'hero-full-only']);
+        Tariff::factory()->for($course)->create();
+
+        $this->get('/k/hero-full-only')
+            ->assertOk()
+            ->assertDontSee('data-analytics="hero-control-line"', false);
+    }
+
+    /** @test */
+    public function hero_control_line_hidden_for_full_course_purchaser(): void
+    {
+        $user = User::factory()->create();
+        $course = $this->makeCourseWithBlockTariff('hero-purchased-course');
+
+        Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 12000,
+            'tariff' => 'full',
+            'status' => 'paid',
+        ]);
+
+        // Уговоры после покупки всего курса — глухота (та же калитка, что H1291).
+        $this->actingAs($user)
+            ->get('/k/hero-purchased-course')
+            ->assertOk()
+            ->assertDontSee('data-analytics="hero-control-line"', false);
+    }
+
+    /** @test */
+    public function hero_control_line_hidden_for_halves_only_course(): void
+    {
+        $course = Course::factory()->create(['slug' => 'hero-halves-only']);
+        $block = CourseBlock::factory()->for($course)->create(['number' => 1]);
+        foreach ([1, 2] as $half) {
+            Tariff::factory()->for($course)->block(1)->create([
+                'course_block_id' => $block->id,
+                'block_half' => $half,
+                'price' => 2400,
+            ]);
+        }
+
+        // Целого блока купить нельзя — «ближайший блок» ложен и в хиро.
+        $this->get('/k/hero-halves-only')
+            ->assertOk()
+            ->assertDontSee('data-analytics="hero-control-line"', false);
+    }
+
+    /** @test */
     public function block_principle_line_is_hidden_for_full_only_course(): void
     {
         $course = Course::factory()->create(['slug' => 'full-only-course']);
