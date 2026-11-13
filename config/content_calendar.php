@@ -128,7 +128,7 @@ return [
     // (от старта разноса, meta.crosspost_started_at). Догоняет их тик
     // content:publish-due (раз в 5 мин), поэтому шаг фактически кратен 5.
     // 0 = всё сразу, как раньше. Сторис по-прежнему последние.
-    'crosspost_gap_minutes' => (int) env('CONTENT_CAL_CROSSPOST_GAP_MINUTES', 10),
+    'crosspost_gap_minutes' => (int) env('CONTENT_CAL_CROSSPOST_GAP_MINUTES', 60),
 
     // Слот, чей publish_at прошёл больше чем столько часов назад и который
     // ещё никуда не публиковался, не публикуется, а уходит в draft

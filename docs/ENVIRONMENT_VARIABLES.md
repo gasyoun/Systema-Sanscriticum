@@ -136,7 +136,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CONTENT_AUTO_PUBLISH_PILOT` | feature-flag | `false` | config/features.php:1088 |
 | `CONTENT_CALENDAR_AUTOPILOT` | optional | `false` | config/features.php:1031 |
 | `CONTENT_CALENDAR_ENABLED` | feature-flag | `false` | config/features.php:1025 |
-| `CONTENT_CAL_CROSSPOST_GAP_MINUTES` | optional | `10` | config/content_calendar.php:131 |
+| `CONTENT_CAL_CROSSPOST_GAP_MINUTES` | optional | `60` | config/content_calendar.php:131 |
 | `CONTENT_CAL_TG_BOT_TOKEN` | secret | `''` | config/content_calendar.php:101 |
 | `CONTENT_CAL_TG_BUSINESS_STORY` | optional | `false` | config/content_calendar.php:64 |
 | `CONTENT_CAL_TG_INGEST` | optional | `false` | config/content_calendar.php:111 |
