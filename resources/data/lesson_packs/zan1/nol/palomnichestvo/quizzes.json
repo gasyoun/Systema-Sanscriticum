@@ -1,0 +1,147 @@
+{
+  "schema": "lyw-quiz-v1",
+  "items": [
+    {
+      "id": "zan1-nol-palomnichestvo-01",
+      "type": "mcq",
+      "concept": [
+        "sparśa",
+        "varga"
+      ],
+      "prompt": "Сколько рядов (varga) в группе sparśa?",
+      "options": [
+        "Три",
+        "Четыре",
+        "Пять",
+        "Десять"
+      ],
+      "answer_index": 2
+    },
+    {
+      "id": "zan1-nol-palomnichestvo-02",
+      "type": "mcq",
+      "concept": [
+        "ka"
+      ],
+      "prompt": "Какой гласный уже «спрятан» в каждой согласной букве devanāgarī, например в क ka?",
+      "options": [
+        "i",
+        "a",
+        "u",
+        "никакой"
+      ],
+      "answer_index": 1
+    },
+    {
+      "id": "zan1-nol-palomnichestvo-03",
+      "type": "mcq",
+      "concept": [
+        "ca"
+      ],
+      "prompt": "В каком ряду стоит буква च ca?",
+      "options": [
+        "заднеязычного",
+        "палатального",
+        "церебрального",
+        "зубного"
+      ],
+      "answer_index": 1
+    },
+    {
+      "id": "zan1-nol-palomnichestvo-04",
+      "type": "mcq",
+      "concept": [
+        "daṇḍa"
+      ],
+      "prompt": "Что означает двойная палочка ॥?",
+      "options": [
+        "запятую",
+        "конец раздела или стиха",
+        "вопрос",
+        "перенос звука"
+      ],
+      "answer_index": 1
+    },
+    {
+      "id": "zan1-nol-palomnichestvo-05",
+      "type": "mcq",
+      "concept": [
+        "j"
+      ],
+      "prompt": "Как произносится j?",
+      "options": [
+        "как русское й",
+        "как русское ж",
+        "как слитное дж",
+        "как английское g"
+      ],
+      "answer_index": 2
+    },
+    {
+      "id": "zan1-nol-palomnichestvo-06",
+      "type": "mcq",
+      "concept": [
+        "ṭ",
+        "ḍ"
+      ],
+      "prompt": "Чем церебральные ṭ, ḍ отличаются от зубных t, d?",
+      "options": [
+        "ничем, это разные записи одного звука",
+        "произносятся тише",
+        "кончик языка завёрнут назад и касается нёба",
+        "произносятся с придыханием всегда"
+      ],
+      "answer_index": 2
+    },
+    {
+      "id": "zan1-nol-palomnichestvo-07",
+      "type": "mcq",
+      "concept": [
+        "patha"
+      ],
+      "prompt": "Какое слово урока значит «путь»?",
+      "options": [
+        "pada",
+        "dama",
+        "patha",
+        "gata"
+      ],
+      "answer_index": 2
+    }
+  ],
+  "answer_keys": {
+    "zan1-nol-palomnichestvo-01": "C",
+    "zan1-nol-palomnichestvo-02": "B",
+    "zan1-nol-palomnichestvo-03": "B",
+    "zan1-nol-palomnichestvo-04": "B",
+    "zan1-nol-palomnichestvo-05": "C",
+    "zan1-nol-palomnichestvo-06": "C",
+    "zan1-nol-palomnichestvo-07": "C"
+  },
+  "glows_grows": {
+    "scale": {
+      "min_score": 0,
+      "max_score": 7
+    },
+    "bands": [
+      {
+        "min_score": 6,
+        "max_score": 7,
+        "kind": "glow",
+        "message": "Отлично! Графика и звуковой состав занятия освоены — можно читать упражнение III без подсказок."
+      },
+      {
+        "min_score": 3,
+        "max_score": 5,
+        "kind": "grow",
+        "message": "Хорошее начало: базу видите, но перепутаны детали рядов. Перечитайте таблицу пяти рядов и повторите попытку."
+      },
+      {
+        "min_score": 0,
+        "max_score": 2,
+        "kind": "grow",
+        "message": "Нормально для первого захода: вернитесь к разделу про varga и произнесение, прочитайте текст вслух — и снова сюда."
+      }
+    ]
+  }
+}

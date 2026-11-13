@@ -142,6 +142,32 @@ class TelegramAdminNotifier
     }
 
     /**
+     * Заменить текст сообщения с кнопками на итог: editMessageText без
+     * reply_markup снимает клавиатуру, мёртвых кнопок в чате не остаётся.
+     * Сбой правки — косметика, не повод падать в вебхуке.
+     */
+    public function editMessage(string $chatId, int $messageId, string $text): void
+    {
+        $token = (string) config('services.telegram.bot_token');
+        if ($token === '' || $chatId === '' || $messageId <= 0) {
+            return;
+        }
+
+        TelegramTransport::post(
+            "https://api.telegram.org/bot{$token}/editMessageText",
+            [
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+                'text' => $text,
+                'disable_web_page_preview' => true,
+            ],
+            'Telegram editMessageText',
+            ['chat_id' => $chatId],
+            'warning',
+        );
+    }
+
+    /**
      * Ответ на нажатие inline-кнопки (убирает «часики» на кнопке у клиента).
      *
      * Вызывается из тела вебхука: пока вызов бросал исключение, недоступный
