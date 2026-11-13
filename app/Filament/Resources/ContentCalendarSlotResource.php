@@ -264,12 +264,12 @@ class ContentCalendarSlotResource extends Resource
         return is_string($state) ? $state : null;
     }
 
-    /** Длина поста в Telegram вместе с префиксом рубрики, который добавится при сохранении. */
+    /** Длина поста в Telegram вместе с префиксом (добавится при сохранении) и хештегами рубрики (при публикации). */
     private static function postLength(?string $html, mixed $rubricId): int
     {
         $rubric = filled($rubricId) ? ContentCalendarRubric::find($rubricId) : null;
 
-        return PostFormatter::telegramLength($html) + ($rubric?->prefixLength($html) ?? 0);
+        return PostFormatter::telegramLength($html) + ($rubric?->prefixLength($html) ?? 0) + ($rubric?->hashtagsLength($html) ?? 0);
     }
 
     private static function publicationsReport(ContentCalendarSlot $record): HtmlString

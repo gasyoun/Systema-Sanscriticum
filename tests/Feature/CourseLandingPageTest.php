@@ -107,4 +107,50 @@ class CourseLandingPageTest extends TestCase
         $response->assertSee('<title>Учить санскрит онлайн | ОРС</title>', false);
         $response->assertSee('content="Лучший курс санскрита."', false);
     }
+
+    /**
+     * Правило «1–2 конкретных отзыва, не стена» (план 10-11-2026):
+     * на лендинге максимум 2 карточки, остальные — по ссылке в библиотеку.
+     */
+    public function test_landing_shows_max_two_testimonials_with_library_link(): void
+    {
+        $course = Course::factory()->create(['is_visible' => true]);
+        foreach ([0, 1, 2] as $i) {
+            $t = Testimonial::create([
+                'author_name' => 'Отзывчик '.$i,
+                'body' => 'Текст отзыва номер '.$i,
+            ]);
+            $course->testimonials()->attach($t->id, ['sort_order' => $i]);
+        }
+
+        $response = $this->get(route('shop.course.show', $course->slug));
+
+        $response->assertOk();
+        // Первые два (по sort_order) — на странице.
+        $response->assertSee('Текст отзыва номер 0');
+        $response->assertSee('Текст отзыва номер 1');
+        // Третий — только в библиотеке.
+        $response->assertDontSee('Текст отзыва номер 2');
+        $response->assertSee('Все отзывы (3)');
+        $response->assertSee(route('shop.testimonials.library'), false);
+    }
+
+    public function test_landing_hides_library_link_when_two_or_fewer_testimonials(): void
+    {
+        $course = Course::factory()->create(['is_visible' => true]);
+        foreach ([0, 1] as $i) {
+            $t = Testimonial::create([
+                'author_name' => 'Отзывчик '.$i,
+                'body' => 'Короткий отзыв '.$i,
+            ]);
+            $course->testimonials()->attach($t->id, ['sort_order' => $i]);
+        }
+
+        $response = $this->get(route('shop.course.show', $course->slug));
+
+        $response->assertOk();
+        $response->assertSee('Короткий отзыв 0');
+        $response->assertSee('Короткий отзыв 1');
+        $response->assertDontSee('Все отзывы');
+    }
 }
