@@ -87,7 +87,10 @@ class BookClubCheckoutTest extends TestCase
 
     public function test_flag_off_returns_404_for_get_and_post(): void
     {
-        // Флаг не включаем: features.book_club_delivery дефолт false.
+        // Пиним флаг ВЫКЛ явно: тест не должен зависеть от ambient .env разработчика
+        // (в phpunit.xml BOOK_CLUB_DELIVERY не задан).
+        config(['features.book_club_delivery' => false]);
+
         $this->get(route('book-club.show'))->assertNotFound();
         $this->post(route('book-club.submit'), $this->rfPayload())->assertNotFound();
 

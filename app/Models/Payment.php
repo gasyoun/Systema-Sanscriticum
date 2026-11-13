@@ -339,6 +339,12 @@ class Payment extends Model
         return $this->tariff === 'donation';
     }
 
+    /** H8195 — «Книжный клуб»: оплата доставки книг кампании planeta 219924. Не учебный продукт: доступа/праны не даёт. */
+    public function isBookClubDelivery(): bool
+    {
+        return $this->tariff === 'book_club_delivery';
+    }
+
     /** Заявка об оплате из-за рубежа (PayPal), поданная студентом. */
     public function isPaypal(): bool
     {
@@ -964,6 +970,15 @@ class Payment extends Model
             return;
         }
 
+        // «Книжный клуб» (H8195): оплата доставки — не учебный продукт, поэтому
+        // общий путь (доступ/группы/депозиты/промо/прана) НЕ запускается.
+        // Только welcome-письмо с паролем для созданного на чекауте аккаунта.
+        if ($payment->isBookClubDelivery()) {
+            $payment->processBookClubDelivery();
+
+            return;
+        }
+
         $payment->processSuccessfulPayment();
 
         // Conditional access под обещание — реальных денег нет,
@@ -1278,6 +1293,21 @@ class Payment extends Model
     }
 
     // ==========================================
+    // «КНИЖНЫЙ КЛУБ» — ОПЛАТА ДОСТАВКИ (H8195)
+    // ==========================================
+    /**
+     * Доставка книг кампании planeta 219924 — НЕ учебный продукт: общий путь
+     * processSuccessfulPayment (доступ/группы/депозиты/промо/прана) не
+     * запускается. Из побочных эффектов оставляем только welcome-письмо с
+     * паролем: аккаунт создаётся на чекауте, и гость должен вернуться в кабинет.
+     * Матчинг с planeta и отправка — ручные (book_club_orders).
+     */
+    public function processBookClubDelivery(): void
+    {
+        $this->sendWelcomeEmailIfNeeded();
+    }
+
+    // ==========================================
     // МАРАФОН «С ПРОВЕРКОЙ» ₽500 — отдельный путь (H471)
     // ==========================================
     /**
@@ -1289,7 +1319,6 @@ class Payment extends Model
     public function processMarathonPaid(): void
     {
         $enrollment = MarathonEnrollment::where('lead_id', $this->lead_id)->first();
-
         if (! $enrollment) {
             Log::warning('Payment::processMarathonPaid — MarathonEnrollment не найден', [
                 'payment_id' => $this->id,

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\BookClub;
 
 use App\Models\BookClubOrder;
+use App\Models\Course;
+use App\Models\Group;
 use App\Models\Payment;
 use App\Models\User;
 use Firebase\JWT\JWT;
@@ -146,5 +148,38 @@ PEM;
 
         $this->postJwt('not-a-jwt')->assertStatus(401);
         $this->assertSame('pending', $payment->fresh()->status);
+    }
+
+    public function test_delivery_payment_awards_no_prana(): void
+    {
+        // Живой контур праны: награда за оплату включена явно.
+        config(['prana.enabled' => true, 'prana.rewards.payment_success' => 10]);
+
+        // Позитивный контроль: обычный КУРСОВОЙ платёж прану начисляет —
+        // механика награды в этом окружении действительно работает.
+        $student = User::factory()->create();
+        $course = Course::factory()->create();
+        $group = Group::create(['name' => 'G']);
+        $course->groups()->attach($group->id);
+        $coursePayment = Payment::create([
+            'user_id' => $student->id,
+            'course_id' => $course->id,
+            'amount' => 4800,
+            'tariff' => 'full',
+            'status' => 'pending',
+        ]);
+        $this->postJwt($this->sign(['purpose' => "Заказ №{$coursePayment->id}", 'status' => 'paid']))->assertOk();
+
+        $this->assertDatabaseCount('prana_transactions', 1);
+        $this->assertSame(10, (int) $student->fresh()->prana_balance);
+
+        // Негатив: доставка «Книжного клуба» — не учебный продукт, прану НЕ начисляет
+        // (ветка processBookClubDelivery в Payment::fireOnPaid).
+        [$payment, , $user] = $this->bookClubPayment();
+        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'paid']))->assertOk();
+
+        $this->assertDatabaseCount('prana_transactions', 1); // без новых начислений
+        $this->assertSame(0, (int) $user->fresh()->prana_balance);
+        $this->assertSame('paid', $payment->fresh()->status);
     }
 }
