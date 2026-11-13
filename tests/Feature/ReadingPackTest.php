@@ -70,4 +70,58 @@ class ReadingPackTest extends TestCase
         $res->assertSee('Kirātārjunīya', false);
         $res->assertSee('эта страница', false);
     }
+
+    public function test_sandhi_twin_toggle_toolbar_is_rendered(): void
+    {
+        config(['features.kosha_reader' => true]);
+
+        $html = $this->get('/reading/kosha-demo')->assertOk()->getContent();
+        // Initial state is server-rendered as «split», so the page is correct even
+        // before the inline JS runs (and for a JS-off reader).
+        $this->assertStringContainsString('data-sandhi-root data-sandhi-mode="split"', $html);
+        $this->assertStringContainsString('data-sandhi-mode-btn="split"', $html);
+        $this->assertStringContainsString('data-sandhi-mode-btn="text"', $html);
+        $this->assertStringContainsString('В тексте (сандхи)', $html);
+        $this->assertStringContainsString('data-reader-tokens', $html);
+    }
+
+    public function test_sandhi_twin_line_only_for_sentences_where_sandhi_changes_the_surface(): void
+    {
+        config(['features.kosha_reader' => true]);
+
+        $html = $this->get('/reading/kosha-demo')->assertOk()->getContent();
+
+        // Expected count is derived from the SAME vendored feed the page renders —
+        // the twin exists exactly when the natural surface differs from the
+        // space-join of the token forms (e.g. «vīrasenasuto» vs «vīrasena sutaḥ»).
+        $pack = json_decode(
+            (string) file_get_contents(dirname(__DIR__, 2).'/resources/data/kosha_reading_pack_nala_1.json'),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
+        $expected = 0;
+        foreach ($pack['sentences'] as $sentence) {
+            $split = trim(implode(' ', array_map(static fn (array $t): string => (string) ($t['form'] ?? ''), $sentence['tokens'])));
+            $surface = trim((string) ($sentence['text'] ?? ''));
+            if ($split !== '' && $surface !== '' && $surface !== $split) {
+                $expected++;
+            }
+        }
+
+        $this->assertGreaterThan(0, $expected, 'fixture must contain at least one sandhi-divergent sentence');
+        $this->assertSame($expected, substr_count($html, 'data-reader-sandhi'));
+    }
+
+    public function test_reader_onboarding_help_is_rendered_and_dismissible(): void
+    {
+        config(['features.kosha_reader' => true]);
+
+        $res = $this->get('/reading/kosha-demo')->assertOk();
+        $res->assertSee('? Как пользоваться ридером', false);
+        $res->assertSee('data-reader-help-panel', false);
+        $res->assertSee('Два режима чтения', false);
+        $res->assertSee('Пословно', false);
+        $res->assertSee('data-reader-help-dismiss', false);
+    }
 }
