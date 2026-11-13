@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\GamesSrsOnboardingController;
 use App\Http\Controllers\Api\GameTelemetryController;
 use App\Http\Controllers\Api\LilaGateController;
 use App\Http\Controllers\Api\PublicWaitlistController;
+use App\Http\Controllers\BookClubController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MarathonController;
@@ -198,6 +199,15 @@ Route::get('/favorites', [CourseFavoriteController::class, 'index'])
 // паттерн Arzamas): статьи + бесплатные беседы + preview-уроки одной сеткой
 // типизированных карточек. Блог остаётся на /s — здесь только агрегатор.
 Route::get('/online/materialy', [MaterialsController::class, 'index'])->name('shop.materials');
+
+// «Книжный клуб» — оплата доставки книг кампании planeta 219924 (H8195).
+// Книги уже оплачены на кампании; за фича-флагом BOOK_CLUB_DELIVERY
+// (дефолт OFF — контроллер отдаёт 404, прод-сборка не меняется).
+Route::get('/knizhny-klub/dostavka', [BookClubController::class, 'show'])
+    ->name('book-club.show');
+Route::post('/knizhny-klub/dostavka', [BookClubController::class, 'submit'])
+    ->middleware('throttle:10,1')
+    ->name('book-club.submit');
 
 // «Консультация по онлайн-курсам ОРС» — 3-дневный диагностический марафон,
 // верхний вход воронки (H440, Phase 1: landing + capture). Evergreen —

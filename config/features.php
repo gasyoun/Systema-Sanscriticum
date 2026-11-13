@@ -610,6 +610,16 @@ return [
     'newsletter_subscribe' => (bool) env('NEWSLETTER_SUBSCRIBE_ENABLED', true),
 
     /*
+     | «Книжный клуб» — оплата доставки книг кампании planeta 219924 (H8195).
+     | Книги уже оплачены на кампании; товар продаёт ТОЛЬКО доставку (РФ 300 ₽
+     | за посылку до 2 кг, заграница — по таблице в config/book_club.php).
+     | ВЫКЛЮЧЕН по умолчанию — deploy-рубильник: пока флаг OFF, маршруты
+     | /knizhny-klub/dostavka отдают 404 и на сайте ничего не меняется.
+     | Включить: BOOK_CLUB_DELIVERY=true в .env + config:cache.
+     */
+    'book_club_delivery' => (bool) env('BOOK_CLUB_DELIVERY', false),
+
+    /*
      | Консолидированный дашборд посещаемости (GetCourse-паритет GC-B2, H553):
      | rate по студенту/группе/курсу, тренд по неделям, список хронических
      | неявок, экспорт CSV — поверх уже существующих ClassAttendanceService /
