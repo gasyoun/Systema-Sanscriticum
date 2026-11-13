@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Support\Lyw\LessonPackTreeGuard;
 use App\Support\ServerGuards\GuardFinding;
 use App\Support\ServerGuards\GuardSpec;
 use App\Support\ServerGuards\ServerGuardsAuditor;
@@ -24,7 +25,7 @@ class VerifyServerGuards extends Command
         {--json : Выдать находки машиночитаемо}
         {--force : Проверять даже там, где проверка отключена (не Linux/CI)}';
 
-    protected $description = 'Проверить ресурсные предохранители прода (cron-обертка, сторожа, потолки памяти, earlyoom, логи)';
+    protected $description = 'Проверить ресурсные предохранители прода (cron-обертка, сторожа, потолки памяти, earlyoom, логи) и целостность LYW-паков';
 
     public function handle(): int
     {
@@ -52,6 +53,13 @@ class VerifyServerGuards extends Command
             }
 
             return self::FAILURE;
+        }
+
+        // H7069: LYW-паки — такой же предохранитель: при LYW_ENABLED=true
+        // пустой/битый packs_path делает фичу обещанием 404. Отдельная команда
+        // lyw:verify-packs зовётся деплоем, а guards:verify ловит дрейф позже.
+        foreach (LessonPackTreeGuard::problemsFromConfig() as $problem) {
+            $findings[] = GuardFinding::critical('lyw-packs', $problem);
         }
 
         $blocking = ServerGuardsAuditor::hasBlocking($findings);

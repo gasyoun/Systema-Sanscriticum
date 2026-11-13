@@ -279,6 +279,12 @@ class ContentCalendarSlot extends Model
         return $query->whereDoesntHave('rubric', fn (Builder $q) => $q->where('is_active', false));
     }
 
+    /** HTML поста для площадок: текст + хештеги рубрики последней строкой. */
+    public function publishBody(): ?string
+    {
+        return $this->rubric?->withHashtags($this->body) ?? $this->body;
+    }
+
     public function isRubricPaused(): bool
     {
         return $this->rubric_id !== null && $this->rubric?->is_active === false;
