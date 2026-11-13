@@ -231,6 +231,18 @@ class OpenLessonFunnel
             return;
         }
 
+        // 13-11-2026: повторное нажатие «✅ Я подписался» или ределивери того
+        // же callback не должны второй раз фиксировать согласие и заново слать
+        // первый вопрос анкеты. Согласие уже дано и шаг подписки пройден —
+        // гасим часики и выходим. Явный рестарт воронки («Участвовать» заново
+        // ставит STEP_SUBSCRIBE) этим кейсом не считается: человеку нужно
+        // продолжить анкету, но consent_at у него уже не перезаписывается.
+        if ($subscriber->consent_at !== null && $subscriber->join_step !== BotSubscriber::STEP_SUBSCRIBE) {
+            $this->answer($callbackId);
+
+            return;
+        }
+
         if (! $this->isChannelMember((string) ($from['id'] ?? $chatId))) {
             $text = 'Не вижу подписки на '.config('open_lesson_cards.channel').' — подпишитесь и нажмите ещё раз.';
             $callbackId !== ''
@@ -242,7 +254,9 @@ class OpenLessonFunnel
 
         $this->answer($callbackId, 'Спасибо за подписку!');
         $subscriber->update([
-            'consent_at' => now(),
+            // Согласие фиксируется один раз: повторный проход воронки не
+            // обнуляет юридически значимую дату принятия политики.
+            'consent_at' => $subscriber->consent_at ?? now(),
             'join_step' => BotSubscriber::STEP_NAME,
             'username' => isset($from['username']) ? mb_substr((string) $from['username'], 0, 64) : $subscriber->username,
         ]);

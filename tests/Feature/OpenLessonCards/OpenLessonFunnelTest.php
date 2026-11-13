@@ -203,6 +203,34 @@ class OpenLessonFunnelTest extends TestCase
         $this->assertSame(1, Lead::query()->count());
     }
 
+    public function test_repeated_subscription_callback_confirms_consent_once(): void
+    {
+        $this->text('/start');
+        $this->text('✍️ Участвовать');
+
+        $this->press('ol:sub');
+        $first = BotSubscriber::query()->where('chat_id', '1001')->firstOrFail();
+        $this->assertNotNull($first->consent_at);
+        $consentAt = $first->consent_at->toDateTimeString();
+        $this->assertStringContainsString('1/3', $this->lastMessage()['text']);
+        $messageCount = count($this->messages());
+
+        // Повторное нажатие / ределивери того же callback на следующий день:
+        // согласие уже зафиксировано, анкета не начинается заново.
+        Carbon::setTestNow(now()->addDay());
+        $this->press('ol:sub');
+
+        $after = BotSubscriber::query()->where('chat_id', '1001')->firstOrFail();
+        $this->assertCount($messageCount, $this->messages());
+        // Сравниваем значения, а не объекты Carbon: каждая выборка создаёт
+        // новый экземпляр, assertSame по идентичности здесь был бы всегда ложным.
+        // Если бы согласие перезаписалось, дата отличалась бы ровно на сутки.
+        $this->assertNotNull($after->consent_at);
+        $this->assertSame($consentAt, $after->consent_at->toDateTimeString());
+        $this->assertSame(BotSubscriber::STEP_NAME, $after->join_step);
+        $this->assertSame(0, Lead::query()->count());
+    }
+
     public function test_existing_lead_is_updated_not_duplicated(): void
     {
         $lead = Lead::create(['name' => 'Анна', 'contact' => '+79990000000', 'telegram_chat_id' => 1001, 'status' => 'new']);
