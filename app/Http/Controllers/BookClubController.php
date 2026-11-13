@@ -139,6 +139,22 @@ final class BookClubController extends Controller
 
         // Только запись в БД — в транзакции; HTTP в Tochka/уведомления — после commit.
         $payment = DB::transaction(function () use ($user, $validated, $isAbroad, $amount, $proofPath, $noteParts): Payment {
+
+            // Анти-дубль ещё раз, ПОД ЛОКОМ строк (паттерн H071 #2): параллельные
+            // сабмиты одного планета-заказа сериализуются здесь — предпроверка до
+            // транзакции отсекает обычный повтор, эта — гонку двух вкладок.
+            $lockedDuplicate = BookClubOrder::where('planeta_email', $validated['planeta_email'])
+                ->where('planeta_order_number', $validated['planeta_order_number'])
+                ->lockForUpdate()
+                ->get()
+                ->contains(fn (BookClubOrder $order) => $order->payment && $order->payment->status !== 'failed');
+
+            if ($lockedDuplicate) {
+                throw ValidationException::withMessages([
+                    'planeta_order_number' => 'Доставка для этого заказа planeta уже оформлена. Мы свяжемся с вами — повторно оплачивать не нужно.',
+                ]);
+            }
+
             $payment = Payment::create([
                 'user_id' => $user->id,
                 'course_id' => null,
