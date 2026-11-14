@@ -25,14 +25,13 @@ final class W1PaymentReconcileAnalyzer
     public function analyze(W1PaymentReconcileScenario $scenario): array
     {
         $open = $scenario->records;
-        $matchedKeys = [];
+        $matchedRecords = [];
         $leftoverEvents = [];
 
         foreach ($scenario->events as $event) {
-            $key = W1PaymentReconcileScenario::pairKey($event['kind'], $event['amount'], $event['currency']);
             $hit = null;
             foreach ($open as $i => $record) {
-                if (W1PaymentReconcileScenario::pairKey($record['kind'], $record['amount'], $record['currency']) === $key) {
+                if ($this->pairs($event, $record)) {
                     $hit = $i;
                     break;
                 }
@@ -40,7 +39,7 @@ final class W1PaymentReconcileAnalyzer
             if ($hit === null) {
                 $leftoverEvents[] = $event;
             } else {
-                $matchedKeys[$key] = true;
+                $matchedRecords[] = $open[$hit];
                 unset($open[$hit]);
             }
         }
@@ -49,16 +48,36 @@ final class W1PaymentReconcileAnalyzer
         $findings = [];
 
         if ($leftoverEvents !== [] && $leftoverRecords !== []) {
-            $findings[] = new W1PaymentReconcileFinding(
-                W1PaymentReconcileFinding::AMOUNT_MISMATCH,
-                'суммы источников расходятся: событие '.$this->describe($leftoverEvents[0])
-                    .' vs запись '.$this->describe($leftoverRecords[0]),
-                array_merge($leftoverEvents, $leftoverRecords),
-            );
+            $hasRefund = false;
+            foreach (array_merge($leftoverEvents, $leftoverRecords) as $item) {
+                if ($item['kind'] === W1PaymentReconcileScenario::KIND_REFUND) {
+                    $hasRefund = true;
+                    break;
+                }
+            }
+            $findings[] = $hasRefund
+                ? new W1PaymentReconcileFinding(
+                    W1PaymentReconcileFinding::REFUND_MISMATCH,
+                    'возврат(ы) не сверяются с записями Systema: событие '.$this->describe($leftoverEvents[0])
+                        .' vs запись '.$this->describe($leftoverRecords[0]),
+                    array_merge($leftoverEvents, $leftoverRecords),
+                )
+                : new W1PaymentReconcileFinding(
+                    W1PaymentReconcileFinding::AMOUNT_MISMATCH,
+                    'суммы источников расходятся: событие '.$this->describe($leftoverEvents[0])
+                        .' vs запись '.$this->describe($leftoverRecords[0]),
+                    array_merge($leftoverEvents, $leftoverRecords),
+                );
         } elseif ($leftoverEvents !== []) {
             foreach ($leftoverEvents as $event) {
-                $key = W1PaymentReconcileScenario::pairKey($event['kind'], $event['amount'], $event['currency']);
-                if (isset($matchedKeys[$key])) {
+                $duplicate = false;
+                foreach ($matchedRecords as $record) {
+                    if ($this->pairs($event, $record)) {
+                        $duplicate = true;
+                        break;
+                    }
+                }
+                if ($duplicate) {
                     $findings[] = new W1PaymentReconcileFinding(
                         W1PaymentReconcileFinding::DUPLICATE_SUSPECTED,
                         'повторное событие '.$this->describe($event).' при одной сверенной записи — подозрение на дубль',
@@ -155,13 +174,28 @@ final class W1PaymentReconcileAnalyzer
     }
 
     /**
-     * @param  array{kind: string, amount: int, currency: string, external_id?: ?string, status?: string}  $item
+     * Событие ↔ запись: kind и amount строго, валюта — совместима (запись без
+     * валюты сверяется с любой валютой события).
+     *
+     * @param  array{kind: string, amount: int, currency: string}  $event
+     * @param  array{kind: string, amount: int, currency: ?string}  $record
+     */
+    private function pairs(array $event, array $record): bool
+    {
+        return $event['kind'] === $record['kind']
+            && $event['amount'] === $record['amount']
+            && ($record['currency'] === null || $record['currency'] === $event['currency']);
+    }
+
+    /**
+     * @param  array{kind: string, amount: int, currency: ?string, external_id?: ?string, status?: string}  $item
      */
     private function describe(array $item): string
     {
         $ref = isset($item['external_id']) && $item['external_id'] !== null ? ' ('.$item['external_id'].')' : '';
+        $currency = $item['currency'] !== null ? ' '.$item['currency'] : '';
 
-        return $item['amount'].' '.$item['currency'].$ref;
+        return $item['amount'].$currency.$ref;
     }
 
     /**

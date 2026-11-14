@@ -33,7 +33,7 @@ final readonly class W1PaymentReconcileScenario
 
     /**
      * @param  list<array{kind: string, amount: int, currency: string, external_id: ?string}>  $events
-     * @param  list<array{kind: string, amount: int, currency: string, status: string}>  $records
+     * @param  list<array{kind: string, amount: int, currency: ?string, status: string}>  $records
      * @param  array{amount: ?int, balance_delta: ?int, currency: ?string}  $expectations
      */
     public function __construct(
@@ -97,7 +97,12 @@ final readonly class W1PaymentReconcileScenario
         ];
     }
 
-    /** @return array{kind: string, amount: int, currency: string, status: string} */
+    /**
+     * Запись Systema: currency опциональна (фикстуры H6181 несут только
+     * amount+status) — отсутствующая валюта сверяется с любой валютой события.
+     *
+     * @return array{kind: string, amount: int, currency: ?string, status: string}
+     */
     private static function record(mixed $raw): array
     {
         $label = 'systema_record';
@@ -116,7 +121,7 @@ final readonly class W1PaymentReconcileScenario
                 default => 'other',
             },
             'amount' => self::amount($raw, $label),
-            'currency' => self::currency($raw, $label),
+            'currency' => isset($raw['currency']) ? self::currency($raw, $label) : null,
             'status' => $status,
         ];
     }

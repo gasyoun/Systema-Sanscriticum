@@ -132,22 +132,27 @@ class H6181HermesAcceptanceTest extends TestCase
         // Роль 20 реализована (H6185, implementation_status=implemented; раннер
         // регистрируется в H6185HermesAcceptanceTest) — вне контекста pending-проверки.
         // Роль 23 реализована (H6187) и проверяется отдельно.
+        // Роль 65 реализована (H6188, implementation_status=implemented); раннер
+        // роли 65 здесь не регистрируется — вне контекста pending-проверки.
         // Роль 85 реализована (H6189, implementation_status=implemented; раннер
         // регистрируется в H6189HermesAcceptanceTest) — вне контекста pending-проверки.
-        foreach ([65] as $roleId) {
+        // Все шесть ролей ростера реализованы — pending-фикстур не осталось;
+        // без зарегистрированного раннера реализованная роль остаётся честным
+        // pending_implementation (0 исполнено — никакого выдуманного PASS).
+        foreach ([13, 19, 20, 65, 85] as $roleId) {
             $entry = $report['roles'][(string) $roleId];
-            $this->assertSame('pending', $entry['implementation_status']);
+            $this->assertSame('implemented', $entry['implementation_status']);
             $this->assertSame('pending_implementation', $entry['status']);
-            $this->assertSame(0, $entry['executed'], "role {$roleId}: pending role must not be executed");
+            $this->assertSame(0, $entry['executed'], "role {$roleId}: no runner registered — nothing executed");
             $this->assertSame(0, $entry['passed'], "role {$roleId}: no invented PASS without implementation");
         }
 
         $this->assertSame('pending_implementation', $report['routing']['status']);
         $this->assertSame(0, $report['routing']['executed']);
 
-        // Честный INCONCLUSIVE: роли без внедрения перечислены явно.
+        // Честный INCONCLUSIVE: роли без раннера перечислены явно.
         $inconclusive = $report['inconclusive'];
-        foreach ([65] as $roleId) {
+        foreach ([13, 19, 20, 65, 85] as $roleId) {
             $this->assertContains($roleId, $inconclusive);
         }
         $this->assertContains('routing', $inconclusive);
