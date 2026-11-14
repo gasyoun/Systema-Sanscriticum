@@ -10,6 +10,7 @@ use App\Models\SupportAiReplyEvent;
 use App\Models\SupportAnswerSuggestion;
 use App\Models\SupportConversation;
 use App\Models\User;
+use App\Services\Support\Faq\FaqScoreFloor;
 use App\Services\Support\Faq\HybridRetriever;
 use App\Support\SupportSmallTalk;
 use Illuminate\Support\Facades\Log;
@@ -255,19 +256,12 @@ final class SupportWebchatAutoReply
 
     /**
      * Порог скора — тот же scoreFloor()-домен, что в TG-полосе (H3766 B5):
-     * категорийный порог всегда строже общего, берём максимум.
+     * категорийный порог всегда строже общего, берём максимум. Один lookup —
+     * FaqScoreFloor (H6185), чтобы пороги не разъезжались между полосами.
      */
     private function scoreFloor(string $category): float
     {
-        $global = (float) config('support.faq_rag.shadow_min_score', 8.0);
-
-        $perCategory = config('support.faq_rag.shadow_min_score_by_category', []);
-
-        if (! is_array($perCategory) || ! isset($perCategory[$category])) {
-            return $global;
-        }
-
-        return max($global, (float) $perCategory[$category]);
+        return FaqScoreFloor::for($category);
     }
 
     /**
