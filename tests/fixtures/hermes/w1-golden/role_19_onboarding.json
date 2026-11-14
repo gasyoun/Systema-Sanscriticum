@@ -5,7 +5,7 @@
     "wave": "W1",
     "role_id": 19,
     "role_name": "onboarding-greeter",
-    "implementation_status": "pending",
+    "implementation_status": "implemented",
     "implementation_handoff": "H6186",
     "provenance": {
         "authored": "2026-10-06",
