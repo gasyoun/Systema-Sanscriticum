@@ -687,11 +687,17 @@ class TeacherSalaryService
 
             // H8245: B2B-оплата «за группу целиком» — плательщик (юрлицо) не член
             // group_user, атрибуция по payments.group_id. Только под флагом
-            // b2b_group_payment: OFF — прежний фильтр по составу группы.
+            // b2b_group_payment: OFF — прежний фильтр по составу группы. received_account
+            // уважает parity-флаг (H5532): при OFF нал лично преподавателю
+            // (teacher_personal) в блок-выручку НЕ входит — это личный заработок.
             if (B2bGroupEntitlement::enabled()) {
                 $query->orWhere(fn ($q) => $q
                     ->where('group_id', $groupId)
-                    ->where('tariff', Payment::TARIFF_B2B_GROUP));
+                    ->where('tariff', Payment::TARIFF_B2B_GROUP)
+                    ->when(! config('features.teacher_direct_receipt_revenue_parity'), fn ($q2) => $q2->where(
+                        'received_account',
+                        Payment::RECEIVED_SCHOOL,
+                    )));
             }
         }
 
