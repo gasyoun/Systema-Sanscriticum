@@ -200,7 +200,7 @@ class ContentCalendarRubricTest extends TestCase
                 'title' => 'Длинный',
                 'body' => '<p>'.str_repeat('а', 1010).'</p>',
             ])
-            ->set('data.media_path', UploadedFile::fake()->image('cover.jpg'))
+            ->set('data.media_path', UploadedFile::fake()->create('teaser.mp4', 2048, 'video/mp4'))
             ->call('create')
             ->assertHasFormErrors(['media_path']);
     }

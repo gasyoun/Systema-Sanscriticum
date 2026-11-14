@@ -13,7 +13,9 @@ use Illuminate\Support\Facades\Storage;
 /**
  * Слот календаря → пост в Telegram-канал (Bot API, parse_mode=HTML).
  * Медиа: sendPhoto / sendVideo multipart с подписью; длина подписи ≤ 1024
- * гарантируется формой слота, Bot API режет multipart-загрузку на 50 МБ —
+ * гарантируется формой слота для видео. Картинка с текстом длиннее 1024 уходит
+ * sendMessage (до 4096) с картинкой крупным превью над текстом
+ * (link_preview_options, публичный URL файла); Bot API режет multipart-загрузку на 50 МБ —
  * тот же предел стоит на поле загрузки.
  */
 class CalendarTelegramPublisher
@@ -46,8 +48,27 @@ class CalendarTelegramPublisher
         }
 
         $text = PostFormatter::toTelegramHtml($slot->publishBody());
+        $media = $slot->mediaType();
 
-        $response = match ($slot->mediaType()) {
+        // Картинка с текстом длиннее подписи (1024) — обычное сообщение до 4096
+        // с этой картинкой крупным превью над текстом (14-11-2026, рубрика
+        // пересказов статей: рисунок из статьи + длинный текст).
+        if ($media === ContentCalendarSlot::MEDIA_PHOTO
+            && PostFormatter::telegramLength($slot->publishBody()) > PostFormatter::TG_CAPTION_LIMIT) {
+            $media = 'photo_preview';
+        }
+
+        $response = match ($media) {
+            'photo_preview' => Http::timeout(30)->asForm()->post($api.'/sendMessage', [
+                'chat_id' => $chatId,
+                'text' => $text,
+                'parse_mode' => 'HTML',
+                'link_preview_options' => json_encode([
+                    'url' => $slot->mediaUrl(),
+                    'prefer_large_media' => true,
+                    'show_above_text' => true,
+                ]),
+            ]),
             ContentCalendarSlot::MEDIA_PHOTO => $this->sendFile($api.'/sendPhoto', 'photo', $slot, $chatId, $text),
             ContentCalendarSlot::MEDIA_VIDEO => $this->sendFile($api.'/sendVideo', 'video', $slot, $chatId, $text, [
                 ['name' => 'supports_streaming', 'contents' => 'true'],

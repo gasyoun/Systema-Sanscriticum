@@ -26,6 +26,7 @@ use FilamentTiptapEditor\Enums\TiptapOutput;
 use FilamentTiptapEditor\TiptapEditor;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\HtmlString;
 
 /**
@@ -117,7 +118,7 @@ class ContentCalendarSlotResource extends Resource
                 // updateEditorContent() делает editor.focus() — клик в другое
                 // поле прыгал к редактору наверх и терялся (26-10-2026).
                 ->helperText('Маркер = спойлер в Telegram. В VK форматирование не переносится: уходит простой текст, ссылка — «текст (url)». '
-                    .'Без вложения — до 4096 символов, с картинкой или видео — до 1024.')
+                    .'До 4096 символов; с видео — до 1024. С картинкой длиннее 1024 пост уходит в Telegram текстом с картинкой крупным превью над ним.')
                 ->rules([
                     fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
                         $length = self::postLength(self::bodyHtml($value), $get('rubric_id'));
@@ -130,7 +131,7 @@ class ContentCalendarSlotResource extends Resource
             Forms\Components\FileUpload::make('media_path')
                 ->label('Картинка или видео (необязательно)')
                 ->helperText('Одно вложение: JPG/PNG/WebP/GIF или MP4/MOV/WebM, до 50 МБ (предел Telegram для бота). '
-                    .'С вложением текст — не длиннее 1024 символов. '
+                    .'С видео текст — не длиннее 1024 символов (с картинкой можно до 4096: она встанет превью над текстом). '
                     .'В VK картинка уходит карточкой-ссылкой с этой картинкой, видео не уходит — '
                     .'для настоящего фото или видео в VK заполните «Готовое медиа VK».')
                 ->disk(ContentCalendarSlot::MEDIA_DISK)
@@ -147,10 +148,17 @@ class ContentCalendarSlotResource extends Resource
                 // длинным текстом за краем экрана (26-10-2026).
                 ->rules([
                     fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                        // Картинке лимит подписи не нужен: длинный текст уходит
+                        // сообщением с картинкой-превью (CalendarTelegramPublisher).
+                        $file = is_array($value) ? (array_values($value)[0] ?? null) : $value;
+                        $name = $file instanceof UploadedFile ? 'x.'.$file->getClientOriginalExtension() : (string) $file;
+                        if ((new ContentCalendarSlot(['media_path' => $name]))->mediaType() !== ContentCalendarSlot::MEDIA_VIDEO) {
+                            return;
+                        }
                         $length = self::postLength(self::bodyHtml($get('body')), $get('rubric_id'));
                         if ($length > PostFormatter::TG_CAPTION_LIMIT) {
-                            $fail('С картинкой или видео Telegram допускает текст до '.PostFormatter::TG_CAPTION_LIMIT
-                                ." символов, сейчас {$length}. Сократите текст или уберите вложение.");
+                            $fail('С видео Telegram допускает текст до '.PostFormatter::TG_CAPTION_LIMIT
+                                ." символов, сейчас {$length}. Сократите текст или уберите видео.");
                         }
                     },
                 ])
