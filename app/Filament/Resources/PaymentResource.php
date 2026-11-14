@@ -7,8 +7,10 @@ use App\Jobs\SendTelegramMessageJob;
 use App\Mail\DepositTransferredMail;
 use App\Models\Course;
 use App\Models\FiscalReceipt;
+use App\Models\Group;
 use App\Models\Payment;
 use App\Models\Teacher;
+use App\Services\Payments\B2bGroupEntitlement;
 use App\Services\CuratorNotifier;
 use App\Services\Reconciliation\RefundAccessPolicy;
 use App\Services\Reconciliation\RefundAccessViolation;
@@ -123,6 +125,12 @@ class PaymentResource extends Resource
                                 'salary_payout' => '👨‍🏫 Выплата преподавателю',
                             ];
 
+                            // H8245: B2B-оплата «за группу целиком» — опция появляется
+                            // только под флагом features.b2b_group_payment.
+                            if (B2bGroupEntitlement::enabled()) {
+                                $options[Payment::TARIFF_B2B_GROUP] = '🏢 B2B: оплата за группу целиком (юрлицо, без чекаута учеников)';
+                            }
+
                             for ($i = 1; $i <= 100; $i++) {
                                 $startLesson = ($i - 1) * 4 + 1;
                                 $endLesson = $i * 4;
@@ -141,7 +149,9 @@ class PaymentResource extends Resource
                         ->required()
                         ->live()
                         ->afterStateUpdated(function ($state, callable $set) {
-                            if ($state === 'full' || $state === 'Расход') {
+                            // H8245: b2b_group — весь курс целиком, диапазон блоков
+                            // пуст (покрытие платёжем решает BlockMonthRecognition).
+                            if ($state === 'full' || $state === 'Расход' || $state === Payment::TARIFF_B2B_GROUP) {
                                 $set('start_block', null);
                                 $set('end_block', null);
                             } elseif (str_starts_with($state ?? '', 'block_')) {
@@ -150,6 +160,29 @@ class PaymentResource extends Resource
                                 $set('end_block', $blockNum);
                             }
                         })
+                        ->columnSpanFull(),
+
+                    // H8245: за какую группу платит юрлицо. Обязательна только для
+                    // b2b_group; её ученики получают доступ виртуальными ключами
+                    // (B2bGroupEntitlement), плательщику доступ не выдаётся.
+                    Forms\Components\Select::make('group_id')
+                        ->label('Группа (B2B-оплата)')
+                        ->options(function (Forms\Get $get) {
+                            $courseId = $get('course_id');
+                            if (! $courseId) {
+                                return [];
+                            }
+
+                            return Group::query()
+                                ->whereHas('courses', fn ($q) => $q->where('courses.id', (int) $courseId))
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->all();
+                        })
+                        ->visible(fn (Forms\Get $get) => $get('tariff') === Payment::TARIFF_B2B_GROUP)
+                        ->required(fn (Forms\Get $get) => $get('tariff') === Payment::TARIFF_B2B_GROUP)
+                        ->searchable()
+                        ->helperText('Группа, за которую платит юрлицо: ученики получают доступ виртуальными ключами (флаг b2b_group_payment), плательщику доступ не выдаётся. Нал: payment_method «Наличные». Счёт юрлицу: provider «Счёт» (H2017, pending до сверки).')
                         ->columnSpanFull(),
                 ])->columns(2),
 

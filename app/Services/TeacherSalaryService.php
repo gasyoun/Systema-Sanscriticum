@@ -12,6 +12,7 @@ use App\Models\SalaryClosedPeriod;
 use App\Models\Tariff;
 use App\Models\Teacher;
 use App\Models\TeacherPayout;
+use App\Services\Payments\B2bGroupEntitlement;
 use App\Support\Money;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -683,6 +684,15 @@ class TeacherSalaryService
             $query->whereIn('user_id', function ($q) use ($groupId) {
                 $q->select('user_id')->from('group_user')->where('group_id', $groupId);
             });
+
+            // H8245: B2B-оплата «за группу целиком» — плательщик (юрлицо) не член
+            // group_user, атрибуция по payments.group_id. Только под флагом
+            // b2b_group_payment: OFF — прежний фильтр по составу группы.
+            if (B2bGroupEntitlement::enabled()) {
+                $query->orWhere(fn ($q) => $q
+                    ->where('group_id', $groupId)
+                    ->where('tariff', Payment::TARIFF_B2B_GROUP));
+            }
         }
 
         $lines = [];

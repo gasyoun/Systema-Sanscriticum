@@ -345,6 +345,28 @@ class Payment extends Model
         return $this->tariff === 'book_club_delivery';
     }
 
+    /**
+     * H8245 — B2B-оплата «за группу целиком»: юрлицо/студия платит за ВСЕХ
+     * учеников группы одним платежом (Адара → гр. «Грамматика по Кочергиной»,
+     * курс 463). Ключ самоописывающий в payments.tariff — по образцу
+     * 'book_club_delivery' / 'club_{N}m': payments не хранит tariff_id.
+     */
+    public const TARIFF_B2B_GROUP = 'b2b_group';
+
+    /**
+     * B2B-платёж за группу — чисто денежная строка. Плательщик (представитель
+     * юрлица) НЕ студент: доступ ему не выдаётся, учеников группы открывают
+     * виртуальные ключи B2bGroupEntitlement (зеркало клубного контура H2646,
+     * флаг features.b2b_group_payment). Деньги при этом настоящая выручка курса
+     * — ЗП/финансы считают её как обычную оплату. Пути приёма денег существующие:
+     * нал (payment_method='cash', received_account=school), счёт юрлицу
+     * (provider=invoice, H2017), Точка — новых проводок не заводится.
+     */
+    public function isB2bGroup(): bool
+    {
+        return $this->tariff === self::TARIFF_B2B_GROUP;
+    }
+
     /** Заявка об оплате из-за рубежа (PayPal), поданная студентом. */
     public function isPaypal(): bool
     {
@@ -522,6 +544,7 @@ class Payment extends Model
             $this->isExpense() => '💸 Технический расход / возврат',
             $this->isSalaryPayout() => '👨‍🏫 Выплата преподавателю',
             $this->isGiftCertificate() => '🎁 Подарочный сертификат',
+            $this->isB2bGroup() => '🏢 B2B: оплата за группу целиком',
             $this->tariff === 'full' => 'Весь курс',
             default => $this->blockLabel(),
         };
@@ -940,6 +963,16 @@ class Payment extends Model
             return;
         }
 
+        // H8245: B2B-оплата за группу — только денежная строка. Плательщик не
+        // студент: grantAccess/enroll/письма/прана/Telegram не срабатывают,
+        // учеников группы открывают виртуальные ключи B2bGroupEntitlement.
+        // Куратору уходит обычное уведомление о деньгах.
+        if ($payment->isB2bGroup()) {
+            $payment->processB2bGroupPaid();
+
+            return;
+        }
+
         if ($payment->isDeposit()) {
             $payment->processDeposit();
 
@@ -1124,6 +1157,23 @@ class Payment extends Model
         if (! $this->is_conditional && config('features.paid_chat_join_request')) {
             SendGroupChatInviteJob::dispatch($this->id);
         }
+    }
+
+    /**
+     * H8245 — paid-проводка b2b_group-платежа «за группу»: только curator-уведомление
+     * о деньгах (как у обычных оплат). Никаких side-effect'ов ученического контура:
+     * доступ группы — чистая функция оплаченного платежа (виртуальные ключи
+     * B2bGroupEntitlement появляются/исчезают сами), письма/прана/Telegram плательщику
+     * не нужны — он не студент.
+     */
+    public function processB2bGroupPaid(): void
+    {
+        app(CuratorNotifier::class)->paymentPaid($this);
+
+        Log::info(
+            'B2B-оплата за группу: платёж #'.$this->id
+            .' (курс #'.$this->course_id.', группа #'.$this->group_id.') — доступ ученикам открывают виртуальные ключи, плательщику доступ не выдан.'
+        );
     }
 
     // ==========================================
@@ -1755,10 +1805,15 @@ class Payment extends Model
 
     private function grantsCourseAccess(): bool
     {
+        // H8245: b2b_group не открывает доступ и плательщику: учеников группы
+        // открывают виртуальные ключи (B2bGroupEntitlement), плательщик — не
+        // студент. Отсекая здесь, гарантируем: откат b2b-платежа вернётся из
+        // reconcileAccessAfterReversal(), НЕ детача учеников группы.
         return ! $this->isDeposit()
             && ! $this->isTrial()
             && ! $this->isExpense()
-            && ! $this->isSalaryPayout();
+            && ! $this->isSalaryPayout()
+            && ! $this->isB2bGroup();
     }
 
     private function userHasRemainingCourseAccess(int $courseId): bool
@@ -1771,10 +1826,13 @@ class Payment extends Model
 
     private function accessGrantingPaymentsForUser(Builder $query): Builder
     {
+        // H8245: b2b_group не грант плательщику — платёж юрлица за группу не
+        // должен участвовать ни в «есть ли у юзера доступ-оплата курса», ни в
+        // откатах этой проверки.
         return RefundAccessPolicy::excludeRefundedAccess($query
             ->where('user_id', $this->user_id)
             ->paid()
-            ->whereNotIn('tariff', ['deposit', 'trial', 'Расход', 'salary_payout']));
+            ->whereNotIn('tariff', ['deposit', 'trial', 'Расход', 'salary_payout', self::TARIFF_B2B_GROUP]));
     }
 
     // ==========================================
