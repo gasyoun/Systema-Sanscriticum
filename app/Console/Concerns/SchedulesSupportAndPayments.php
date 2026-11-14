@@ -252,5 +252,16 @@ trait SchedulesSupportAndPayments
             ->onOneServer()
             ->name('detect-missing-milestone-courses');
 
+        // H8250 — B2B-напоминания плательщику: после даты последнего урока
+        // покрытого b2b-блока — ровно одно напоминание оплатить следующий блок
+        // (без Telegram у плательщика — задача кураторам). Гейт
+        // (features.b2b_payer_reminders, дефолт OFF) и дедуп ровно-один на
+        // (плательщик, блок) — внутри команды.
+        $schedule->command('b2b:remind-payer')
+            ->dailyAt($paymentTime)
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('b2b-remind-payer');
+
     }
 }
