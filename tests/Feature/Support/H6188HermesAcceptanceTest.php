@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Support;
 
+use App\Services\Support\Hermes\Access\W1AccessDiagnosticsService;
 use App\Services\Support\Hermes\FaqRag\W1FaqRagGoldenScenarioRunner;
 use App\Services\Support\Hermes\FirstContact\W1FirstContactService;
 use App\Services\Support\Hermes\GoldenCaseEvaluator;
@@ -21,7 +22,7 @@ use Tests\TestCase;
  * H6188 acceptance (Epic E026, Hermes W1, класс money): роль 65
  * `payment-reconciler` — READ-ONLY предложение сверки оплат. Обёртка над
  * GoldenCaseEvaluator H6181 (role_65_payment_reconciler.json, runner роли 65
- * живьём; соседние роли 13/19/20/23 не сломаны) + сценарии сервиса сверки
+ * живьём; соседние роли 13/19/20/23/85 не сломаны) + сценарии сервиса сверки
  * (H6188PaymentReconcileScenarios / H6188MoneySafetyScenarios):
  * payment/duplicate/refund/mismatch сверяются как ДАННЫЕ, находки — человеку
  * через human-send (H6183); ZERO money-мутаций, ZERO платёжных API и
@@ -43,9 +44,10 @@ class H6188HermesAcceptanceTest extends TestCase
             // Роль 65 (H6188) — flag ON только в тестовом контексте; в проде
             // флаг ВЫКЛ (role 65 stays OFF, W1 deploy gate).
             'features.hermes_payment_reconciler' => true,
-            // Соседние роли в общем golden-прогоне (как в H6185/H6186).
+            // Соседние роли в общем golden-прогоне (как в H6185/H6186/H6189).
             'features.hermes_faq_rag' => true,
             'features.hermes_schedule_keeper' => true,
+            'features.hermes_access_diagnostics' => true,
             'services.telegram.student_bot_username' => 'samskrtamru_bot',
         ]);
         Carbon::setTestNow(Carbon::parse('2026-10-06 12:00:00', config('app.timezone')));
@@ -89,6 +91,13 @@ class H6188HermesAcceptanceTest extends TestCase
             )->toObservation();
         });
         $evaluator->registerRunner(20, new W1FaqRagGoldenScenarioRunner);
+        $access = new W1AccessDiagnosticsService;
+        $evaluator->registerRunner(85, function (array $input) use ($access): array {
+            return $access->handle(
+                'h6188:golden:role85:'.md5((string) json_encode($input)),
+                $input,
+            )->toObservation();
+        });
 
         $report = $evaluator->evaluate();
 
@@ -105,28 +114,26 @@ class H6188HermesAcceptanceTest extends TestCase
         $this->assertSame(0, $role65['errors'], 'role 65: no errors');
         $this->assertSame(0, $role65['failed'], 'role 65: no failures');
 
-        // Соседи не сломаны: роли 13 (H6184), 19 (H6186), 20 (H6185), 23 (H6187).
-        foreach (['13', '19', '20', '23'] as $roleId) {
+        // Соседи не сломаны: роли 13 (H6184), 19 (H6186), 20 (H6185), 23 (H6187),
+        // 85 (H6189).
+        foreach (['13', '19', '20', '23', '85'] as $roleId) {
             $this->assertSame(4, $report['roles'][$roleId]['executed'], "role {$roleId}: executed");
             $this->assertSame(4, $report['roles'][$roleId]['passed'], "role {$roleId}: passed");
             $this->assertSame(0, $report['roles'][$roleId]['errors'], "role {$roleId}: no errors");
         }
 
-        // Нереализованная роль 85 и routing — честный INCONCLUSIVE, не PASS.
-        $this->assertSame('pending_implementation', $report['roles']['85']['status'], 'role 85: honest pending');
-        $this->assertSame(0, $report['roles']['85']['executed'], 'role 85: nothing invented');
+        // Routing без раннера — честный INCONCLUSIVE (pending_implementation), не PASS.
         $this->assertSame('pending_implementation', $report['routing']['status']);
         $this->assertSame(0, $report['routing']['executed']);
-        $this->assertContains(85, $report['inconclusive']);
         $this->assertContains('routing', $report['inconclusive']);
-        foreach (['13', '19', '20', '23', 65] as $roleId) {
+        foreach ([13, 19, 20, 23, 65, 85] as $roleId) {
             $this->assertNotContains($roleId, $report['inconclusive'], "role {$roleId}: evaluated, not inconclusive");
         }
 
-        // Правило «ошибки в знаменателе» живо; 20 исполненных кейсов зелёные.
+        // Правило «ошибки в знаменателе» живо; 24 исполненных кейса зелёные.
         $this->assertTrue($report['score']['errors_in_denominator']);
-        $this->assertSame(20, $report['score']['executed'], 'roles 13+19+20+23+65: 4 cases each');
-        $this->assertSame(20, $report['score']['passed']);
+        $this->assertSame(24, $report['score']['executed'], 'roles 13+19+20+23+65+85: 4 cases each');
+        $this->assertSame(24, $report['score']['passed']);
         $this->assertSame(1.0, $report['score']['pass_rate']);
     }
 
