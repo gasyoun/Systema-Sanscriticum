@@ -8,7 +8,6 @@ use App\Services\Support\Hermes\FirstContact\W1FirstContactResult;
 use App\Services\Support\Hermes\FirstContact\W1FirstContactService;
 use App\Services\Support\Hermes\GoldenCaseEvaluator;
 use App\Services\Support\Hermes\Routing\W1FirstContactRouter;
-use App\Services\Support\Hermes\Routing\W1FirstContactRoutingLayer;
 use App\Services\Support\Hermes\Routing\W1RoutingDecision;
 use App\Services\Support\SupportStudentPiiMasker;
 use Carbon\Carbon;
@@ -107,7 +106,7 @@ class H6184HermesAcceptanceTest extends TestCase
             $this->assertSame(
                 $case['expected']['outcome'],
                 $result->outcome,
-                "{$case['id']}: outcome must match the versioned expected (".json_encode($case['expected'], JSON_UNESCAPED_UNICODE).")",
+                "{$case['id']}: outcome must match the versioned expected (".json_encode($case['expected'], JSON_UNESCAPED_UNICODE).')',
             );
 
             // Однопроходность и single_pass флаг из маршрутизации.
