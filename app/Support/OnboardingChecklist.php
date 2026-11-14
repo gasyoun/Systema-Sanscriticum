@@ -20,6 +20,41 @@ use App\Models\User;
 class OnboardingChecklist
 {
     /**
+     * Утверждённый чек-лист привязки мессенджера (H6186, Hermes W1 роль 19).
+     *
+     * Единственный источник шагов для черновиков подготовки привязки
+     * («черновик строго из утверждённого чек-листа привязки» — golden-контракт
+     * role_19_onboarding.json). Текст — только из утверждённых источников,
+     * нового копирайта здесь нет:
+     *
+     *  - шаг 1 — label/hint шага `link_messenger` метода for() выше
+     *    (текст-основа docs/onboarding-student.md: «Привяжите Telegram, чтобы
+     *    получать уведомления и писать в поддержку»);
+     *  - шаг 2 — утверждённая инструкция страницы привязки
+     *    resources/views/student/messenger-connect.blade.php
+     *    (GET /telegram/connect — «инструкция без мутаций», H3313).
+     *
+     * Меняется текст шагов ⇒ тот же PR обновляет перечисленные источники.
+     *
+     * @return list<array{key: string, label: string, hint: string}>
+     */
+    public static function bindingSteps(): array
+    {
+        return [
+            [
+                'key' => 'open_connect_page',
+                'label' => 'Привяжите Telegram или VK',
+                'hint' => 'Чтобы получать уведомления и писать в поддержку.',
+            ],
+            [
+                'key' => 'press_connect',
+                'label' => 'Открыть Telegram и привязать',
+                'hint' => 'Кнопка откроет мессенджер в новой вкладке и безопасно свяжет его с вашим аккаунтом.',
+            ],
+        ];
+    }
+
+    /**
      * @return array{steps: list<array{key: string, label: string, hint: string, icon: string, done: bool, url: ?string}>, completed: int, total: int, allComplete: bool}
      */
     public static function for(User $user): array
