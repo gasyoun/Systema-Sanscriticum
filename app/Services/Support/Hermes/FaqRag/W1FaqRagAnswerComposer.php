@@ -257,6 +257,11 @@ final class W1FaqRagAnswerComposer
                 $this->piiMasker->seedConversation($names, $nicks);
             }
 
+            // H6918-2, контракт maskAll(): сначала learn() по текстам беседы
+            // (словарь имён/ников), затем маскирование — иначе bare-фамилия из
+            // того же сообщения уходит в LLM сырой.
+            $this->piiMasker->learn($message);
+
             [$masked, $count] = $this->piiMasker->maskOrFail($message);
 
             return [(string) $masked, (int) $count];
