@@ -941,7 +941,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TELEGRAM_BUSINESS_TIMEOUT_SECONDS` | optional | `15` | config/services.php:542 |
 | `TELEGRAM_BUSINESS_WEBHOOK_SECRET` | secret | `''` | config/services.php:519 |
 | `TELEGRAM_BUSINESS_WINDOW_FALLBACK_ACCOUNT` | optional | `'support'` | config/services.php:541 |
-| `TELEGRAM_CABINET_EMAIL_LINK` | optional | `false` — выкл. на проде (09-10-2026) | config/features.php:855 |
+| `TELEGRAM_CABINET_EMAIL_LINK` | optional | `false` — вкл. на проде (14-11-2026) | config/features.php:855 |
 | `TELEGRAM_CABINET_LOGIN` | optional | `false` — вкл. на проде (09-10-2026) | config/features.php:841 |
 | `TELEGRAM_CABINET_PROVISION` | optional | `false` — вкл. на проде (09-10-2026) | config/features.php:866 |
 | `TELEGRAM_CURATORS_CHAT_ID` | required | `—` | config/services.php:168 |
