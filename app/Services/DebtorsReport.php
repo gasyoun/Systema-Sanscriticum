@@ -351,12 +351,14 @@ class DebtorsReport
         // (conditional платежи не учитываем). H8245: под флагом b2b_group_payment
         // пара (юзер, курс) не должник, если его группу этого курса покрывает
         // оплаченный b2b_group-платёж юрлица (плательщик — не ученик, у него на
-        // курсе своих payments нет).
+        // курсе своих payments нет). ВАЖНО: guard — второй AND NOT EXISTS (не OR!):
+        // должник = (нет личной оплаты) И (группа не покрыта b2b) И (не non-debt
+        // статус); OR дал бы неверный приоритет относительно AND cu-условия.
         $b2bGroupGuard = '';
         $b2bGroupBindings = [];
         if (B2bGroupEntitlement::enabled()) {
             $b2bGroupGuard = "
-                  OR EXISTS (
+                  AND NOT EXISTS (
                     SELECT 1 FROM payments p3
                     WHERE p3.group_id = gu.group_id
                       AND p3.course_id = cg.course_id
