@@ -124,7 +124,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CHECKOUT_STALE_ORDER_EXPIRY` | optional | `true` | config/features.php:768 |
 | `CHECKOUT_STALE_PENDING_MINUTES` | optional | `180` | config/checkout.php:19 |
 | `CHECKOUT_WEBHOOK_AMOUNT_TOLERANCE` | optional | `1.00` | config/checkout.php:41 |
-| `CLAIM_TRUST_POLICY_ENABLED` | feature-flag | `false` | config/features.php:2148 |
+| `CLAIM_TRUST_POLICY_ENABLED` | feature-flag | `false` | config/features.php:2164 |
 | `CLASS_LINK_AUTOPOST` | optional | `false` | config/features.php:140 |
 | `CLIP_MARKETING_ENABLED` | feature-flag | `false` | config/features.php:1015 |
 | `CLUB_COURSE_SLUG` | optional | `'club'` | config/membership.php:122 |
@@ -250,7 +250,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `ECON_USN_PCT` | optional | `6.0` | config/economics.php:16 |
 | `EGRESS_PING_PROXY` | optional | `''` | config/egress.php:52 |
 | `EMAIL_CAMPAIGNS` | optional | `false` | config/features.php:981 |
-| `ENROLL_PILOT_TELEGRAM_IDS` | optional | `''` | config/features.php:2136 |
+| `ENROLL_PILOT_TELEGRAM_IDS` | optional | `''` | config/features.php:2152 |
 | `EXCHANGERATE_HOST_KEY` | required | `—` | config/services.php:93 |
 | `EXIT_SURVEY_AUTO_TRIGGER` | optional | `false` | config/features.php:1797 |
 | `FAQ_HYBRID_RETRIEVAL` | optional | `false` | config/features.php:195 |
@@ -284,7 +284,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `GRAMMAR_LAB_SEMANTIC` | optional | `false` | config/features.php:1599 |
 | `GRAMMAR_LAB_SUBSCRIPTION_COURSE_SLUG` | optional | `''` | config/grammar_lab.php:53 |
 | `GRANT_ACCESS_FAIL_CLOSED` | optional | `false` | config/features.php:876 |
-| `GRANT_CHOSEN_GROUP` | optional | `false` | config/features.php:2117 |
+| `GRANT_CHOSEN_GROUP` | optional | `false` | config/features.php:2133 |
 | `GUARD_PACK_LOAD1_PER_CORE_CRITICAL` | optional | `2.0` | config/guard_pack.php:26 |
 | `GUARD_PACK_MEM_AVAILABLE_RATIO_CRITICAL` | optional | `0.15` | config/guard_pack.php:28 |
 | `GUARD_PACK_QUEUE_OLDEST_MAX_MINUTES` | optional | `30` | config/guard_pack.php:33 |
@@ -294,6 +294,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `HEARTBEAT_CRON` | optional | `'*/5 * * * *'` | config/heartbeat.php:50 |
 | `HEARTBEAT_PING_URL` | optional | `''` | config/heartbeat.php:43 |
 | `HEARTBEAT_TIMEOUT` | optional | `10` | config/heartbeat.php:54 |
+| `HERMES_ACCESS_DIAGNOSTICS` | optional | `false` | config/features.php:2084 |
 | `HERMES_FAQ_RAG` | optional | `false` | config/features.php:2068 |
 | `HERMES_HUMAN_SEND` | optional | `false` | config/features.php:2055 |
 | `HERMES_SCHEDULE_KEEPER` | optional | `false` | config/features.php:2041 |
@@ -523,7 +524,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MIC_SHADOW_CLASSIFY` | optional | `false` | config/features.php:1823 |
 | `MINI_COURSE_DRIP_DAYS` | optional | `3` | config/mini_courses.php:11 |
 | `MINI_COURSE_GRAMMAR_COURSE_ID` | optional | `450` | config/mini_courses.php:17 |
-| `MINI_COURSE_QUICK_ENROLL` | optional | `false` | config/features.php:2080 |
+| `MINI_COURSE_QUICK_ENROLL` | optional | `false` | config/features.php:2096 |
 | `MINI_COURSE_SLUG` | optional | `'podgotovitelnaya-gruppa-sanskrita'` | config/mini_courses.php:14 |
 | `MINI_COURSE_TRIAL_COURSE_ID` | optional | `451` | config/mini_courses.php:20 |
 | `MONEY_BANK_STATEMENT_CREDITS` | optional | `false` | config/features.php:1938 |
@@ -602,7 +603,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `OPENROUTER_TOPUP_ROUND_TO` | optional | `10` | config/openrouter.php:26 |
 | `OPEN_LESSON_CARDS_ENABLED` | feature-flag | `false` | config/features.php:1173 |
 | `OPEN_LESSON_CARDS_TEST_CHAT_IDS` | optional | `''` | config/open_lesson_cards.php:17 |
-| `PAID_CHAT_JOIN_REQUEST` | optional | `false` | config/features.php:2127 |
+| `PAID_CHAT_JOIN_REQUEST` | optional | `false` | config/features.php:2143 |
 | `PAPERTRAIL_PORT` | required | `—` | config/logging.php:102<br>config/logging.php:103 |
 | `PAPERTRAIL_URL` | required | `—` | config/logging.php:101<br>config/logging.php:103 |
 | `PARTNER_BOT_SECRET` | secret | `''` | config/partner.php:33 |
@@ -835,7 +836,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_DM_LLM_DRAFTS_LIVE` | optional | `false` | config/features.php:305 |
 | `SUPPORT_DM_LLM_DRAFTS_LOCAL` | optional | `false` | config/features.php:318 |
 | `SUPPORT_DRAFT_QUEUE` | optional | `false` | config/features.php:442 |
-| `SUPPORT_ENROLL_PAY_LINK` | optional | `false` | config/features.php:2090 |
+| `SUPPORT_ENROLL_PAY_LINK` | optional | `false` | config/features.php:2106 |
 | `SUPPORT_FACT_LIVE_TYPES` | optional | `'zoom,schedule,recording'` | config/support.php:100 |
 | `SUPPORT_FAQ_RAG_ANSWER_MAX_CHARS` | optional | `12000` | config/support.php:194 |
 | `SUPPORT_FAQ_RAG_ANSWER_TOP_K` | optional | `6` | config/support.php:186 |
@@ -868,8 +869,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_LEAD_CAPTURE` | optional | `false` | config/features.php:690 |
 | `SUPPORT_LLM_REPLIES_MIN_SCORE` | optional | `8.0` | config/support.php:288 |
 | `SUPPORT_OBSERVABILITY` | optional | `false` | config/features.php:647 |
-| `SUPPORT_PAY_CLARIFY` | optional | `false` | config/features.php:2099 |
-| `SUPPORT_PAY_DIALOG_LLM` | optional | `'off'` | config/features.php:2107<br>config/features.php:2108 |
+| `SUPPORT_PAY_CLARIFY` | optional | `false` | config/features.php:2115 |
+| `SUPPORT_PAY_DIALOG_LLM` | optional | `'off'` | config/features.php:2123<br>config/features.php:2124 |
 | `SUPPORT_PAY_LLM_HISTORY` | optional | `20` | config/support.php:325 |
 | `SUPPORT_PAY_LLM_MIN_CONFIDENCE` | optional | `0.7` | config/support.php:323 |
 | `SUPPORT_PAY_LLM_TIMEOUT` | optional | `60` | config/support.php:324 |
@@ -893,7 +894,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_TECH_ASSIGNEE_USER_ID` | required | `—` | config/services.php:307<br>config/services.php:308<br>config/support_tech.php:10<br>config/support_tech.php:11 |
 | `SUPPORT_TECH_KEYWORDS` | required | `—` | config/support_tech.php:36 |
 | `SUPPORT_TEMPLATE_DRAFTS` | optional | `true` | config/features.php:173 |
-| `SUPPORT_TOPIC_SYNCED_RULES` | optional | `false` | config/features.php:2164 |
+| `SUPPORT_TOPIC_SYNCED_RULES` | optional | `false` | config/features.php:2180 |
 | `SUPPORT_UNIFIED_REPLY` | optional | `false` | config/features.php:57 |
 | `SUPPORT_UNLINKED_DM_THREADS` | optional | `false` | config/features.php:450 |
 | `SUPPORT_VISITOR_GEO` | optional | `false` | config/features.php:513 |
