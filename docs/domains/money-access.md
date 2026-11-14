@@ -60,3 +60,27 @@ php artisan catalog:mirror-recording-lessons <source> <target>
 - [money-core-adversarial-review.md](../money-core-adversarial-review.md)
 - [revenue-recognition.md](../revenue-recognition.md)
 - [ARCHITECTURE_SYSTEMA_TEACHER_STUDENT_SETTLEMENT_GROUP_REVIEWERS.md](../ARCHITECTURE_SYSTEMA_TEACHER_STUDENT_SETTLEMENT_GROUP_REVIEWERS.md)
+
+## B2B-оплата «за группу целиком» (H8245)
+
+Юрлицо/студия платит за всех учеников группы одним платежом (Адара → курс 463,
+гр. «Грамматика по Кочергиной»), без чекаута учеников.
+
+- **Тариф-ключ платежа:** `b2b_group` (константа `Payment::TARIFF_B2B_GROUP`,
+  `Payment::isB2bGroup()`). Платёж несёт `group_id` — за какую группу платят.
+- **Флаг `features.b2b_group_payment`** (env `B2B_GROUP_PAYMENT`, дефолт OFF).
+  OFF: b2b_group-платёж — чисто денежная строка, контур прежний. ON:
+  - ученики группы получают виртуальные ключи доступа через
+    `B2bGroupEntitlement::extraTariffKeysFor()` (зеркало клубного контура:
+    ключ живёт только на запросе, откат платежа закрывает доступ немедленно);
+  - блок-калькулятор атрибутирует b2b-платёж группе по `payments.group_id`
+    (плательщик — юрлицо, в group_user не состоит);
+  - должники не считают (user, course), покрытые b2b-платежом группы.
+- **Деньги всегда считаются** (вне флага): b2b_group не входит в
+  `NON_REVENUE_TARIFFS`, курсовой accrual и 30% ЗП работают как у обычной
+  оплаты. Приём — существующие пути: нал (`payment_method='cash'`,
+  `received_account=school`), счёт юрлицу (`provider=invoice`, H2017), Точка.
+- **Плательщику доступ не выдаётся** (не студент): `processB2bGroupPaid()` —
+  только curator-уведомление; `grantsCourseAccess()` отсекает b2b_group, поэтому
+  откат b2b-платежа НЕ детачит учеников группы.
+- **Проверка:** `php artisan test --filter=B2bGroupPaymentTest`.

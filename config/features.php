@@ -1528,6 +1528,14 @@ return [
      | командой `membership:rehearse` до объявления запуска.
      */
     'club_membership' => (bool) env('CLUB_MEMBERSHIP', false),
+
+    // H8245: B2B-оплата «за группу целиком» — юрлицо/студия платит за всех учеников
+    // группы одним платежом (Адара → курс 463 «Грамматика по Кочергиной»).
+    // OFF (дефолт): b2b_group-платёж — чисто денежная строка, поведение живого
+    // контура прежнее. ON: ученики группы с оплаченным b2b_group-платежом получают
+    // виртуальные ключи доступа (B2bGroupEntitlement), блок-калькулятор атрибутирует
+    // платёж группе по payments.group_id, должники не считают покрытых учеников.
+    'b2b_group_payment' => (bool) env('B2B_GROUP_PAYMENT', false),
     // H2744 staged rollout. Tier interpretation is dark until legacy rows and
     // tariffs have been explicitly classified by membership:classify-tiers.
     'membership_tiered' => (bool) env('MEMBERSHIP_TIERED', false),
