@@ -1536,6 +1536,12 @@ return [
     // виртуальные ключи доступа (B2bGroupEntitlement), блок-калькулятор атрибутирует
     // платёж группе по payments.group_id, должники не считают покрытых учеников.
     'b2b_group_payment' => (bool) env('B2B_GROUP_PAYMENT', false),
+
+    // H8250: B2B-напоминания плательщику (после последнего урока покрытого
+    // блока — ровно одно напоминание оплатить следующий блок). Собственный
+    // выключатель лейна поверх b2b_group_payment: напоминания не активируются
+    // молча вместе с b2b-контуром, только явным переворотом (DEPLOY_QUEUE).
+    'b2b_payer_reminders' => (bool) env('B2B_PAYER_REMINDERS', false),
     // H2744 staged rollout. Tier interpretation is dark until legacy rows and
     // tariffs have been explicitly classified by membership:classify-tiers.
     'membership_tiered' => (bool) env('MEMBERSHIP_TIERED', false),
