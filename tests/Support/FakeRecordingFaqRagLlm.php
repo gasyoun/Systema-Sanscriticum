@@ -19,10 +19,11 @@ final class FakeRecordingFaqRagLlm implements FaqRagAnswerLlm
     /** @var list<array{question: string, chunks: list<string>}> */
     public array $calls = [];
 
-    public function __construct(private readonly ?string $forcedAnswer = null)
-    {
-    }
+    public function __construct(private readonly ?string $forcedAnswer = null) {}
 
+    /**
+     * @param  list<FaqChunk>  $chunks  разделы корпуса, ушедшие за PII-границу
+     */
     public function complete(string $maskedQuestion, array $chunks): string
     {
         $this->called = true;

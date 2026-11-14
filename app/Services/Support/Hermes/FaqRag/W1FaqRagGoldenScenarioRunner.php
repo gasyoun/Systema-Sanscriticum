@@ -29,7 +29,7 @@ final class W1FaqRagGoldenScenarioRunner
 
     /**
      * @param  array<string, mixed>  $input  сценарий из fixture (message, context)
-     * @return array<string, mixed>  наблюдение для GoldenCaseEvaluator
+     * @return array<string, mixed> наблюдение для GoldenCaseEvaluator
      */
     public function __invoke(array $input): array
     {
