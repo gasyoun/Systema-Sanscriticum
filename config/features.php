@@ -2068,6 +2068,22 @@ return [
     'hermes_faq_rag' => (bool) env('HERMES_FAQ_RAG', false),
 
     /*
+     | Hermes W1 роль 85 `access-provisioner` (H6189, пакет hermes-24-01a10bca):
+     | READ-ONLY диагностика доступа + проект исправления как ДАННЫЕ для
+     | человека — действующее/истёкшее/чужое/отсутствующее право, объяснение
+     | основания (оплата), проект операции (grant/extend/revoke/rebind/none).
+     | НИКАКИХ реальных изменений доступов (access mutations запрещены
+     | абсолютно): проект исполняется только подтверждением человека. Вход
+     | маскируется ДО обработки (H6182, fail-closed), маршрутизация — общий
+     | слой H6190, квота H6174 (default OFF) ограничивает композицию
+     | черновика. Никаких платных API и исходящих отправок (human-send per
+     | H6183). ВЫКЛ по умолчанию (роль OFF — W1 deploy gate stays OFF):
+     | включение HERMES_ACCESS_DIAGNOSTICS=true + config:cache — deploy-шаг
+     | человека.
+     */
+    'hermes_access_diagnostics' => (bool) env('HERMES_ACCESS_DIAGNOSTICS', false),
+
+    /*
      | Быстрая запись на бесплатный мини-курс «Подготовительная группа» для
      | рекламного трафика из VK-бота: /k/{mini_courses.slug}/start — имя + email
      | + согласие ПДн → кабинет, платёж 0 ₽ по штатному пути Payment (доступ,

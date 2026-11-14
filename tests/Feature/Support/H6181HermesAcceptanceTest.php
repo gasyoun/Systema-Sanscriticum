@@ -132,7 +132,9 @@ class H6181HermesAcceptanceTest extends TestCase
         // Роль 20 реализована (H6185, implementation_status=implemented; раннер
         // регистрируется в H6185HermesAcceptanceTest) — вне контекста pending-проверки.
         // Роль 23 реализована (H6187) и проверяется отдельно.
-        foreach ([65, 85] as $roleId) {
+        // Роль 85 реализована (H6189, implementation_status=implemented; раннер
+        // регистрируется в H6189HermesAcceptanceTest) — вне контекста pending-проверки.
+        foreach ([65] as $roleId) {
             $entry = $report['roles'][(string) $roleId];
             $this->assertSame('pending', $entry['implementation_status']);
             $this->assertSame('pending_implementation', $entry['status']);
@@ -145,7 +147,7 @@ class H6181HermesAcceptanceTest extends TestCase
 
         // Честный INCONCLUSIVE: роли без внедрения перечислены явно.
         $inconclusive = $report['inconclusive'];
-        foreach ([65, 85] as $roleId) {
+        foreach ([65] as $roleId) {
             $this->assertContains($roleId, $inconclusive);
         }
         $this->assertContains('routing', $inconclusive);
