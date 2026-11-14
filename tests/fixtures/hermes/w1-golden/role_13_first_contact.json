@@ -5,7 +5,7 @@
     "wave": "W1",
     "role_id": 13,
     "role_name": "first-contact-247",
-    "implementation_status": "pending",
+    "implementation_status": "implemented",
     "implementation_handoff": "H6184",
     "provenance": {
         "authored": "2026-10-06",
