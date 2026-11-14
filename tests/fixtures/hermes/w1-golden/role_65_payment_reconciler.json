@@ -5,7 +5,7 @@
     "wave": "W1",
     "role_id": 65,
     "role_name": "payment-reconciler",
-    "implementation_status": "pending",
+    "implementation_status": "implemented",
     "implementation_handoff": "H6188",
     "provenance": {
         "authored": "2026-10-06",
