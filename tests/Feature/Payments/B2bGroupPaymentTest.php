@@ -231,6 +231,32 @@ class B2bGroupPaymentTest extends TestCase
         );
     }
 
+    /**
+     * Нал ЛИЧНО преподавателю (H8245 follow-up, MG 14-11-2026): b2b-платёж с
+     * received_account=teacher_personal — личный заработок преподавателя, он уже
+     * держит 100% наличными; школьная ЗП не начисляется НИСКОЛЬКО (предикат
+     * isCourseRevenuePayment, parity OFF; block-калькулятор фильтрует schoolReceived).
+     */
+    public function test_b2b_paid_teacher_personal_accrues_no_school_salary(): void
+    {
+        $this->payB2bGroup(attrs: [
+            'received_account' => Payment::RECEIVED_TEACHER,
+            'received_by_teacher_id' => $this->teacher->id,
+        ]); // 30 000 налом лично преподавателю
+
+        $this->assertEqualsWithDelta(
+            0.0,
+            app(TeacherSalaryService::class)->totalForTeacher($this->teacher->fresh()),
+            0.01,
+        );
+        config(['features.b2b_group_payment' => true]);
+        $this->assertEqualsWithDelta(
+            0.0,
+            app(TeacherSalaryService::class)->blockGroupRevenue($this->course->id, 1, $this->group->id),
+            0.01,
+        );
+    }
+
     /** Блок-калькулятор: b2b-платёж атрибутируется группе только под флагом. */
     public function test_block_group_revenue_attributes_b2b_payment_by_group_id_under_flag(): void
     {

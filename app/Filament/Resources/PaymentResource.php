@@ -182,7 +182,7 @@ class PaymentResource extends Resource
                         ->visible(fn (Forms\Get $get) => $get('tariff') === Payment::TARIFF_B2B_GROUP)
                         ->required(fn (Forms\Get $get) => $get('tariff') === Payment::TARIFF_B2B_GROUP)
                         ->searchable()
-                        ->helperText('Группа, за которую платит юрлицо: ученики получают доступ виртуальными ключами (флаг b2b_group_payment), плательщику доступ не выдаётся. Нал: payment_method «Наличные». Счёт юрлицу: provider «Счёт» (H2017, pending до сверки).')
+                        ->helperText('Группа, за которую платит юрлицо: ученики получают доступ виртуальными ключами (флаг b2b_group_payment), плательщику доступ не выдаётся. ДЕНЬГИ: счёт/перевод в кассу школы → received_account «school» (ЗП 30% как у обычной оплаты); нал ЛИЧНО преподавателю → «teacher_personal» + получатель (школьная ЗП не начисляется — личный заработок). Счёт юрлицу: provider «Счёт» (H2017, pending до сверки).')
                         ->columnSpanFull(),
                 ])->columns(2),
 
