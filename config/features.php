@@ -2055,6 +2055,19 @@ return [
     'hermes_human_send' => (bool) env('HERMES_HUMAN_SEND', false),
 
     /*
+     | Hermes W1 роль 20 `faq-rag` (H6185, пакет hermes-24-01a10bca):
+     | RAG-сборка ответа с ПРОВЕРЯЕМЫМИ цитатами — вход маскируется ДО LLM
+     | (H6182), контур-гейт на общем классификаторе H6190, ретривал H2448 +
+     | score floor H3766 B5, ответ только с маркером [cite:chunk_id],
+     | разрешимым против утверждённого FAQ-корпуса (missing/stale/
+     | contradictory цитата = отказ или человеку). Mock-LLM путь, никаких
+     | платных API и исходящих отправок (human-send per H6183). ВЫКЛ по
+     | умолчанию (роль OFF — W1 deploy gate stays OFF): включение
+     | HERMES_FAQ_RAG=true + config:cache — deploy-шаг человека.
+     */
+    'hermes_faq_rag' => (bool) env('HERMES_FAQ_RAG', false),
+
+    /*
      | Быстрая запись на бесплатный мини-курс «Подготовительная группа» для
      | рекламного трафика из VK-бота: /k/{mini_courses.slug}/start — имя + email
      | + согласие ПДн → кабинет, платёж 0 ₽ по штатному пути Payment (доступ,
