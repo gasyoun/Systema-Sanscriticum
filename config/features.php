@@ -2084,6 +2084,19 @@ return [
     'hermes_access_diagnostics' => (bool) env('HERMES_ACCESS_DIAGNOSTICS', false),
 
     /*
+     | Hermes W1 роль 65 `payment-reconciler` (H6188, пакет hermes-24-01a10bca):
+     | READ-ONLY предложение сверки оплат — синтетические payment/duplicate/
+     | refund/mismatch данные сверяются с записями Systema и ожиданиями
+     | (курс/баланс), находки адресуются человеку через human-send (H6183).
+     | ZERO money-мутаций, ZERO платёжных API и LLM-вызовов (предложение
+     | композится детерминированно), PII fail-closed (H6182), маршрутизация —
+     | общий слой H6190, квота H6174 (default OFF — log-only). ВЫКЛ по
+     | умолчанию (роль OFF — W1 deploy gate stays OFF): включение
+     | HERMES_PAYMENT_RECONCILER=true + config:cache — deploy-шаг человека.
+     */
+    'hermes_payment_reconciler' => (bool) env('HERMES_PAYMENT_RECONCILER', false),
+
+    /*
      | Быстрая запись на бесплатный мини-курс «Подготовительная группа» для
      | рекламного трафика из VK-бота: /k/{mini_courses.slug}/start — имя + email
      | + согласие ПДн → кабинет, платёж 0 ₽ по штатному пути Payment (доступ,
