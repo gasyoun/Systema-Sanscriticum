@@ -183,7 +183,7 @@ class ContentCalendarSlotResourceGateTest extends TestCase
                 'body' => '<p>'.str_repeat('а', 1100).'</p>',
                 'destinations' => ['tg_a'],
             ])
-            ->set('data.media_path', UploadedFile::fake()->image('cover.jpg'))
+            ->set('data.media_path', UploadedFile::fake()->create('teaser.mp4', 2048, 'video/mp4'))
             ->call('create')
             ->assertHasFormErrors(['media_path'])
             ->assertHasNoFormErrors(['body'])
@@ -277,18 +277,25 @@ class ContentCalendarSlotResourceGateTest extends TestCase
             ->assertFormSet(['vk_attachments' => "photo-236973776_457239017\nvideo-236973776_456239020"]);
     }
 
-    public function test_caption_over_1024_with_media_is_rejected(): void
+    public function test_caption_over_1024_is_rejected_with_video_but_allowed_with_photo(): void
     {
         Storage::fake(ContentCalendarSlot::MEDIA_DISK);
         $slot = $this->crosspostSlot();
         $long = '<p>'.str_repeat('а', 1025).'</p>';
 
         Livewire::test(ContentCalendarSlotResource\Pages\EditContentCalendarSlot::class, ['record' => $slot->getRouteKey()])
-            ->set('data.media_path', UploadedFile::fake()->image('cover.jpg'))
+            ->set('data.media_path', UploadedFile::fake()->create('teaser.mp4', 2048, 'video/mp4'))
             ->set('data.body', $long)
             ->call('save')
             ->assertHasFormErrors(['media_path'])
             ->assertHasNoFormErrors(['body']);
+
+        // Картинка + длинный текст: в Telegram уйдёт сообщением с картинкой-превью.
+        Livewire::test(ContentCalendarSlotResource\Pages\EditContentCalendarSlot::class, ['record' => $slot->getRouteKey()])
+            ->set('data.media_path', UploadedFile::fake()->image('cover.jpg'))
+            ->set('data.body', $long)
+            ->call('save')
+            ->assertHasNoFormErrors();
 
         Livewire::test(ContentCalendarSlotResource\Pages\EditContentCalendarSlot::class, ['record' => $slot->getRouteKey()])
             ->set('data.body', $long)
