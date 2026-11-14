@@ -25,6 +25,9 @@ class ZoomService implements WebinarProvider
 
     private const TOKEN_CACHE_KEY = 'zoom.s2s.access_token';
 
+    /** Резолв «meeting id или occurrence uuid → имя аккаунта» в рамках процесса. */
+    private array $accountOf = [];
+
     public function __construct(
         private readonly ?string $accountId,
         private readonly ?string $clientId,
@@ -49,6 +52,31 @@ class ZoomService implements WebinarProvider
     }
 
     /**
+     * Все сконфигурированные аккаунты Zoom: основной (ZOOM_*) + дополнительные
+     * слоты из services.zoom.extra_accounts (напр. ZOOM2_* — второй аккаунт
+     * школы). Комнаты курсов живут в разных аккаунтах, поэтому чтение
+     * посещаемости пробует их по порядку. Порядок = приоритет.
+     *
+     * @return array<string, self>
+     */
+    public static function configuredAccounts(): array
+    {
+        $accounts = ['main' => self::fromConfig()];
+
+        foreach ((array) config('services.zoom.extra_accounts', []) as $name => $cfg) {
+            $cfg = (array) $cfg;
+            $accounts[(string) $name] = new self(
+                is_string($cfg['account_id'] ?? null) ? $cfg['account_id'] : null,
+                is_string($cfg['client_id'] ?? null) ? $cfg['client_id'] : null,
+                is_string($cfg['client_secret'] ?? null) ? $cfg['client_secret'] : null,
+                (int) config('services.zoom.timeout', 30),
+            );
+        }
+
+        return array_filter($accounts, fn (self $svc): bool => $svc->isConfigured());
+    }
+
+    /**
      * Access-token через account_credentials grant. Кэшируем чуть короче, чем
      * реальный TTL (Zoom отдаёт ~3600с), чтобы не словить просрочку на границе.
      */
@@ -56,7 +84,7 @@ class ZoomService implements WebinarProvider
     {
         $this->assertConfigured();
 
-        return Cache::remember(self::TOKEN_CACHE_KEY, now()->addMinutes(55), function (): string {
+        return Cache::remember($this->tokenCacheKey(), now()->addMinutes(55), function (): string {
             $response = Http::asForm()
                 ->withBasicAuth($this->clientId, $this->clientSecret)
                 ->timeout($this->timeout)
@@ -74,34 +102,105 @@ class ZoomService implements WebinarProvider
         });
     }
 
+    /** Ключ кэша токена — на аккаунт: у доп. аккаунтов свои креды и свои токены. */
+    private function tokenCacheKey(): string
+    {
+        return self::TOKEN_CACHE_KEY.'.'.substr(sha1(($this->accountId ?? '').'|'.($this->clientId ?? '')), 0, 12);
+    }
+
     /**
      * Прошедшие запуски recurring-встречи: [{uuid, start_time}, ...].
      * При едином meeting_id каждый запуск имеет свой uuid — по нему привязываем
-     * посещаемость к конкретной дате занятия.
+     * посещаемость к конкретной дате занятия. Встреча ищется по всем аккаунтам
+     * школы (pastMeetingInstancesAcrossAccounts).
      *
      * @return array<int, array{uuid?: string, start_time?: string}>
      */
     public function pastMeetingInstances(string $meetingId): array
     {
-        $response = $this->apiRequest()->get(self::API_BASE."/past_meetings/{$meetingId}/instances");
+        return $this->pastMeetingInstancesAcrossAccounts($meetingId)['meetings'];
+    }
 
-        return $response->successful() ? (array) $response->json('meetings', []) : [];
+    /**
+     * То же с указанием аккаунта, на котором встреча нашлась. Комнаты школы
+     * разложены по нескольким Zoom-аккаунтам: пробуем по порядку, первый
+     * непустой ответ побеждает; успех без запусков запоминается как fallback.
+     * Найденные uuid запоминаются вместе с аккаунтом — meetingParticipants
+     * дальше ходит без перебора.
+     *
+     * @return array{account: string, meetings: array<int, array{uuid?: string, start_time?: string}>}
+     */
+    public function pastMeetingInstancesAcrossAccounts(string $meetingId): array
+    {
+        $fallback = null;
+
+        foreach (self::configuredAccounts() as $name => $svc) {
+            $response = $svc->apiRequest()->get(self::API_BASE."/past_meetings/{$meetingId}/instances");
+
+            if (! $response->successful()) {
+                continue; // 404 — встречи нет в этом аккаунте, пробуем следующий
+            }
+
+            $meetings = (array) $response->json('meetings', []);
+
+            if ($meetings !== []) {
+                $this->accountOf[$meetingId] = $name;
+                foreach ($meetings as $meeting) {
+                    $uuid = isset($meeting['uuid']) ? (string) $meeting['uuid'] : '';
+                    if ($uuid !== '') {
+                        $this->accountOf[$uuid] = $name;
+                    }
+                }
+
+                return ['account' => $name, 'meetings' => $meetings];
+            }
+
+            $fallback ??= ['account' => $name, 'meetings' => $meetings];
+        }
+
+        return $fallback ?? ['account' => '', 'meetings' => []];
     }
 
     /**
      * Участники прошедшей встречи/запуска (Reports API), с пагинацией.
      * $meetingUuid — uuid конкретного запуска (instances) либо meeting id.
+     * Запрос идёт в аккаунт, где встреча уже нашлась (memo от instances);
+     * без memo перебираем аккаунты — первый непустой отчёт побеждает (404
+     * чужого аккаунта не останавливает перебор).
      *
      * @return array<int, array<string, mixed>>
      */
     public function meetingParticipants(string $meetingUuid): array
+    {
+        $accounts = self::configuredAccounts();
+
+        $known = $this->accountOf[$meetingUuid] ?? null;
+        if (is_string($known) && isset($accounts[$known])) {
+            return $this->participantsFrom($accounts[$known], $meetingUuid);
+        }
+
+        foreach ($accounts as $name => $svc) {
+            $participants = $this->participantsFrom($svc, $meetingUuid);
+
+            if ($participants !== []) {
+                $this->accountOf[$meetingUuid] = $name;
+
+                return $participants;
+            }
+        }
+
+        return [];
+    }
+
+    /** Пагинированная выгрузка участников строго с указанного аккаунта. */
+    private function participantsFrom(self $svc, string $meetingUuid): array
     {
         $encoded = $this->encodeUuid($meetingUuid);
         $participants = [];
         $token = '';
 
         do {
-            $response = $this->apiRequest()->get(
+            $response = $svc->apiRequest()->get(
                 self::API_BASE."/report/meetings/{$encoded}/participants",
                 array_filter(['page_size' => 300, 'next_page_token' => $token ?: null]),
             );

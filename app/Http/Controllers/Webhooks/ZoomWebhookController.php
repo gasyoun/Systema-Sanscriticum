@@ -37,16 +37,26 @@ class ZoomWebhookController extends Controller
 {
     public function handle(Request $request): JsonResponse
     {
-        $secret = trim((string) config('services.zoom.webhook_secret', ''));
+        $secrets = $this->webhookSecrets();
         $event = (string) $request->input('event', '');
 
-        if ($secret === '') {
-            Log::error('Zoom webhook: ZOOM_WEBHOOK_SECRET не задан');
+        if ($secrets === []) {
+            Log::error('Zoom webhook: ни одного webhook-секрета не задано (ZOOM_WEBHOOK_SECRET / ZOOM2_WEBHOOK_SECRET)');
 
             return response()->json(['message' => 'Webhook secret is not configured'], 503);
         }
 
-        if (! $this->signatureValid($request, $secret)) {
+        // События приходят от приложений всех аккаунтов школы (основной + доп.):
+        // подпись сверяем с каждым секретом, валидной считаем первую совпавшую.
+        $secret = null;
+        foreach ($secrets as $candidate) {
+            if ($this->signatureValid($request, $candidate)) {
+                $secret = $candidate;
+                break;
+            }
+        }
+
+        if ($secret === null) {
             Log::warning('Zoom webhook: неверная подпись', ['ip' => $request->ip(), 'event' => $event]);
 
             return response()->json(['message' => 'Invalid signature'], 403);
@@ -66,6 +76,23 @@ class ZoomWebhookController extends Controller
 
         // Прочие события подтверждаем 200, чтобы Zoom не уходил в ретраи.
         return response()->json(['status' => 'ignored', 'event' => $event]);
+    }
+
+    /**
+     * Непустые Secret Token'ы Event Subscriptions всех аккаунтов школы:
+     * основной + дополнительные слоты services.zoom.extra_accounts.
+     *
+     * @return list<string>
+     */
+    private function webhookSecrets(): array
+    {
+        $secrets = [trim((string) config('services.zoom.webhook_secret', ''))];
+
+        foreach ((array) config('services.zoom.extra_accounts', []) as $account) {
+            $secrets[] = trim((string) ($account['webhook_secret'] ?? ''));
+        }
+
+        return array_values(array_filter($secrets, fn (string $secret): bool => $secret !== ''));
     }
 
     private function urlValidationResponse(Request $request, string $secret): JsonResponse
