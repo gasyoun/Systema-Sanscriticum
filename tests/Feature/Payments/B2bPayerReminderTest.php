@@ -31,6 +31,8 @@ class B2bPayerReminderTest extends TestCase
 
     private Group $group;
 
+    private Teacher $teacher;
+
     private User $payer;
 
     protected function setUp(): void
