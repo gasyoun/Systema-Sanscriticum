@@ -82,4 +82,11 @@ else
   # молчали семь часов. Возраст отметки читает guards:verify (scheduler-stamp).
   date -u +%s > "$APP_DIR/storage/framework/schedule-run.stamp" 2>/dev/null || true
 fi
+# 161126 DEBUG (time-boxed 7 дней, снять 23-11-2026): расследование тихого
+# пропуска weekly spatie backup:run (два понедельника подряд — #3038-след):
+# каждый минутный тик пишет rc в /var/log/schedule-debug.log (файл создаётся
+# с chown www-data вручную), чтобы видеть, исполнялся ли schedule:run в
+# понедельник 02:00 МСК и чем кончился. Убрать блок целиком после снятия.
+echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) tick rc=${rc:-none}" >> /var/log/schedule-debug.log
+find /var/log/schedule-debug.log -mtime +7 -delete 2>/dev/null || true
 exit 0
