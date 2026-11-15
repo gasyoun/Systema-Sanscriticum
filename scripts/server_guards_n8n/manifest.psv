@@ -86,6 +86,7 @@ fail2ban/jail.d/systema-sshd.conf|/etc/fail2ban/jail.d/systema-sshd.conf|644|cri
 # и таймером не перезапускается), строки манифеста и REQUIRED_ACTIVE_TIMERS добавлены.
 systemd/disk-watch.timer|/etc/systemd/system/disk-watch.timer|644|warning
 systemd/disk-watch.service|/etc/systemd/system/disk-watch.service|644|warning
+sbin/disk_watch.py|/usr/local/sbin/disk_watch.py|700|warning
 systemd/restic-n8n-estate.timer|/etc/systemd/system/restic-n8n-estate.timer|644|critical
 systemd/restic-n8n-estate.service|/etc/systemd/system/restic-n8n-estate.service|644|critical
 systemd/restic-fanout.timer|/etc/systemd/system/restic-fanout.timer|644|critical
