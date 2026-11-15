@@ -130,6 +130,6 @@ REMOVED=$(comm -23 "$PREVF" "$CURF" | head -10)
   echo "  проверка вручную: php artisan tinker --execute=\"App\\Models\\User::count();\""
 } > "$BRIEF_DIR/${NAME}_latest.md"
 log "FAIL drift was=$OLD_COUNT now=$COUNT"
-page_or_queue "P1" "admin-roster .92: дрейф привилегированных $OLD_COUNT→$COUNT (урок ova_wp: руж-админ ловится сутками, не неделями)"
+page_or_queue "P1" "admin-roster .92: дрейф привилегированных $OLD_COUNT→$COUNT; подробности: brief/admin_roster_latest.md"
 hb_mark "$NAME" 2
 exit 2

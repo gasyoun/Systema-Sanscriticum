@@ -1,0 +1,8 @@
+[Unit]
+Description=Self-check of .92 internals -> Better Stack heartbeat 477251 (agent 18-09-2026)
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/samskrte-internals-heartbeat.sh
+TimeoutStartSec=120

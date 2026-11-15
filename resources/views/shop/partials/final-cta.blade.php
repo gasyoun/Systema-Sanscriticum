@@ -14,7 +14,7 @@
         <div class="relative z-10">
             <h2 class="text-3xl lg:text-4xl font-extrabold text-white mb-4">Готовы начать изучать {{ $ctaSubject }}?</h2>
             <p class="text-slate-400 max-w-2xl mx-auto mb-8 leading-relaxed">
-                Присоединяйтесь к курсу «{{ $course->title }}» и откройте для себя язык живой традиции.
+                Присоединяйтесь к курсу «{{ $displayCourseTitle ?? $course->title }}» и откройте для себя язык живой традиции.
             </p>
             <a href="#tariffs"
                class="inline-flex justify-center items-center px-10 py-4 text-base font-bold rounded-xl text-white bg-brand hover:bg-brand-hover transition-all hover:-translate-y-1 shadow-[0_0_30px_rgba(232,92,36,0.35)]">

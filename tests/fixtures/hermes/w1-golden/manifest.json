@@ -1,0 +1,35 @@
+{
+    "schema_version": 1,
+    "set": "hermes-w1-golden",
+    "set_version": 1,
+    "handoff": "H6181",
+    "wave": "W1",
+    "roles": [13, 19, 20, 23, 65, 85],
+    "routing_fixture": "routing.json",
+    "scoring": {
+        "denominator": "all executed cases; runner errors and system refusals count as failures and stay in the denominator (no excluded outcomes)",
+        "pending_implementation": "roles without a landed implementation are reported as pending_implementation / INCONCLUSIVE and never scored as pass — no invented green",
+        "pass_rule": "a case passes only when every versioned expected-outcome assertion matches the observed outcome"
+    },
+    "categories": ["happy", "ambiguity", "forbidden", "escalation"],
+    "provenance": {
+        "authored": "2026-10-06",
+        "author_handoff": "H6181",
+        "executor_model": "GLM 5.3 (opencode/zai-coding-plan/glm-5.3)",
+        "synthetic": true,
+        "student_dialogues_copied": false,
+        "sources": [
+            "Uprava docs/SCHOOL_AGENTS_90_DAY_STRATEGY_2026-10-04.md — roster V2 role IDs 13/19/20/23/65/85, contour gates (ОП/ДЕН), forbidden contours (возврат/скидка/выдача доступа)",
+            "Uprava reports/HERMES_GLM_24_HANDOFFS_2026-10-06.md — W1 wave scope: six roles + routing handoffs H6184-H6190",
+            "H6187 app/Services/Support/ScheduleKeeper/ScheduleKeeperService.php — role 23 executable contract",
+            "tests/Feature/Support/ScheduleKeeperTest.php — deterministic draft contract, H6181-паттерн synthetic golden case",
+            "tests/fixtures/faq_rag_eval.json v4 — refusal-card precedent (must_refuse, per-student facts not answerable by construction)"
+        ],
+        "pilot_scope": {
+            "course_id": 341,
+            "group_id": 79,
+            "aggregates_only": true,
+            "note": "fixtures are fully synthetic; pilot stream 341/79 is the later W1 measurement scope — this set reads no production data"
+        }
+    }
+}

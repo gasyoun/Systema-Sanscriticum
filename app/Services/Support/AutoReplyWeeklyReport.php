@@ -24,6 +24,13 @@ final class AutoReplyWeeklyReport
     private const LATENCY_KINDS = ['ack', 'template'];
 
     /**
+     * H6767: окно разведочных прокси «а что было дальше» после отправленного
+     * варианта (студент написал снова / куратор ответил). Разведочно: никакой
+     * значимости, пороги — решение MG (GTD-остаток, как в H6732 unit 1).
+     */
+    private const VARIANT_FOLLOWUP_WINDOW_HOURS = 48;
+
+    /**
      * @return array{
      *     from: string,
      *     to: string,
@@ -81,6 +88,11 @@ final class AutoReplyWeeklyReport
             ->sortKeys()
             ->all();
 
+        // H6767: разведочный срез по вариантам (support_reply_variant_sampling).
+        // Флаг OFF неделю = в meta нет variant_* → среза нет и строка в тексте
+        // не появляется (OFF-инвариант отчёта: байт-в-байт прежний).
+        $variants = $this->variantAggregates($tgEvents);
+
         return [
             'from' => $from->format('d.m'),
             'to' => $to->format('d.m'),
@@ -95,6 +107,7 @@ final class AutoReplyWeeklyReport
             'web_sent_by_kind' => $webSentByKind,
             'hint_suppressed' => $hintSuppressed,
             'hint_suppressed_by_reason' => $hintSuppressedByReason,
+            'variants' => $variants,
             'text' => $this->formatHtml(
                 $from,
                 $to,
@@ -109,6 +122,7 @@ final class AutoReplyWeeklyReport
                 $webSentByKind,
                 $hintSuppressed,
                 $hintSuppressedByReason,
+                $variants,
             ),
         ];
     }
@@ -267,10 +281,89 @@ final class AutoReplyWeeklyReport
     }
 
     /**
+     * H6767: разведочный агрегат по вариантам отправленных автоответов.
+     *
+     * Только id/счётчики (variant_id + sent + два прокси «а что было дальше»
+     * в окне 48ч: студент написал снова в чате / куратор ответил). Ни текстов,
+     * ни значимости: выборка разведочная, пороги — GTD-остаток MG (та же
+     * позиция, что у QA-сэмплинга H6732 unit 1).
+     *
+     * @param  Collection<int, SupportAiReplyEvent>  $events
+     * @return array<string, array<string, array{sent: int, student_followup_48h: int, curator_answer_48h: int}>>
+     */
+    private function variantAggregates(Collection $events): array
+    {
+        $variants = [];
+
+        foreach ($events->where('event_type', SupportDmAutoReply::EVENT_SENT) as $event) {
+            $kind = $event->meta['variant_kind'] ?? null;
+            $id = $event->meta['variant_id'] ?? null;
+
+            if ($kind === null || $id === null) {
+                continue;
+            }
+
+            $kind = (string) $kind;
+            $id = (string) $id;
+
+            $variants[$kind] ??= [];
+            $variants[$kind][$id] ??= ['sent' => 0, 'student_followup_48h' => 0, 'curator_answer_48h' => 0];
+            $variants[$kind][$id]['sent']++;
+
+            /** @var TelegramSupportMessage|null $botOutgoing */
+            $botOutgoing = $event->telegram_support_message_id !== null
+                ? TelegramSupportMessage::query()->find($event->telegram_support_message_id)
+                : null;
+
+            if ($botOutgoing === null || $botOutgoing->sent_at === null) {
+                continue;
+            }
+
+            $until = $botOutgoing->sent_at->copy()->addHours(self::VARIANT_FOLLOWUP_WINDOW_HOURS);
+
+            $studentFollowUp = TelegramSupportMessage::query()
+                ->where('telegram_chat_id', $botOutgoing->telegram_chat_id)
+                ->where('direction', 'incoming')
+                ->where('sent_at', '>', $botOutgoing->sent_at)
+                ->where('sent_at', '<=', $until)
+                ->exists();
+
+            $curatorAnswer = TelegramSupportMessage::query()
+                ->where('telegram_chat_id', $botOutgoing->telegram_chat_id)
+                ->where('direction', 'outgoing')
+                ->where('id', '!=', $botOutgoing->id)
+                ->where('sent_at', '>', $botOutgoing->sent_at)
+                ->where('sent_at', '<=', $until)
+                ->where(fn ($q) => $q
+                    ->where('responder_type', 'human')
+                    ->orWhere(fn ($qq) => $qq->whereNull('responder_type')->where('role', 'human')))
+                ->exists();
+
+            if ($studentFollowUp) {
+                $variants[$kind][$id]['student_followup_48h']++;
+            }
+
+            if ($curatorAnswer) {
+                $variants[$kind][$id]['curator_answer_48h']++;
+            }
+        }
+
+        foreach ($variants as &$byId) {
+            ksort($byId);
+        }
+        unset($byId);
+
+        ksort($variants);
+
+        return $variants;
+    }
+
+    /**
      * @param  array<string, int>  $sentByKind
      * @param  array<string, int>  $categories
      * @param  array<string, int>  $latency
      * @param  array<string, int>  $webSentByKind
+     * @param  array<string, array<string, array{sent: int, student_followup_48h: int, curator_answer_48h: int}>>  $variants
      */
     private function formatHtml(
         CarbonImmutable $from,
@@ -286,6 +379,7 @@ final class AutoReplyWeeklyReport
         array $webSentByKind = [],
         int $hintSuppressed = 0,
         array $hintSuppressedByReason = [],
+        array $variants = [],
     ): string {
         $lines = [
             '<b>🤖 Автоответы · '.$from->format('d.m').'–'.$to->format('d.m').'</b>',
@@ -356,6 +450,22 @@ final class AutoReplyWeeklyReport
                 array_values($latency),
             ));
             $lines[] = 'Медиана ответа человека: '.$parts;
+        }
+
+        // H6767: срез вариантов. Разведочно, только счётчики; нет вариантов —
+        // нет строки (OFF-инвариант: неделя без сэмплинга не меняет отчёт).
+        if ($variants !== []) {
+            foreach ($variants as $kind => $byId) {
+                $parts = implode(' · ', array_map(
+                    fn (string $id, array $agg): string => '#'.e($id)
+                        .' ×'.$agg['sent']
+                        .' (студент 48ч '.$agg['student_followup_48h']
+                        .' · куратор 48ч '.$agg['curator_answer_48h'].')',
+                    array_keys($byId),
+                    array_values($byId),
+                ));
+                $lines[] = 'Варианты '.e($kind).' (разведочно, пороги — решение MG): '.$parts;
+            }
         }
 
         return implode("\n", $lines);

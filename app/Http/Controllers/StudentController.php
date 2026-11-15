@@ -11,6 +11,7 @@ use App\Models\Course;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\Membership\ClubEntitlement;
+use App\Services\Payments\B2bGroupEntitlement;
 
 class StudentController extends Controller
 {
@@ -56,9 +57,17 @@ class StudentController extends Controller
         //    (club_included). Ключ существует только на время запроса и нигде
         //    не сохраняется — истёкшее членство закрывает доступ немедленно,
         //    без миграции и без «забытых» строк в payments.
+        // H8245: виртуальные ключи B2B-группы — тот же паттерн «ключ живёт только
+        // на запросе», что у клубного членства выше: оплаченный b2b_group-платёж
+        // группы открывает уроки её ученикам, откат покрытия закрывает немедленно.
+        // Флаг features.b2b_group_payment (OFF → no-op, ключей не добавляется).
         return array_values(array_unique(array_merge(
             $keys,
             app(ClubEntitlement::class)->extraTariffKeys(
+                $userId ? User::find($userId) : null,
+                $course,
+            ),
+            app(B2bGroupEntitlement::class)->extraTariffKeysFor(
                 $userId ? User::find($userId) : null,
                 $course,
             ),

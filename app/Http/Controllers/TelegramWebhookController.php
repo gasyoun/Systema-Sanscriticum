@@ -22,6 +22,7 @@ use App\Services\Bot\RosterBotCommand;
 use App\Services\Bot\StudentSelfService;
 use App\Services\Bot\TelegramFormatter;
 use App\Services\Bot\UnblockBotCommand; // Добавили для переключения на человека
+use App\Services\Discipline\ChatSilenceRemovalService;
 use App\Services\HomeworkTelegramTagService;
 use App\Services\Support\HomeworkPauseNoteRecorder;
 use App\Services\Support\SupportDmAutoReply;
@@ -772,6 +773,11 @@ class TelegramWebhookController extends Controller
             || str_starts_with($data, VacationQuorumService::CALLBACK_DECLINE)) {
             $this->handleVacationQuorumCallback($callback, $notifier);
 
+            return;
+        }
+
+        // «Молчит в учебном чате, урок закрыт»: исключить / не трогать.
+        if (app(ChatSilenceRemovalService::class)->handleCallback($callback)) {
             return;
         }
 

@@ -265,7 +265,7 @@ class AccessDiagnosticsService
      *
      * @param  array<int, string>  $ownedKeys
      */
-    private function hasPaidCoverageMissingKey(User $user, int $courseId, int $block, array $ownedKeys): bool
+    public function hasPaidCoverageMissingKey(User $user, int $courseId, int $block, array $ownedKeys): bool
     {
         if (in_array('full', $ownedKeys, true) || in_array('block_'.$block, $ownedKeys, true)) {
             return false;

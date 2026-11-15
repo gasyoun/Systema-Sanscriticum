@@ -366,7 +366,7 @@ GitHub, реальная частота которого измерена и с�
 |---|---|---|
 | Значения (числа памяти, пороги, таймауты) | [scripts/server_guards.conf](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards.conf) | **одно** место, откуда их берут и applier, и проверка |
 | Сами предохранители | [scripts/server_guards/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/scripts/server_guards) + [manifest.psv](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/manifest.psv) | шаблоны с `@@ПОДСТАНОВКАМИ@@` и список «файл → куда → права» |
-| Применить | `sudo bash `[scripts/server_guards_apply.sh](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards_apply.sh) | идемпотентно; второй прогон ничего не меняет; бэкап в `/root/preflight-backup-<stamp>/` |
+| Применить | `sudo bash `[scripts/server_guards_apply.sh](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards_apply.sh) | идемпотентно; второй прогон ничего не меняет; бэкап в `/root/preflight-backup-<stamp>/`. С H7060 apply на drift зовёт сам `deploy.sh` (шаг 9b) |
 | Проверить | `php artisan guards:verify` ([VerifyServerGuards.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/VerifyServerGuards.php)) | non-zero + имя пропавшего; висит на `cabinet:probe` и на [deploy.sh](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh) |
 
 Документ ниже объясняет **почему** каждый предохранитель такой; менять значения
@@ -697,6 +697,12 @@ cat /var/www/html/storage/framework/auto-deploy-retries              # скол�
 > и отказывает **именованно**: `3` — apply упал/дрейф остался, `4` — не root
 > (diff напечатан, apply не запускался), `5` — apply-скрипта нет в дереве.
 > Любой не-ноль означает «дрейф остался видимым», а не «деплой провален».
+>
+> Первый проход шага делает [`scripts/deploy_guards_sync.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/deploy_guards_sync.sh):
+> `guards:verify` → dry-run diff → `server_guards_apply.sh` → повторный `guards:verify`,
+> каждая строка `changed` уходит в `deploys.log`; дрейф, переживший его, уходит во
+> второй шанс — `managed-guards-apply-on-deploy.sh` выше. Режим `--rollback`
+> остаётся **verify-only** — аварийный откат не переписывает системный конфиг.
 >
 > Ручной apply остаётся для случаев вне деплоя (не-root прогон, apply упал,
 > машина без нового дерева):
@@ -1109,9 +1115,9 @@ Telegram и не дают деплою exit 75.
 ### 12.3 Что осталось человеку
 
 Прямого доступа не требует — юниты ставит `server_guards_apply.sh` (root на
-`.92`, `bash scripts/server_guards_apply.sh` после деплоя кода). Applied
-managed-файл, как и `systema-madeline-daemon` (§9): код выкладывается,
-`apply` — отдельный шаг.
+`.92`; с H7060 деплой сам зовёт apply, если `guards:verify` видит drift).
+Applied managed-файл, как и `systema-madeline-daemon` (§9): код выкладывается
+деплоем, а guard-конфиг применяется в том же прогоне (шаг 9b `deploy.sh`).
 
 ### 12.4 Второй класс отказа: медленный канал × большой backlog (07-09-2026,
 ### H4306)
