@@ -66,6 +66,16 @@ _Created: 06-07-2026 · Last updated: 15-11-2026_
    «вариант A»; механика — `TelegramLoginService`, consumer `/tg-login`);
    студенческий сценарий — шаг 4 и строка «Письмо не пришло» в
    [`docs/STUDENT_CABINET_GUIDE_RU.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_GUIDE_RU.md).
+7. **После входа любым способом — привязка Telegram одним выстрелом** — кнопка
+   **«Подключить Telegram»** на дашборде кабинета (или `/telegram/connect`
+   под своим входом): заполняет `telegram_id`, после чего `/вход` боту —
+   бессрочный self-service входа (новая ссылка в любой момент, куратор не
+   нужен) плюс TG-канал уведомлений и ИИ-куратор в личке. Класс «пусть
+   привяжет, пока мы всё равно выдаём ссылку» — закрывает повторные
+   обращения. Механика привязки —
+   [`docs/cabinet-bot.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/cabinet-bot.md);
+   студенческий сценарий — шаг 9 в
+   [`docs/STUDENT_CABINET_GUIDE_RU.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_GUIDE_RU.md).
 
 Если ни один способ не сработал (в т.ч. студент **не помнит email и пароль**):
 куратор выдаёт **личную одноразовую magic-ссылку** (`/login-link/…`, 24 ч) —
