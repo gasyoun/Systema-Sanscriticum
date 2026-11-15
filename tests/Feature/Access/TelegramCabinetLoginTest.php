@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Access;
 
+use App\Mail\TelegramBindingMail;
 use App\Models\MagicLinkToken;
 use App\Models\Payment;
 use App\Models\User;
@@ -13,6 +14,7 @@ use App\Support\UsedLoginLinkResponse;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
@@ -261,5 +263,54 @@ class TelegramCabinetLoginTest extends TestCase
 
         $this->assertSame(TelegramLoginService::MAX_LINKS_PER_CHAT, MagicLinkToken::count());
         $this->assertStringContainsString('Слишком много попыток', $this->lastBotMessage());
+    }
+
+    /** @test */
+    public function email_link_does_not_rebind_already_bound_account(): void
+    {
+        Mail::fake();
+        config(['features.telegram_cabinet_login' => true]);
+        config(['features.telegram_cabinet_email_link' => true]);
+
+        // Щит H8294 «вариант A»: знание оплаченной почты чужого ПРИВЯЗАННОГО
+        // кабинета не перепривязывает его на чат атакующего.
+        $student = User::factory()->create([
+            'email' => 'bound.student@example.com',
+            'telegram_id' => 777001,
+            'telegram_username' => 'bound_lena',
+        ]);
+        Payment::create(['user_id' => $student->id, 'amount' => 5000, 'status' => 'paid']);
+
+        $this->postUpdate($this->webhookMessage(999888777, 'bound.student@example.com'));
+
+        $fresh = $student->fresh();
+        $this->assertSame(777001, (int) $fresh->telegram_id);
+        $this->assertSame('bound_lena', $fresh->telegram_username);
+        $this->assertSame(0, MagicLinkToken::count());
+        $this->assertStringContainsString('уже привязан', $this->lastBotMessage());
+        $this->assertStringContainsString('/вход', $this->lastBotMessage());
+        Mail::assertNotSent(TelegramBindingMail::class);
+    }
+
+    /** @test */
+    public function email_link_binding_notifies_account_email(): void
+    {
+        Mail::fake();
+        config(['features.telegram_cabinet_login' => true]);
+        config(['features.telegram_cabinet_email_link' => true]);
+
+        // Щит H8294 «вариант B»: владелец узнаёт о привязке письмом на email
+        // аккаунта — даже если его Telegram не при нём.
+        $student = User::factory()->create(['email' => 'Notify.Me@Example.com']);
+        Payment::create(['user_id' => $student->id, 'amount' => 5000, 'status' => 'paid']);
+
+        $this->postUpdate($this->webhookMessage(999888779, 'notify.me@example.com'));
+
+        $this->assertSame(999888779, (int) $student->fresh()->telegram_id);
+        Mail::assertQueued(TelegramBindingMail::class, function (TelegramBindingMail $mail) use ($student): bool {
+            return $mail->hasTo('notify.me@example.com')
+                && $mail->user->id === $student->id
+                && $mail->boundUsername === 'lena_test';
+        });
     }
 }

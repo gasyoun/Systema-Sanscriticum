@@ -1,0 +1,116 @@
+{
+  "schema": "lyw-pack-v1",
+  "zan": 1,
+  "profile": {
+    "level": "prodolzhayushchiy",
+    "interest": "palomnichestvo"
+  },
+  "source": {
+    "claims_yml_sha256": "67254676c2e0b2ccfc9b5aa245d38b11bbaffec40b750c52a7bc55a5a58b7079",
+    "lesson_marker": "Занятие I"
+  },
+  "sections": [
+    {
+      "id": "devanagari-script",
+      "title": "Письмо devanāgarī",
+      "source_concepts": [
+        "devanāgarī"
+      ],
+      "embedded_questions": [
+        "zan1-prodolzhayushchiy-palomnichestvo-02"
+      ]
+    },
+    {
+      "id": "sparsa-varga",
+      "title": "Группа sparśa и пять рядов (varga)",
+      "source_concepts": [
+        "sparśa",
+        "varga"
+      ],
+      "embedded_questions": [
+        "zan1-prodolzhayushchiy-palomnichestvo-01"
+      ]
+    },
+    {
+      "id": "five-rows",
+      "title": "Пять рядов: от горла к губам",
+      "source_concepts": [
+        "ka",
+        "kha",
+        "ga",
+        "gha",
+        "ṅa",
+        "ca",
+        "cha",
+        "ja",
+        "jha",
+        "ña",
+        "ṭa",
+        "ṭha",
+        "ḍa",
+        "ḍha",
+        "ṇa",
+        "ta",
+        "tha",
+        "da",
+        "dha",
+        "na",
+        "pa",
+        "pha",
+        "ba",
+        "bha",
+        "ma"
+      ],
+      "embedded_questions": [
+        "zan1-prodolzhayushchiy-palomnichestvo-03",
+        "zan1-prodolzhayushchiy-palomnichestvo-07"
+      ]
+    },
+    {
+      "id": "pronunciation",
+      "title": "Произнесение согласных",
+      "source_concepts": [
+        "c",
+        "j",
+        "ṭ",
+        "ḍ"
+      ],
+      "embedded_questions": [
+        "zan1-prodolzhayushchiy-palomnichestvo-05",
+        "zan1-prodolzhayushchiy-palomnichestvo-06"
+      ]
+    },
+    {
+      "id": "writing-rules",
+      "title": "Правила написания и знаки daṇḍa",
+      "source_concepts": [
+        "daṇḍa"
+      ],
+      "embedded_questions": [
+        "zan1-prodolzhayushchiy-palomnichestvo-04"
+      ]
+    }
+  ],
+  "views": {
+    "mindmap": "views/mindmap.mmd"
+  },
+  "quizzes": "quizzes.json",
+  "mnemonics": [
+    {
+      "for": "devanāgarī",
+      "sentence": "Каждая буква devanāgarī — слог-костюм: согласная уже одета в «а» (क = к+а), раздевать её научат позже."
+    },
+    {
+      "for": "varga",
+      "sentence": "Ряды идут от горла к губам: К → Ч → Т(завёрнут.) → Т(зубн.) → П; в ряду глухой шепчет, звонкий гудит, «+h» добавляет выдох, носовой замыкает."
+    },
+    {
+      "for": "daṇḍa",
+      "sentence": "Одна палочка । — точка, две палочки ॥ — конец главы: daṇḍa = дорожный столбик текста."
+    }
+  ],
+  "generated": {
+    "date": "25-08-2026",
+    "session": "H3521-OxAlpha"
+  }
+}

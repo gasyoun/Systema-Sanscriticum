@@ -29,6 +29,19 @@ class Schedule extends Model
     public const DEFAULT_DURATION_HOURS = 2;
 
     /**
+     * Метка «в чат уже напомнили» (zapisi_reminded_at / group_link_posted_at)
+     * относится к ЭТОМУ старту, только если поставлена не раньше чем за столько
+     * часов до него. Легальная метка ставится в окне упреждения (максимум в
+     * админке — 1440 мин), так что 48 ч — с запасом.
+     *
+     * Инцидент 04-11-2026 (гр.62, S#1218): строку серии 21.10 временно сделали
+     * занятием «на сегодня», по ней ушло напоминание, а потом ее вернули на 4.11
+     * правкой в обход модели — метка от 21.10 осталась, и 4.11 обе рассылки
+     * молча пропустили занятие. Старая метка теперь считается протухшей.
+     */
+    public const REMINDER_MARK_FRESH_HOURS = 48;
+
+    /**
      * Запас жизни трекинг-ссылки «Подключиться» после конца занятия и её
      * минимальный срок годности с момента выдачи (H5081: подпись без
      * истечения в чатах живёт вечно и переживает отзыв доступа).
@@ -240,6 +253,32 @@ class Schedule extends Model
     /**
      * Признак, что событие идёт прямо сейчас (нужно для бейджа LIVE).
      */
+    /**
+     * Метка напоминания стоит и относится к текущему старту (см. REMINDER_MARK_FRESH_HOURS).
+     */
+    public function hasFreshReminderMark(string $column): bool
+    {
+        $mark = $this->{$column};
+        if ($mark === null) {
+            return false;
+        }
+
+        if ($this->start === null) {
+            return true;
+        }
+
+        return Carbon::parse($mark)->gte($this->start->copy()->subHours(self::REMINDER_MARK_FRESH_HOURS));
+    }
+
+    /**
+     * Метка стоит, но поставлена задолго до текущего старта — осталась от прежней
+     * даты строки (перенос в обход модели). Такую метку игнорируем и громко логируем.
+     */
+    public function hasStaleReminderMark(string $column): bool
+    {
+        return $this->{$column} !== null && ! $this->hasFreshReminderMark($column);
+    }
+
     public function isLive(): bool
     {
         $now = now();

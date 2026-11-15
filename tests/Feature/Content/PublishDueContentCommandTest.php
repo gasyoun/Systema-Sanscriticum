@@ -205,6 +205,44 @@ class PublishDueContentCommandTest extends TestCase
         $this->assertSame([], $this->notified);
     }
 
+    public function test_destinations_go_out_one_by_one_with_a_gap(): void
+    {
+        config(['content_calendar.crosspost_gap_minutes' => 10]);
+        $this->fakeApis();
+        $slot = $this->slot();
+
+        // Первый тик: только первая площадка, старт разноса запомнен.
+        $this->artisan('content:publish-due')->assertSuccessful();
+        $this->assertSame(1, self::sentTo('sendMessage'));
+        $this->assertSame(0, self::sentTo('wall.post'));
+        $slot->refresh();
+        $this->assertSame(ContentCalendarSlot::STATUS_SCHEDULED, $slot->status);
+        $this->assertNotNull($slot->meta['crosspost_started_at'] ?? null);
+
+        // Через 5 минут пауза ещё не вышла — тик ничего не шлёт.
+        $this->travel(5)->minutes();
+        $this->artisan('content:publish-due')->assertSuccessful();
+        $this->assertSame(1, self::sentTo('sendMessage'));
+
+        // 10 минут от старта — вторая площадка, 20 — третья.
+        $this->travel(5)->minutes();
+        $this->artisan('content:publish-due')->assertSuccessful();
+        $this->assertSame(2, self::sentTo('sendMessage'));
+        $this->assertSame(0, self::sentTo('wall.post'));
+
+        $this->travel(10)->minutes();
+        $this->artisan('content:publish-due')->assertSuccessful();
+        $this->assertSame(1, self::sentTo('wall.post'));
+        $this->assertSame(ContentCalendarSlot::STATUS_SCHEDULED, $slot->fresh()->status);
+
+        // Пропущенный тик не копит площадки: опоздавшие выходят разом, но не раньше своего часа.
+        $this->travel(15)->minutes();
+        $this->artisan('content:publish-due')->assertSuccessful();
+        $this->assertSame(2, self::sentTo('wall.post'));
+        $this->assertSame(ContentCalendarSlot::STATUS_PUBLISHED, $slot->fresh()->status);
+        $this->assertSame(4, $slot->publications()->where('status', 'published')->count());
+    }
+
     public function test_unchecked_destinations_are_skipped(): void
     {
         $this->fakeApis();

@@ -606,6 +606,8 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
 
 Отгруженные/заархивированные дорожные карты лежат в корне репозитория: [ROADMAP_MEMRISE_SRS_SANSKRIT_HINDI_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/ROADMAP_MEMRISE_SRS_SANSKRIT_HINDI_2026.md) — тренажёр отгружен и переименован в «колоду», текущий план контента — [docs/PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md); [PRANA_ROADMAP.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/PRANA_ROADMAP.md) — первоисточник идеи «Праны», заархивирован 01-10-2026 (вердикты wave 2 — [H5576](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5576-OxAlpha_Systema-Sanscriticum_roadmap-verdict-w2-systema-karaoke_01.10.26.md)).
 
+Доменная модель и решения: [`CONTEXT.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CONTEXT.md) (глоссарий) + [`docs/adr/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/adr) (ADR-0001…0003: fail-closed default, PAYMENT_FIX_WAVE1 flag, generated teacher_rates canon). Архитектурные/логические находки с чеками: [docs/systema-grill-flaws-2026-11-09.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/systema-grill-flaws-2026-11-09.md).
+
 ### Now
 
 - **Масштабирование Telegram — активная программа.** Support-аналитика (импорт истории

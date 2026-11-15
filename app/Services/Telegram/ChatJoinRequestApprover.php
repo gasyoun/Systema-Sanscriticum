@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services\Telegram;
 
+use App\Models\ChatSilenceRemoval;
 use App\Models\CourseDebtChatRemoval;
 use App\Models\Group;
-use App\Models\TelegramSupportContact;
 use App\Models\User;
 use App\Services\Access\TelegramAdminNotifier;
 use App\Support\EnrollPilot;
@@ -32,6 +32,7 @@ final class ChatJoinRequestApprover
     public function __construct(
         private readonly ZapisiChatMemberService $zapisi,
         private readonly TelegramAdminNotifier $admins,
+        private readonly TelegramAccountResolver $accounts,
     ) {}
 
     /**
@@ -88,13 +89,7 @@ final class ChatJoinRequestApprover
     {
         $groupIds = $groups->pluck('id')->all();
 
-        $userIds = User::query()->where('telegram_id', $telegramId)->pluck('id')
-            ->merge(TelegramSupportContact::query()
-                ->where('telegram_user_id', $telegramId)
-                ->whereNotNull('linked_user_id')
-                ->pluck('linked_user_id'))
-            ->unique()
-            ->values();
+        $userIds = $this->accounts->userIds($telegramId);
 
         foreach ($userIds as $userId) {
             $user = User::query()->find($userId);
@@ -108,6 +103,9 @@ final class ChatJoinRequestApprover
                 ->whereNotNull('removed_at')
                 ->whereNull('restored_at')
                 ->exists();
+
+            // Исключён за молчание при закрытом уроке и не разбанен.
+            $removed = $removed || ChatSilenceRemoval::isBanned((int) $user->id, $chatId);
 
             if (! $removed) {
                 return $user;

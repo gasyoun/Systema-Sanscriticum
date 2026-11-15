@@ -115,7 +115,7 @@ $lines = [
 $prodNotes = [
     'TELEGRAM_CABINET_PROVISION' => 'вкл. на проде (09-10-2026)',
     'TELEGRAM_CABINET_LOGIN' => 'вкл. на проде (09-10-2026)',
-    'TELEGRAM_CABINET_EMAIL_LINK' => 'выкл. на проде (09-10-2026)',
+    'TELEGRAM_CABINET_EMAIL_LINK' => 'вкл. на проде (14-11-2026)',
 ];
 
 foreach ($entries as $key => $entry) {
