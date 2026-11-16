@@ -7,9 +7,12 @@ namespace App\Services\Telegram;
 use App\Jobs\SendZapisiPollJob;
 use App\Models\Group;
 use App\Models\MarketingSetting;
+use App\Models\Schedule;
+use App\Models\ScheduleAttendanceNotice;
 use App\Models\TelegramPoll;
 use App\Models\TelegramPollAnswer;
 use App\Models\User;
+use App\Services\AttendanceNoticeService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
@@ -34,8 +37,9 @@ final class ZapisiPollService
 
     /**
      * @param  array<int, mixed>  $options
+     * @param  array<string, mixed>  $attributes  доп. поля опроса (kind, schedule_id, schedule_start)
      */
-    public function create(Group $group, string $question, array $options, bool $multiple, ?User $by = null): TelegramPoll
+    public function create(Group $group, string $question, array $options, bool $multiple, ?User $by = null, array $attributes = []): TelegramPoll
     {
         $chatId = (string) ($group->telegram_chat_id ?? '');
         if ($chatId === '') {
@@ -60,7 +64,7 @@ final class ZapisiPollService
             }
         }
 
-        $poll = TelegramPoll::create([
+        $poll = TelegramPoll::create($attributes + [
             'group_id' => $group->id,
             'chat_id' => $chatId,
             'question' => $question,
@@ -73,6 +77,30 @@ final class ZapisiPollService
         SendZapisiPollJob::dispatch($poll->id);
 
         return $poll;
+    }
+
+    /**
+     * Автоопрос о присутствии на занятии (classes:post-attendance-poll): один
+     * ответ, варианты TelegramPoll::ATTENDANCE_OPTIONS. Опрос помнит занятие и
+     * его время начала на момент отправки — по ним команда не шлёт дубль, а
+     * голос после переноса занятия не пишется в предупреждения.
+     */
+    public function createAttendancePoll(Schedule $schedule, Group $group): TelegramPoll
+    {
+        return $this->create($group, $this->attendanceQuestion($schedule), TelegramPoll::ATTENDANCE_OPTIONS, false, null, [
+            'kind' => TelegramPoll::KIND_ATTENDANCE,
+            'schedule_id' => $schedule->id,
+            'schedule_start' => $schedule->start,
+        ]);
+    }
+
+    private function attendanceQuestion(Schedule $schedule): string
+    {
+        $title = trim((string) ($schedule->title ?: ($schedule->course?->title ?? '')));
+        $title = $title !== '' ? mb_strimwidth($title, 0, 180, '…') : 'Занятие';
+        $when = $schedule->start->isToday() ? 'сегодня' : $schedule->start->format('d.m');
+
+        return "Занятие «{$title}» {$when} в {$schedule->start->format('H:i')} (МСК). Будете?";
     }
 
     /**
@@ -98,24 +126,75 @@ final class ZapisiPollService
         }
 
         $tgUserId = (int) $tgUser['id'];
+        $student = TelegramCommandAcl::findUser($tgUserId);
+        $optionIds = array_values(array_map('intval', (array) ($pollAnswer['option_ids'] ?? [])));
         $name = trim(((string) ($tgUser['first_name'] ?? '')).' '.((string) ($tgUser['last_name'] ?? '')));
 
         TelegramPollAnswer::updateOrCreate(
             ['telegram_poll_id' => $poll->id, 'telegram_user_id' => $tgUserId],
             [
-                'user_id' => TelegramCommandAcl::findUser($tgUserId)?->id,
+                'user_id' => $student?->id,
                 'tg_username' => isset($tgUser['username']) ? (string) $tgUser['username'] : null,
                 'tg_name' => $name !== '' ? $name : null,
-                'option_ids' => array_values(array_map('intval', (array) ($pollAnswer['option_ids'] ?? []))),
+                'option_ids' => $optionIds,
                 'answered_at' => now(),
             ],
         );
+
+        $this->applyAttendanceAnswer($poll, $student, $optionIds);
 
         Log::info('ZapisiPoll: answer recorded', [
             'poll_id' => $poll->id,
             'telegram_user_id' => $tgUserId,
             'options' => $pollAnswer['option_ids'] ?? [],
         ]);
+    }
+
+    /**
+     * Голос в автоопросе о присутствии → предупреждение о занятии, которое видит
+     * преподаватель: «Опоздаю» / «Не смогу» записываются, «Буду» и отозванный
+     * голос снимают предупреждение (последнее слово ученика главнее прежнего).
+     * Молча ничего не делает для ручных опросов, непривязанного Telegram,
+     * выключенных предупреждений (features.attendance_notices), ученика не из
+     * состава занятия, перенесённого или уже прошедшего занятия.
+     *
+     * @param  array<int, int>  $optionIds
+     */
+    private function applyAttendanceAnswer(TelegramPoll $poll, ?User $student, array $optionIds): void
+    {
+        if ($poll->kind !== TelegramPoll::KIND_ATTENDANCE || $poll->schedule_id === null || $student === null) {
+            return;
+        }
+
+        $notices = app(AttendanceNoticeService::class);
+        if (! $notices->enabled()) {
+            return;
+        }
+
+        $schedule = Schedule::find($poll->schedule_id);
+        if ($schedule === null || $schedule->start === null) {
+            return;
+        }
+
+        // Опрос был про другое время (занятие перенесли) или занятие уже идёт давно.
+        if ($poll->schedule_start !== null && ! $schedule->start->equalTo($poll->schedule_start)) {
+            return;
+        }
+        if ($schedule->start->copy()->addHour()->isPast()) {
+            return;
+        }
+
+        $status = TelegramPoll::attendanceStatusFor($optionIds);
+
+        try {
+            if ($status === null) {
+                $notices->clear($student, $schedule);
+            } else {
+                $notices->upsert($student, $schedule, $status, ScheduleAttendanceNotice::SOURCE_TELEGRAM_POLL);
+            }
+        } catch (InvalidArgumentException) {
+            // Голосовал участник чата не из состава занятия — голос остаётся в опросе.
+        }
     }
 
     /** Закрыть опрос в чате (stopPoll — бот-опрос в группе может остановить только бот). */

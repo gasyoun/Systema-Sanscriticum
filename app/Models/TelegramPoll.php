@@ -29,6 +29,21 @@ class TelegramPoll extends Model
 
     public const STATUS_CLOSED = 'closed';
 
+    /** Ручной опрос куратора из админки. */
+    public const KIND_MANUAL = 'manual';
+
+    /** Автоопрос о присутствии перед занятием (classes:post-attendance-poll). */
+    public const KIND_ATTENDANCE = 'attendance';
+
+    /** Варианты автоопроса о присутствии; индексы — ATTENDANCE_OPTION_*. */
+    public const ATTENDANCE_OPTIONS = ['Буду', 'Опоздаю', 'Не смогу'];
+
+    public const ATTENDANCE_OPTION_COMING = 0;
+
+    public const ATTENDANCE_OPTION_LATE = 1;
+
+    public const ATTENDANCE_OPTION_ABSENT = 2;
+
     public const STATUS_LABELS = [
         self::STATUS_PENDING => 'Отправляется',
         self::STATUS_SENT => 'Идёт',
@@ -40,6 +55,9 @@ class TelegramPoll extends Model
     protected $fillable = [
         'group_id',
         'chat_id',
+        'kind',
+        'schedule_id',
+        'schedule_start',
         'question',
         'options',
         'allows_multiple',
@@ -55,6 +73,7 @@ class TelegramPoll extends Model
     protected $casts = [
         'options' => 'array',
         'allows_multiple' => 'boolean',
+        'schedule_start' => 'datetime',
         'sent_at' => 'datetime',
         'closed_at' => 'datetime',
     ];
@@ -62,6 +81,27 @@ class TelegramPoll extends Model
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
+    }
+
+    /** Занятие, о котором спрашивает автоопрос о присутствии (у ручных — null). */
+    public function schedule(): BelongsTo
+    {
+        return $this->belongsTo(Schedule::class);
+    }
+
+    /**
+     * Голос в автоопросе о присутствии → статус предупреждения о занятии.
+     * null — предупреждения нет: «Буду» или голос отозван.
+     *
+     * @param  array<int, int>  $optionIds
+     */
+    public static function attendanceStatusFor(array $optionIds): ?string
+    {
+        return match ($optionIds[0] ?? null) {
+            self::ATTENDANCE_OPTION_LATE => ScheduleAttendanceNotice::STATUS_LATE,
+            self::ATTENDANCE_OPTION_ABSENT => ScheduleAttendanceNotice::STATUS_ABSENT,
+            default => null,
+        };
     }
 
     public function creator(): BelongsTo

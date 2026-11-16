@@ -140,6 +140,24 @@ return [
     'class_link_autopost' => (bool) env('CLASS_LINK_AUTOPOST', false),
 
     /*
+     | Автоопрос о присутствии: перед занятием @zapisi_ORSbot вешает в Telegram-чат
+     | группы опрос «Будете?» (Буду / Опоздаю / Не смогу), команда
+     | classes:post-attendance-poll. ВЫКЛЮЧЕН по умолчанию. Требует
+     | telegram_zapisi_bot и telegram_chat_id у группы. Голоса учеников с
+     | привязанным Telegram пишутся в предупреждения о занятии, если включён
+     | attendance_notices.
+     |  - attendance_poll_lead_minutes — за сколько минут до старта вешать опрос;
+     |  - attendance_poll_group_ids — id пилотных групп через запятую; пусто —
+     |    все группы с привязанным чатом.
+     */
+    'attendance_poll_autopost' => (bool) env('ATTENDANCE_POLL_AUTOPOST', false),
+    'attendance_poll_lead_minutes' => (int) env('ATTENDANCE_POLL_LEAD_MINUTES', 180),
+    'attendance_poll_group_ids' => array_values(array_filter(array_map(
+        'intval',
+        explode(',', (string) env('ATTENDANCE_POLL_GROUP_IDS', '')),
+    ))),
+
+    /*
      | FAQ-суггестер «Отдела заботы» (H247, тикет S3): факт-черновик ответа на
      | фактологические вопросы категорий A (Zoom/ссылка), B (записи), C (расписание)
      | из данных LMS — БЕЗ единого LLM-вызова. Бот сам НЕ отвечает студенту: готовит
