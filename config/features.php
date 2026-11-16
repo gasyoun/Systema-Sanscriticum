@@ -1560,6 +1560,13 @@ return [
     // выключатель лейна поверх b2b_group_payment: напоминания не активируются
     // молча вместе с b2b-контуром, только явным переворотом (DEPLOY_QUEUE).
     'b2b_payer_reminders' => (bool) env('B2B_PAYER_REMINDERS', false),
+
+    // Смешанная группа под B2B-оплатой: отметка «платит сам» на членстве ученика
+    // (group_user.b2b_self_pay). OFF (дефолт): отметка игнорируется, групповой
+    // платёж покрывает всех членов группы. ON (только поверх b2b_group_payment):
+    // отмеченному b2b_group-платёж не даёт виртуальных ключей и не снимает его
+    // из должников — доступ только по собственным платежам.
+    'b2b_group_self_pay' => (bool) env('B2B_GROUP_SELF_PAY', false),
     // H2744 staged rollout. Tier interpretation is dark until legacy rows and
     // tariffs have been explicitly classified by membership:classify-tiers.
     'membership_tiered' => (bool) env('MEMBERSHIP_TIERED', false),
