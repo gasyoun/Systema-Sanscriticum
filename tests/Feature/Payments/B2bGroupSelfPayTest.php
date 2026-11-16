@@ -133,7 +133,8 @@ class B2bGroupSelfPayTest extends TestCase
     {
         return app(DebtorsReport::class)->query()
             ->where('course_id', $this->course->id)
-            ->pluck('user_id')
+            ->get()
+            ->pluck('id')
             ->map(fn ($id) => (int) $id)
             ->unique()
             ->values()
