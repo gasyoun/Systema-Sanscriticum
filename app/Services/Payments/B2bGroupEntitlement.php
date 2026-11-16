@@ -36,9 +36,19 @@ final class B2bGroupEntitlement
     }
 
     /**
+     * Отметка «платит сам» (group_user.b2b_self_pay) учитывается только под
+     * собственным флагом features.b2b_group_self_pay и только поверх живого
+     * b2b-контура. OFF — отметка игнорируется во всех точках (доступ, должники).
+     */
+    public static function selfPayEnabled(): bool
+    {
+        return self::enabled() && (bool) config('features.b2b_group_self_pay');
+    }
+
+    /**
      * Виртуальные ключи ученика по его группам курса. Покрытие группы =
      * оплаченный (paid) не-conditional b2b_group-платёж курса с group_id одной
-     * из групп ученика. (null, null) → 'full' (весь курс); диапазон
+     * из групп ученика (кроме членств с отметкой «платит сам», selfPayEnabled()). (null, null) → 'full' (весь курс); диапазон
      * start_block..end_block → 'block_N' на каждый покрытый блок
      * (BlockMonthRecognition::coveredBlockNumbers — тот же предикат, что у
      * зарплатной раскладки, поэтому ключи всегда совпадают с признанной выручкой).
@@ -56,7 +66,13 @@ final class B2bGroupEntitlement
             return [];
         }
 
-        $userGroupIds = $user->groups->map(fn ($group) => (int) $group->id)->all();
+        // Смешанная группа: членство с отметкой «платит сам» групповым платежом
+        // не покрывается — у такого ученика доступ только по своим платежам.
+        $selfPay = self::selfPayEnabled();
+        $userGroupIds = $user->groups
+            ->reject(fn ($group) => $selfPay && (bool) $group->pivot?->b2b_self_pay)
+            ->map(fn ($group) => (int) $group->id)
+            ->all();
         $coveredGroupIds = array_values(array_intersect($courseGroupIds, $userGroupIds));
         if ($coveredGroupIds === []) {
             return [];
