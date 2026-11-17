@@ -23,7 +23,7 @@ Advisory-чеклист (не гейт): единое ядро проверки 
 
 ## Санскрит-специфика
 
-- [ ] Сначала опознаны целевые формы урока (тема урока → какие формы ожидаются), только потом гипотезы об ошибках — правило «fit first, errata second» из плейбука разбора ДЗ ([KocherginaUchebnik_1998/PLAYBOOK_KOCHERGINA_*.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/KocherginaUchebnik_1998) и скилл `homework-parse-playbook`).
+- [ ] Сначала опознаны целевые формы урока (тема урока → какие формы ожидаются), только потом гипотезы об ошибках — правило «fit first, errata second» из плейбука разбора ДЗ ([PLAYBOOK_KOCHERGINA_EXERCISE_PARSE_2026-11-07.md](https://github.com/gasyoun/SanskritGrammar/blob/main/KocherginaUchebnik_1998/PLAYBOOK_KOCHERGINA_EXERCISE_PARSE_2026-11-07.md) в SanskritGrammar, скилл `homework-parse-playbook`).
 - [ ] Sandhi/транслитерация в ответе ученика сверены по правилам текущего урока, не по интуиции.
 - [ ] Кандидат-опечатка учебника: вердикт только по правилу «свидетель» (kind: print | digitization); нет свидетеля — кандидат паркуется, никогда не фейковый вердикт.
 
@@ -38,7 +38,7 @@ Advisory-чеклист (не гейт): единое ядро проверки 
 
 ## Ссылки
 
-- Скилл-ранбук разбора ДЗ: `homework-parse-playbook` (двойник в [`KocherginaUchebnik_1998`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/KocherginaUchebnik_1998)).
+- Скилл-ранбук разбора ДЗ: `homework-parse-playbook`; двойник в SanskritGrammar: [PLAYBOOK_KOCHERGINA_EXERCISE_PARSE_2026-11-07.md](https://github.com/gasyoun/SanskritGrammar/blob/main/KocherginaUchebnik_1998/PLAYBOOK_KOCHERGINA_EXERCISE_PARSE_2026-11-07.md).
 - Учёт выплат/ЗП преподавателя — не здесь: [CHECKLIST_TEACHER_PAYOUT_ROUTE_WALK_H5635_02-10-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CHECKLIST_TEACHER_PAYOUT_ROUTE_WALK_H5635_02-10-2026.md).
 
 _к.ф.н. М.Ю. Гасунс_
