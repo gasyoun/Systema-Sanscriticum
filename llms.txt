@@ -1,0 +1,10 @@
+# Systema Sanscriticum — Sanskrit online-learning platform
+
+> Laravel platform of the Sanskrit school (samskrtam.ru): student cabinet with dictionary, homework and SRS, course shop, funnels and admin panel — public promo and status pages.
+
+## Pages
+
+- [Promo / home](https://gasyoun.github.io/Systema-Sanscriticum/): platform landing — student cabinet, course shop, admin panel overview.
+- [Uptime status](https://gasyoun.github.io/Systema-Sanscriticum/uptime/): public service-uptime dashboard for the platform.
+
+Source: https://github.com/gasyoun/Systema-Sanscriticum
