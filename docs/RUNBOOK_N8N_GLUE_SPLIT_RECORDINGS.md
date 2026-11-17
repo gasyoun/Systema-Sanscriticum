@@ -66,13 +66,17 @@ ffmpeg -y -i p1_134.mp4 -i p1_140.m4a -c copy part1.mp4
 ```sh
 ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate,bit_rate /opt/n8n/storage/tmp_merge/part1.mp4
 ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate,bit_rate /opt/n8n/storage/tmp_merge/part2.mp4
-printf "file '/opt/n8n/storage/tmp_merge/part1.mp4'\nfile '/opt/n8n/storage/tmp_merge/part2.mp4'\n" > /opt/n8n/storage/tmp_merge/list.txt
-ffmpeg -y -f concat -safe 0 -i /opt/n8n/storage/tmp_merge/list.txt -c copy /opt/n8n/storage/tmp_merge/merged.mp4
+# ОСНОВНОЙ путь — concat-фильтр (иммунен к разным таймстемпам частей):
+ffmpeg -y -i /opt/n8n/storage/tmp_merge/part1.mp4 -i /opt/n8n/storage/tmp_merge/part2.mp4 \
+  -filter_complex '[0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1[v][a]' \
+  -map '[v]' -map '[a]' -c:v libx264 -preset veryfast -crf 23 -c:a aac -b:a 128k \
+  /opt/n8n/storage/tmp_merge/merged.mp4
 ffprobe -v error -show_entries format=duration,size -of default=noprint_wrappers=1 /opt/n8n/storage/tmp_merge/merged.mp4
 ```
-- `-c copy` работает, когда обе части — один кодек/разрешение/fps/аудио (типично для одного Zoom-аккаунта и часто — для двух аккаунтов с одинаковыми настройками записи; в кейсе 17-11-2026: обе 640×360 h264 25 fps + AAC).
-- **Разные параметры** (напр. одна 1080p, другая 360p): привести part1 к параметрам part2 перед concat (`-vf scale=...,-r ...,-c:v libx264 -preset veryfast -c:a aac`), затем concat. Или (лучше) перекачать part1 в полном качестве по источнику №1/№2.
-- Длительность merged должна равняться сумме частей ±1 с (кроме единичных «зависших» кадров на стыке — норма).
+- **Demuxer-путь (`-f concat … -c copy`) НЕ использовать без проверки длительности:** на разнородных источниках (YT-dash + Zoom-вебхук) контейнерные таймстемпы несовместимы — 17-11-2026 дал `duration=33308 с` при сумме 8882 и `Non-monotonic DTS`; аудио-реэнкод не спас. Если части с одинаковых аккаунтов/настроек — `-c copy` быстр, но ОБЯЗАТЕЛЬНО сверь duration с суммой; разошлась — фильтр.
+- Фильтр-путь: ~10 мин CPU на 2,5 ч 360p, +40% к размеру (crf 23; кейс 17-11: 304 МБ).
+- **Разные разрешения** (1080p × 360p): сначала привести part1 к part2 (`scale`,`fps`), затем тем же фильтром; либо перекачать part1 в полном качестве (источники №1/№2).
+- Длительность merged должна равняться сумме частей ±1 с.
 
 ## 6. Публикация: клон хвоста трубы (temp-webhook workflow)
 
