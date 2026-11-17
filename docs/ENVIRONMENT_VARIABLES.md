@@ -32,7 +32,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `ATTENDANCE_NOTICES` | optional | `false` | config/features.php:656 |
 | `ATTENDANCE_POLL_AUTOPOST` | optional | `false` | config/features.php:153 |
 | `ATTENDANCE_POLL_GROUP_IDS` | optional | `''` | config/features.php:157 |
-| `ATTENDANCE_POLL_LEAD_MINUTES` | optional | `180` | config/features.php:154 |
+| `ATTENDANCE_POLL_LEAD_MINUTES` | optional | `1440` | config/features.php:154 |
 | `ATTENDANCE_TREND_WEEKS` | optional | `12` | config/attendance.php:23 |
 | `AWS_ACCESS_KEY_ID` | required | `—` | config/cache.php:85<br>config/filesystems.php:65<br>config/queue.php:56<br>config/services.php:31 |
 | `AWS_BUCKET` | required | `—` | config/filesystems.php:68 |

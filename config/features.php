@@ -151,7 +151,7 @@ return [
      |    все группы с привязанным чатом.
      */
     'attendance_poll_autopost' => (bool) env('ATTENDANCE_POLL_AUTOPOST', false),
-    'attendance_poll_lead_minutes' => (int) env('ATTENDANCE_POLL_LEAD_MINUTES', 180),
+    'attendance_poll_lead_minutes' => (int) env('ATTENDANCE_POLL_LEAD_MINUTES', 1440),
     'attendance_poll_group_ids' => array_values(array_filter(array_map(
         'intval',
         explode(',', (string) env('ATTENDANCE_POLL_GROUP_IDS', '')),
