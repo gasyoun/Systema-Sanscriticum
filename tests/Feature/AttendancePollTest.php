@@ -121,7 +121,7 @@ class AttendancePollTest extends TestCase
         $this->assertSame(TelegramPoll::ATTENDANCE_OPTIONS, $poll->options);
         $this->assertFalse($poll->allows_multiple);
         $this->assertStringContainsString('Грамматика по Кочергиной', $poll->question);
-        $this->assertStringContainsString('сегодня в 14:00', $poll->question);
+        $this->assertSame('Занятие №1 · Грамматика по Кочергиной · сегодня, пн 16.11.2026 в 14:00 (МСК). Будете?', $poll->question);
         Queue::assertPushed(SendZapisiPollJob::class, 1);
     }
 
@@ -179,7 +179,36 @@ class AttendancePollTest extends TestCase
 
         $this->artisan('classes:post-attendance-poll')->assertSuccessful();
 
-        $this->assertStringContainsString('17.11 в 00:30', TelegramPoll::firstOrFail()->question);
+        $this->assertStringContainsString('завтра, вт 17.11.2026 в 00:30 (МСК)', TelegramPoll::firstOrFail()->question);
+    }
+
+    public function test_question_takes_lesson_number_from_schedule_title(): void
+    {
+        $group = $this->group();
+        $this->lesson($group, '2026-11-14 11:00:00', 'Грамматика по Кочергиной гр.64 (#1, 14.11.26)');
+        $this->lesson($group, '2026-11-16 14:00:00', 'Грамматика по Кочергиной гр.64 (#2, 16.11.26)');
+        $other = $this->group('-100778', 'Бюллер гр.27');
+        $this->lesson($other, '2026-11-16 14:30:00', 'Грамматика по Бюллеру гр.27 (урок 9, 16.11.26)');
+
+        $this->artisan('classes:post-attendance-poll')->assertSuccessful();
+
+        $questions = TelegramPoll::orderBy('id')->pluck('question')->all();
+        $this->assertSame([
+            'Занятие №2 · Грамматика по Кочергиной гр.64 · сегодня, пн 16.11.2026 в 14:00 (МСК). Будете?',
+            'Занятие №9 · Грамматика по Бюллеру гр.27 · сегодня, пн 16.11.2026 в 14:30 (МСК). Будете?',
+        ], $questions);
+    }
+
+    public function test_question_without_number_in_title_counts_group_lessons(): void
+    {
+        $group = $this->group();
+        $this->lesson($group, '2026-11-09 14:00:00');
+        $this->lesson($group, '2026-11-12 14:00:00');
+        $this->lesson($group, '2026-11-16 14:00:00');
+
+        $this->artisan('classes:post-attendance-poll')->assertSuccessful();
+
+        $this->assertStringStartsWith('Занятие №3 · Грамматика по Кочергиной · ', TelegramPoll::firstOrFail()->question);
     }
 
     public function test_votes_of_linked_student_become_attendance_notices(): void
