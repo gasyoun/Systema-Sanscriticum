@@ -1,8 +1,8 @@
 # Roadmap — Bühler grammatical-tables Memrise course into the SRS clone
 
-_Created: 22-07-2026 · Last updated: 05-09-2026_
+_Created: 22-07-2026 · Last updated: 17-11-2026_
 
-> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** импорт состоялся: команда [srs:import-buhler-paradigms](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/ImportBuhlerParadigmsSrsDeck.php) завозит парадигменные ячейки курса Memrise 6517849 в колоду (H1990, 02-08-2026). Дальнейшая судьба контента живёт в [PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md).
+> **Truth-pass 17-11-2026 (DeepSeek V4.1 Flash 1017):** прежняя формулировка «импорт состоялся» (truth-pass 19-08-2026, H3072) описывала **отгрузку кода**, а не доставку контента. Read-only проверка на .92 17-11-2026: среди 49 колод прода **ни одной** колоды Бюлера, 0 карточек. Импорт довезён 17-11-2026 — команда [srs:import-buhler-paradigms](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/ImportBuhlerParadigmsSrsDeck.php) создала колоду `buhler-paradigm-drills` на 78 карточек (H1990, код от 02-08-2026); прод после — 91 колода / 26 660 карточек. Уточнение по контенту: курс 6517849 — **грамматические таблицы** (78 парадигменных ячеек), а не уроки Бюлера; уроки идут другим конвейером. Дальнейшая судьба контента живёт в [PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md).
 
 ## 1. What this is
 
