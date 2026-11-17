@@ -94,13 +94,42 @@ final class ZapisiPollService
         ]);
     }
 
-    private function attendanceQuestion(Schedule $schedule): string
+    private const WEEKDAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+
+    /**
+     * «Занятие №2 · Грамматика по Кочергиной гр.64 · сб 21.11.2026 в 11:00 (МСК). Будете?»
+     * Номер — из названия в расписании («(#2, 21.11.26)» / «(урок 9, 17.11.26)»,
+     * хвост из названия убираем, чтобы дата не повторялась); если в названии
+     * номера нет — порядковый номер занятия группы по времени начала.
+     */
+    public function attendanceQuestion(Schedule $schedule): string
     {
         $title = trim((string) ($schedule->title ?: ($schedule->course?->title ?? '')));
-        $title = $title !== '' ? mb_strimwidth($title, 0, 180, '…') : 'Занятие';
-        $when = $schedule->start->isToday() ? 'сегодня' : $schedule->start->format('d.m');
+        $number = null;
+        if (preg_match('/\s*\((?:#|№|урок\s*)(\d+)\s*(?:,[^)]*)?\)\s*$/iu', $title, $m) === 1) {
+            $number = (int) $m[1];
+            $title = trim(mb_substr($title, 0, mb_strlen($title) - mb_strlen($m[0])));
+        } elseif ($schedule->group_id !== null) {
+            $number = Schedule::query()
+                ->where('group_id', $schedule->group_id)
+                ->where('start', '<=', $schedule->start)
+                ->distinct()
+                ->count('start');
+        }
 
-        return "Занятие «{$title}» {$when} в {$schedule->start->format('H:i')} (МСК). Будете?";
+        $title = $title !== '' ? mb_strimwidth($title, 0, 180, '…') : '';
+        $start = $schedule->start;
+        $date = self::WEEKDAYS[$start->dayOfWeek].' '.$start->format('d.m.Y');
+        if ($start->isToday()) {
+            $date = 'сегодня, '.$date;
+        } elseif ($start->isTomorrow()) {
+            $date = 'завтра, '.$date;
+        }
+
+        $head = $number ? "Занятие №{$number}" : 'Занятие';
+        $parts = array_filter([$head, $title, "{$date} в {$start->format('H:i')} (МСК)"], fn (string $p): bool => $p !== '');
+
+        return implode(' · ', $parts).'. Будете?';
     }
 
     /**

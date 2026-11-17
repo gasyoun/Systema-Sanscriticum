@@ -11,7 +11,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Автоопрос о присутствии: за N минут до занятия @zapisi_ORSbot вешает в
+ * Автоопрос о присутствии: за N минут до занятия (по умолчанию за сутки, 1440) @zapisi_ORSbot вешает в
  * Telegram-чат группы опрос «Будете на занятии?» (Буду / Опоздаю / Не смогу).
  * Опрос не анонимный: результаты поимённо — «Записи (бот)» → «Опросы», а голос
  * ученика с привязанным Telegram пишется ещё и в предупреждения о занятии
@@ -52,7 +52,7 @@ class PostAttendancePollToGroupChat extends Command
 
         $lead = $this->option('minutes') !== null
             ? (int) $this->option('minutes')
-            : (int) config('features.attendance_poll_lead_minutes', 180);
+            : (int) config('features.attendance_poll_lead_minutes', 1440);
         $lead = max(self::MIN_MINUTES_BEFORE + 5, $lead);
 
         /** @var list<int> $pilotGroupIds */
