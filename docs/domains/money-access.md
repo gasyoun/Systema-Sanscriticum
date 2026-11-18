@@ -93,4 +93,12 @@ php artisan catalog:mirror-recording-lessons <source> <target>
   платежи членов группы и групповой платёж. Ставится в админке: карточка
   ученика → «Группы (активный состав)» → «Платит сам» / «Вернуть под групповую
   оплату». OFF: отметка игнорируется.
-- **Проверка:** `php artisan test --filter="B2bGroupPaymentTest|B2bGroupSelfPayTest"`.
+- **Доступ до оплаты** (флаг `features.b2b_group_pending_access`, env
+  `B2B_GROUP_PENDING_ACCESS`, дефолт OFF, только поверх `b2b_group_payment`).
+  Отметка на платеже — `payments.access_while_pending` (дефолт `false`), в
+  админке «Открыть доступ до оплаты» у b2b_group-платежа. ON: b2b_group-платёж
+  в статусе `pending` с отметкой даёт ученикам группы ключи своих блоков и
+  снимает их из должников, как оплаченный. Выручка и ЗП его не считают, пока
+  статус не «Оплачено»; «Отменено» закрывает доступ. Чистка зависших оплат
+  (`payments:expire-stale-checkouts`) b2b_group-платежи не трогает (вне флага).
+- **Проверка:** `php artisan test --filter="B2bGroupPaymentTest|B2bGroupSelfPayTest|B2bGroupPendingAccessTest"`.

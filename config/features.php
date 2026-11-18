@@ -1567,6 +1567,13 @@ return [
     // отмеченному b2b_group-платёж не даёт виртуальных ключей и не снимает его
     // из должников — доступ только по собственным платежам.
     'b2b_group_self_pay' => (bool) env('B2B_GROUP_SELF_PAY', false),
+
+    // B2B-оплата за группу: «открыть доступ до оплаты» (payments.access_while_pending).
+    // OFF (дефолт): групповой платёж даёт доступ только в статусе «Оплачено».
+    // ON (только поверх b2b_group_payment): b2b_group-платёж в статусе pending с
+    // отметкой уже открывает ученикам группы свои блоки и снимает их из должников.
+    // Выручка/ЗП считают платёж только после «Оплачено».
+    'b2b_group_pending_access' => (bool) env('B2B_GROUP_PENDING_ACCESS', false),
     // H2744 staged rollout. Tier interpretation is dark until legacy rows and
     // tariffs have been explicitly classified by membership:classify-tiers.
     'membership_tiered' => (bool) env('MEMBERSHIP_TIERED', false),
