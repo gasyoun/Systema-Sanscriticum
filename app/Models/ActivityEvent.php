@@ -105,6 +105,14 @@ class ActivityEvent extends Model
 
     public const OFFER_CLICK = 'offer.click';
 
+    /**
+     * H7968 — атрибуция покупки к офферу кабинета: сервер пишет РОВНО одну
+     * запись на подтверждённый платёж (дедупликация по payment_id,
+     * OfferPurchaseAttribution). Клиент прислать не может — в
+     * CLIENT_CABINET_EVENTS сознательно не входит.
+     */
+    public const OFFER_PURCHASE = 'offer.purchase';
+
     public const ACCESS_RENEWAL_START = 'access.renewal.start';
 
     public const ACCESS_RENEWAL_COMPLETE = 'access.renewal.complete';

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\ActivityEvent;
+use App\Services\Activity\OfferPurchaseAttribution;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -38,13 +39,13 @@ class CabinetBaselineReport extends Command
         ActivityEvent::PATH_STATION_LIT_IMPRESSION,
         ActivityEvent::OFFER_IMPRESSION,
         ActivityEvent::OFFER_CLICK,
+        ActivityEvent::OFFER_PURCHASE,
         ActivityEvent::ACCESS_RENEWAL_START,
         ActivityEvent::ACCESS_RENEWAL_COMPLETE,
     ];
 
     /** События §4 без нынешней поверхности в кабинете — чтобы отчет был честным про охват. */
     private const NO_CURRENT_SURFACE = [
-        'offer.purchase' => 'атрибуция покупки к офферу — после чекаут-attribution',
         'support.topic.pick' => 'у виджета поддержки нет выбора темы',
     ];
 
@@ -90,6 +91,60 @@ class CabinetBaselineReport extends Command
             $this->line("  - {$event} — {$why}");
         }
 
+        $this->renderAttribution($since);
+
         return self::SUCCESS;
+    }
+
+    /**
+     * H7968 — агрегат атрибуции «клик по офферу → подтверждённая оплата».
+     * PII-минимум: только COUNT/DISTINCT и счётчики, без сумм и пользователей.
+     */
+    private function renderAttribution($since): void
+    {
+        $windowDays = OfferPurchaseAttribution::windowDays();
+        $flag = (bool) config('features.cabinet_offer_attribution', false);
+
+        $this->line('');
+        $this->line(
+            'Атрибуция офферов (H7968): флаг cabinet_offer_attribution '
+            . ($flag ? 'ON' : 'OFF — offer.purchase не пишется')
+            . ". Правило связки: пользователь + oффер (course при наличии) + confirmed paid; "
+            . "окно «клик → подтверждение оплаты» — {$windowDays} сут. от подтверждения."
+        );
+
+        $purchases = DB::table('activity_events')
+            ->selectRaw('COUNT(*) AS n, COUNT(DISTINCT user_id) AS uniq')
+            ->where('event_type', ActivityEvent::OFFER_PURCHASE)
+            ->where('created_at', '>=', $since)
+            ->first();
+        $this->table(
+            ['Атрибутированных покупок (offer.purchase)', 'Уник. студентов'],
+            [[(int) ($purchases->n ?? 0), (int) ($purchases->uniq ?? 0)]]
+        );
+
+        $clicks = DB::table('activity_events')
+            ->where('event_type', ActivityEvent::OFFER_CLICK)
+            ->where('created_at', '>=', $since)
+            ->pluck('id');
+
+        $attributedClickIds = DB::table('activity_events')
+            ->where('event_type', ActivityEvent::OFFER_PURCHASE)
+            ->pluck('event_data')
+            ->map(fn ($raw): array => is_string($raw) ? (array) json_decode($raw, true) : (array) $raw)
+            ->filter(fn (array $data): bool => isset($data['click_id']))
+            ->map(fn (array $data): int => (int) $data['click_id'])
+            ->all();
+
+        $unmatched = $clicks->reject(fn ($id): bool => in_array((int) $id, $attributedClickIds, true))->count();
+
+        $this->line(
+            "Клики офферов (offer.click) за окно отчёта: {$clicks->count()}, "
+            . "из них без атрибуции: {$unmatched} (ноль — тоже результат)."
+        );
+        $this->line(
+            'Это НАБЛЮДАЕМЫЕ атрибутированные конверсии, НЕ причинный revenue lift: '
+            . 'связка «пользователь+окно» причинность не измеряет, влияние оффера на выручку не измерялось.'
+        );
     }
 }

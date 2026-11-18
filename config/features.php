@@ -2237,4 +2237,23 @@ return [
      | Включение: SUPPORT_TOPIC_SYNCED_RULES=true + php artisan config:cache.
      */
     'support_topic_synced_rules' => (bool) env('SUPPORT_TOPIC_SYNCED_RULES', false),
+
+    /*
+     | H7968 — атрибуция «клик по офферу кабинета → подтверждённая оплата».
+     | ВЫКЛ (default): ровно прежнее поведение, offer.purchase не пишется.
+     | ВКЛ: PaymentTelemetryObserver дописывает offer.purchase (ровно одна
+     |   запись на платёж, дедупликация по payment_id) при переходе статуса в
+     |   Payment::PAID_STATUSES, если у того же пользователя есть свежий
+     |   offer.click (окно — cabinet_offer_attribution_window_days ниже).
+     | Это ТОЛЬКО телеметрия: обработка платежей, выдача доступа, суммы и
+     |   тарифы не трогаются; связка наблюдательная, не причинная.
+     | Включение в проде — отдельный ops-шаг (env + config:cache), не мерж PR.
+     */
+    'cabinet_offer_attribution' => (bool) env('CABINET_OFFER_ATTRIBUTION', false),
+
+    /*
+     | H7968 — окно связки «клик → подтверждение оплаты», суток. Клик старше
+     | окна на момент подтверждения — просроченный, в атрибуцию не идёт.
+     */
+    'cabinet_offer_attribution_window_days' => (int) env('CABINET_OFFER_ATTRIBUTION_WINDOW_DAYS', 7),
 ];

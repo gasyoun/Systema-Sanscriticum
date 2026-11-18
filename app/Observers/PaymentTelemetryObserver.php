@@ -8,6 +8,7 @@ use App\Models\ActivityEvent;
 use App\Models\Payment;
 use App\Services\Activity\CabinetTelemetry;
 use App\Services\Activity\FunnelTelemetry;
+use App\Services\Activity\OfferPurchaseAttribution;
 use App\Services\Membership\MembershipFunnelAnalytics;
 
 /**
@@ -22,6 +23,11 @@ use App\Services\Membership\MembershipFunnelAnalytics;
  * сценарии погашения долга/продления из кабинета (DebtPaymentResolver и
  * чекаут по долговым тариф-ссылкам). Платежи, созданные менеджером руками,
  * в baseline продлений не входят — фиксируем поведение СТУДЕНТА в кабинете.
+ *
+ * H7968: здесь же точка атрибуции «клик по офферу → подтверждённая оплата»
+ * (OfferPurchaseAttribution, флаг features.cabinet_offer_attribution,
+ * default OFF). Телеметрия только читает состоявшийся переход status→paid —
+ * денежная логика и выдача доступа не затрагиваются.
  */
 class PaymentTelemetryObserver
 {
@@ -29,6 +35,7 @@ class PaymentTelemetryObserver
         private readonly CabinetTelemetry $telemetry,
         private readonly FunnelTelemetry $funnel,
         private readonly MembershipFunnelAnalytics $membershipFunnel,
+        private readonly OfferPurchaseAttribution $offerAttribution,
     ) {}
 
     public function updated(Payment $payment): void
@@ -36,6 +43,8 @@ class PaymentTelemetryObserver
         if ($payment->wasChanged('status')) {
             $this->emitIfSelfServicePaid($payment);
             $this->emitFunnelPaymentSuccess($payment);
+            // H7968 — атрибуция «клик по офферу → оплата», флаг OFF (self-guard).
+            $this->offerAttribution->recordPaid($payment);
         }
     }
 
@@ -44,6 +53,7 @@ class PaymentTelemetryObserver
     {
         $this->emitIfSelfServicePaid($payment);
         $this->emitFunnelPaymentSuccess($payment);
+        $this->offerAttribution->recordPaid($payment);
     }
 
     private function emitIfSelfServicePaid(Payment $payment): void
