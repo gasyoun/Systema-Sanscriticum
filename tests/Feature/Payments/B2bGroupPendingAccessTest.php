@@ -178,6 +178,19 @@ class B2bGroupPendingAccessTest extends TestCase
         $this->assertTrue($this->canWatch(1));
     }
 
+    public function test_revenue_ignores_canceled_and_other_course_group_payments(): void
+    {
+        $this->pendingBlockOne(overrides: ['status' => 'canceled']);
+        $otherCourse = Course::factory()->create();
+        $this->pendingBlockOne(overrides: ['status' => 'paid', 'course_id' => $otherCourse->id]);
+
+        $this->assertEqualsWithDelta(
+            0.0,
+            app(TeacherSalaryService::class)->blockGroupRevenue($this->course->id, 1, $this->group->id),
+            0.01,
+        );
+    }
+
     public function test_canceled_payment_closes_access(): void
     {
         config(['features.b2b_group_pending_access' => true]);
