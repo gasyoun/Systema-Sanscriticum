@@ -337,6 +337,105 @@ class HybridPhase1Test extends TestCase
         $this->assertFalse($state->active, 'Successful re-pay must clear recovery');
     }
 
+    /**
+     * Prod 28-10-2026: a checkout abandoned on 28-09 sat pending; the student paid
+     * the course by other routes, then paid the next block on 28-10 09:33. At 10:05
+     * payments:expire-stale-checkouts flipped the 30-day-old link to failed with
+     * updated_at = now — and the cabinet showed «Не проходит оплата» right after a
+     * successful payment. Runs the real reaper so the two stay in contract.
+     *
+     * @test
+     */
+    public function stale_checkout_reaped_by_expiry_command_is_not_recovery(): void
+    {
+        $this->enableHybrid();
+        config(['features.checkout_stale_order_expiry' => true, 'checkout.legacy_pending_days' => 30]);
+        $this->travelTo(now()->setTime(12, 0));
+        ['user' => $user, 'course' => $course] = $this->studentWithCourse();
+
+        $abandoned = Payment::withoutEvents(function () use ($user, $course) {
+            $pending = Payment::create([
+                'user_id' => $user->id,
+                'course_id' => $course->id,
+                'amount' => 16000,
+                'tariff' => 'block_4',
+                'status' => 'pending',
+                'is_conditional' => false,
+            ]);
+            $pending->forceFill([
+                'created_at' => now()->subDays(31),
+                'updated_at' => now()->subDays(31),
+            ])->saveQuietly();
+
+            $paid = Payment::create([
+                'user_id' => $user->id,
+                'course_id' => $course->id,
+                'amount' => 8000,
+                'tariff' => 'block_12',
+                'status' => 'paid',
+                'is_conditional' => false,
+            ]);
+            $paid->forceFill([
+                'created_at' => now()->subMinutes(40),
+                'updated_at' => now()->subMinutes(40),
+            ])->saveQuietly();
+
+            return $pending;
+        });
+
+        $this->artisan('payments:expire-stale-checkouts', ['--apply' => true])->assertSuccessful();
+        $this->assertSame('failed', $abandoned->fresh()->status, 'precondition: reaper flipped the row');
+
+        $state = app(RecoveryStateResolver::class)->resolve($user);
+        $this->assertFalse($state->active, 'An expired abandoned link is not a declined payment');
+
+        $this->actingAs($user)
+            ->get(route('student.access'))
+            ->assertOk()
+            ->assertDontSee('Не проходит оплата', false);
+    }
+
+    /** @test */
+    public function timed_link_failed_after_expiry_is_not_recovery_but_decline_inside_window_is(): void
+    {
+        $this->enableHybrid();
+        ['user' => $user, 'course' => $course] = $this->studentWithCourse();
+
+        $make = function (array $times) use ($user, $course): Payment {
+            return Payment::withoutEvents(function () use ($user, $course, $times) {
+                $p = Payment::create([
+                    'user_id' => $user->id,
+                    'course_id' => $course->id,
+                    'amount' => 4800,
+                    'tariff' => 'block_2',
+                    'status' => 'failed',
+                    'is_conditional' => false,
+                ]);
+                $p->forceFill($times)->saveQuietly();
+
+                return $p;
+            });
+        };
+
+        // Promo link reaped after TTL + webhook buffer → abandoned, not declined.
+        $make([
+            'created_at' => now()->subHours(3),
+            'payment_link_expires_at' => now()->subHours(2),
+            'updated_at' => now()->subHour(),
+        ]);
+        $this->assertFalse(app(RecoveryStateResolver::class)->resolve($user)->active);
+
+        // Bank declined while the link was still alive → real fault, recovery ON.
+        $declined = $make([
+            'created_at' => now()->subMinutes(20),
+            'payment_link_expires_at' => now()->addHour(),
+            'updated_at' => now()->subMinutes(15),
+        ]);
+        $state = app(RecoveryStateResolver::class)->resolve($user);
+        $this->assertTrue($state->active);
+        $this->assertSame([(int) $declined->id], $state->faultPaymentIds);
+    }
+
     /** @test */
     public function expired_promise_enters_recovery(): void
     {

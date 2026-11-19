@@ -22,8 +22,9 @@
         : \Illuminate\Support\Str::limit(trim(strip_tags(\App\Support\SanitizedHtml::render($teacher->page_html))) ?: $teacher->page_role, 160);
 @endphp
 
+@section('meta_description', $metaDescription)
+
 @push('head')
-    <meta name="description" content="{{ $metaDescription }}">
     <link rel="canonical" href="{{ $pageUrl }}">
     <meta name="robots" content="index, follow">
 

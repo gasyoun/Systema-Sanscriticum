@@ -8,6 +8,7 @@ use App\Jobs\SendZapisiBotMessageJob;
 use App\Models\MarketingSetting;
 use App\Models\Schedule;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 /**
  * P0 автоматизации «Отдела заботы»: за N минут до занятия постит ссылку
@@ -52,11 +53,23 @@ class PostClassLinkToGroupChat extends Command
 
         $schedules = Schedule::query()
             ->with(['group', 'course'])
-            ->whereNull('group_link_posted_at')
             ->whereNotNull('group_id')
             ->whereBetween('start', [now(), now()->addMinutes($lead)])
             ->orderBy('id')
-            ->get();
+            ->get()
+            // Дедуп по своей метке — только по СВЕЖЕЙ: метка, оставшаяся от прежней
+            // даты строки (инцидент 04-11-2026, гр.62), не должна глушить занятие.
+            ->reject(fn (Schedule $s): bool => $s->hasFreshReminderMark('group_link_posted_at'))
+            ->each(function (Schedule $s): void {
+                if ($s->hasStaleReminderMark('group_link_posted_at')) {
+                    Log::warning('classes:post-group-link: stale group_link_posted_at ignored', [
+                        'schedule_id' => $s->id,
+                        'start' => $s->start?->toDateTimeString(),
+                        'mark' => (string) $s->group_link_posted_at,
+                    ]);
+                }
+            })
+            ->values();
 
         $posted = 0;
 
@@ -87,7 +100,7 @@ class PostClassLinkToGroupChat extends Command
             // пост от другого бота студенты читают как повтор. Пропускаем без пометки:
             // колонки обеих команд сбрасываются при переносе start, так что при
             // переносе занятия автопостинг снова станет активен наравне с zapisi.
-            if ($rows->contains(fn (Schedule $r): bool => $r->zapisi_reminded_at !== null)) {
+            if ($rows->contains(fn (Schedule $r): bool => $r->hasFreshReminderMark('zapisi_reminded_at'))) {
                 continue;
             }
 

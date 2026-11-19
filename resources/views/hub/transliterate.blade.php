@@ -12,6 +12,15 @@
 @section('robots', $indexable ? 'index, follow' : 'noindex, follow')
 @if($indexable)
     @section('canonical', url('/sanskritorium'))
+
+@push('head')
+    @if($indexable)
+        @include('partials.schema-breadcrumbs', ['crumbs' => [
+            ['name' => 'Главная', 'url' => url('/')],
+            ['name' => 'Транслитерация'],
+        ]])
+    @endif
+@endpush
     @section('og_title', 'Транслитерация санскрита: IAST, SLP1 и деванагари')
 @endif
 

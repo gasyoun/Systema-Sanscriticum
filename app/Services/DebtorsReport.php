@@ -12,6 +12,7 @@ use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\Tariff;
 use App\Models\User;
+use App\Services\Payments\B2bGroupEntitlement;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -347,7 +348,40 @@ class DebtorsReport
         ";
 
         // B: no_payment — юзер в course-группе, но реальный paid Payment отсутствует
-        // (conditional платежи не учитываем).
+        // (conditional платежи не учитываем). H8245: под флагом b2b_group_payment
+        // пара (юзер, курс) не должник, если его группу этого курса покрывает
+        // оплаченный b2b_group-платёж юрлица (плательщик — не ученик, у него на
+        // курсе своих payments нет). ВАЖНО: guard — второй AND NOT EXISTS (не OR!):
+        // должник = (нет личной оплаты) И (группа не покрыта b2b) И (не non-debt
+        // статус); OR дал бы неверный приоритет относительно AND cu-условия.
+        // Отметка «платит сам» (group_user.b2b_self_pay, флаг b2b_group_self_pay):
+        // групповой платёж снимает из должников только неотмеченных членов группы.
+        $b2bGroupGuard = '';
+        $b2bGroupBindings = [];
+        $b2bSelfPayGuard = B2bGroupEntitlement::selfPayEnabled() ? 'AND gu.b2b_self_pay = 0' : '';
+        // «Открыть доступ до оплаты»: ожидающий групповой платёж с отметкой тоже
+        // снимает покрытых учеников из должников — долг на юрлице, не на них.
+        $b2bPendingAccess = B2bGroupEntitlement::pendingAccessEnabled()
+            ? "OR (p3.status = 'pending' AND p3.access_while_pending = 1)"
+            : '';
+        if (B2bGroupEntitlement::enabled()) {
+            $b2bGroupGuard = "
+                  AND NOT EXISTS (
+                    SELECT 1 FROM payments p3
+                    WHERE p3.group_id = gu.group_id
+                      AND p3.course_id = cg.course_id
+                      AND p3.tariff = ?
+                      AND (p3.status IN ({$paidIn}) {$b2bPendingAccess})
+                      AND p3.is_conditional = 0
+                      {$b2bSelfPayGuard}
+                      AND (
+                        (p3.start_block IS NULL AND p3.end_block IS NULL)
+                        OR (p3.start_block <= ref.ref_number AND (p3.end_block >= ref.ref_number OR p3.end_block IS NULL))
+                      )
+                  )";
+            $b2bGroupBindings = array_merge([Payment::TARIFF_B2B_GROUP], self::PAID_STATUSES);
+        }
+
         $noPaymentSql = "
             SELECT
                 gu.user_id                                  AS user_id,
@@ -368,7 +402,7 @@ class DebtorsReport
                   AND p2.status IN ({$paidIn})
                   AND p2.is_conditional = 0
                   AND p2.tariff NOT IN ('Расход', 'salary_payout')
-            )
+            ){$b2bGroupGuard}
               AND (cu.status IS NULL OR cu.status NOT IN ({$nonDebtIn}))
             GROUP BY gu.user_id, cg.course_id, ref.ref_number
         ";
@@ -382,6 +416,7 @@ class DebtorsReport
             ['no_payment'],
             $refBindings,
             self::PAID_STATUSES,
+            $b2bGroupBindings,
             self::NON_DEBT_STATUSES,
         );
 

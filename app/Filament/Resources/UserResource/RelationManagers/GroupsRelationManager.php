@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\UserResource\RelationManagers;
 
 use App\Services\GroupMembershipManager;
+use App\Services\Payments\B2bGroupEntitlement;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -54,6 +55,15 @@ class GroupsRelationManager extends RelationManager
                     ->label('Вышел')
                     ->dateTime('d.m.Y H:i')
                     ->placeholder('—'),
+
+                // Смешанная группа под B2B-оплатой «за группу целиком»: покрывает ли
+                // ученика платёж юрлица или он платит блоки сам (флаг b2b_group_self_pay).
+                Tables\Columns\TextColumn::make('b2b_payment_mode')
+                    ->label('Групповая оплата')
+                    ->badge()
+                    ->getStateUsing(fn ($record): string => $record->pivot->b2b_self_pay ? 'Платит сам' : 'По группе')
+                    ->color(fn (string $state): string => $state === 'Платит сам' ? 'warning' : 'gray')
+                    ->visible(fn (): bool => B2bGroupEntitlement::selfPayEnabled()),
             ])
             ->filters([
                 Tables\Filters\TernaryFilter::make('membership')
@@ -93,6 +103,26 @@ class GroupsRelationManager extends RelationManager
                         [$record->id],
                         GroupMembershipManager::REASON_MANUAL,
                     )),
+
+                Tables\Actions\Action::make('b2bSelfPay')
+                    ->label('Платит сам')
+                    ->icon('heroicon-m-banknotes')
+                    ->color('warning')
+                    ->visible(fn ($record): bool => B2bGroupEntitlement::selfPayEnabled() && ! $record->pivot->b2b_self_pay)
+                    ->requiresConfirmation()
+                    ->modalHeading('Ученик платит сам')
+                    ->modalDescription('Групповая оплата юрлица за эту группу перестанет покрывать ученика: уроки откроются только по его собственным платежам, без оплаты он попадет в должники. Его уже сделанные платежи не меняются.')
+                    ->action(fn ($record) => $this->getOwnerRecord()->groups()->updateExistingPivot($record->id, ['b2b_self_pay' => true])),
+
+                Tables\Actions\Action::make('b2bGroupCovered')
+                    ->label('Вернуть под групповую оплату')
+                    ->icon('heroicon-m-building-office')
+                    ->color('gray')
+                    ->visible(fn ($record): bool => B2bGroupEntitlement::selfPayEnabled() && (bool) $record->pivot->b2b_self_pay)
+                    ->requiresConfirmation()
+                    ->modalHeading('Вернуть под групповую оплату')
+                    ->modalDescription('Ученика снова будет покрывать групповая оплата юрлица за эту группу: оплаченные юрлицом блоки откроются ему без личной оплаты.')
+                    ->action(fn ($record) => $this->getOwnerRecord()->groups()->updateExistingPivot($record->id, ['b2b_self_pay' => false])),
             ])
             ->bulkActions([]);
     }

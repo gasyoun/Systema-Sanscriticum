@@ -65,4 +65,44 @@ class OpenLessonOccasions
 
         return null;
     }
+
+    /**
+     * Трансляции эфира кнопками: Rutube / VK Видео / YouTube. Ссылки из админки
+     * часто без схемы (rutube.ru/video/…) — дописываем https://, мусор пропускаем.
+     *
+     * @return list<array{label: string, url: string}>
+     */
+    public function streamLinks(Schedule $schedule): array
+    {
+        $links = [];
+        foreach ((array) ($schedule->stream_links ?? []) as $raw) {
+            $url = trim((string) $raw);
+            if ($url === '') {
+                continue;
+            }
+            if (! preg_match('~^https?://~i', $url)) {
+                $url = 'https://'.ltrim($url, '/');
+            }
+            $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+            if ($host === '' || filter_var($url, FILTER_VALIDATE_URL) === false) {
+                continue;
+            }
+
+            $links[] = ['label' => self::streamLabel($host), 'url' => $url];
+        }
+
+        return $links;
+    }
+
+    private static function streamLabel(string $host): string
+    {
+        $host = preg_replace('~^(www\.|m\.)~', '', $host);
+
+        return match (true) {
+            str_ends_with($host, 'rutube.ru') => '📺 Rutube',
+            str_ends_with($host, 'vkvideo.ru'), str_ends_with($host, 'vk.com'), str_ends_with($host, 'vk.ru') => '📺 VK Видео',
+            str_ends_with($host, 'youtube.com'), $host === 'youtu.be' => '📺 YouTube',
+            default => '📺 Трансляция',
+        };
+    }
 }

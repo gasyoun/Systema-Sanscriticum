@@ -4,6 +4,7 @@ namespace Tests\Feature\Support;
 
 use App\Models\SupportDailyRollup;
 use App\Models\TelegramSupportChat;
+use App\Services\Support\SupportParityReportBuilder;
 use App\Services\TelegramSupport\SupportDailyRollupAggregator;
 use App\Services\TelegramSupport\TelegramSupportSyncService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -220,7 +221,7 @@ class SupportRollupGroupBotFilterTest extends TestCase
             ],
         ]);
 
-        $report = app(\App\Services\Support\SupportParityReportBuilder::class)->build(14);
+        $report = app(SupportParityReportBuilder::class)->build(14);
 
         $telegram = $report['channel_mix']['telegram'];
 

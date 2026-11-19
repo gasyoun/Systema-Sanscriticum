@@ -73,8 +73,18 @@ class OpenLessonCardSender
         }
 
         $url = $this->occasions->joinUrl($schedule);
-        if ($url === null) {
+        $streams = $this->occasions->streamLinks($schedule);
+        if ($url === null && $streams === []) {
             return self::SKIPPED;
+        }
+
+        // Zoom — отдельной строкой сверху, трансляции — рядом под ним.
+        $keyboard = [];
+        if ($url !== null) {
+            $keyboard[] = [['text' => '▶️ Подключиться в Zoom', 'url' => $url]];
+        }
+        if ($streams !== []) {
+            $keyboard[] = array_map(fn (array $s): array => ['text' => $s['label'], 'url' => $s['url']], $streams);
         }
 
         if (! $this->claim($schedule, $chatId, OpenLessonCardSend::STAGE_ZOOM)) {
@@ -83,10 +93,10 @@ class OpenLessonCardSender
 
         $response = $this->telegram->call('sendMessage', [
             'chat_id' => $chatId,
-            'text' => $this->builder->zoomText($schedule),
+            'text' => $this->builder->zoomText($schedule, $url !== null, $streams !== []),
             'parse_mode' => 'HTML',
             'disable_web_page_preview' => true,
-            'reply_markup' => json_encode(['inline_keyboard' => [[['text' => '▶️ Подключиться', 'url' => $url]]]], JSON_UNESCAPED_UNICODE),
+            'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE),
         ]);
 
         return $this->settle($response, $schedule, $chatId, OpenLessonCardSend::STAGE_ZOOM, true, function () use ($rsvp): void {

@@ -72,7 +72,15 @@ class VacationResumeAnnounceTest extends TestCase
 
         Queue::assertPushed(SendMessengerAlerts::class);
         Queue::assertPushed(SendTelegramChatMessageJob::class, fn ($job): bool => $job->chatId === '-10089');
-        Mail::assertQueued(VacationResumeMail::class);
+        Mail::assertQueued(VacationResumeMail::class, function (VacationResumeMail $mail): bool {
+            // Разметка из TG-текста — живой HTML, а не теги буквами (иначе
+            // автоссылка почтовика цепляет кавычку href → 404).
+            $mail->assertSeeInHtml("<a href='".route('student.calendar')."'>", false);
+            $mail->assertSeeInHtml('<b>Занятия возобновляются!</b>', false);
+            $mail->assertDontSeeInHtml('&lt;a href', false);
+
+            return true;
+        });
 
         // Дедуп: повторный запуск в тот же слот — no-op (новых отправок нет,
         // сумма по ростеру остаётся 5 ЛС).

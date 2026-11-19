@@ -62,6 +62,17 @@ Telegram/VK через `ScheduledReminder` (`Payment::scheduleOnboardingIfFirstF
 **Отправка сознательно НЕ подключена** — ни одного send-сайта вне `app/Mail/`; канал ждет
 ESP-гейта (H1147), Telegram-дрип остается основным. Тест: `tests/Feature/Mail/MarathonMailablesTest.php`.
 
+## `ZhdunPaymentOpenMail`
+**Очередь**: `mailing`  
+**Шаблон**: `resources/views/emails/zhdun/payment-open.blade.php`
+
+Ждун: «оплата открыта» голосовавшему за строку списка ожидания — тот же текст,
+что уходит в TG/VK, плюс кнопка «Записаться и оплатить» на `/k/{slug}`.
+Рекламное (призыв к оплате): только при `wants_email_announcements`, с отпиской
+(`Unsubscribable`). Шлёт `App\Services\Waitlist\ZhdunVoterNotifier` — авто при
+кворуме (флаг `WAITLIST_NOTIFY_VOTERS`, по умолчанию OFF) и кнопка
+«Сообщить голосовавшим» в админке. Тест: `tests/Feature/ZhdunVoterNotifierTest.php`.
+
 ---
 
 ## Добавление нового письма

@@ -44,6 +44,9 @@ final class FakeSystemInspector implements SystemInspector
     /** @var list<array{disk: string, reachable: bool, newestAt: int|null, newestBytes: int|null}>|null */
     public ?array $backupDestinations = null;
 
+    /** @var array<string, int|null> host:port => дней до конца; null = не читается */
+    public array $certificateDaysLeft = [];
+
     public static function healthy(GuardSpec $spec, string $templateRoot, string $manifestBody): self
     {
         $fake = new self;
@@ -91,16 +94,44 @@ final class FakeSystemInspector implements SystemInspector
             'systema-madeline-daemon|MemoryMax' => (string) $spec->bytes('MADELINE_MEMORY_MAX'),
             'systema-madeline-daemon|TasksMax' => $spec->get('MADELINE_TASKS_MAX'),
             'systema-madeline-daemon|OOMPolicy' => 'kill',
+            // H7059: у yandex-resume тоже есть свой бюджет, и обобщённая
+            // проверка сравнивает current именно с ним.
+            'systema-yandex-resume|MemoryHigh' => (string) $spec->bytes('YANDEX_RESUME_MEMORY_HIGH'),
+            'systema-yandex-resume|MemoryMax' => (string) $spec->bytes('YANDEX_RESUME_MEMORY_MAX'),
         ];
 
         // H3121: здоровый прод — группа крона далеко под порогом, а отметка
         // завершённого schedule:run свежая. Тест на «ноль находок» обязан
         // проверять и это: обе проверки молчаливы по построению, и без явного
         // здорового значения они молчали бы всегда, в том числе и сломанные.
-        $fake->files['/sys/fs/cgroup/system.slice/cron.service/memory.current'] =
-            (string) intdiv($spec->bytes('CRON_MEMORY_HIGH'), 10)."\n";
+        // H7059: у каждой группы из CGROUP_BUDGET_UNITS здоровый запас 10 %.
+        // Раньше здесь был только cron; обобщённая проверка без этих строк
+        // молчала бы по missing-файлу, а не по здоровому бюджету.
+        $budgetUnits = $spec->has('CGROUP_BUDGET_UNITS') ? $spec->csv('CGROUP_BUDGET_UNITS') : ['cron'];
+        $unitHigh = [
+            'cron' => 'CRON_MEMORY_HIGH',
+            'supervisor' => 'SUPERVISOR_MEMORY_HIGH',
+            'systema-madeline-daemon' => 'MADELINE_MEMORY_HIGH',
+            'systema-yandex-resume' => 'YANDEX_RESUME_MEMORY_HIGH',
+        ];
+        foreach ($budgetUnits as $unit) {
+            $key = $unitHigh[$unit] ?? null;
+            if ($key === null || ! $spec->has($key)) {
+                continue;
+            }
+            $fake->files['/sys/fs/cgroup/system.slice/'.$unit.'.service/memory.current'] =
+                (string) intdiv($spec->bytes($key), 10)."\n";
+        }
         $fake->files[rtrim($spec->get('APP_DIR'), '/').'/storage/framework/schedule-run.stamp'] =
             (string) time()."\n";
+
+        // H7059: здоровый прод — у каждого настроенного сертификата запас
+        // вдвое больше порога. Проверка молчалива по построению, и без явного
+        // здорового значения молчала бы всегда, в том числе сломанная.
+        $certMinDays = $spec->has('CERT_EXPIRY_MIN_DAYS') ? (int) $spec->get('CERT_EXPIRY_MIN_DAYS') : 21;
+        foreach ($spec->has('CERT_EXPIRY_HOSTS') ? $spec->csv('CERT_EXPIRY_HOSTS') : [] as $target) {
+            $fake->certificateDaysLeft[$target] = $certMinDays * 2;
+        }
 
         $fake->phpCliMemoryLimit = $spec->get('PHP_CLI_MEMORY_LIMIT');
 
@@ -190,5 +221,10 @@ final class FakeSystemInspector implements SystemInspector
     public function backupDestinations(): ?array
     {
         return $this->backupDestinations;
+    }
+
+    public function certificateDaysLeft(string $host, int $port): ?int
+    {
+        return $this->certificateDaysLeft[$host.':'.$port] ?? null;
     }
 }

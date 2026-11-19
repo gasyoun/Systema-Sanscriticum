@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>@yield('title', 'Словарь санскрита — Общество ревнителей санскрита')</title>
+    <title>{{ \App\Support\SeoTitle::render($__env->yieldContent('title', 'Словарь санскрита')) }}</title>
     <meta name="description" content="@yield('meta_description', 'Санскритско-русские словарные статьи: деванагари, IAST, кириллическая транслитерация и перевод.')">
 
     {{-- Wave 0 (SEO P2 / H204): страницы словаря по умолчанию noindex,follow —
@@ -30,6 +30,9 @@
 
     @vite('resources/css/fonts.css')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- H7590 — лоадер поиска в шапке. Alpine на словарных страницах нет:
+         бокс деградирует до GET-формы /poisk (редирект на path-style). --}}
+    @vite('resources/js/global-search.js')
 
     @stack('head')
 

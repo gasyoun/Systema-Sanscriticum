@@ -42,14 +42,18 @@
         @if($catalogBadgeUrl)
             {{-- H-perf: каталог отдается целиком (~90 карточек). Без lazy это ~28 МБ
                  обложек в первом же запросе. Первый ряд (до 4 карточек в сетке)
-                 грузим eager — это LCP; остальное по мере прокрутки. --}}
-            <img src="{{ $catalogBadgeUrl }}"
-                 alt="{{ $course->title }}"
-                 width="533" height="400"
-                 loading="{{ $eager ? 'eager' : 'lazy' }}"
-                 @if($eager) fetchpriority="high" @endif
+                 грузим eager — это LCP; остальное по мере прокрутки.
+                 srcset: баннер 4:3 из course_design_assets — исходник 1448×1086,
+                 при показе 533×400 это 3,8× лишних пикселей (замер 19-10-2026). --}}
+            <x-responsive-image :src="$catalogBadgeUrl"
+                 :alt="$course->title"
+                 :width="533" :height="400"
+                 :loading="$eager ? 'eager' : 'lazy'"
+                 :fetchpriority="$eager ? 'high' : null"
                  decoding="async"
-                 class="absolute inset-0 w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-700 opacity-80">
+                 sizes="(min-width: 1536px) 420px, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw"
+                 class="absolute inset-0 w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-700 opacity-80" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#111622] via-transparent to-transparent opacity-80"></div>
             <div class="absolute inset-0 bg-gradient-to-t from-[#111622] via-transparent to-transparent opacity-80"></div>
         @else
             {{-- Типографская обложка-фолбэк: градиент по цвету категории + имя преподавателя + название --}}
@@ -92,7 +96,7 @@
             @elseif($course->isEnrolling())
                 <span class="inline-flex items-center gap-1.5 bg-amber-500 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md shadow-[0_4px_12px_rgba(245,158,11,0.5)] tracking-wider">
                     <i class="fas fa-bullhorn text-[9px]"></i>
-                    Идет набор
+                    {{ $course->recruitmentLabel($cadence) }}
                 </span>
             @else
                 <span class="inline-flex items-center gap-1.5 bg-indigo-500/90 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md tracking-wider">

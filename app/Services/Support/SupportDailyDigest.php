@@ -299,7 +299,8 @@ final class SupportDailyDigest
             'Неотвеченных: '.(int) ($metrics['unanswered'] ?? 0),
             'Новых контактов: '.(int) ($metrics['new_contacts'] ?? 0),
             'ИИ отправил: '.(int) ($metrics['ai_sent'] ?? 0),
-            'Горбаченко '.SupportOutgoingAttribution::APPLE_MARKER.': '.$attribution['apple'],
+            // Горбаченко уволена (MG 07-11-2026): строка из сводки убрана; 🍎-счётчик
+            // в attribution держится для исторических дней, в текст не печатается.
             'Иван '.SupportOutgoingAttribution::TURTLE_MARKER.': '.$attribution['turtle'],
             'Гасунс: '.$attribution['gasuns'],
         ];

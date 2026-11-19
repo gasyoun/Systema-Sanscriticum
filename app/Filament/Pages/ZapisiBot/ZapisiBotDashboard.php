@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Filament\Pages\ZapisiBot;
 
 use App\Filament\Clusters\ZapisiBot;
+use App\Models\ChatSilenceRemoval;
 use App\Models\Group;
+use App\Services\Telegram\ZapisiBanJournal;
 use App\Services\Telegram\ZapisiChatMemberException;
 use App\Services\Telegram\ZapisiChatMemberService;
 use App\Support\RoleGate;
@@ -316,7 +318,7 @@ class ZapisiBotDashboard extends Page implements HasForms
 
             // Убрать из локального снимка + записать в журнал банов.
             $this->removeMemberFromRosterSnapshot($chatId, $telegramUserId);
-            $this->rememberBanned($chatId, [
+            app(ZapisiBanJournal::class)->remember($chatId, [
                 'id' => $telegramUserId,
                 'username' => is_array($member) ? ($member['username'] ?? null) : null,
                 'name' => is_array($member) ? ($member['name'] ?? null) : null,
@@ -373,7 +375,15 @@ class ZapisiBotDashboard extends Page implements HasForms
                 ->success()
                 ->send();
 
-            $this->forgetBanned($chatId, $telegramUserId);
+            app(ZapisiBanJournal::class)->forget($chatId, $telegramUserId);
+            ChatSilenceRemoval::query()
+                ->activeBan()
+                ->where('telegram_chat_id', $chatId)
+                ->where('telegram_user_id', (string) $telegramUserId)
+                ->update([
+                    'status' => ChatSilenceRemoval::STATUS_UNBANNED,
+                    'unbanned_at' => now(),
+                ]);
         } catch (ZapisiChatMemberException $e) {
             Notification::make()
                 ->title('Не удалось разбанить')
@@ -391,24 +401,8 @@ class ZapisiBotDashboard extends Page implements HasForms
     public function getBannedMembersProperty(): array
     {
         $chatId = $this->chatId();
-        if ($chatId === null) {
-            return [];
-        }
 
-        $file = $this->bannedPath($chatId);
-        if (! File::exists($file)) {
-            return [];
-        }
-
-        $decoded = json_decode(File::get($file), true);
-        if (! is_array($decoded) || ! isset($decoded['members']) || ! is_array($decoded['members'])) {
-            return [];
-        }
-
-        return array_values(array_filter(
-            $decoded['members'],
-            fn ($m): bool => is_array($m) && (int) ($m['id'] ?? 0) > 0,
-        ));
+        return $chatId === null ? [] : app(ZapisiBanJournal::class)->all($chatId);
     }
 
     private function removeMemberFromRosterSnapshot(string $chatId, int $telegramUserId): void
@@ -430,62 +424,6 @@ class ZapisiBotDashboard extends Page implements HasForms
         $decoded['count'] = count($decoded['members']);
 
         File::put($file, json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-    }
-
-    /**
-     * @param  array{id: int, username: ?string, name: ?string, banned_at: ?string, by_user_id: ?int}  $entry
-     */
-    private function rememberBanned(string $chatId, array $entry): void
-    {
-        $file = $this->bannedPath($chatId);
-        $dir = dirname($file);
-        if (! File::isDirectory($dir)) {
-            File::makeDirectory($dir, 0755, true);
-        }
-
-        $decoded = ['members' => []];
-        if (File::exists($file)) {
-            $raw = json_decode(File::get($file), true);
-            if (is_array($raw) && isset($raw['members']) && is_array($raw['members'])) {
-                $decoded = $raw;
-            }
-        }
-
-        $id = (int) $entry['id'];
-        $decoded['members'] = array_values(array_filter(
-            $decoded['members'],
-            fn ($m): bool => ! is_array($m) || (int) ($m['id'] ?? 0) !== $id,
-        ));
-        $decoded['members'][] = $entry;
-        $decoded['updated_at'] = now()->toIso8601String();
-
-        File::put($file, json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-    }
-
-    private function forgetBanned(string $chatId, int $telegramUserId): void
-    {
-        $file = $this->bannedPath($chatId);
-        if (! File::exists($file)) {
-            return;
-        }
-
-        $decoded = json_decode(File::get($file), true);
-        if (! is_array($decoded) || ! isset($decoded['members']) || ! is_array($decoded['members'])) {
-            return;
-        }
-
-        $decoded['members'] = array_values(array_filter(
-            $decoded['members'],
-            fn ($m): bool => ! is_array($m) || (int) ($m['id'] ?? 0) !== $telegramUserId,
-        ));
-        $decoded['updated_at'] = now()->toIso8601String();
-
-        File::put($file, json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-    }
-
-    private function bannedPath(string $chatId): string
-    {
-        return $this->storePath().'/roster/'.$chatId.'.banned.json';
     }
 
     private function chatId(): ?string

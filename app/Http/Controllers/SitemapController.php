@@ -125,15 +125,21 @@ class SitemapController extends Controller
 
                 // Отдельные публичные колоды (H5184 N14) — только слагованные
                 // URL /koloda/{slug}: сегменты вида id-N не каноничны, в карту
-                // не тащим. noindex-флаги и canonical-логику не трогаем.
+                // не тащим. SEO-META-1: noindex-колоды («Level 2»…«Level 10»,
+                // дубли уровня 1) тоже не попадают в карту — sitemap = только
+                // индексируемые URL.
                 SrsDeck::query()
                     ->whereIn('visibility', ['system', 'public'])
                     ->whereNotNull('slug')
                     ->where('slug', '!=', '')
-                    ->select(['slug', 'updated_at'])
+                    ->select(['slug', 'name', 'updated_at'])
                     ->orderBy('slug')
                     ->chunk(500, function ($decks) use (&$urls) {
                         foreach ($decks as $deck) {
+                            if (! $deck->isSeoIndexable()) {
+                                continue;
+                            }
+
                             $urls[] = [
                                 'loc' => route('srs.deck', $deck->slug),
                                 'lastmod' => optional($deck->updated_at)->format(DATE_ATOM),
@@ -210,7 +216,7 @@ class SitemapController extends Controller
                 DictionaryWord::query()
                     ->whereNotNull('slug')
                     ->whereHas('dictionary', fn ($q) => $q->where('is_active', true))
-                    ->select(['slug', 'translation', 'updated_at'])
+                    ->select(['slug', 'translation', 'is_indexable', 'updated_at'])
                     ->orderBy('slug')
                     ->chunk(1000, function ($words) use (&$urls) {
                         $seen = [];

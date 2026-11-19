@@ -20,6 +20,15 @@ trait SchedulesOvernightAndCrm
             ->onOneServer()
             ->name('media-covers-to-webp');
 
+        // Responsive-варианты для srcset (19-10-2026): карточки каталога и медиа
+        // Куратора. У медиа нет наблюдателя на загрузку, поэтому ежедневный
+        // добор — единственный рубеж; новые файлы сутки живут исходником.
+        $schedule->command('media:responsive-variants')
+            ->dailyAt('02:50')
+            ->withoutOverlapping(20)
+            ->onOneServer()
+            ->name('media-responsive-variants');
+
         $schedule->command('archives:cleanup --hours=24')
             ->dailyAt('03:00')
             ->withoutOverlapping(10)

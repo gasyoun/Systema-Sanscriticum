@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\CourseWaitlistItem;
 use App\Models\Tariff;
 use App\Services\CuratorNotifier;
+use App\Services\Waitlist\ZhdunVoterNotifier;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -44,7 +45,10 @@ class OpenWaitlistPayment
     /** Кэш-надгробие блокирующего уведомления: раз в сутки (крон ежедневно). */
     private const BLOCKED_NOTIFY_TOMBSTONE_HOURS = 20;
 
-    public function __construct(private readonly CuratorNotifier $notifier) {}
+    public function __construct(
+        private readonly CuratorNotifier $notifier,
+        private readonly ZhdunVoterNotifier $voterNotifier,
+    ) {}
 
     public function handle(CourseWaitlistItem $item): string
     {
@@ -93,7 +97,11 @@ class OpenWaitlistPayment
 
         Cache::forget('public_waitlist:v1');
 
-        $this->notifier->waitlistPaymentOpened($item, $activated);
+        // Голосовавшим — «оплата открыта» (флаг waitlist_notify_voters);
+        // итог рассылки уходит строкой в сигнал куратору.
+        $voters = $this->voterNotifier->notifyPaymentOpened($item);
+
+        $this->notifier->waitlistPaymentOpened($item, $activated, $voters);
 
         return self::RESULT_OPENED;
     }

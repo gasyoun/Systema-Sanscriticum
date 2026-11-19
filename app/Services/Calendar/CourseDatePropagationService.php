@@ -10,13 +10,14 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Каскад «правка дат блока курса → сдвиг занятий» (Google Calendar Phase 4,
+ * Каскад «правка начала блока курса → сдвиг занятий» (Google Calendar Phase 4,
  * docs/GOOGLE_CALENDAR_INTEGRATION_ROADMAP.md §6/§7, H6369).
  *
  * Правило сдвига — **translate** (решение MG 10-10-2026, «грилл календарей»):
  * каждое БУДУЩЕЕ занятие курса сдвигается на ту же дельту, на которую
- * сдвинулась граница блока (starts_at — первичная, при её неизменности —
- * ends_at). Интервалы между занятиями сохраняются.
+ * сдвинулась starts_at. Интервалы между занятиями сохраняются.
+ * Изменение ends_at занятия не двигает: окончание блока не является командой
+ * переносить расписание (инцидент курса 296, 20-10-2026).
  *
  * - прошедшие занятия (start < now) не трогаются;
  * - сдвиг идёт через Eloquent save(), поэтому штатные хуки Schedule
@@ -28,19 +29,17 @@ use Illuminate\Support\Facades\Log;
 class CourseDatePropagationService
 {
     /**
-     * @return int количество сдвинутых будущих занятий (0 — если даты блока
-     *             не менялись или дельта не вычислима)
+     * @return int количество сдвинутых будущих занятий (0 — если starts_at
+     *             не менялась или дельта не вычислима)
      */
     public function propagate(CourseBlock $block): int
     {
-        $boundary = $this->changedBoundary($block);
-
-        if ($boundary === null) {
+        if (! $block->wasChanged('starts_at')) {
             return 0;
         }
 
-        $old = $block->getOriginal($boundary);
-        $new = $block->{$boundary};
+        $old = $block->getOriginal('starts_at');
+        $new = $block->starts_at;
 
         if ($old === null || $new === null) {
             // Нельзя перевести занятия относительно границы, которой не было:
@@ -48,7 +47,7 @@ class CourseDatePropagationService
             Log::info('course_block.date_propagation.skipped_non_translatable', [
                 'block_id' => $block->id,
                 'course_id' => $block->course_id,
-                'boundary' => $boundary,
+                'boundary' => 'starts_at',
                 'reason' => 'null-boundary',
             ]);
 
@@ -91,7 +90,7 @@ class CourseDatePropagationService
         Log::info('course_block.date_propagation.translate', [
             'block_id' => $block->id,
             'course_id' => $block->course_id,
-            'boundary' => $boundary,
+            'boundary' => 'starts_at',
             'delta_seconds' => $deltaSeconds,
             'shifted' => $future->count(),
             'skipped_past' => $skippedPast,
@@ -99,22 +98,5 @@ class CourseDatePropagationService
         ]);
 
         return $future->count();
-    }
-
-    /**
-     * Какую границу блока использовали для дельты: starts_at, если она
-     * изменилась, иначе ends_at. null — даты не менялись.
-     */
-    private function changedBoundary(CourseBlock $block): ?string
-    {
-        if ($block->wasChanged('starts_at')) {
-            return 'starts_at';
-        }
-
-        if ($block->wasChanged('ends_at')) {
-            return 'ends_at';
-        }
-
-        return null;
     }
 }
