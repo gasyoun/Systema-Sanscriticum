@@ -13,6 +13,7 @@ use App\Services\CuratorNotifier;
 use App\Services\GroupRecruitmentNotifier;
 use App\Services\VacationResumeService;
 use App\Services\WaitlistNotifier;
+use App\Support\CourseNamingStandard;
 use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -46,7 +47,11 @@ class GroupResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->required()
-                            ->label('Название группы'),
+                            ->label('Название группы')
+                            // Единый стандарт названий (19-11-2026): имя группы —
+                            // источник титула занятий (генератор подставляет его
+                            // в {TITLE}), проверяем на входе. docs/STANDING_POLICY_COURSE_NAMING_2026.md.
+                            ->rule(fn () => CourseNamingStandard::filamentRule()),
 
                         Forms\Components\TextInput::make('slug')
                             ->label('Публичный ID (slug)')
