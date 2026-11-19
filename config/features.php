@@ -752,6 +752,25 @@ return [
     'checkout_inactive_tariff_guard' => (bool) env('CHECKOUT_INACTIVE_TARIFF_GUARD', true),
 
     /*
+     | Подсказка про оплату картой после перехода НСПК на сертификаты Минцифры
+     | (19-11-2026): в чекауте под кнопкой оплаты и в TG-напоминаниях об оплате —
+     | «ошибка браузера → СБП или Яндекс Браузер». Только текст, деньги и доступ
+     | не трогает. ВКЛ; выключить CHECKOUT_CARD_CERT_HINT=false, когда браузеры
+     | начнут доверять сертификатам. App\Support\CardCertHint.
+     */
+    'checkout_card_cert_hint' => (bool) env('CHECKOUT_CARD_CERT_HINT', true),
+
+    /*
+     | Чекаут целого блока, который у вошедшего студента уже оплачен (16-11-2026:
+     | сохранённые ссылки прошлого месяца → второй платёж за оплаченные блоки).
+     | Когда ВКЛ, /checkout/{tariff} вместо формы показывает «Блок N уже оплачен»
+     | и кнопку следующего неоплаченного блока, а POST /payment/create отказывает
+     | до создания Payment. Подарок и половины блоков не затрагиваются.
+     | App\Services\Checkout\AlreadyPaidBlockGuard. Money-контур: OFF по умолчанию.
+     */
+    'checkout_already_paid_block_guard' => (bool) env('CHECKOUT_ALREADY_PAID_BLOCK_GUARD', false),
+
+    /*
      | Сериализация реферального кошелька в чекауте. Когда ВКЛ, транзакция первым
      | действием перечитывает и блокирует строку users, а расчёт/списание кредита
      | использует только это DB-значение. ВКЛ по умолчанию (MG 01-08-2026):
@@ -1567,6 +1586,13 @@ return [
     // отмеченному b2b_group-платёж не даёт виртуальных ключей и не снимает его
     // из должников — доступ только по собственным платежам.
     'b2b_group_self_pay' => (bool) env('B2B_GROUP_SELF_PAY', false),
+
+    // B2B-оплата за группу: «открыть доступ до оплаты» (payments.access_while_pending).
+    // OFF (дефолт): групповой платёж даёт доступ только в статусе «Оплачено».
+    // ON (только поверх b2b_group_payment): b2b_group-платёж в статусе pending с
+    // отметкой уже открывает ученикам группы свои блоки и снимает их из должников.
+    // Выручка/ЗП считают платёж только после «Оплачено».
+    'b2b_group_pending_access' => (bool) env('B2B_GROUP_PENDING_ACCESS', false),
     // H2744 staged rollout. Tier interpretation is dark until legacy rows and
     // tariffs have been explicitly classified by membership:classify-tiers.
     'membership_tiered' => (bool) env('MEMBERSHIP_TIERED', false),
