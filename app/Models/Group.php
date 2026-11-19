@@ -174,7 +174,7 @@ class Group extends Model
     {
         // ВСЕ участники (включая вышедших) — путь доступа/листинга.
         return $this->belongsToMany(User::class)
-            ->withPivot(['left_at', 'left_reason'])
+            ->withPivot(['left_at', 'left_reason', 'b2b_self_pay'])
             ->withTimestamps();
     }
 
@@ -182,7 +182,7 @@ class Group extends Model
     public function activeUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
-            ->withPivot(['left_at', 'left_reason'])
+            ->withPivot(['left_at', 'left_reason', 'b2b_self_pay'])
             ->withTimestamps()
             ->wherePivotNull('left_at');
     }
