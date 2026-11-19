@@ -71,7 +71,7 @@ class CabinetDocsFreshnessTest extends TestCase
 
     private const PROD_NOTE_ON = 'вкл. на проде (09-10-2026)';
 
-    private const PROD_NOTE_OFF = 'выкл. на проде (09-10-2026)';
+    private const PROD_NOTE_EMAILLINK_ON = 'вкл. на проде (14-11-2026)';
 
     public function test_student_manual_names_bot_self_service_and_feature_anchors(): void
     {
@@ -193,9 +193,9 @@ class CabinetDocsFreshnessTest extends TestCase
         }
 
         $this->assertMatchesRegularExpression(
-            '#\| `TELEGRAM_CABINET_EMAIL_LINK` \|[^\n]*'.preg_quote(self::PROD_NOTE_OFF, '#').'#u',
+            '#\| `TELEGRAM_CABINET_EMAIL_LINK` \|[^\n]*'.preg_quote(self::PROD_NOTE_EMAILLINK_ON, '#').'#u',
             $inventory,
-            'ENV-строка TELEGRAM_CABINET_EMAIL_LINK без прод-пометки «'.self::PROD_NOTE_OFF.'».'
+            'ENV-строка TELEGRAM_CABINET_EMAIL_LINK без прод-пометки «'.self::PROD_NOTE_EMAILLINK_ON.'».'
         );
 
         $generator = $this->read('scripts/generate_env_inventory.php');
@@ -206,7 +206,7 @@ class CabinetDocsFreshnessTest extends TestCase
             'Прод-пометки живут только в регеняемом md — следующий прогон генератора их сотрёт. Источник: $prodNotes в scripts/generate_env_inventory.php.'
         );
 
-        foreach ([self::PROD_NOTE_ON, self::PROD_NOTE_OFF] as $note) {
+        foreach ([self::PROD_NOTE_ON, self::PROD_NOTE_EMAILLINK_ON] as $note) {
             $this->assertStringContainsString($note, $generator, 'В генераторе нет пометки «'.$note.'».');
         }
     }

@@ -1,4 +1,4 @@
-_Created: 08-07-2026 · Last updated: 10-11-2026_
+_Created: 08-07-2026 · Last updated: 16-11-2026_
 
 # Очередь деплоя — агентский чек-лист выката (MG 10-11-2026: «все выкатки делай сам, никогда не жди Ивана»)
 
@@ -51,6 +51,60 @@ _Создано: 08-07-2026 · Обновлено: 12-10-2026 (№91 — кам�
 >
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
+
+### №98 — B2B: доступ группе до поступления денег — флаг `B2B_GROUP_PENDING_ACCESS` (default OFF)
+
+Гр.64 (курс 463, группа 157): блок 1 нужен ученикам до оплаты Адары.
+
+1. Миграция `add_access_while_pending_to_payments_table` применяется деплоем (`payments.access_while_pending`, дефолт false).
+2. `B2B_GROUP_PENDING_ACCESS=true` в прод `.env` → `config:clear` + `config:cache` → tinker `config('features.b2b_group_pending_access')` = true.
+3. Админка: Финансы → Создать: тариф «B2B: оплата за группу», группа, сумма, блок 1–1, статус «Ожидает оплаты», «Открыть доступ до оплаты» ✓.
+4. Смоук: у неотмеченного ученика группы блок 1 открыт, блок 2 закрыт; у «платит сам» — закрыт.
+5. Когда деньги пришли: статус «Оплачено» + дата поступления.
+
+### №97 — Опросы @zapisi_ORSbot в чатах групп + автоопрос о присутствии перед занятием — флаг `ATTENDANCE_POLL_AUTOPOST` (default OFF)
+
+После мержа PR и авто-деплоя:
+
+1. Миграции применяются деплоем: `telegram_polls`, `telegram_poll_answers` и колонки `kind` / `schedule_id` / `schedule_start`.
+2. **Обязательно:** `php artisan zapisi:set-webhook` на проде — список апдейтов бота теперь включает `poll_answer`; без этого Telegram не пришлёт голоса.
+3. Пилот: `ATTENDANCE_POLL_AUTOPOST=true` и `ATTENDANCE_POLL_GROUP_IDS=<id пилотной группы>` в прод `.env` → `config:clear` + `config:cache`. Окно — `ATTENDANCE_POLL_LEAD_MINUTES` (дефолт 180 минут до старта).
+4. Смоук: за ~3 часа до занятия пилотной группы в её чате появляется опрос «Будете?»; голос виден в «Записи (бот)» → «Опросы» → «Результаты», «Не смогу» ученика с привязанным Telegram — в предупреждениях о занятии; повторный прогон `classes:post-attendance-poll` второй опрос не шлёт.
+5. После пилота: очистить `ATTENDANCE_POLL_GROUP_IDS` — опросы пойдут во все группы с привязанным чатом.
+
+### №96 — B2B: отметка «платит сам» в смешанной группе — флаг `B2B_GROUP_SELF_PAY` (default OFF)
+
+Продолжение H8245-контура (гр.64, курс 463, группа 157: ученики Адары + самостоятельные). После мержа PR и авто-деплоя:
+
+1. Миграция `add_b2b_self_pay_to_group_user_table` применяется деплоем (`group_user.b2b_self_pay`, дефолт `false` — поведение прежнее).
+2. `B2B_GROUP_SELF_PAY=true` в прод `.env` → `config:clear` + `config:cache` → tinker `config('features.b2b_group_self_pay')` = ON. Требует живой `B2B_GROUP_PAYMENT=true` (уже ON).
+3. В админке: карточка самостоятельного ученика → «Группы (активный состав)» → действие «Платит сам» на группе 157.
+4. Смоук: у отмеченного ученика оплаченный юрлицом блок закрыт (пока нет своей оплаты), он виден в «Должниках»; сосед по группе без отметки урок открывает.
+
+### №95 — H8250 — B2B-напоминания плательщику (после последнего урока блока) — флаг `B2B_PAYER_REMINDERS` — ✅ ИСПОЛНЕНО 14-11-2026 (агент, без участия Ивана)
+
+Выполнено тем же вечером (рул. MG 10-11 «все выкатки делай сам»; merge PR #4181 — решение MG в чате):
+
+1. Деплой: ручной прогон `systema-auto-deploy-run.sh` → `d505768a → ecc4fc75` (health чист, smoke 200).
+2. `B2B_PAYER_REMINDERS=true` в прод `.env` (бэкап `/var/www/html/.env.bak-b2b-payer-reminders-20261114-1428`) → `config:clear` + `config:cache` → tinker: `b2b_payer_reminders=ON`, `b2b_group_payment=ON`.
+3. Смоук `php artisan b2b:remind-payer --dry-run` → «Назревших напоминаний: 0» — **корректная пустота, не дефект**: в проде 0 оплаченных `b2b_group`-платежей (фактический платёж Алексея ещё не заведён — остаток H8245). Лейн жив, инертен; после заведения платежа с диапазоном блоков напоминание уйдёт в утренний слот (`payment_reminder_time`, дефолт 09:00 МСК) — ровно одно, дедуп в claim_meta.
+
+Откат одной строкой: `B2B_PAYER_REMINDERS=false` + `config:cache` — лейн полный no-op. Миграций нет.
+
+### №94 — H8224 (ops-остаток H8195) — «Книжный клуб»: доставка кампании planeta 219924 — ✅ ИСПОЛНЕНО 13-11-2026 (агент)
+
+Код H8195 сливался в `develop` (PR #4129/#4139) — на прод он попал через
+main-land PR [#4147](https://github.com/gasyoun/Systema-Sanscriticum/pull/4147)
+(money-contour; cherry-pick 4 коммитов, конфликты routes-split / Payment-merge /
+changelog_queue решены; CI зелёный; squash `c75d9811`), выкатка `deploy.sh`
+`d066f1fb → c75d9811`.
+
+1. `php artisan migrate --force` → `Nothing to migrate` — `create_book_club_orders_table` (№274) уже Ran при деплое.
+2. `BOOK_CLUB_DELIVERY=true` в прод `.env` (бэкап `/root/.env.bak-book-club-delivery-20261113-2225`) → `config:clear` + `config:cache` → tinker `config('features.book_club_delivery')` = ON.
+3. Смоук `GET /knizhny-klub/dostavka` → HTTP 200, «Книжный клуб» ×2, «planeta» ×6, форма заказа, РФ-цена 300 ₽ в рендере (до флага — 404). Локально на ветке: BookClub 20/20 · CheckoutPriceTest|TochkaWebhookTest 36/36 · pint passed.
+
+Откат одной строкой: `BOOK_CLUB_DELIVERY=false` в `.env` + `config:cache` — маршруты снова 404; таблица `book_club_orders` аддитивная, откат миграции не требуется.
+Новость planeta — публиковать ТОЛЬКО после живого товара (правило кампании): **товар жив с 22:28 13-11-2026 — гейт ОТКРЫТ**, публикация новости — отдельный шаг.
 
 ### №93 — H7966 — таксономия колод + сегментация мега-деков — ✅ ИСПОЛНЕНО 10-11-2026 (агент, без участия Ивана)
 

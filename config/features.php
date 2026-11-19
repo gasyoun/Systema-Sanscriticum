@@ -140,6 +140,24 @@ return [
     'class_link_autopost' => (bool) env('CLASS_LINK_AUTOPOST', false),
 
     /*
+     | Автоопрос о присутствии: перед занятием @zapisi_ORSbot вешает в Telegram-чат
+     | группы опрос «Будете?» (Буду / Опоздаю / Не смогу), команда
+     | classes:post-attendance-poll. ВЫКЛЮЧЕН по умолчанию. Требует
+     | telegram_zapisi_bot и telegram_chat_id у группы. Голоса учеников с
+     | привязанным Telegram пишутся в предупреждения о занятии, если включён
+     | attendance_notices.
+     |  - attendance_poll_lead_minutes — за сколько минут до старта вешать опрос;
+     |  - attendance_poll_group_ids — id пилотных групп через запятую; пусто —
+     |    все группы с привязанным чатом.
+     */
+    'attendance_poll_autopost' => (bool) env('ATTENDANCE_POLL_AUTOPOST', false),
+    'attendance_poll_lead_minutes' => (int) env('ATTENDANCE_POLL_LEAD_MINUTES', 1440),
+    'attendance_poll_group_ids' => array_values(array_filter(array_map(
+        'intval',
+        explode(',', (string) env('ATTENDANCE_POLL_GROUP_IDS', '')),
+    ))),
+
+    /*
      | FAQ-суггестер «Отдела заботы» (H247, тикет S3): факт-черновик ответа на
      | фактологические вопросы категорий A (Zoom/ссылка), B (записи), C (расписание)
      | из данных LMS — БЕЗ единого LLM-вызова. Бот сам НЕ отвечает студенту: готовит
@@ -610,6 +628,16 @@ return [
     'newsletter_subscribe' => (bool) env('NEWSLETTER_SUBSCRIBE_ENABLED', true),
 
     /*
+     | «Книжный клуб» — оплата доставки книг кампании planeta 219924 (H8195).
+     | Книги уже оплачены на кампании; товар продаёт ТОЛЬКО доставку (РФ 300 ₽
+     | за посылку до 2 кг, заграница — по таблице в config/book_club.php).
+     | ВЫКЛЮЧЕН по умолчанию — deploy-рубильник: пока флаг OFF, маршруты
+     | /knizhny-klub/dostavka отдают 404 и на сайте ничего не меняется.
+     | Включить: BOOK_CLUB_DELIVERY=true в .env + config:cache.
+     */
+    'book_club_delivery' => (bool) env('BOOK_CLUB_DELIVERY', false),
+
+    /*
      | Консолидированный дашборд посещаемости (GetCourse-паритет GC-B2, H553):
      | rate по студенту/группе/курсу, тренд по неделям, список хронических
      | неявок, экспорт CSV — поверх уже существующих ClassAttendanceService /
@@ -722,6 +750,25 @@ return [
      | CHECKOUT_INACTIVE_TARIFF_GUARD=false. См. MONEY_FALSE_ECONOMY_DARK_FLAGS_2026.
      */
     'checkout_inactive_tariff_guard' => (bool) env('CHECKOUT_INACTIVE_TARIFF_GUARD', true),
+
+    /*
+     | Подсказка про оплату картой после перехода НСПК на сертификаты Минцифры
+     | (19-11-2026): в чекауте под кнопкой оплаты и в TG-напоминаниях об оплате —
+     | «ошибка браузера → СБП или Яндекс Браузер». Только текст, деньги и доступ
+     | не трогает. ВКЛ; выключить CHECKOUT_CARD_CERT_HINT=false, когда браузеры
+     | начнут доверять сертификатам. App\Support\CardCertHint.
+     */
+    'checkout_card_cert_hint' => (bool) env('CHECKOUT_CARD_CERT_HINT', true),
+
+    /*
+     | Чекаут целого блока, который у вошедшего студента уже оплачен (16-11-2026:
+     | сохранённые ссылки прошлого месяца → второй платёж за оплаченные блоки).
+     | Когда ВКЛ, /checkout/{tariff} вместо формы показывает «Блок N уже оплачен»
+     | и кнопку следующего неоплаченного блока, а POST /payment/create отказывает
+     | до создания Payment. Подарок и половины блоков не затрагиваются.
+     | App\Services\Checkout\AlreadyPaidBlockGuard. Money-контур: OFF по умолчанию.
+     */
+    'checkout_already_paid_block_guard' => (bool) env('CHECKOUT_ALREADY_PAID_BLOCK_GUARD', false),
 
     /*
      | Сериализация реферального кошелька в чекауте. Когда ВКЛ, транзакция первым
@@ -1518,6 +1565,34 @@ return [
      | командой `membership:rehearse` до объявления запуска.
      */
     'club_membership' => (bool) env('CLUB_MEMBERSHIP', false),
+
+    // H8245: B2B-оплата «за группу целиком» — юрлицо/студия платит за всех учеников
+    // группы одним платежом (Адара → курс 463 «Грамматика по Кочергиной»).
+    // OFF (дефолт): b2b_group-платёж — чисто денежная строка, поведение живого
+    // контура прежнее. ON: ученики группы с оплаченным b2b_group-платежом получают
+    // виртуальные ключи доступа (B2bGroupEntitlement), блок-калькулятор атрибутирует
+    // платёж группе по payments.group_id, должники не считают покрытых учеников.
+    'b2b_group_payment' => (bool) env('B2B_GROUP_PAYMENT', false),
+
+    // H8250: B2B-напоминания плательщику (после последнего урока покрытого
+    // блока — ровно одно напоминание оплатить следующий блок). Собственный
+    // выключатель лейна поверх b2b_group_payment: напоминания не активируются
+    // молча вместе с b2b-контуром, только явным переворотом (DEPLOY_QUEUE).
+    'b2b_payer_reminders' => (bool) env('B2B_PAYER_REMINDERS', false),
+
+    // Смешанная группа под B2B-оплатой: отметка «платит сам» на членстве ученика
+    // (group_user.b2b_self_pay). OFF (дефолт): отметка игнорируется, групповой
+    // платёж покрывает всех членов группы. ON (только поверх b2b_group_payment):
+    // отмеченному b2b_group-платёж не даёт виртуальных ключей и не снимает его
+    // из должников — доступ только по собственным платежам.
+    'b2b_group_self_pay' => (bool) env('B2B_GROUP_SELF_PAY', false),
+
+    // B2B-оплата за группу: «открыть доступ до оплаты» (payments.access_while_pending).
+    // OFF (дефолт): групповой платёж даёт доступ только в статусе «Оплачено».
+    // ON (только поверх b2b_group_payment): b2b_group-платёж в статусе pending с
+    // отметкой уже открывает ученикам группы свои блоки и снимает их из должников.
+    // Выручка/ЗП считают платёж только после «Оплачено».
+    'b2b_group_pending_access' => (bool) env('B2B_GROUP_PENDING_ACCESS', false),
     // H2744 staged rollout. Tier interpretation is dark until legacy rows and
     // tariffs have been explicitly classified by membership:classify-tiers.
     'membership_tiered' => (bool) env('MEMBERSHIP_TIERED', false),
@@ -2043,6 +2118,48 @@ return [
      | deploy-шаг человека.
      */
     'hermes_human_send' => (bool) env('HERMES_HUMAN_SEND', false),
+
+    /*
+     | Hermes W1 роль 20 `faq-rag` (H6185, пакет hermes-24-01a10bca):
+     | RAG-сборка ответа с ПРОВЕРЯЕМЫМИ цитатами — вход маскируется ДО LLM
+     | (H6182), контур-гейт на общем классификаторе H6190, ретривал H2448 +
+     | score floor H3766 B5, ответ только с маркером [cite:chunk_id],
+     | разрешимым против утверждённого FAQ-корпуса (missing/stale/
+     | contradictory цитата = отказ или человеку). Mock-LLM путь, никаких
+     | платных API и исходящих отправок (human-send per H6183). ВЫКЛ по
+     | умолчанию (роль OFF — W1 deploy gate stays OFF): включение
+     | HERMES_FAQ_RAG=true + config:cache — deploy-шаг человека.
+     */
+    'hermes_faq_rag' => (bool) env('HERMES_FAQ_RAG', false),
+
+    /*
+     | Hermes W1 роль 85 `access-provisioner` (H6189, пакет hermes-24-01a10bca):
+     | READ-ONLY диагностика доступа + проект исправления как ДАННЫЕ для
+     | человека — действующее/истёкшее/чужое/отсутствующее право, объяснение
+     | основания (оплата), проект операции (grant/extend/revoke/rebind/none).
+     | НИКАКИХ реальных изменений доступов (access mutations запрещены
+     | абсолютно): проект исполняется только подтверждением человека. Вход
+     | маскируется ДО обработки (H6182, fail-closed), маршрутизация — общий
+     | слой H6190, квота H6174 (default OFF) ограничивает композицию
+     | черновика. Никаких платных API и исходящих отправок (human-send per
+     | H6183). ВЫКЛ по умолчанию (роль OFF — W1 deploy gate stays OFF):
+     | включение HERMES_ACCESS_DIAGNOSTICS=true + config:cache — deploy-шаг
+     | человека.
+     */
+    'hermes_access_diagnostics' => (bool) env('HERMES_ACCESS_DIAGNOSTICS', false),
+
+    /*
+     | Hermes W1 роль 65 `payment-reconciler` (H6188, пакет hermes-24-01a10bca):
+     | READ-ONLY предложение сверки оплат — синтетические payment/duplicate/
+     | refund/mismatch данные сверяются с записями Systema и ожиданиями
+     | (курс/баланс), находки адресуются человеку через human-send (H6183).
+     | ZERO money-мутаций, ZERO платёжных API и LLM-вызовов (предложение
+     | композится детерминированно), PII fail-closed (H6182), маршрутизация —
+     | общий слой H6190, квота H6174 (default OFF — log-only). ВЫКЛ по
+     | умолчанию (роль OFF — W1 deploy gate stays OFF): включение
+     | HERMES_PAYMENT_RECONCILER=true + config:cache — deploy-шаг человека.
+     */
+    'hermes_payment_reconciler' => (bool) env('HERMES_PAYMENT_RECONCILER', false),
 
     /*
      | Быстрая запись на бесплатный мини-курс «Подготовительная группа» для

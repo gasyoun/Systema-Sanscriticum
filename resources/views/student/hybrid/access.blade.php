@@ -37,6 +37,54 @@
                     @if (! empty($debt->debt_label))
                         <p class="text-sm text-gray-600 mt-1">{{ $debt->debt_label }}</p>
                     @endif
+                    @if ($debt->has_arrangement && $debt->is_installment)
+                        {{-- Рассрочка: полный график платежей с отметками статуса — как во
+                             вкладке «Мои долги» классического кабинета (dashboard.blade.php).
+                             Данные те же: StudentDebtsService::forUser() (отменённые взносы
+                             туда не попадают). --}}
+                        <div class="mt-3 rounded-xl border border-gray-100 bg-gray-50/70 px-4 py-3" data-testid="installment-schedule">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Рассрочка</span>
+                                @if ($debt->overdue_count > 0)
+                                    <span class="text-xs font-bold text-red-600">Просрочено взносов: {{ $debt->overdue_count }}</span>
+                                @endif
+                            </div>
+                            <ul class="mt-2 space-y-1.5">
+                                @foreach ($debt->promises as $p)
+                                    @php
+                                        $paid = $p->isPaid();
+                                        $late = ! $paid && $p->isOverdueOrExpired();
+                                        $rowStatus = $paid ? 'paid' : ($late ? 'overdue' : 'upcoming');
+                                        $rowText = $paid ? 'text-gray-400 line-through' : ($late ? 'text-red-700 font-bold' : 'text-gray-800');
+                                    @endphp
+                                    <li class="flex items-center justify-between gap-3 text-sm" data-status="{{ $rowStatus }}">
+                                        <span class="flex items-center gap-2">
+                                            @if ($paid)
+                                                <span class="text-emerald-600 font-bold" aria-hidden="true">✓</span>
+                                                <span class="sr-only">Оплачено:</span>
+                                            @elseif ($late)
+                                                <span class="text-red-600 font-bold" aria-hidden="true">!</span>
+                                                <span class="sr-only">Срок прошел:</span>
+                                            @else
+                                                <span class="text-gray-400" aria-hidden="true">○</span>
+                                                <span class="sr-only">Предстоит:</span>
+                                            @endif
+                                            <span class="{{ $rowText }}">{{ $p->promised_at?->format('d.m.Y') }}</span>
+                                        </span>
+                                        @if ($p->amount)
+                                            <span class="{{ $rowText }}">{{ number_format((float) $p->amount, 0, ',', ' ') }} ₽</span>
+                                        @endif
+                                    </li>
+                                @endforeach
+                            </ul>
+                            @if ($debt->plan_remaining)
+                                <div class="mt-2 pt-2 border-t border-gray-200/70 flex items-center justify-between gap-3 text-sm">
+                                    <span class="text-gray-500">Осталось внести</span>
+                                    <span class="font-extrabold text-[#101010]">{{ number_format((float) $debt->plan_remaining, 0, ',', ' ') }} ₽</span>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
                     @if (config('features.payment_recovery_cta') && is_array($opts) && ! empty($opts['next']['amount']))
                         <p class="text-sm text-gray-500 mt-1">К оплате: {{ number_format((float) $opts['next']['amount'], 0, ',', ' ') }} ₽</p>
                     @endif
