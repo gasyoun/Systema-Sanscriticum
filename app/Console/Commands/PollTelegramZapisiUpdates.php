@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Jobs\ProcessTelegramZapisiUpdate;
 use App\Models\MarketingSetting;
 use App\Services\Messaging\TelegramDeliveryChannel;
+use App\Support\TelegramWebhooks;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -116,12 +117,8 @@ class PollTelegramZapisiUpdates extends Command
     {
         $offset = (int) Cache::get(self::OFFSET_KEY, 0);
 
-        // allowed_updates те же, что регистрировал вебхук (ZapisiSetWebhook):
-        // группа шлет message, канал — channel_post, my_chat_member —
-        // приветственная карточка (H4314), chat_join_request — заявка в чат
-        // группы после оплаты (features.paid_chat_join_request), callback_query —
-        // кнопки бота.
-        $updates = $client->getUpdates($offset, $pollTimeout, ['message', 'channel_post', 'my_chat_member', 'chat_join_request', 'callback_query']);
+        // allowed_updates те же, что регистрирует вебхук (ZapisiSetWebhook).
+        $updates = $client->getUpdates($offset, $pollTimeout, TelegramWebhooks::ZAPISI_ALLOWED_UPDATES);
 
         foreach ($updates as $update) {
             if (! is_array($update) || ! isset($update['update_id'])) {
