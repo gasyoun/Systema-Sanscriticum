@@ -59,6 +59,15 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('post-class-link-to-group');
 
+        // Автоопрос о присутствии в чат группы перед занятием (Буду / Опоздаю /
+        // Не смогу). Гейт (features.attendance_poll_autopost), окно и дедуп по
+        // слоту (telegram_polls) — внутри команды; флаг OFF → no-op.
+        $schedule->command('classes:post-attendance-poll')
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('post-attendance-poll-to-group');
+
         // Еженедельная сводка в чат онбординга: % с доступом, кто ни разу не заходил.
         $schedule->command('onboarding:weekly-digest')
             ->weeklyOn(1, '09:30') // понедельник 09:30 МСК

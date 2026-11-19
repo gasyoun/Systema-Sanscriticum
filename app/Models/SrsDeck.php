@@ -12,9 +12,43 @@ use Illuminate\Support\Str;
 
 /**
  * Колода SRS. Владелец user_id NULL = системная колода. См. миграцию srs_decks (H211).
+ *
+ * H7966 (трек А): таксономия — topic / difficulty / size_tier / tags — и
+ * иерархия сегментации мега-деков через parent_deck_id (подколоды топ-500 /
+ * 500-2000 / остальное). Вокабуляры осей — константы ниже: фильтры хабов и
+ * Filament опираются на них, офлайн-сидder и утвердительный проход учителя
+ * пишут только в эти значения.
  */
 class SrsDeck extends Model
 {
+    /** Ось «тема»: словарь / корни / письмо / курс / грамматика (офлайн-проход Q9). */
+    public const TOPICS = [
+        'lexicon' => 'Словарь',
+        'roots' => 'Корни',
+        'script' => 'Письмо',
+        'course' => 'Курс',
+        'grammar' => 'Грамматика',
+    ];
+
+    /** Ось «сложность»: заявленная учителем, не вычисляется. */
+    public const DIFFICULTIES = [
+        'beginner' => 'Начальный',
+        'intermediate' => 'Средний',
+        'advanced' => 'Продвинутый',
+    ];
+
+    /**
+     * Ось «размер»: считается из cards_count (SrsTaxonomySeeder /
+     * MegaDeckSegmenter), пороги — медианы бейзлайна 10-11-2026
+     * (мега-деки ≈11 тыс., остальные ≤570).
+     */
+    public const SIZE_TIERS = [
+        'small' => 'Малая (до 100)',
+        'medium' => 'Средняя (100–999)',
+        'large' => 'Большая (1000–4999)',
+        'mega' => 'Мега (5000+)',
+    ];
+
     protected $fillable = [
         'user_id',
         'course_id',
@@ -25,11 +59,47 @@ class SrsDeck extends Model
         'language',
         'visibility',
         'description',
+        'topic',
+        'difficulty',
+        'size_tier',
+        'tags',
+        'parent_deck_id',
+    ];
+
+    protected $casts = [
+        'tags' => 'array',
     ];
 
     public function noteType(): BelongsTo
     {
         return $this->belongsTo(SrsNoteType::class, 'note_type_id');
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_deck_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_deck_id');
+    }
+
+    /** Размерная tier по количеству карточек — источник истины для size_tier. */
+    public static function sizeTierFor(int $cardsCount): string
+    {
+        return match (true) {
+            $cardsCount >= 5000 => 'mega',
+            $cardsCount >= 1000 => 'large',
+            $cardsCount >= 100 => 'medium',
+            default => 'small',
+        };
+    }
+
+    /** Русская подпись topic для хабов/Filament; null → пустая строка. */
+    public function topicLabel(): string
+    {
+        return self::TOPICS[(string) $this->topic] ?? '';
     }
 
     public function owner(): BelongsTo

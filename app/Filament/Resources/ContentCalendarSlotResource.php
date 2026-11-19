@@ -352,11 +352,10 @@ class ContentCalendarSlotResource extends Resource
                             ->modalWidth(MaxWidth::SevenExtraLarge)
                             ->modalHeading(fn (ContentCalendarSlot $record): string => (string) $record->title)
                             ->modalContent(fn (ContentCalendarSlot $record): HtmlString => new HtmlString(
-                                // !important обязательны: глобальный хук панели
-                                // (AdminPanelProvider) жмёт все картинки .fi-main до
-                                // 150px с !important — инлайн без него проигрывает.
+                                // Глобального хака .fi-main img больше нет (скоуп снят
+                                // в H7487, PR #3625) — обычного инлайн-стиля достаточно.
                                 '<img src="'.e((string) $record->mediaUrl()).'" alt="Обложка слота"'
-                                .' style="display:block;margin:0 auto;width:auto!important;height:auto!important;max-width:100%!important;max-height:80vh!important;border-radius:8px">'
+                                .' style="display:block;margin:0 auto;width:auto;height:auto;max-width:100%;max-height:80vh;border-radius:8px">'
                             ))
                             ->modalSubmitAction(false)
                             ->modalCancelAction(false),

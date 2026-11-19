@@ -17,6 +17,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -31,6 +32,10 @@ use Illuminate\Support\Facades\Log;
  *
  * Слот становится published, когда ни одной pending-площадки не осталось
  * (failed видны в таблице календаря и в уведомлении).
+ *
+ * 13-11-2026: площадки идут лесенкой с паузой content_calendar.crosspost_gap_minutes
+ * (i-я — не раньше meta.crosspost_started_at + i × пауза); ещё не наступившие
+ * догоняет следующий тик content:publish-due.
  */
 class PublishCalendarSlotJob implements ShouldBeUnique, ShouldQueue
 {
@@ -98,8 +103,15 @@ class PublishCalendarSlotJob implements ShouldBeUnique, ShouldQueue
 
         $destinations = ContentCalendarSlot::enabledDestinations();
         $report = [];
+        $startedAt = $this->crosspostStartedAt($slot);
+        $gap = max(0, (int) config('content_calendar.crosspost_gap_minutes', 0));
 
-        foreach ($targets as $key) {
+        foreach ($targets as $i => $key) {
+            // Лесенка: i-я площадка не раньше старта + i × пауза; остальные
+            // догонит следующий тик content:publish-due (слот ещё scheduled).
+            if ($gap > 0 && now()->lt($startedAt->copy()->addMinutes($i * $gap))) {
+                continue;
+            }
             $line = $runner->run($slot, $key, $destinations[$key])['line'];
             if ($line !== null) {
                 $report[] = $line;
@@ -111,6 +123,20 @@ class PublishCalendarSlotJob implements ShouldBeUnique, ShouldQueue
         if ($report !== []) {
             $notifier->notifyAdmins("Календарь контента, слот #{$slot->id} ({$slot->slot_date?->format('d.m.Y')}):\n".implode("\n", $report));
         }
+    }
+
+    /** Начало разноса слота: первый прогон джобы, запоминается в meta. */
+    private function crosspostStartedAt(ContentCalendarSlot $slot): Carbon
+    {
+        $started = $slot->meta['crosspost_started_at'] ?? null;
+        if (filled($started)) {
+            return Carbon::parse($started);
+        }
+
+        $now = now();
+        $slot->forceFill(['meta' => array_merge($slot->meta ?? [], ['crosspost_started_at' => $now->toIso8601String()])])->save();
+
+        return $now;
     }
 
     /** @param  list<string>  $targets */

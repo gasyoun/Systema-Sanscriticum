@@ -366,6 +366,11 @@ class SupportReplyService
      * НЕ создаётся — возвращается существующая. Проверка и вставка — под
      * блокировкой строки чата (паттерн SupportDmLinkInvite), чтобы гонка двух
      * постановок не проскочила между проверкой и вставкой.
+     *
+     * Доработка 13-11-2026: подтверждение «политика принята» гасится ОДИН РАЗ
+     * НАВСЕГДА на чат, а не per-day — иначе суточный лимит на следующий день
+     * снова выпустил бы ту же копию. Ветка идёт до суточного счётчика, чтобы
+     * просьба о согласии не погасила подтверждение и наоборот.
      */
     private function createPendingOutgoing(
         int $accountId,
@@ -382,6 +387,23 @@ class SupportReplyService
         if ($isAi && ! $bypassConsentDailyDedup && $this->consentDedup->isConsentLike($text)) {
             return DB::transaction(function () use ($accountId, $chat, $text, $replyToMsgId, $via): TelegramSupportMessage {
                 TelegramSupportChat::query()->whereKey($chat->id)->lockForUpdate()->firstOrFail();
+
+                // Подтверждение принятия политики — «раз навсегда» на чат.
+                if ($this->consentDedup->isPolicyConfirmation($text)) {
+                    $confirmed = $this->consentDedup->findPolicyConfirmation($chat);
+
+                    if ($confirmed !== null) {
+                        Log::info('SupportConsentDailyDedup: подтверждение политики уже отправлялось — дубль подавлен', [
+                            'chat_id' => (int) $chat->telegram_chat_id,
+                            'existing_message_id' => $confirmed->id,
+                            'via' => $via,
+                        ]);
+
+                        return $confirmed;
+                    }
+
+                    return $this->insertPendingOutgoing($accountId, $chat, $text, null, $replyToMsgId, $via, true);
+                }
 
                 $existing = $this->consentDedup->findTodaysOutgoing($chat);
 

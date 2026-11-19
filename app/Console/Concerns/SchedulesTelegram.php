@@ -79,6 +79,20 @@ trait SchedulesTelegram
             ->onOneServer()
             ->name('telegram-harvest-roster-groups');
 
+        // Молчит в учебном чате N дней И кабинет закрыл последний урок →
+        // админам предложение с кнопкой «Исключить» (банит Почтальон только по
+        // нажатию). Опирается на ростер выше (свежесть ≤ roster_stale_after_hours)
+        // и корпус вебхука Почтальона. Без CHAT_SILENCE_REMOVAL_ENABLED — no-op.
+        $schedule->command('chats:silence-removal-propose')
+            ->dailyAt('11:20')
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->when(fn (): bool => (bool) config('chat_silence_removal.enabled', false))
+            ->onFailure(fn () => Log::critical('schedule.chat_silence_removal_propose_failed', [
+                'command' => 'chats:silence-removal-propose',
+            ]))
+            ->name('chat-silence-removal-propose');
+
         // H2635: two bounded evidence ingests, exactly 12 hours apart. The command and the support
         // reader share the same Madeline session lock; session_busy exits
         // non-zero so the scheduler records an honest missed run for retry.

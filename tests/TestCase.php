@@ -8,8 +8,26 @@ abstract class TestCase extends BaseTestCase
 {
     use CreatesApplication;
 
+    /**
+     * Ambient-зона процесса на входе в тест (Y71).
+     *
+     * Laravel при каждом boot прогоняет LoadConfiguration::configureDate и
+     * выставляет `date_default_timezone_set(config('app.timezone'))` —
+     * Europe/Moscow. Это глобальное состояние ПРОЦЕССА, поэтому тест, который
+     * его меняет (или получает от bootstrap), оставляет следующему классу
+     * чужую зону: ровно так `TimezoneDstEngineTest` ронял `SplitGroupMathTest`
+     * на 10800 с, а изоляция была зелёной. Возвращаем входное значение в
+     * tearDown — один сторож на весь набор вместо заплатки в каждом классе,
+     * который зовёт date_default_timezone_set() (сейчас это три теста
+     * Homework; следующий добавился бы молча).
+     */
+    private ?string $previousTimezone = null;
+
     protected function setUp(): void
     {
+        // Снимок ДО parent::setUp(): именно boot приложения и переписывает зону.
+        $this->previousTimezone = date_default_timezone_get();
+
         parent::setUp();
 
         // Views pull the bundle through @vite; without a built
@@ -19,6 +37,16 @@ abstract class TestCase extends BaseTestCase
         // frontend is built. Disable Vite for all tests — the standard
         // Laravel test stub — so the suite never depends on a build.
         $this->withoutVite();
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+
+        if ($this->previousTimezone !== null) {
+            date_default_timezone_set($this->previousTimezone);
+            $this->previousTimezone = null;
+        }
     }
 
     /**

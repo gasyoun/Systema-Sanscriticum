@@ -4,6 +4,8 @@
 @section('og_title', 'Словарь санскрита')
 
 @push('head')
+    @include('partials.schema-defined-term-set', ['dictionaries' => $dictionaries])
+
     @include('partials.schema-breadcrumbs', ['crumbs' => [
         ['name' => 'Главная', 'url' => url('/')],
         ['name' => 'Словарь', 'url' => route('slovar.index')],

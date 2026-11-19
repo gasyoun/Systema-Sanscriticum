@@ -44,6 +44,13 @@
 
     @php
         $lang = $lang ?? 'sa';
+        $filters = $filters ?? ['topic' => null, 'size' => null, 'difficulty' => null];
+        $taxQuery = array_filter([
+            'topic' => $filters['topic'],
+            'size' => $filters['size'],
+            'difficulty' => $filters['difficulty'],
+        ]);
+        $taxQs = $taxQuery !== [] ? '?'.http_build_query($taxQuery) : '';
         $tabs = [
             'sa' => 'Санскрит',
             'hi' => 'Хинди',
@@ -54,7 +61,7 @@
     <div class="mb-6 flex flex-wrap gap-2" role="tablist" aria-label="Язык колод">
         @foreach($tabs as $code => $label)
             @php $active = $lang === $code; $tabWord = $wordForLang[$code]; @endphp
-            <a href="{{ $tabWord ? route('srs.index.lang', ['word' => $tabWord]) : route('srs.index') }}"
+            <a href="{{ ($tabWord ? route('srs.index.lang', ['word' => $tabWord]) : route('srs.index')).$taxQs }}"
                role="tab"
                aria-selected="{{ $active ? 'true' : 'false' }}"
                class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-colors
@@ -65,6 +72,39 @@
             </a>
         @endforeach
     </div>
+
+    {{-- H7966 (трек А) — discovery-фильтры таксономии: тема / размер / сложность. --}}
+    <form method="GET" action="{{ url($canonicalPath) }}" class="mb-6 flex flex-wrap items-end gap-3"
+          data-testid="srs-taxonomy-filters">
+        @php
+            $taxonomySpecs = [
+                'topic' => ['label' => 'Тема', 'options' => $topicOptions ?? []],
+                'size' => ['label' => 'Размер', 'options' => $sizeOptions ?? []],
+                'difficulty' => ['label' => 'Сложность', 'options' => $difficultyOptions ?? []],
+            ];
+        @endphp
+        @foreach ($taxonomySpecs as $name => $spec)
+            <label class="flex flex-col gap-1 text-xs font-bold text-slate-400">
+                {{ $spec['label'] }}
+                <select name="{{ $name }}"
+                        class="rounded-xl bg-[#111622] border border-[#1F2636] text-slate-200 text-sm px-3 py-2 focus:border-brand">
+                    <option value="">— любая —</option>
+                    @foreach ($spec['options'] as $value => $optionLabel)
+                        <option value="{{ $value }}" @selected(($filters[$name] ?? null) === $value)>{{ $optionLabel }}</option>
+                    @endforeach
+                </select>
+            </label>
+        @endforeach
+        <button type="submit"
+                class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-bold hover:opacity-90 transition">
+            Применить
+        </button>
+        @if (array_filter($filters))
+            <a href="{{ url($canonicalPath) }}" class="px-3 py-2 rounded-xl text-sm font-bold text-slate-400 hover:text-white transition">
+                Сбросить
+            </a>
+        @endif
+    </form>
 
     @if($decks->isEmpty())
         <div class="rounded-2xl border border-[#1F2636] bg-[#111622] p-10 text-center text-slate-400">
@@ -97,6 +137,19 @@
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-[#0A0D14] font-medium text-slate-300">{{ $langLabel }}</span>
                                 <span class="ml-2">{{ $deck->cards_count }} карт.</span>
                                 <span class="ml-2 text-slate-500">· учите {{ $taglineSubject }}</span>
+                                @if ($deck->topic || $deck->difficulty || $deck->size_tier)
+                                    <span class="ml-2 inline-flex flex-wrap gap-1 align-middle">
+                                        @if ($deck->topic)
+                                            <span class="px-2 py-0.5 rounded-md bg-brand/15 text-brand font-medium">{{ \App\Models\SrsDeck::TOPICS[$deck->topic] ?? $deck->topic }}</span>
+                                        @endif
+                                        @if ($deck->difficulty)
+                                            <span class="px-2 py-0.5 rounded-md bg-[#0A0D14] text-slate-300 font-medium">{{ \App\Models\SrsDeck::DIFFICULTIES[$deck->difficulty] ?? $deck->difficulty }}</span>
+                                        @endif
+                                        @if ($deck->size_tier)
+                                            <span class="px-2 py-0.5 rounded-md bg-[#0A0D14] text-slate-300 font-medium">{{ \App\Models\SrsDeck::SIZE_TIERS[$deck->size_tier] ?? $deck->size_tier }}</span>
+                                        @endif
+                                    </span>
+                                @endif
                             </div>
                         </div>
                         <span class="text-sm font-bold text-brand whitespace-nowrap">Попробовать →</span>
