@@ -11,7 +11,9 @@ use App\Models\Payment;
 use App\Models\Tariff;
 use App\Models\User;
 use App\Services\AttributionService;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\CuratorNotifier;
+use App\Services\Payments\ClaimTrustGate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -60,8 +62,8 @@ final class BankClaimController extends Controller
         // «существующий» = isEstablishedClaimStudent() (возраст аккаунта
         // ≥ 7 дней ИЛИ проведённый платёж), а не голый auth()->check() —
         // сессию минтит сама публичная форма (Nv06 two-POST bootstrap).
-        $trusted = auth()->check()
-            && auth()->user()->isEstablishedClaimStudent()
+        // H6395 lever 2 (WIC): предикат живёт в ClaimTrustGate (OFF = легаси).
+        $trusted = app(ClaimTrustGate::class)->trusts(auth()->user(), ClaimTrustGate::BANK_CLAIM)
             && (bool) config('services.bank_claim.trust_existing_students', true);
 
         $user = $this->resolveUser($request);
@@ -180,6 +182,7 @@ final class BankClaimController extends Controller
             'name' => $request->validated('name'),
             'password' => Hash::make(Str::random(12)),
         ]);
+        app(ConsentRecorder::class)->fromForm($request, 'claim:bank', $user);
 
         app(AttributionService::class)->applyToNewUser($user);
 

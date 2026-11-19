@@ -47,10 +47,18 @@
                                 </td>
                                 <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ $visitor['time_on_site'] }}</td>
                                 <td class="px-4 py-3 text-right">
+                                    {{-- H6601: «Написать» только на горячих страницах в рабочие часы; --}}
+                                    {{-- серверный гейт в sendProactive отказывает и без этой кнопки. --}}
                                     @if ($composeFor !== $visitor['id'])
-                                        <x-filament::button size="sm" wire:click="startCompose({{ $visitor['id'] }})">
-                                            Написать
-                                        </x-filament::button>
+                                        @if ($visitor['proactive_allowed'])
+                                            <x-filament::button size="sm" wire:click="startCompose({{ $visitor['id'] }})">
+                                                Написать
+                                            </x-filament::button>
+                                        @else
+                                            <span class="text-xs text-gray-400" title="{{ $visitor['proactive_blocked_reason'] }}">
+                                                {{ $visitor['proactive_blocked_reason'] }}
+                                            </span>
+                                        @endif
                                     @else
                                         <span class="text-xs text-gray-400">пишем ниже…</span>
                                     @endif

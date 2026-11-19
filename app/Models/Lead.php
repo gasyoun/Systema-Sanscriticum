@@ -8,9 +8,30 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use InvalidArgumentException;
 
 class Lead extends Model
 {
+    /**
+     * Гвард users_email_valid-класса (MG 04-10-2026): непустой не-адрес
+     * в leads.email невозможен — intake отсекает HouseEmail, этот мутатор
+     * стережёт Eloquent-пути, сырые вставки — CHECK leads_email_valid.
+     */
+    public function setEmailAttribute(?string $value): void
+    {
+        $email = $value === null ? null : trim($value);
+
+        if ($email !== null && $email !== ''
+            && preg_match('/'.User::EMAIL_PATTERN.'/i', $email) !== 1) {
+            throw new InvalidArgumentException(sprintf(
+                'leads.email: "%s" — не валидный email (гвард мусора, MG 04-10).',
+                $email
+            ));
+        }
+
+        $this->attributes['email'] = $email;
+    }
+
     use HasFactory;
     use TracksBlame;
 
@@ -81,6 +102,7 @@ class Lead extends Model
         'utm_term',
         'click_id',
         'source',           // источник, введённый человеком (H5021) — машина не трогает
+        'reported_source',  // самоотчёт заявителя «откуда узнали» (H6531, HDYHAU)
 
         // Технические данные - теперь они будут сохраняться
         'ip_address',
@@ -120,6 +142,45 @@ class Lead extends Model
         }
 
         return null;
+    }
+
+    /**
+     * H6531 — канонический словарь самоотчёта «откуда узнали» (HDYHAU, пункт 4
+     * H6046, MG 12-10-2026 «Внедрять»). Ключи стабильны (их шлёт форма и их
+     * хранит leads.reported_source), подписи — человекочитаемые, для админки.
+     * Ветка «other» в форме открывает свободный текст — тогда reported_source
+     * хранит сам текст (журнал лида «со слов человека», UTM не выдумываем).
+     *
+     * @return array<string,string> key => подпись для человека
+     */
+    public static function hdyhauOptions(): array
+    {
+        return [
+            'friends' => 'Посоветовали друзья или знакомые',
+            'tg_school' => 'Telegram-канал школы',
+            'vk_school' => 'Сообщество школы во ВКонтакте',
+            'youtube' => 'YouTube',
+            'instagram' => 'Instagram',
+            'search' => 'Поиск в интернете',
+            'article' => 'Статья или блог',
+            'partner' => 'Приглашение партнёра',
+            'other' => 'Другое',
+        ];
+    }
+
+    /**
+     * Человекочитаемое значение reported_source для админки/журнала:
+     * канонический ключ => подпись из словаря; свободный текст (ветка
+     * «other») и неизвестные значения — как есть.
+     */
+    public function reportedSourceLabel(): ?string
+    {
+        $value = trim((string) $this->reported_source);
+        if ($value === '') {
+            return null;
+        }
+
+        return self::hdyhauOptions()[$value] ?? $value;
     }
 
     // Стадия воронки (LeadStage.key ↔ leads.status) — источник канбан-доски.

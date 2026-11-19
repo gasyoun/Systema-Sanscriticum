@@ -269,13 +269,13 @@ class CourseResource extends Resource
 
                                 Forms\Components\Radio::make('format')
                                     ->label('Формат курса')
-                                    ->options([
-                                        'live' => '🔴 Идёт сейчас (live-поток)',
-                                        'recorded' => '📼 В записи (доступен в любое время)',
-                                    ])
+                                    ->options(Course::FORMAT_LABELS)
                                     ->default('recorded')
                                     ->required()
                                     ->inline(false)
+                                    // «Идёт набор / донабор» — живой курс, который ещё можно купить:
+                                    // жёлтый бейдж на карточке, своя секция и чип-фильтр каталога.
+                                    ->helperText('«Идёт набор / донабор» — живой курс, ещё продаётся. До первого занятия бейдж «Идет набор», после — «Продолжается донабор» (выводится из расписания). Переключать на «Идёт сейчас» на старте не нужно; в «В записи» — когда занятия кончились.')
                                     ->columnSpanFull(),
 
                                 Forms\Components\Select::make('level')

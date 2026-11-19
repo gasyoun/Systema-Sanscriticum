@@ -143,6 +143,7 @@ class SupportDmAutoReplyTest extends TestCase
         $attr = app(SupportOutgoingAttribution::class);
 
         $this->assertSame('🍎', $attr->markerFromOutgoingText('Добрый день 🍎 вот ссылка'));
+        $this->assertSame('🐢', $attr->markerFromOutgoingText('Добрый день 🐢 вот ссылка'));
         $this->assertSame('gasuns', $attr->markerFromOutgoingText('Добрый день, вот ссылка'));
     }
 }

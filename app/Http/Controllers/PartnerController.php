@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Partner;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\PartnerService;
+use App\Support\Consent\ConsentRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -66,7 +68,8 @@ class PartnerController extends Controller
             'phone' => ['nullable', 'string', 'max:50'],
             'telegram_username' => ['nullable', 'string', 'max:100'],
             'payout_details' => ['nullable', 'string', 'max:500'],
-        ])->after(function ($validator) use ($request): void {
+            'pd_consent' => ConsentRules::pd(),
+        ], ConsentRules::messages())->after(function ($validator) use ($request): void {
             // Нужен хотя бы один канал связи, иначе партнёра не с кем связать.
             if (blank($request->input('email'))
                 && blank($request->input('phone'))
@@ -89,6 +92,7 @@ class PartnerController extends Controller
             'code' => Partner::generateCode(),
             'status' => Partner::STATUS_PENDING,
         ]);
+        app(ConsentRecorder::class)->fromForm($request, 'partner:register', $request->user(), $data['email'] ?? null);
 
         return redirect()
             ->route('partners.registered', ['code' => $partner->code])

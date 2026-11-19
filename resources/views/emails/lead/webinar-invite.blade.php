@@ -41,5 +41,6 @@
         </p>
     </div>
 
+    @include('emails.partials.unsubscribe-footer')
 </body>
 </html>

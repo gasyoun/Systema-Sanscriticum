@@ -5,7 +5,6 @@
 @endphp
 
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Charis+SIL:ital,wght@0,400;0,700;1,400;1,700&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
     
     .font-charis { font-family: 'Charis SIL', serif; }
     .font-nunito { font-family: 'Nunito Sans', sans-serif; }
@@ -187,7 +186,7 @@
                     <div class="pt-2 pb-2 space-y-3">
                         <label class="flex items-start gap-3 cursor-pointer group">
                             <div class="shrink-0 mt-0.5">
-                                <input type="checkbox" x-model="agreedForm" class="w-6 h-6 bg-[#f4f5fa] rounded border border-[#424242] text-[#424242] focus:ring-brand cursor-pointer">
+                                <input type="checkbox" name="pd_consent" value="1" required x-model="agreedForm" class="w-6 h-6 bg-[#f4f5fa] rounded border border-[#424242] text-[#424242] focus:ring-brand cursor-pointer">
                             </div>
                             <div class="font-normal text-[12px] leading-[15px] text-black">
                                 <span class="font-semibold">Я соглашаюсь на </span>
@@ -196,7 +195,7 @@
                         </label>
                         <label class="flex items-start gap-3 cursor-pointer group">
                             <div class="shrink-0 mt-0.5">
-                                <input type="checkbox" name="is_promo_agreed" x-model="agreedPromo" class="w-6 h-6 bg-[#f4f5fa] rounded border border-[#424242] text-[#424242] focus:ring-brand cursor-pointer">
+                                <input type="checkbox" name="is_promo_agreed" value="1" x-model="agreedPromo" class="w-6 h-6 bg-[#f4f5fa] rounded border border-[#424242] text-[#424242] focus:ring-brand cursor-pointer">
                             </div>
                             <div class="font-normal text-[12px] leading-[15px] text-black">
                                 <span class="font-semibold">Я даю согласие на </span>

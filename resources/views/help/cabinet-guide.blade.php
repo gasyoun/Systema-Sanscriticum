@@ -8,12 +8,20 @@
 
     <div class="bg-white rounded-3xl border border-brand/15 shadow-sm p-6 md:p-8 mb-8 text-center">
         <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3">Гид личного кабинета</h1>
-        <p class="text-gray-600 leading-relaxed mb-6">
+        <p class="text-gray-600 leading-relaxed">
             Регистрироваться не нужно — кабинет уже создан при оплате и привязан
             к email заказа. Пароль придумывать не надо: на странице входа нажмите
             «Войдите по email заказа» — пришлем одноразовую ссылку.
             Не забыть заглянуть в папку «Спам» 🙂
         </p>
+        {{-- H6315: бот-путь single-source из docs/STUDENT_CABINET_GUIDE_RU.md (PublicCabinetGuideController::botPathLine) --}}
+        @if (! empty($botPathLine))
+            <p class="text-gray-600 leading-relaxed mb-6 mt-3 border-l-4 border-brand/40 pl-4 text-left">
+                {!! $botPathLine !!}
+            </p>
+        @else
+            <div class="mb-6"></div>
+        @endif
         <a href="{{ route('login') }}"
            class="inline-flex items-center gap-2 bg-brand text-white font-bold rounded-full px-6 py-3 hover:opacity-90 transition-opacity">
             <i class="fas fa-right-to-bracket"></i> Войти в кабинет

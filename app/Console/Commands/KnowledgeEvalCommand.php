@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\KnowledgeChunk;
+use App\Models\SupportAnswerSuggestion;
 use App\Services\Support\Faq\Bm25FaqRetriever;
 use App\Services\Support\Faq\EmbeddingProvider;
 use App\Services\Support\Faq\HybridRetriever;
+use App\Services\Support\SupportAnswerSuggester;
 use Illuminate\Console\Command;
 
 /**
@@ -31,7 +33,7 @@ class KnowledgeEvalCommand extends Command
 
     protected $description = 'H3234: recall@K / MRR of BM25 vs hybrid retrieval on a golden eval set';
 
-    public function handle(Bm25FaqRetriever $bm25, HybridRetriever $hybrid, EmbeddingProvider $embeddings): int
+    public function handle(Bm25FaqRetriever $bm25, HybridRetriever $hybrid, EmbeddingProvider $embeddings, SupportAnswerSuggester $suggester): int
     {
         $evalsetPath = (string) $this->option('evalset');
         $full = str_starts_with($evalsetPath, '/') || preg_match('/^[A-Za-z]:/', $evalsetPath) === 1
@@ -95,11 +97,13 @@ class KnowledgeEvalCommand extends Command
                 $hits = 0;
                 $rrSum = 0.0;
 
+                $scored = 0;
                 foreach ($items as $item) {
                     $expected = array_values(array_map('strval', $item['expected_chunk_ids'] ?? []));
                     if ($expected === []) {
                         continue;
                     }
+                    $scored++;
 
                     $retrieved = $config === 'bm25'
                         ? array_map(
@@ -118,10 +122,10 @@ class KnowledgeEvalCommand extends Command
                     }
                 }
 
-                $n = max(1, count($items));
+                $n = max(1, $scored);
                 $rows[] = [
                     'config' => $label,
-                    'questions' => count($items),
+                    'questions' => $scored,
                     "recall@{$topK}" => round($hits / $n, 4),
                     'MRR' => round($rrSum / $n, 4),
                 ];
@@ -138,6 +142,20 @@ class KnowledgeEvalCommand extends Command
             $rows,
         );
 
+        $refusal = $this->refusalReport($items, $bm25, $suggester);
+        if ($refusal['cards'] > 0) {
+            $this->line(sprintf(
+                'refusal cards: %d, answered anyway: %d (accuracy %.1f%%, F floor %.1f)',
+                $refusal['cards'],
+                count($refusal['would_answer']),
+                $refusal['accuracy'] * 100,
+                $refusal['floor'],
+            ));
+            foreach ($refusal['would_answer'] as $leak) {
+                $this->warn("REFUSAL LEAK: {$leak}");
+            }
+        }
+
         $recallKey = "recall@{$topK}";
         if ($rows[1][$recallKey] >= $rows[0][$recallKey]) {
             $this->info('acceptance: hybrid ≥ BM25 — OK');
@@ -149,8 +167,43 @@ class KnowledgeEvalCommand extends Command
     }
 
     /**
-     * Ранг (с 1) первого ожидаемого чанка в выдаче или null. Суффикс-фолбэк —
-     * чанки из дополнительных корпусов несут префикс файла (faq_from_lectures/…).
+     * 0YS: refusal accuracy — the only metric that protects auto-send. A card
+     * leaks if the live F lane would answer it: category F AND BM25 ≥ F floor.
+     *
+     * @param  list<array<string, mixed>>  $items
+     * @return array{cards: int, would_answer: list<string>, accuracy: float, floor: float}
+     */
+    private function refusalReport(array $items, Bm25FaqRetriever $bm25, SupportAnswerSuggester $suggester): array
+    {
+        $floor = (float) config('support.faq_rag.shadow_min_score_by_category.'.SupportAnswerSuggestion::CATEGORY_MATERIALS, 15.7);
+        $cards = 0;
+        $would = [];
+
+        foreach ($items as $item) {
+            if (empty($item['must_refuse'])) {
+                continue;
+            }
+            $cards++;
+            $question = (string) $item['question'];
+            $category = $suggester->categorize($question);
+            $hits = $bm25->retrieve($question, 1);
+            $score = $hits === [] ? 0.0 : HybridRetriever::bm25Score($hits[0]);
+
+            if ($category === SupportAnswerSuggestion::CATEGORY_MATERIALS && $score >= $floor) {
+                $would[] = sprintf('%s (%.1f ≥ %.1f)', (string) $item['id'], $score, $floor);
+            }
+        }
+
+        return [
+            'cards' => $cards,
+            'would_answer' => $would,
+            'accuracy' => $cards === 0 ? 1.0 : ($cards - count($would)) / $cards,
+            'floor' => $floor,
+        ];
+    }
+
+    /**
+     * Ранг (с 1) первого ожидаемого чанка в выдаче или null.
      *
      * @param  list<string>  $retrieved
      * @param  list<string>  $expected

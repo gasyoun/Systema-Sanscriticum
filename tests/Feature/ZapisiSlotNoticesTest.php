@@ -107,7 +107,10 @@ class ZapisiSlotNoticesTest extends TestCase
             return $job->chatId === self::CHAT_ID
                 && str_contains($job->text, 'Блок занятий завершён — 4-е из 7')
                 && str_contains($job->text, '15.09.2026')
-                && str_contains($job->text, 'игры, просмотр бесплатных вебинаров');
+                && str_contains($job->text, 'игры, просмотр бесплатных вебинаров')
+                // MG 12-10-2026: в платёжных текстах есть ссылка на кабинет.
+                && str_contains($job->text, 'Оплатить в личном кабинете')
+                && str_contains($job->text, route('student.dashboard'));
         });
     }
 

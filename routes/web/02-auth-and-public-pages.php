@@ -13,6 +13,7 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PublicCabinetGuideController;
 use App\Http\Controllers\ReadingPackController;
 use App\Http\Controllers\RecordingGateController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\TransliterateController;
 use App\Http\Controllers\VisualDcsController;
@@ -67,6 +68,11 @@ Route::get('/cabinet', fn () => redirect()->route('student.dashboard', [], 301))
 Route::get('/dokumenty/{slug}', [DocController::class, 'show'])
     ->name('docs.show');
 
+// H6373 — публичная страница политики конфиденциальности /privacy (152-ФЗ +
+// раскрытие OAuth-данных Google). Пререквизит верификации sensitive scope
+// calendar — docs/GOOGLE_CALENDAR_VERIFICATION_PACK_H4434.md шаг 2. До catch-all /{slug}.
+Route::view('/privacy', 'pages.privacy')->name('privacy');
+
 // Условия возврата (H1288) — порядок отказа из оферты (приложение №1),
 // изложенный по-русски; сами условия задает только PDF оферты.
 Route::view('/vozvrat', 'docs.vozvrat')->name('refund.show');
@@ -91,6 +97,17 @@ Route::get('/help/kabinet', [PublicCabinetGuideController::class, 'show'])
 // Публичная «сайт жив?» для учеников (VPN vs наш сервер + @rusamskrtam).
 // До catch-all /{slug}. Зеркало на GitHub Pages: /uptime/ в корне репо.
 Route::view('/uptime', 'uptime')->name('uptime.show');
+
+// ═══════════════════════════════════════════════════════════════
+// ГЛОБАЛЬНЫЙ ПОИСК САЙТА (H7590) — страница полных результатов.
+// Канонический URL — path-style /poisk/{q}, БЕЗ ?q= (SEO-вердикт MG
+// 01-11-2026); GET /poisk?q=… (no-JS-форма) редиректится 301-м.
+// Клиентская половина (дропдаун в шапке, Fuse.js по public/search) —
+// partials/global-search.blade.php + resources/js/global-search*.js.
+// ВАЖНО: до catch-all /{slug}.
+// ═══════════════════════════════════════════════════════════════
+Route::get('/poisk', [SearchController::class, 'form'])->name('search.form');
+Route::get('/poisk/{q}', [SearchController::class, 'results'])->name('search.results');
 
 // ═══════════════════════════════════════════════════════════════
 // СТАТЬИ (блог) — ВАЖНО: должно быть до catch-all /{slug}
@@ -191,7 +208,7 @@ Route::get('/maintenance-bypass/{secret}', function (string $secret) {
 // всё платное контроллер закрывает 404 сам. До catch-all /{slug}.
 Route::get('/c/{slug}/u/{lessonId}/video/{player}', [RecordingGateController::class, 'show'])
     ->middleware('course.canonical')
-    ->whereIn('player', ['youtube', 'rutube', 'kinescope', 'video'])
+    ->whereIn('player', ['youtube', 'rutube', 'kinescope', 'vk', 'video'])
     ->name('student.recording.gate');
 
 Route::get('/otzyvy', [ShopController::class, 'testimonialsLibrary'])

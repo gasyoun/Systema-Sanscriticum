@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Mail\Concerns\Unsubscribable;
 use App\Models\Season;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -24,6 +25,7 @@ use Illuminate\Support\Carbon;
 class SeasonStartMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+    use Unsubscribable;
 
     public function __construct(public ?Season $season = null)
     {

@@ -55,6 +55,8 @@ class SupportDailyRollup extends Model
         'unresolved_after_hours',
         'has_new_contact',
         'first_response_seconds',
+        'proactive_count',
+        'proactive_converted',
     ];
 
     /**
@@ -76,6 +78,7 @@ class SupportDailyRollup extends Model
         'is_unanswered' => 'boolean',
         'unresolved_after_hours' => 'boolean',
         'has_new_contact' => 'boolean',
+        'proactive_converted' => 'boolean',
     ];
 
     public function chat(): BelongsTo

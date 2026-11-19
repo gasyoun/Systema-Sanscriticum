@@ -1,0 +1,23 @@
+{
+  "schema": "lyw-quiz-v1",
+  "items": [
+    {
+      "id": "zan1-nol-ayurveda-01",
+      "type": "mcq",
+      "concept": [
+        "varga"
+      ],
+      "prompt": "Сколько рядов (varga) в группе sparśa?",
+      "options": [
+        "Три",
+        "Четыре",
+        "Пять",
+        "Десять"
+      ],
+      "answer_index": 2
+    }
+  ],
+  "answer_keys": {
+    "zan1-nol-ayurveda-01": "C"
+  }
+}

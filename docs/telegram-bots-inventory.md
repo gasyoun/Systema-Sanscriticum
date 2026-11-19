@@ -1,6 +1,6 @@
 # Telegram-боты и TG-аккаунты в Systema Sanscriticum
 
-_Created: 30-07-2026 · Last updated: 17-09-2026 (проверено live-пробой: usernames и режим @samskrtamru_bot)
+_Created: 30-07-2026 · Last updated: 14-10-2026 (@samskrte_bot: карточки открытых занятий + callback_query; лестница поддержки 05-10-2026; usernames сверены live-пробой 17-09-2026)
 
 Инвентарь **Bot API-ботов**, **landing-ботов** и **userbot-аккаунта** (MadelineProto),
 которые использует LMS на `samskrte.ru`.  
@@ -23,6 +23,7 @@ Lead-магнит / марафон drip  →  @samskrte_bot        (MarketingSet
 Запись на занятие           →  @zapisi_ORSbot       (MarketingSetting.zapisi_*)
 Служебные алерты LMS        →  TELEGRAM_BOT_*       (на проде: @testpodpiska12_bot)
 Саппорт / harvest чатов     →  userbot @rusamskrtam (TELEGRAM_SUPPORT_*, MTProto)
+Первая линия поддержки      →  ИИ-куратор @samskrtamru_bot; эскалация: Иван (ops) → MG — ранбук RUNBOOK_SUPPORT_ESCALATION
 Ответ ОТ ИМЕНИ аккаунта     →  TELEGRAM_BUSINESS_*  (Business-бот, Bot API, §2.5)
 «Написать в Telegram» (UX)  →  t.me/rusamskrtam     (человек/аккаунт, не LMS-бот)
 Grok в «Отделе заботы»      →  @grokusaurus_bot     (ПК Марциса, не VPS)
@@ -94,7 +95,12 @@ Grok в «Отделе заботы»      →  @grokusaurus_bot     (ПК Ма�
 | **Маршрут** | `POST /api/webhooks/telegram-magnet` (header `X-Telegram-Bot-Api-Secret-Token`) |
 
 **Назначение:** лид-магниты, deep-link `magnet_token`, drip марафона Day 1–3,
-публикация в канал `@samskrte` (если бот — админ канала с правом постинга).
+публикация в канал `@samskrte` (если бот — админ канала с правом постинга),
+ждун (`/zhdun`, callback `wl:*`), **карточки открытых занятий** с «✅ Я иду» и
+нижним меню (callback `ol:*`, deep-link `?start=ol_<schedule_id>`, флаг
+`OPEN_LESSON_CARDS_ENABLED`) — [RUNBOOK_OPEN_LESSON_CARDS.md](RUNBOOK_OPEN_LESSON_CARDS.md).
+Вебхук принимает `message` и `callback_query` (с 14-10-2026; до этого inline-кнопки
+бота не доходили).
 
 Не путать с **каналом** [@samskrte](https://t.me/samskrte).
 
@@ -105,11 +111,12 @@ Grok в «Отделе заботы»      →  @grokusaurus_bot     (ПК Ма�
 | **Хранение** | `MarketingSetting.zapisi_bot_username`, `zapisi_bot_token`, `zapisi_webhook_secret`, `zapisi_chat_id`, шаблон напоминания |
 | **Флаг** | `TELEGRAM_ZAPISI_BOT_ENABLED` / `features.telegram_zapisi_bot` (прод: **true**) |
 | **Прод username** | `@zapisi_ORSbot` |
-| **Приём апдейтов** | штатно webhook через входной узел (`allowed_updates: message, channel_post, my_chat_member` — H4314); аварийно long-poll `zapisi:poll` (`TELEGRAM_ZAPISI_POLL_ENABLED`, default false) |
+| **Приём апдейтов** | штатно webhook через входной узел; аварийно long-poll `zapisi:poll` (`TELEGRAM_ZAPISI_POLL_ENABLED`, default false). `allowed_updates` — одна константа `TelegramWebhooks::ZAPISI_ALLOWED_UPDATES`: `message, channel_post, my_chat_member` (H4314), `callback_query` (кнопки отмены H4519 / выбора урока #ДЗ — до 15-09-2026 не запрашивались, кнопки молчали), `poll_answer` (голоса в опросах). **Сменился список ⇒ после деплоя `php artisan zapisi:set-webhook` на проде.** |
 | **Config** | `config('services.telegram_zapisi')` |
 | **Приветственная карточка** | при добавлении бота в чат: 1 раз в сутки на чат (см. ниже, H4314–H4318) |
+| **Опросы** | «Записи (бот)» → «Опросы» / «Опрос в чат» на строке учебной группы: `sendPoll` (не анонимный), голоса `poll_answer` → `telegram_poll_answers` поимённо (студент по `users.telegram_id` / `social_accounts`), «Закрыть опрос» = `stopPoll` (15-09-2026) |
 
-**Назначение:** чат бронирования занятий, напоминания, дашборд Filament «Записи (бот)»,
+**Назначение:** чат бронирования занятий, напоминания, опросы, дашборд Filament «Записи (бот)»,
 roster/harvest peer (совместно с Track B), приветственная карточка чата.
 
 #### Приветственная карточка чата (H4314–H4318, 07-09-2026)
@@ -147,7 +154,7 @@ Privacy mode бота — снять в [@BotFather](https://t.me/BotFather) (с
 |--|--|
 | **Env** | `TELEGRAM_BUSINESS_BOT_TOKEN`, `TELEGRAM_BUSINESS_WEBHOOK_SECRET`, `TELEGRAM_BUSINESS_BOT_ENABLED` |
 | **Config** | `services.telegram_business`, флаг `features.telegram_business_bot` |
-| **Маршрут** | `POST /api/webhooks/telegram-business` (middleware `verify.tg.business`) |
+| **Маршрут** | `POST /api/webhooks/telegram-business` (middleware `verify.tg.business`); при `TELEGRAM_BUSINESS_SHARED_STUDENT_WEBHOOK=true` `set-webhook` регистрирует общий студенческий `POST /api/telegram/webhook` |
 | **Аккаунт в support-таблицах** | `TELEGRAM_BUSINESS_ACCOUNT_NAME` (по умолчанию `telegram-business`) |
 
 **Назначение:** бот подключён к аккаунту школы в **Настройки → Business →
@@ -207,6 +214,7 @@ Privacy mode бота — снять в [@BotFather](https://t.me/BotFather) (с
 | | |
 |--|--|
 | **Аккаунт** | `@rusamskrtam` (user account, MTProto) |
+| **Экстренная лестница** | Иван (1-я очередь, ops, канал @samskrte_ops_bot) → MG (2-я) — рулинг MG 05-10-2026; раньше экстренным каналом был только MG. Ранбук: [`RUNBOOK_SUPPORT_ESCALATION.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_SUPPORT_ESCALATION.md) |
 | **Env** | `TELEGRAM_SUPPORT_ENABLED`, `TELEGRAM_SUPPORT_API_ID`, `TELEGRAM_SUPPORT_API_HASH`, `TELEGRAM_SUPPORT_SESSION`, … |
 | **Команды** | `telegram-support:sync`, `telegram-support:healthcheck`, harvest/roster (`TELEGRAM_HARVEST_*`) |
 | **Сессия** | **одна** на support+harvest — **не** гонять параллельно два синка (риск `AUTH_RESTART`) |

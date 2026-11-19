@@ -1,0 +1,86 @@
+{
+  "schema": "lyw-pack-v1",
+  "zan": 1,
+  "profile": {
+    "level": "base",
+    "interest": "base"
+  },
+  "source": {
+    "kosha_commit": "3ccfd4050c3b68595cb333861183aae6befa6654",
+    "morphology_curriculum_sha256": "bb36467d28495e404af301129e969d50ad06a156316f41affc7be72417d4065f",
+    "drills_sha256": "916dff3f9cec8583761a860e0ff39e5f52fbcf476d3e610b8ac1ec9a3f176942",
+    "lesson_marker": "Морфология · урок 1 (a-основы)",
+    "attested": true,
+    "license": "kosha morphology-curriculum / morphology-drills, CC BY-SA 4.0 (credit Dr. Marcis Gasuns; upstream DCS by Oliver Hellwig / DCS)",
+    "selection_rule": "curriculum lesson==1 rows (all n_attested_cells>=1); drills joined on lemma_iast; per type (fill,match) sorted by (rank,id) take first 10 items with unseen (lemma_iast,cell_label) AND unseen lemma in that type"
+  },
+  "sections": [
+    {
+      "id": "masc-a-stems",
+      "title": "Мужской род: a-основы (-aḥ)",
+      "source_concepts": [
+        "artha",
+        "dharma",
+        "putra",
+        "loka",
+        "rasa",
+        "indra",
+        "rūpa",
+        "bala",
+        "ratha",
+        "phala"
+      ],
+      "embedded_questions": [
+        "MD-00273-F",
+        "MD-00323-F",
+        "MD-00403-F",
+        "MD-00455-F",
+        "MD-00593-F",
+        "MD-00685-F",
+        "MD-00917-F",
+        "MD-00983-F",
+        "MD-01033-F",
+        "MD-01107-F",
+        "MD-00274-M",
+        "MD-00324-M",
+        "MD-00404-M",
+        "MD-00456-M",
+        "MD-00594-M",
+        "MD-00686-M",
+        "MD-00918-M",
+        "MD-00984-M",
+        "MD-01034-M",
+        "MD-01108-M"
+      ]
+    }
+  ],
+  "views": {
+    "mindmap": "views/mindmap.mmd"
+  },
+  "quizzes": "quizzes.json",
+  "mnemonics": [
+    {
+      "for": "neuter syncretism",
+      "sentence": "У среднего рода именительный и винительный всегда одинаковы: artham — это и «(тот) предмет», и «(в/на) предмет» — контекст решает."
+    },
+    {
+      "for": "m_a -aḥ",
+      "sentence": "Мужской a-стем оканчивается на -aḥ в именительном: dharmaḥ, arthaḥ — «ḥ» на конце слова сигнализирует мужской подлежащий."
+    },
+    {
+      "for": "-e endings",
+      "sentence": "На -e кончаются и locative singular (arthe «в смысле»), и nominative dual (arthe «два смысла») — число падежа подскажет контекст."
+    }
+  ],
+  "teacher_sample": [
+    "MD-00273-F",
+    "MD-00323-F",
+    "MD-00403-F",
+    "MD-00455-F",
+    "MD-00593-F"
+  ],
+  "generated": {
+    "date": "2026-10-11",
+    "session": "H6305-GLM"
+  }
+}

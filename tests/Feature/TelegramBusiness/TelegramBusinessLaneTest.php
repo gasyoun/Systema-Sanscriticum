@@ -316,6 +316,90 @@ class TelegramBusinessLaneTest extends TestCase
         $this->assertSame(1, (int) (($outgoing->raw_payload ?? [])['delivery_attempts'] ?? 0));
     }
 
+    /**
+     * Прод, 14-10-2026: ответ куратора студенту, молчащему 6,6 суток, Telegram
+     * отказал с BUSINESS_PEER_USAGE_MISSING («нельзя писать через business
+     * connection, если пользователь недавно не писал»). Окно — свойство пира,
+     * а не транспорта: юзербот-полоса с сессией ТОЙ ЖЕ персоны пишет в тот же
+     * диалог без ограничений. Строка обязана переехать в такой аккаунт (ближайший
+     * `telegram-support:sync` доставит её по MTProto), а не сгорать в ретраях.
+     */
+    public function test_window_error_hands_the_reply_to_the_shared_session_userbot(): void
+    {
+        $sharedSession = 'storage/app/telegram-support/session.madeline';
+
+        TelegramSupportAccount::query()->where('name', 'telegram-business')->update(['session_path' => $sharedSession]);
+        $fallback = TelegramSupportAccount::query()->create([
+            'name' => 'support',
+            'is_enabled' => true,
+            'session_path' => $sharedSession,
+        ]);
+
+        $sendMessageCalls = 0;
+        Http::fake([
+            'api.telegram.org/*sendMessage' => function () use (&$sendMessageCalls) {
+                $sendMessageCalls++;
+
+                return Http::response(['ok' => false, 'error_code' => 400, 'description' => 'Bad Request: BUSINESS_PEER_USAGE_MISSING'], 400);
+            },
+            'api.telegram.org/*' => Http::response(['ok' => true], 200),
+        ]);
+
+        $this->runUpdate($this->connectionUpdate());
+        $this->runUpdate($this->studentMessageUpdate(700));
+
+        $outgoing = TelegramSupportMessage::query()->where('direction', 'outgoing')->firstOrFail();
+
+        $this->assertSame($fallback->id, (int) $outgoing->telegram_support_account_id, 'строка передана юзербот-полосе');
+        $this->assertLessThan(0, (int) $outgoing->telegram_message_id, 'бизнес-полоса не доставила');
+        $this->assertTrue((bool) (($outgoing->raw_payload ?? [])['pending_delivery'] ?? false), 'строка ждёт досыла синком');
+        $this->assertTrue((bool) (($outgoing->raw_payload ?? [])['delivery_window_closed'] ?? false));
+        $this->assertStringContainsString('юзербот', (string) (($outgoing->raw_payload ?? [])['delivery_error']));
+        $this->assertSame(
+            TelegramSupportAccount::query()->where('name', 'telegram-business')->firstOrFail()->id,
+            (int) (($outgoing->raw_payload ?? [])['business_window_fallback']['from_account_id'] ?? 0),
+        );
+
+        // Одна попытка — окно диагностируется сразу, попытки не горят.
+        $this->assertSame(1, $sendMessageCalls, 'после окна бизнес-полоса больше не пытается');
+    }
+
+    public function test_window_error_without_a_matching_session_stops_churn_and_reports(): void
+    {
+        // Фолбэк-аккаунт есть, но сессия другая (чужая персона): молча написать
+        // студенту от другого аккаунта нельзя — строка остаётся на бизнес-полосе
+        // с человеческой ошибкой и остановленными автопопытками.
+        TelegramSupportAccount::query()->create([
+            'name' => 'support',
+            'is_enabled' => true,
+            'session_path' => 'storage/app/telegram-support/other-persona/session.madeline',
+        ]);
+
+        Http::fake([
+            'api.telegram.org/*sendMessage' => Http::response([
+                'ok' => false,
+                'error_code' => 400,
+                'description' => 'Bad Request: BUSINESS_PEER_USAGE_MISSING',
+            ], 400),
+            'api.telegram.org/*' => Http::response(['ok' => true], 200),
+        ]);
+
+        $this->runUpdate($this->connectionUpdate());
+        $this->runUpdate($this->studentMessageUpdate(800));
+
+        $outgoing = TelegramSupportMessage::query()->where('direction', 'outgoing')->firstOrFail();
+
+        $business = TelegramSupportAccount::query()->where('name', 'telegram-business')->firstOrFail();
+        $this->assertSame($business->id, (int) $outgoing->telegram_support_account_id, 'чужая персона — строка не передаётся');
+        $this->assertTrue((bool) (($outgoing->raw_payload ?? [])['delivery_window_closed'] ?? false));
+        $this->assertSame(
+            (int) config('services.telegram_business.pending_delivery_max_attempts', 3),
+            (int) (($outgoing->raw_payload ?? [])['delivery_attempts'] ?? 0),
+            'автопопытки остановлены сразу, чат не перемалывается',
+        );
+        $this->assertStringContainsString('вручную', (string) (($outgoing->raw_payload ?? [])['delivery_error']));
+    }
+
     private function fakeTelegram(): void
     {
         Http::fake([

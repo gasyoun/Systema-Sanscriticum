@@ -193,8 +193,9 @@ class CourseDesignAssetService
     /**
      * Сводка для виджета и бейджа навигации.
      *
-     * Показатели готовности считаем только по АКТИВНЫМ курсам: бейдж, который
-     * вечно горит красным из-за архивных курсов, приучает не смотреть на бейдж.
+     * Показатели готовности считаем только по курсам В РАБОТЕ — активным и
+     * стоящим в ждуне (Course::scopeInDesignScope): бейдж, который вечно горит
+     * красным из-за архивных курсов, приучает не смотреть на бейдж.
      *
      * ОБЪЁМ — исключение: он считается по ВСЕМ строкам. Архивный курс место на
      * диске занимает ровно так же, и «занято на диске», посчитанное по части
@@ -208,7 +209,7 @@ class CourseDesignAssetService
         /** @var list<string> $formats */
         $formats = (array) config('design_assets.formats', []);
 
-        $courses = Course::query()->where('is_active', true)->with('designAssets')->get();
+        $courses = Course::query()->inDesignScope()->with('designAssets')->get();
 
         $complete = 0;
         $missingSlots = 0;

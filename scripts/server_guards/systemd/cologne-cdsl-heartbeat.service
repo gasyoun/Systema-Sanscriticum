@@ -1,0 +1,9 @@
+[Unit]
+Description=Cologne CDSL availability check, reports to Better Stack heartbeat (agent 18-09-2026, completes the 30-07 install that lacked a scheduler)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/cologne-cdsl-heartbeat.sh
+TimeoutStartSec=90

@@ -19,6 +19,10 @@ use App\Models\User;
  * отчеством → «Фамилия Имя» по окончанию фамилии → первое слово.
  * Точное имя, когда оно известно, лежит в `users.greeting_name`
  * ({@see User::greetingName()}) и имеет приоритет.
+ *
+ * Второй потребитель того же поля — документы (сертификаты/справки):
+ * {@see shortOf()} выдает «Фамилия Имя», чтобы в PDF не печаталось
+ * «Хара Галина Юрьевна, Москва» из свободного поля профиля.
  */
 final class GreetingName
 {
@@ -35,6 +39,32 @@ final class GreetingName
         }
 
         return self::capitalize(self::pick($words));
+    }
+
+    /**
+     * «Фамилия Имя» для документов: та же чистка, что у of(), минус отчества,
+     * затем первые два слова. Порядок слов профиля не переставляем — что
+     * написано, то и печатаем. Мусор вместо имени → '' (пустой снимок
+     * certificates.student_name даст привычный фолбэк на живой профиль).
+     */
+    public static function shortOf(?string $full): string
+    {
+        $words = self::words((string) $full);
+        $kept = array_values(array_filter(
+            $words,
+            fn (string $w) => ! preg_match(self::PATRONYMIC, self::key($w)),
+        ));
+
+        // Всё слово — отчество/город («Юрьевна, Москва»): лучше напечатать
+        // как написано, чем оставить пустоту.
+        if ($kept === [] && $words !== []) {
+            $kept = $words;
+        }
+
+        return implode(' ', array_map(
+            fn (string $w) => self::capitalize($w),
+            array_slice($kept, 0, 2),
+        ));
     }
 
     /** @param  list<string>  $words */

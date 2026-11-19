@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Actions\SplitPaymentBlockBulkAction;
 use App\Filament\Resources\UserResource\Pages;
+use App\Filament\Support\NoAutofill;
 use App\Jobs\SendMessengerAlerts;
 use App\Models\Course;
 use App\Models\Group;
@@ -201,6 +202,8 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('password')
                             ->label('Пароль')
                             ->password()
+                            ->autocomplete('new-password')
+                            ->extraInputAttributes(NoAutofill::IGNORE_MANAGERS)
                             ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                             ->dehydrated(fn ($state) => filled($state))
                             ->required(fn (string $context): bool => $context === 'create'),

@@ -109,6 +109,21 @@ class LandingPage extends Model
         return ! is_null($this->webinar_date);
     }
 
+    /**
+     * Шаг бота webinar_invite применим к лендингу: письмо-приглашение собирается,
+     * только если заполнена ссылка на вебинар (LeadStepMailer::buildMailable).
+     */
+    public function canSendWebinarInvite(): bool
+    {
+        return ! empty($this->webinar_url);
+    }
+
+    /** Шаг webinar_recording применим: заполнена ссылка на запись вебинара. */
+    public function canSendWebinarRecording(): bool
+    {
+        return ! empty($this->webinar_recording_url);
+    }
+
     /** За сколько минут до старта вебинара выдавать лид-магнит (дефолт 60). */
     public function magnetLeadMinutes(): int
     {

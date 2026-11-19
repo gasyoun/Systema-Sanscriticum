@@ -65,7 +65,7 @@
                             {{-- Чекбокс 1: Обязательный (Персональные данные) --}}
                             <label class="flex items-start gap-3 text-left p-3 sm:p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                                 <div class="flex items-center h-5 mt-0.5 shrink-0">
-                                    <input type="checkbox" x-model="agreedForm" class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
+                                    <input type="checkbox" name="pd_consent" value="1" required x-model="agreedForm" class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
                                 </div>
                                 <div class="text-xs sm:text-sm text-gray-600 leading-relaxed select-none group-hover:text-gray-900 transition">
                                     {{ $data['pd_text'] ?? 'Чтобы попасть в лист ожидания, я даю' }} <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие</span> на обработку моих персональных данных в соответствии с <span @click.prevent.stop="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>
@@ -97,9 +97,9 @@
                     </form>
                 </div>
             @else
-                {{-- ВАРИАНТ B: гость — контакт обязателен, имя и почта нет --}}
-                <div class="bg-[#19191C] rounded-[2rem] p-8 md:p-10 shadow-2xl"
-                     x-data="{ agreedForm: false, agreedPromo: false }">
+            {{-- ВАРИАНТ B: гость — контакт обязателен, имя и почта нет --}}
+            <div class="bg-[#19191C] rounded-[2rem] p-8 md:p-10 shadow-2xl"
+                     x-data="{ agreedForm: false, agreedPromo: false, hdyhau: '', hdyhauOther: '' }">
 
                     <h3 class="text-2xl font-extrabold text-white mb-2 text-center">
                         {{ $data['title'] ?? 'Записаться на курс' }}
@@ -164,12 +164,38 @@
                                    class="w-full px-5 py-4 rounded-xl border border-transparent bg-[#252529] text-white placeholder-[#505055] focus:bg-[#2C2C32] focus:border-[#3E3E45] focus:ring-0 transition text-base">
                         </div>
 
+                        {{-- H6531: необязательный самоотчёт «откуда узнали» (HDYHAU) --}}
+                        <div>
+                            <label for="reported-source-{{ $landingId ?: 'form' }}" class="block text-[10px] font-bold text-[#65656B] uppercase tracking-widest mb-2">
+                                Откуда вы узнали о школе?
+                                <span class="text-[#505055] normal-case tracking-normal font-medium">— необязательно</span>
+                            </label>
+                            <select id="reported-source-{{ $landingId ?: 'form' }}" name="reported_source" x-model="hdyhau"
+                                    class="w-full px-5 py-4 rounded-xl border border-transparent bg-[#252529] text-white focus:bg-[#2C2C32] focus:border-[#3E3E45] focus:ring-0 transition text-base">
+                                <option value="">— выберите вариант —</option>
+                                @foreach(\App\Models\Lead::hdyhauOptions() as $key => $label)
+                                    <option value="{{ $key }}" @selected(old('reported_source') === $key)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div x-show="hdyhau === 'other'" x-cloak>
+                            <label for="reported-source-other-{{ $landingId ?: 'form' }}" class="block text-[10px] font-bold text-[#65656B] uppercase tracking-widest mb-2">
+                                Уточните — откуда именно
+                            </label>
+                            <input type="text" id="reported-source-other-{{ $landingId ?: 'form' }}" name="reported_source_other" x-model="hdyhauOther"
+                                   placeholder="Пара слов"
+                                   maxlength="255"
+                                   value="{{ old('reported_source_other') }}"
+                                   class="w-full px-5 py-4 rounded-xl border border-transparent bg-[#252529] text-white placeholder-[#505055] focus:bg-[#2C2C32] focus:border-[#3E3E45] focus:ring-0 transition text-base">
+                        </div>
+
                         {{-- Чекбоксы --}}
                         <div class="space-y-3 pt-2">
                             {{-- Чекбокс 1: Обязательный (Персональные данные) --}}
                             <label class="flex items-start gap-3 text-left p-3 sm:p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                                 <div class="flex items-center h-5 mt-0.5 shrink-0">
-                                    <input type="checkbox" x-model="agreedForm" class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
+                                    <input type="checkbox" name="pd_consent" value="1" required x-model="agreedForm" class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
                                 </div>
                                 <div class="text-xs sm:text-sm text-gray-600 leading-relaxed select-none group-hover:text-gray-900 transition">
                                     {{ $data['pd_text'] ?? 'Чтобы попасть в лист ожидания, я даю' }} <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие</span> на обработку моих персональных данных в соответствии с <span @click.prevent.stop="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>

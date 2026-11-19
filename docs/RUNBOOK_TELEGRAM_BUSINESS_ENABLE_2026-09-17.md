@@ -27,11 +27,19 @@ TELEGRAM_BUSINESS_BOT_TOKEN=<токен из BotFather>
 TELEGRAM_BUSINESS_WEBHOOK_SECRET=<случайная строка, ≥24 символа>
 TELEGRAM_BUSINESS_BOT_USERNAME=@<username>
 TELEGRAM_BUSINESS_ACCOUNT_NAME=telegram-business
+
+# Опционально (e79566aa): переиспользовать студенческого бота вместо выделенного:
+# TELEGRAM_BUSINESS_SHARED_STUDENT_WEBHOOK=true
 ```
 
 `TELEGRAM_BUSINESS_ACCOUNT_NAME` — имя аккаунта в support-таблицах. Оно
 намеренно **отдельное** от `support`: Business-ответы не должны смешиваться с
 личкой userbot-аккаунта в аналитике и в дренаже.
+
+При `TELEGRAM_BUSINESS_SHARED_STUDENT_WEBHOOK=true` команда
+`php artisan telegram-business:set-webhook` регистрирует общий студенческий
+вебхук `/api/telegram/webhook` (с добавленными student-типами обновлений) —
+выделенный BotFather-бот в этом режиме не нужен.
 
 Опционально (локальная модель для формулировки ответа — приватность и ноль
 внешних вызовов):

@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\LandingPage;
 use App\Models\Lead;
 use App\Models\User;
+use App\Rules\HouseEmail;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\LeadNotifier;
 use App\Services\Leads\LeadFlashBuilder;
 use App\Services\Messaging\SocialChannelParser;
+use App\Support\Consent\ConsentRules;
 use App\Support\FormulaGuard;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -31,7 +34,7 @@ class LeadController extends Controller
             // (обязательность на ней держит HTML required).
             'name' => 'nullable|string|max:255',
             'contact' => 'required|string',
-            'email' => 'nullable|email',
+            'email' => ['nullable', 'string', 'max:255', new HouseEmail],
             'social' => 'nullable|string|max:255',
             'landing_page_id' => 'nullable|integer',
             'form_name' => 'nullable|string',
@@ -42,16 +45,35 @@ class LeadController extends Controller
             'utm_term' => 'nullable|string',
             'click_id' => 'nullable|string',
             'referrer' => 'nullable|string',
+            // H6531 HDYHAU: необязательный самоотчёт «откуда узнали» — только
+            // канонические ключи; свободный текст едёт отдельным полем ветки
+            // «Другое». Отсутствие поля валидно (старые формы его не шлют).
+            'reported_source' => 'nullable|string|in:'.implode(',', array_keys(Lead::hdyhauOptions())),
+            'reported_source_other' => 'nullable|string|max:255',
             'is_promo_agreed' => 'nullable',
+            'pd_consent' => ConsentRules::pd(),
             'source_article_id' => 'nullable|integer',
             'source_article_slug' => 'nullable|string|max:255',
-        ]);
+        ], ConsentRules::messages());
 
         // Берём только провалидированные поля — отсекаем mass-assignment мусор.
         $data = $validated;
+        unset($data['pd_consent']);
         $data['is_promo_agreed'] = $request->has('is_promo_agreed');
         $data['ip_address'] = $request->ip();
         $data['user_agent'] = $request->userAgent();
+
+        // H6531 HDYHAU: ключ канонического варианта остаётся как есть (стабилен
+        // для агрегатов); ветка «Другое» сохраняет слова заявителя дословно —
+        // зеркало reported_source журнала лида, UTM не выдумываем. Пустой выбор
+        // => null: заявка без ответа валидна.
+        $reportedSource = trim((string) ($validated['reported_source'] ?? ''));
+        if ($reportedSource === 'other') {
+            $other = trim((string) ($validated['reported_source_other'] ?? ''));
+            $reportedSource = $other !== '' ? mb_substr($other, 0, 255) : '';
+        }
+        $data['reported_source'] = $reportedSource !== '' ? $reportedSource : null;
+        unset($data['reported_source_other']);
 
         // Упрощённая форма шлёт один контакт. Если введён email — дублируем его в
         // поле email (для дедупа и писем); телефон/ник остаётся только в contact.
@@ -103,7 +125,11 @@ class LeadController extends Controller
                 ->first();
         }
 
+        $consentSource = 'lead:'.($validated['form_name'] ?? 'form');
+
         if ($existing) {
+            app(ConsentRecorder::class)->fromForm($request, $consentSource, null, $data['email'] ?? null, $existing->id, 'is_promo_agreed');
+
             // Подписка на статусы (H3339): заявившийся раньше выдачи токена
             // всё равно должен получить кнопки — досыпаем binding сейчас.
             if ($landing && $landing->hasStatusBlock() && ! $existing->magnet_token) {
@@ -116,6 +142,7 @@ class LeadController extends Controller
         }
 
         $lead = Lead::create($data);
+        app(ConsentRecorder::class)->fromForm($request, $consentSource, null, $lead->email, $lead->id, 'is_promo_agreed');
 
         // Lead-magnet: если у лендинга включён магнит — привязываем токен и канал.
         // H3339: тот же generic-binding (поля лида magnet_*) служит и подпиской
@@ -153,7 +180,8 @@ class LeadController extends Controller
         $validated = $request->validate([
             'landing_page_id' => ['required', 'integer'],
             'is_promo_agreed' => ['nullable'],
-        ]);
+            'pd_consent' => ConsentRules::pd(),
+        ], ConsentRules::messages());
 
         $user = $request->user();
 
@@ -210,6 +238,7 @@ class LeadController extends Controller
             'user_agent' => $request->userAgent(),
             'user_id' => $user->id,
         ]);
+        app(ConsentRecorder::class)->fromForm($request, 'lead:one-click', $user, $email, $lead->id, 'is_promo_agreed');
 
         // H3339: binding-токен (кнопки «Подключить уведомления») — каждой
         // заявке лендинга с status_block, включая учеников кабинета.

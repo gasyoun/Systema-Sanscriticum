@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Mail\Concerns\Unsubscribable;
 use App\Models\Announcement;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
@@ -15,6 +16,7 @@ use Illuminate\Queue\SerializesModels;
 class AnnouncementMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+    use Unsubscribable;
 
     public $announcement;
 

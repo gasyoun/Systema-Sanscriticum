@@ -8,12 +8,14 @@ use App\Enums\ExpenseCategory;
 use App\Models\Expense;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
+use App\Models\Teacher;
 use App\Models\TeacherPayout;
 use App\Models\User;
 use App\Services\DebtorsReport;
 use App\Services\RevenueScheduleService;
 use App\Services\TeacherSalaryService;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -49,6 +51,9 @@ class FinanceCockpitReport
 
     /** 10 праны = 1 ₽ (config('prana.rate')). */
     private const PRANA_RATE = 10;
+
+    /** as-of кэш начислений earnedThrough(): идентификатор+дата → сумма. */
+    private array $earnedThroughCache = [];
 
     /**
      * Границы месяца 'YYYY-MM' → [начало, конец].
@@ -337,5 +342,106 @@ class FinanceCockpitReport
             'days', 'expectedInflow', 'expectedCount',
             'overdue', 'overdueCount', 'teacherPayable', 'gap',
         );
+    }
+
+    /**
+     * Обязательства на дату (as-of): back-computation «к выплате» преподавателям
+     * и непогашенных авансов по датируемым каноническим источникам. Баланс
+     * канонического ядра точечный (на сейчас, см. balance()), а пос cycle-разрез
+     * triple-report (H6705, H5554 gap [1]) требует состояние на конец цикла.
+     *
+     * Точность честно ограничена источниками:
+     *  - начисление признаётся помесячно (recognition month), поэтому as-of
+     *    якорится к концу цикла: месяц as-of входит целиком, середина месяца
+     *    посчитана быть не может;
+     *  - у частично зачтённых авансов нет датированного леджера зачётов —
+     *    полный зачёт берётся по дате settled_at, частичный — по текущему
+     *    прогрессу settled_amount (зафиксирован в advance_settlement_basis).
+     *
+     * Остаток при as-of = now воспроизводит balance(): та же семантика
+     * max(0, ·) по преподавателю, авансы не уменьшают «к выплате», пока не
+     * зачтены. Остальные строки баланса (долг учеников, депозиты, прана,
+     * реферальный кредит) не воспроизводимы на дату — их состояние в каноне
+     * только текущее, поэтому они остаются в точечном снимке.
+     *
+     * @return array{teacherPayable:float, advances:float,
+     *     accrual_basis:string, advance_settlement_basis:string}
+     */
+    public function obligationsAsOf(Carbon $asOf): array
+    {
+        $asOf = $asOf->copy()->endOfDay();
+        $salary = app(TeacherSalaryService::class);
+        $epoch = Carbon::parse('2000-01-01')->startOfDay();
+
+        // Авансы, выданные на дату: полный зачёт — по дате settled_at (она
+        // авторитетна: если зачёт завершится в будущем, на as-of до него
+        // зачтённого нет); без settled_at (зачёт всё ещё открыт) — по текущему
+        // прогрессу settled_amount, датированного леджера зачётов нет.
+        $settledByTeacher = [];
+        $advances = 0.0;
+        foreach ($this->advancesIssuedThrough($asOf) as $advance) {
+            $amount = (float) $advance->amount;
+            $settled = match (true) {
+                $advance->settled_at !== null && $advance->settled_at->lte($asOf) => $amount,
+                $advance->settled_at !== null => 0.0,
+                default => min((float) ($advance->settled_amount ?? 0), $amount),
+            };
+            $settledByTeacher[$advance->teacher_id] = ($settledByTeacher[$advance->teacher_id] ?? 0.0) + $settled;
+            $advances += max(0.0, $amount - $settled);
+        }
+
+        // Регулярные выплаты на дату — по фактической дате выплаты (paid_at).
+        $paidRegular = TeacherPayout::query()
+            ->where('type', TeacherPayout::TYPE_REGULAR)
+            ->whereNotNull('paid_at')
+            ->where('paid_at', '<=', $asOf)
+            ->selectRaw('teacher_id, SUM(amount) AS total')
+            ->groupBy('teacher_id')
+            ->pluck('total', 'teacher_id');
+
+        // «К выплате» = начислено (все месяцы признания до конца месяца as-of)
+        // − выплачено/зачтено на дату. Переплата не уменьшает обязательства.
+        $teacherPayable = 0.0;
+        foreach (Teacher::query()->get(['id']) as $teacher) {
+            $earnedThrough = $this->earnedThrough($salary, $teacher->id, $epoch, $asOf);
+            $paidThrough = (float) ($paidRegular[$teacher->id] ?? 0)
+                + ($settledByTeacher[$teacher->id] ?? 0.0);
+            $teacherPayable += max(0.0, $earnedThrough - $paidThrough);
+        }
+
+        return [
+            'teacherPayable' => $teacherPayable,
+            'advances' => $advances,
+            'accrual_basis' => 'recognition months through the as-of month, cycle-end anchor',
+            'advance_settlement_basis' => 'settled_at date when present (a future date means nothing settled by then), current settled_amount progress while settlement is open',
+        ];
+    }
+
+    /** @return Collection<int, TeacherPayout> */
+    private function advancesIssuedThrough(Carbon $asOf)
+    {
+        return TeacherPayout::query()
+            ->where('type', TeacherPayout::TYPE_ADVANCE)
+            ->whereNotNull('paid_at')
+            ->where('paid_at', '<=', $asOf)
+            ->get(['teacher_id', 'amount', 'settled_amount', 'settled_at']);
+    }
+
+    /**
+     * Начислено преподавателю за всё время до конца месяца as-of. Окно
+     * [epoch; asOf]: windowSum режет по месяцам признания, месяц as-of входит
+     * целиком (пос cycle-якорь — конец месяца). Считается на идентификаторе,
+     * чтобы не тащить модель целиком в цикл отчёта.
+     */
+    private function earnedThrough(TeacherSalaryService $salary, int $teacherId, Carbon $epoch, Carbon $asOf): float
+    {
+        $key = $teacherId.'|'.$asOf->toDateString();
+        if (isset($this->earnedThroughCache[$key])) {
+            return $this->earnedThroughCache[$key];
+        }
+
+        $teacher = Teacher::query()->findOrFail($teacherId);
+
+        return $this->earnedThroughCache[$key] = (float) $salary->totalForTeacher($teacher, $epoch, $asOf);
     }
 }

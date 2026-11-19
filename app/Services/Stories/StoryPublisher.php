@@ -6,6 +6,7 @@ namespace App\Services\Stories;
 
 use App\Models\TelegramSupportAccount;
 use App\Services\Telegram\MadelineClientFactory;
+use App\Support\MediaAreaMath;
 use Illuminate\Support\Facades\Process;
 use RuntimeException;
 
@@ -45,14 +46,18 @@ class StoryPublisher
     private const PERIOD_24H = 86400;
 
     /**
-     * Легаси mediaAreaUrl-прямоугольник (#2643, ИЗМЕНЕНИЮ НЕ ПОДЛЕЖИТ —
-     * прод-поведение старой очереди): x=50, y=55, w=78, h=14, radius=7.
-     * H5049: anons-публикации вместо него передают ИЗМЕРЕННЫЙ прямоугольник
-     * отрисованной плашки ($mediaArea) — клик-зона ложится ровно на видимую
-     * область; старая полоса (stories:publish-story) ведёт себя как раньше.
+     * Легаси mediaAreaUrl-прямоугольник — прод-поведение старой очереди.
+     * H6678: layout-прямоугольник #2643 (x=50, y=55 — ВЕРХНЯЯ КРОМКА,
+     * w=78, h=14, radius=7, семантика ОТРИСОВКИ) в center-семантике
+     * mediaAreaCoordinates Telegram означает y-центр = 55 + 14/2 = 62.
+     * Прежняя отсылка y=55 как центра клала клик-зону на пол-плашки выше
+     * отрисованной (живой тап-тест 13-10-2026). Значение теперь
+     * единственно выводится в MediaAreaMath::legacyCenterArea().
+     * H5049: anons-публикации передают ИЗМЕРЕННЫЙ прямоугольник отрисованной
+     * плашки ($mediaArea) — клик-зона ложится ровно на видимую область;
+     * старая полоса (stories:publish-story без per-story override) ведёт
+     * себя как легаси.
      */
-    private const LEGACY_MEDIA_AREA = ['x' => 50.0, 'y' => 55.0, 'w' => 78.0, 'h' => 14.0, 'rotation' => 0.0, 'radius' => 7.0];
-
     public function __construct(private readonly MadelineClientFactory $factory) {}
 
     /** Подпроцессная полоса включена (реальный хост; в тестах выключена). */
@@ -135,10 +140,15 @@ class StoryPublisher
     /**
      * Удалить свою сториз по id. Имя метода — deleteStories (множественное):
      * stories.deleteStory в схеме MP v8 НЕТ.
+     *
+     * $client (H6678): уже открытый клиент — изолированный воркер передаёт
+     * СВОЙ прогретый инстанс (см. scripts/stories_lane_worker.php), чтобы
+     * в одном процессе не жило два клиента одной сессии. Прямые вызовы
+     * (тесты) оставляют null — клиент открывается здесь.
      */
-    public function deleteStoryDirect(int $storyId, ?string $account = null): void
+    public function deleteStoryDirect(int $storyId, ?string $account = null, ?object $client = null): void
     {
-        $this->client($account)->stories->deleteStories([
+        ($client ?? $this->client($account))->stories->deleteStories([
             'peer' => 'me',
             'id' => [$storyId],
         ]);
@@ -184,7 +194,7 @@ class StoryPublisher
         ];
 
         if ($link !== null && filter_var($link, FILTER_VALIDATE_URL) !== false) {
-            $area = $mediaArea ?? self::LEGACY_MEDIA_AREA;
+            $area = $mediaArea ?? MediaAreaMath::legacyCenterArea();
             $params['media_areas'] = [[
                 '_' => 'mediaAreaUrl',
                 'coordinates' => [

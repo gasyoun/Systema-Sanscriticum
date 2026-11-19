@@ -36,8 +36,8 @@ final class DrainTelegramBusinessReplies extends Command
         $stats = $drainer->drain();
 
         $this->table(
-            ['attempted', 'delivered', 'failed', 'skipped'],
-            [[$stats['attempted'], $stats['delivered'], $stats['failed'], $stats['skipped']]],
+            ['attempted', 'delivered', 'failed', 'skipped', 'window_closed'],
+            [[$stats['attempted'], $stats['delivered'], $stats['failed'], $stats['skipped'], $stats['window_closed']]],
         );
 
         return self::SUCCESS;

@@ -46,6 +46,10 @@
                 <p class="text-sm text-red-400">{{ session('error') }}</p>
             @endif
 
+            {{-- 152-ФЗ: путь оплаты (донат) — обязательность по флагу money-контура.
+                 Вверху формы: быстрые кнопки сумм ниже тоже её отправляют. --}}
+            <x-consent.pd theme="dark" class="text-sm" :required="(bool) config('features.checkout_pd_consent_enforce')" />
+
             {{-- H4400: три ратифицированных уровня меценатства (MG 08-09-2026). --}}
             @if(!empty(config('institute.mecenaty_skus')))
                 <div>

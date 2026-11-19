@@ -10,6 +10,7 @@ use App\Models\Lead;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\AttributionService;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\Crm\TrialBookingService;
 use App\Services\Payments\TochkaPaymentService;
 use Illuminate\Http\Client\ConnectionException;
@@ -151,6 +152,7 @@ final class TrialController extends Controller
             // Новый аккаунт = opt-in по той же галочке согласия на рассылку (152-ФЗ).
             'wants_messenger_announcements' => $request->boolean('wants_announcements'),
         ]);
+        app(ConsentRecorder::class)->fromForm($request, 'trial', $user, null, null, 'wants_announcements');
 
         $attribution = app(AttributionService::class);
         $attribution->applyToNewUser($user);

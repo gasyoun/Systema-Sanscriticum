@@ -23,7 +23,7 @@
         $priceMuted  = $isDark ? 'text-gray-400' : 'text-[#6B6258]';
         $linkColor   = $isDark ? 'text-brand' : 'text-brand';
         $hoverShadow = $isDark ? 'group-hover:shadow-[0_0_25px_rgba(232,92,36,0.15)]' : 'group-hover:shadow-lg';
-        $allUrl      = route('shop.index') . '?format=recorded';
+        $allUrl      = route('shop.index') . '/format/recorded';
         $perPage     = 6;
         $chunks      = $courses->chunk($perPage)->values();
         $pageCount   = $chunks->count();

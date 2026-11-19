@@ -15,6 +15,8 @@ _Parser residual (same day): DE P2P email sample retune after H2215 ship._
 [PR #2014](https://github.com/gasyoun/Systema-Sanscriticum/pull/2014)).
 **Канон хэндла — gasuns, prod `PAYPAL_ME_LINK` переведен на него**
 (ox-alpha, 23-08-2026; рулинг MG в чате).
+**Штатный путь «оплата из-за рубежа» с владельцем и SLA (кейс Морозовой):**
+[RUNBOOK_ABROAD_PAY_PAYPAL_CLAIM_H6646_13-10-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_ABROAD_PAY_PAYPAL_CLAIM_H6646_13-10-2026.md).
 
 ## ✅ Prod status (23-08-2026)
 

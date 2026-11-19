@@ -130,16 +130,32 @@ class MessageTemplate extends Model
     /**
      * Рендер для ответов поддержки (бот лички, хелпдеск): курс, блок и
      * {pay_link} берутся из долга студента, номер блока — из его сообщения
-     * ({@see SupportPayLinkResolver}). Флаг OFF или долг не найден — ровно
-     * {@see render()} без курса, как раньше.
+     * ({@see SupportPayLinkResolver}). Флаг OFF — ровно {@see render()} без
+     * курса, как раньше.
+     *
+     * Флаг ON, но курс опознать не удалось: «Оплатить курс «» … /login»
+     * студенту не уходит (инцидент 02-10-2026 — два таких автоответа в одном
+     * чате). Пустые кавычки схлопываются вместе с ведущим пробелом, а
+     * {pay_link} ведёт в кабинет ({@see SupportPayLinkResolver::cabinetPaymentsUrl()}).
      */
     public function renderForSupport(User $user, ?string $studentText = null): string
     {
         $resolver = app(SupportPayLinkResolver::class);
-        $link = $resolver->isEnabled() ? $resolver->resolve($user, $studentText) : null;
+        $resolverEnabled = $resolver->isEnabled();
+        $link = $resolverEnabled ? $resolver->resolve($user, $studentText) : null;
 
         if ($link === null) {
-            return $this->render($user);
+            if (! $resolverEnabled) {
+                return $this->render($user);
+            }
+
+            return str_replace(' «»', '', MessagePlaceholders::render(
+                (string) $this->body,
+                array_merge(
+                    MessagePlaceholders::forUser($user),
+                    ['{pay_link}' => $resolver->cabinetPaymentsUrl()],
+                ),
+            ));
         }
 
         return MessagePlaceholders::render(

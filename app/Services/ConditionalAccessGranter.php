@@ -86,6 +86,13 @@ class ConditionalAccessGranter
             // grantAccess руками: добавит юзера в группы курса, чтобы он увидел
             // курс в дашборде. Идемпотентно — syncWithoutDetaching.
             $payments[0]->grantAccess();
+
+            // enrollInCourse тоже руками: этот путь создаёт платежи через
+            // withoutEvents — fireOnPaid не стреляет, и без явного вызова
+            // course_user у promise-гранта не появляется (инцидент 14577/14066:
+            // «оплачен, но course_user пуст»). Строка «Записался» — админское
+            // состояние/история, не ACL; идемпотентно — attach при отсутствии.
+            $payments[0]->enrollInCourse();
         });
 
         $this->notifyOpened($promise, $mode, $blockNumbers);

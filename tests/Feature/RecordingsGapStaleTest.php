@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\Course;
 use App\Models\Group;
+use App\Models\Lesson;
 use App\Models\Schedule;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Scheduling\Event;
@@ -20,8 +21,10 @@ use Tests\TestCase;
 
 /**
  * MG 24-08-2026: a midday lesson must not wait for the 08:00 next-morning
- * pass — today's slots older than stale_hours without a recording alert the
- * same day (hourly tick, deduped).
+ * pass — today's pipeline failures (no-recording) older than stale_hours
+ * alert the same day (hourly tick, per-slot deduped). С 17-11-2026 тик
+ * ловит только no-recording: no-lesson («не отметили занятие») не имеет
+ * SLA конвейера и накрывается утренним проходом.
  */
 class RecordingsGapStaleTest extends TestCase
 {
@@ -67,7 +70,14 @@ class RecordingsGapStaleTest extends TestCase
 
     public function test_stale_slot_today_is_flagged_same_day(): void
     {
-        $this->seedSlotStartedHoursAgo(6);
+        ['course' => $course] = $this->seedSlotStartedHoursAgo(6);
+        // 17-11-2026: дневной тик следит только за сбоем конвейера записи —
+        // урок есть, публикации нет (no-recording). no-lesson уходит
+        // утреннему 08:00 проходу (см. соседний тест).
+        Lesson::factory()->create([
+            'course_id' => $course->id,
+            'lesson_date' => CarbonImmutable::now('Europe/Moscow')->toDateString(),
+        ]);
         Http::fake(['https://api.telegram.org/*' => Http::response(['ok' => true], 200)]);
 
         $code = Artisan::call('recordings:gap-watch', ['--stale' => true]);
@@ -76,7 +86,24 @@ class RecordingsGapStaleTest extends TestCase
         // H3557: успешная отправка алерта = exit 0, а не FAILURE.
         $this->assertSame(0, $code);
         $this->assertStringContainsString('Курс тест', $out);
+        $this->assertStringContainsString('no-recording', $out);
         Http::assertSent(fn ($request) => str_contains($request->url(), 'api.telegram.org'));
+    }
+
+    /**
+     * 17-11-2026: у no-lesson слота нет SLA конвейера записи — «не отметили
+     * занятие» либо «занятия не было». Hourly-тик по нему молчит, накрывает
+     * утренний 08:00 проход (окно «вчера»), иначе каждый учебный день даёт
+     * серию дневных TG по неотмеченным данным.
+     */
+    public function test_stale_tick_leaves_no_lesson_slots_to_morning_pass(): void
+    {
+        $this->seedSlotStartedHoursAgo(6);
+        Http::fake(['https://api.telegram.org/*' => Http::response(['ok' => true], 200)]);
+
+        $this->assertSame(0, Artisan::call('recordings:gap-watch', ['--stale' => true]));
+        $this->assertStringContainsString('Сегодняшних слотов старше', Artisan::output());
+        Http::assertNothingSent();
     }
 
     public function test_default_morning_pass_ignores_today(): void
@@ -89,7 +116,11 @@ class RecordingsGapStaleTest extends TestCase
 
     public function test_hourly_tick_dedupes_within_the_day(): void
     {
-        $this->seedSlotStartedHoursAgo(6);
+        ['course' => $course] = $this->seedSlotStartedHoursAgo(6);
+        Lesson::factory()->create([
+            'course_id' => $course->id,
+            'lesson_date' => CarbonImmutable::now('Europe/Moscow')->toDateString(),
+        ]);
         Http::fake(['https://api.telegram.org/*' => Http::response(['ok' => true], 200)]);
 
         Artisan::call('recordings:gap-watch', ['--stale' => true]);

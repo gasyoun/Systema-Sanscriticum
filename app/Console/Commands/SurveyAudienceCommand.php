@@ -17,22 +17,22 @@ use Illuminate\Support\Facades\DB;
  */
 class SurveyAudienceCommand extends Command
 {
-    protected $signature = 'survey:audience {slug : churn-block или post3m}';
+    protected $signature = 'survey:audience {slug : churn-block, churn-2026-10 или post3m}';
 
-    protected $description = 'CSV-список получателей анкеты churn-block / post3m';
+    protected $description = 'CSV-список получателей анкеты churn-block / churn-2026-10 / post3m';
 
     public function handle(): int
     {
         $slug = (string) $this->argument('slug');
 
         $rows = match ($slug) {
-            'churn-block' => $this->churnBlock(),
+            'churn-block', 'churn-2026-10' => $this->churnBlock(),
             'post3m' => $this->postThreeMonths(),
             default => null,
         };
 
         if ($rows === null) {
-            $this->error('slug должен быть churn-block или post3m');
+            $this->error('slug должен быть churn-block, churn-2026-10 или post3m');
 
             return self::FAILURE;
         }

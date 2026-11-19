@@ -29,6 +29,12 @@ class CreateTeacher extends CreateRecord
         $password = $this->form->getRawState()['account_password'] ?? null;
 
         return DB::transaction(function () use ($data, $password) {
+            // Включили публичную страницу, но слаг не ввели — собираем из ФИО
+            // (после тумблера поле обычно уже заполнено; это фолбэк для сохранений мимо UI).
+            if (! empty($data['page_enabled']) && blank($data['page_slug'] ?? null) && filled($data['name'] ?? null)) {
+                $data['page_slug'] = Str::slug((string) $data['name']) ?: null;
+            }
+
             /** @var Teacher $teacher */
             $teacher = static::getModel()::create($data);
 

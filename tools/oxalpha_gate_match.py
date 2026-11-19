@@ -58,6 +58,11 @@ EXCLUDE_PATTERNS = [
     "*/tests/Fixtures/**",
     "tests/**/fixtures/**",
     ".ai_state.md",
+    # Data-only campaign-key table (H6096): pure /ga/ key -> destination + UTM
+    # mappings, no logic — attribution mints take the skip path instead of the
+    # 900s independent-verdict wait (live case up26, H6078). EXACT path on
+    # purpose: the rest of config/*.php stays executable.
+    "config/tracked_links.php",
 ]
 
 # --- Design section 3: sensitive money/security/production paths ------------

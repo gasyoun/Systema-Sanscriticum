@@ -11,6 +11,7 @@ use App\Models\Schedule;
 use App\Models\TelegramChatPost;
 use App\Services\TeacherVacation;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Track C (H164): напоминание о занятии в Telegram-чат группы через @zapisi_ORSbot,
@@ -61,11 +62,23 @@ class RemindZapisiClasses extends Command
 
         $schedules = Schedule::query()
             ->with(['group', 'course'])
-            ->whereNull('zapisi_reminded_at')
             ->whereNotNull('group_id')
             ->whereBetween('start', [now(), now()->addMinutes($lead)])
             ->orderBy('id')
-            ->get();
+            ->get()
+            // Дедуп по своей метке — только по СВЕЖЕЙ: метка, оставшаяся от прежней
+            // даты строки (инцидент 04-11-2026, гр.62), не должна глушить занятие.
+            ->reject(fn (Schedule $s): bool => $s->hasFreshReminderMark('zapisi_reminded_at'))
+            ->each(function (Schedule $s): void {
+                if ($s->hasStaleReminderMark('zapisi_reminded_at')) {
+                    Log::warning('zapisi:remind-classes: stale zapisi_reminded_at ignored', [
+                        'schedule_id' => $s->id,
+                        'start' => $s->start?->toDateTimeString(),
+                        'mark' => (string) $s->zapisi_reminded_at,
+                    ]);
+                }
+            })
+            ->values();
 
         $template = trim((string) ($settings?->zapisi_reminder_template ?? '')) !== ''
             ? (string) $settings->zapisi_reminder_template
@@ -96,7 +109,7 @@ class RemindZapisiClasses extends Command
             // Зеркальная дубль-гвардия (диагноз 26-08-2026): если автопостинг ссылки
             // (classes:post-group-link, T-15) уже постит ЛЮБУЮ строку слота —
             // не отправляем второй «Скоро занятие» в тот же чат.
-            if ($rows->contains(fn (Schedule $r): bool => $r->group_link_posted_at !== null)) {
+            if ($rows->contains(fn (Schedule $r): bool => $r->hasFreshReminderMark('group_link_posted_at'))) {
                 continue;
             }
 

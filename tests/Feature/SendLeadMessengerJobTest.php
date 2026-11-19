@@ -101,7 +101,8 @@ class SendLeadMessengerJobTest extends TestCase
         (new SendLeadMessenger($noSubject->id, 'Привет', ['email']))
             ->handle(app(DeliveryChannelManager::class));
 
-        $badEmail = $this->makeLead(['email' => 'не-адрес']);
+        // Пост-гвард (leads_email_valid, MG 04-10) «invalid address» = '' (пустая строка).
+        $badEmail = $this->makeLead(['email' => '']);
         (new SendLeadMessenger($badEmail->id, 'Привет', ['email'], null, 'Тема'))
             ->handle(app(DeliveryChannelManager::class));
 

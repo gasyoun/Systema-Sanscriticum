@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Listeners\Backup;
 
+use App\Support\Backup\OffsiteArchiveEncryptionGate;
 use App\Support\Backup\SplitGroupMath;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -130,6 +131,16 @@ class SplitUploadToYandex
             return;
         }
 
+        // H6306: префлайт шифрования ДО первой части — незашифрованный
+        // архив off-site не уезжает ВООБЩЕ (раньше части молча лились
+        // открытым zip). local-копия не страдает; свежесть off-site
+        // честно краснеет в guards, а не врёт зелёным.
+        if (! OffsiteArchiveEncryptionGate::passwordConfigured()) {
+            Log::error('split-upload: ОТКАЗ — '.OffsiteArchiveEncryptionGate::refusalReason());
+
+            return;
+        }
+
         try {
             $this->upload(
                 (string) config('backup.backup.name', ''),
@@ -161,6 +172,14 @@ class SplitUploadToYandex
 
         $name = (string) config('backup.backup.name', '');
         if ($name === '') {
+            return;
+        }
+
+        // H6306: докатка возит те же байты, что и основной прогон —
+        // без пароля она столь же запрещена, как и выгрузка целиком.
+        if (! OffsiteArchiveEncryptionGate::passwordConfigured()) {
+            Log::error('split-upload: докатка ОТКАЗАНА — '.OffsiteArchiveEncryptionGate::refusalReason());
+
             return;
         }
 
