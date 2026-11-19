@@ -38,7 +38,10 @@ label="first crossing" if not alerting else "repeat reminder"
 msg="[disk-watch %s] / on 193.232.229.91: %d%% used, %s free (threshold %d%%) — освободите место или решите retention (GTD @DECIDE)"%(label,used_pct,free_gb,THRESHOLD)
 body=urllib.parse.urlencode({"chat_id":chat,"text":msg}).encode()
 try:
-    urllib.request.urlopen(urllib.request.Request("https://api.telegram.org/bot%s/sendMessage"%tok,data=body),timeout=15)
+    # URL is a fixed https literal; the only dynamic part is the bot token from
+    # /etc/systema-backup/alert.env (server-side secret, not user input).
+    # Scoped SAST suppression per .github/workflows/semgrep.yml header (H8353).
+    urllib.request.urlopen(urllib.request.Request("https://api.telegram.org/bot%s/sendMessage"%tok,data=body),timeout=15) # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected
     print("TG sent direct (%s)"%label)
 except Exception as e:
     curl=["curl","-s","-m","20","-x","socks5h://127.0.0.1:1080","-d","chat_id="+str(chat),"--data-urlencode","text="+msg,"https://api.telegram.org/bot%s/sendMessage"%tok]
