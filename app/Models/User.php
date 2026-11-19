@@ -628,7 +628,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         // dashboard/showCourse/forUserGroups гейтят курс по этой связи — поэтому
         // «мягкий выход» из группы НЕ должен влиять на доступ к оплаченному.
         return $this->belongsToMany(Group::class)
-            ->withPivot(['left_at', 'left_reason'])
+            ->withPivot(['left_at', 'left_reason', 'b2b_self_pay'])
             ->withTimestamps();
     }
 
@@ -639,7 +639,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function activeGroups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class)
-            ->withPivot(['left_at', 'left_reason'])
+            ->withPivot(['left_at', 'left_reason', 'b2b_self_pay'])
             ->withTimestamps()
             ->wherePivotNull('left_at');
     }
@@ -648,7 +648,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function archivedGroups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class)
-            ->withPivot(['left_at', 'left_reason'])
+            ->withPivot(['left_at', 'left_reason', 'b2b_self_pay'])
             ->withTimestamps()
             ->wherePivotNotNull('left_at');
     }

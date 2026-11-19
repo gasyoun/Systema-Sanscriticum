@@ -94,7 +94,7 @@ case "$last_page" in ''|*[!0-9]*) last_page=0 ;; esac
 
 paged=0
 if [ $((NOW - last_page)) -ge "$PAGE_EVERY" ]; then
-  page_or_queue "P1" "ib-balance вотчер на боксе молчит: $reason. Карантин провайдера не снимается — задачи встанут молча. Проверь бокс/задачу «claude ib-balance sweep» (лог ~/.claude/state/ib_autoresume.log)."
+  page_or_queue "P1" "ib-balance: $reason — карантин провайдера не снимается, задачи встанут молча; подробности: brief/ib_balance_watch_latest.md (лог бокса: ~/.claude/state/ib_autoresume.log)"
   printf '%s' "$NOW" > "$PAGEF" 2>/dev/null || true
   paged=1
 fi

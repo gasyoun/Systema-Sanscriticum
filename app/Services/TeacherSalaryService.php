@@ -12,6 +12,7 @@ use App\Models\SalaryClosedPeriod;
 use App\Models\Tariff;
 use App\Models\Teacher;
 use App\Models\TeacherPayout;
+use App\Services\Payments\B2bGroupEntitlement;
 use App\Support\Money;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -680,8 +681,28 @@ class TeacherSalaryService
         }
 
         if ($groupId !== null) {
-            $query->whereIn('user_id', function ($q) use ($groupId) {
-                $q->select('user_id')->from('group_user')->where('group_id', $groupId);
+            // Обе ветки атрибуции — в одной скобке: OR на верхнем уровне обходил
+            // course_id / paid() / real() / amount, и b2b_group-платёж группы
+            // (в т.ч. «Ожидает оплаты», отменённый, другого курса) попадал в выручку.
+            $query->where(function ($scope) use ($groupId): void {
+                $scope->whereIn('user_id', function ($q) use ($groupId) {
+                    $q->select('user_id')->from('group_user')->where('group_id', $groupId);
+                });
+
+                // H8245: B2B-оплата «за группу целиком» — плательщик (юрлицо) не член
+                // group_user, атрибуция по payments.group_id. Только под флагом
+                // b2b_group_payment: OFF — прежний фильтр по составу группы. received_account
+                // уважает parity-флаг (H5532): при OFF нал лично преподавателю
+                // (teacher_personal) в блок-выручку НЕ входит — это личный заработок.
+                if (B2bGroupEntitlement::enabled()) {
+                    $scope->orWhere(fn ($q) => $q
+                        ->where('group_id', $groupId)
+                        ->where('tariff', Payment::TARIFF_B2B_GROUP)
+                        ->when(! config('features.teacher_direct_receipt_revenue_parity'), fn ($q2) => $q2->where(
+                            'received_account',
+                            Payment::RECEIVED_SCHOOL,
+                        )));
+                }
             });
         }
 
