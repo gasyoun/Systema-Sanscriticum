@@ -15,5 +15,6 @@ require __DIR__.'/web/03-student-cabinet.php';
 require __DIR__.'/web/04-technical-and-marketing.php';
 require __DIR__.'/web/05-payments-and-money.php';
 require __DIR__.'/web/06-editor-and-misc-public.php';
+require __DIR__.'/web/07-two-factor.php';
 
 Route::get('/{slug}', [PromoController::class, 'show'])->name('promo.show');

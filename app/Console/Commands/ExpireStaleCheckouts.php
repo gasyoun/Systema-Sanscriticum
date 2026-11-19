@@ -24,6 +24,8 @@ class ExpireStaleCheckouts extends Command
      *   simply hasn't been paid yet and carries no separate reservation to release.
      * - paypal / invoice: await manual reconciliation in the admin
      *   (Payment::MANUAL_CLAIM_PROVIDERS — PayPal claim + company invoice).
+     * - b2b_group: payment of a company for a whole group is entered by hand and
+     *   may legitimately wait for the money (access_while_pending) — never a checkout.
      * - conditional: zero-money "under promise" grants are always created directly
      *   as paid (see ConditionalAccessGranter) and should never appear pending, but
      *   excluded defensively.
@@ -31,7 +33,7 @@ class ExpireStaleCheckouts extends Command
     private function excludedFromReaping($query): void
     {
         $query
-            ->whereNotIn('tariff', ['deposit', 'trial'])
+            ->whereNotIn('tariff', ['deposit', 'trial', Payment::TARIFF_B2B_GROUP])
             ->where(function ($provider): void {
                 $provider->whereNull('provider')
                     ->orWhereNotIn('provider', Payment::MANUAL_CLAIM_PROVIDERS);
@@ -120,7 +122,7 @@ class ExpireStaleCheckouts extends Command
                 return false;
             }
 
-            if (in_array($payment->tariff, ['deposit', 'trial'], true)
+            if (in_array($payment->tariff, ['deposit', 'trial', Payment::TARIFF_B2B_GROUP], true)
                 || in_array($payment->provider, Payment::MANUAL_CLAIM_PROVIDERS, true)
                 || $payment->is_conditional
             ) {

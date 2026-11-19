@@ -16,6 +16,7 @@ use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\MilestoneCertificateIssuer;
+use App\Support\GreetingName;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
@@ -104,13 +105,26 @@ class MilestoneCertificateIssueTest extends TestCase
         $this->assertSame($milestone->id, $cert->certificate_milestone_id);
         $this->assertSame('О прохождении деванагари', $cert->course_title);
         $this->assertSame('gasuns', $cert->template);
-        $this->assertSame($student->name, $cert->student_name);
+        $this->assertSame(GreetingName::shortOf($student->name), $cert->student_name);
         $this->assertNotNull($cert->number);
         $this->assertNotNull($cert->notified_at);
 
         Queue::assertPushed(SendMessengerAlerts::class, fn ($job) => $job->user->is($student)
             && str_contains($job->text, 'О прохождении деванагари'));
         Mail::assertQueued(CertificateIssuedMail::class, fn ($mail) => $mail->certificate->is($cert));
+    }
+
+    /** @test */
+    public function snapshot_name_strips_patronymic_city_and_marks(): void
+    {
+        $this->enableAutoIssue();
+        $this->milestone();
+        $student = $this->student(['name' => 'Хара Галина Юрьевна, Москва']);
+        $this->pay($student, 'full');
+
+        $this->artisan('certificates:issue-milestones')->assertSuccessful();
+
+        $this->assertSame('Хара Галина', Certificate::where('user_id', $student->id)->first()->student_name);
     }
 
     /** @test */

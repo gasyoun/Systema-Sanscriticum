@@ -1,6 +1,6 @@
 # bi26 — бесплатное знакомство с санскритом, @samskrte
 
-_Created: 12-10-2026 · Planned: 13-10-2026_
+_Created: 12-10-2026 · Published: 14-10-2026_
 
 ## Решения 12-10-2026
 
@@ -38,10 +38,10 @@ _Created: 12-10-2026 · Planned: 13-10-2026_
 | Kind | неприменимо: самостоятельные материалы, запланированного занятия нет |
 | Creative ID | `BI26-C` ↔ `bi26_c` |
 | Text/version ID | `bi26-ors-c-v1` |
-| Placement | Telegram @samskrte, отдельный пост 13-10-2026 |
+| Placement | Telegram @samskrte, отдельный пост 14-10-2026 |
 | Account or channel | `ors`: `telegram_samskrte` / `owned_channel` |
-| Publication time and zone | запланировано на 13-10-2026, 11:00 МСК; фактическое время заполнить после публикации |
-| Post permalink | заполнить после публикации |
+| Publication time and zone | 14-10-2026, 11:02:53 МСК (публичный пост: 08:02:53 UTC) |
+| Post permalink | https://t.me/samskrte/651 |
 | VK poll/post IDs and permalinks | неприменимо |
 | Media master / published file | неприменимо: текстовый пост |
 | Orientation and dimensions | неприменимо |
@@ -51,11 +51,11 @@ _Created: 12-10-2026 · Planned: 13-10-2026_
 | Cost and currency | 0 ₽ |
 | Paid, free partner post, or owned placement | собственный канал |
 | Response owner | куратор: вопросы о доступе и продолжении после самостоятельного старта |
-| 24h views / clicks / inquiries | снять 14-10-2026; неизвестные источники отдельно |
-| 72h views / clicks / inquiries | снять 16-10-2026; неизвестные источники отдельно |
+| 24h views / clicks / inquiries | снять после 15-10-2026 11:02:53 МСК; пока не измерено |
+| 72h views / clicks / inquiries | снять после 17-10-2026 11:02:53 МСК; пока не измерено |
 | Suitable leads / payments / revenue | сопоставить с пилотным отчетом, не приписывать покупку одному клику без наблюдаемой связи |
 | Reported source for unattributed leads | `reported_source` отдельно от наблюдаемой UTM |
-| Findings and next action | после публикации проверить текст, активную ссылку, фактическое время и закрыть журнал |
+| Findings and next action | пост #651 публично проверен: текст и единственный активный `/ga/bi26-ors-c` совпадают с записью; production-журнал `anons:ops` #38 закрыт временем и permalink. Измерить 24/72 часа. |
 
 ## Премортем перед выпуском
 

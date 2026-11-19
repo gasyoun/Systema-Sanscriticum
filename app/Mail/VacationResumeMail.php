@@ -32,8 +32,14 @@ class VacationResumeMail extends Mailable implements ShouldQueue
         );
     }
 
+    /**
+     * Текст — уже HTML (тот же, что уходит в Telegram с parse_mode=HTML:
+     * <b>, <a href>, название группы экранировано в resumeText()). Повторное
+     * e() показывало теги буквами, а почтовик автоссылкой захватывал
+     * закрывающую кавычку href — ссылки календаря и ICS отдавали 404.
+     */
     public function content(): Content
     {
-        return new Content(htmlString: nl2br(e($this->resumeText)));
+        return new Content(htmlString: nl2br($this->resumeText));
     }
 }

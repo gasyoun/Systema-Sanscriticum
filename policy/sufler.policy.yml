@@ -1,12 +1,15 @@
-# Sufler autonomy policy — v1, ENFORCED (H5776)
+# Sufler autonomy policy — v2 (H6767), ENFORCED (H5776)
+# v1 → v2: добавлен ТОЛЬКО декларативный блок sampling (ниже). Семантика
+# enforcement'а v1 не изменилась ни в одном пункте: гейты, потолки, human_stays
+# и метрики читаются кодом как раньше (App\Services\Support\Sufler\*).
 # Каждый пункт ниже — проверяемый gate в коде, см. маппинг в комментариях.
 # Нарушение любого ceiling = авто-стоп с трейсом (dm_ceiling_stop),
 # нарушение любого gate = блокировка отправки с трейсом (dm_policy_blocked) —
 # не вмешательство человека в machinery, молчаливых остановок нет.
 
-version: 1
+version: 2
 pilot: sufler-autonomy-2026-09-29
-supersedes: v0 skeleton (H5560)
+supersedes: v1 (H5776); v0 skeleton (H5560)
 
 tool_allowlist:
   - catalog.read
@@ -62,6 +65,37 @@ metrics:
     citation_precision_n20_min: 0.95
     personal_data_in_corpus: 0
     auto_replies_in_money_disputes: 0
+
+# H6767: v2 — декларативный блок sampling. ТРИ метода сэмплинга, один кодовый
+# контракт: выбор всегда из заранее одобренного пула, никогда — свободная
+# генерация; провенанс пишется, тексты — нет.
+sampling:
+  # 1) QA-кадр слепой проверки отправленных ответов — ВЫНЕСЕН в H6732
+  #    (support-replies-review, unit 1 программы MG). Здесь только указатель:
+  #    этот документ семплинг QA не вводит и не дублирует.
+  qa_frame: see H6732 (support-replies-review) — pointer only, not re-minted here
+  # 2) Сэмплинг вариантов ответа (H6767, флаг features.support_reply_variant_sampling,
+  #    default OFF — включение отдельным решением после ревью пулов):
+  #    ack — пул services.telegram_support.auto_ack_variants, пустой пул =
+  #    fallback на единственный auto_ack_text; template — ВСЕ строки
+  #    MessageTemplate, привязанные к категории, равномерный выбор
+  #    (осознанное изменение: раньше «последний updated_at выигрывает»);
+  #    выбор — RNG в sendAuto() (App\Services\Support\ReplyVariantSampler),
+  #    инъекцируемый в тестах.
+  variant_sampling:
+    flag: support_reply_variant_sampling   # default OFF
+    ack_pool: services.telegram_support.auto_ack_variants
+    ack_fallback: services.telegram_support.auto_ack_text
+    template_pool: all MessageTemplate rows bound to the category (uniform pick)
+    provenance: dm_auto_sent meta {variant_id, variant_pool_size, variant_kind}
+    guards:
+      - pools are human-approved copy            # не LLM, не свободная генерация
+      - paraphrase never changes meaning         # смысл идентичен исходнику
+      - every pick is logged (variant meta)      # провенанс обязателен
+      - no PII in pools, meta or readouts        # только id/счётчики/агрегаты
+  # 3) Рандомизированный holdout пилота автономии — НЕ здесь: остаётся в
+  #    программе пилота (K6-gated); pointer only, не реализован в этом юните.
+  pilot_holdout: future — owned by the autonomy pilot programme (K6-gated)
 
 # Состояние пилота 03-10-2026 (H5776): machinery enforced и покрыта тестами,
 # RAG-нога за порогом faq:score-floor (support_dm_auto_reply_live_faq, OFF по

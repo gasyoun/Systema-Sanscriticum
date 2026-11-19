@@ -158,6 +158,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'unreliable_marked_at' => 'datetime',
         'discipline_improved_since' => 'date',
         'tz_override_until' => 'date',
+        // H6352-r5: второй фактор админ-ролей — секрет и резервные коды
+        // шифруются at-rest, метка подтверждения читается как datetime.
+        'two_factor_secret' => 'encrypted',
+        'two_factor_recovery_codes' => 'encrypted:array',
+        'two_factor_confirmed_at' => 'datetime',
     ];
 
     /**
@@ -514,6 +519,22 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     }
 
     /**
+     * H6352-r5: обязателен ли второму фактору этот пользователь — по роли;
+     * выключатель контура (config security.two_factor_enforced) проверяет
+     * middleware, не модель.
+     */
+    public function requiresTwoFactor(): bool
+    {
+        return in_array($this->role, Roles::twoFactorRequired(), true);
+    }
+
+    /** H6352-r5: 2FA реально включён (секрет подтверждён кодом). */
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->two_factor_confirmed_at !== null && filled($this->two_factor_secret);
+    }
+
+    /**
      * Синхронизируем legacy-флаг is_admin с ролью.
      * Старый код (Payment.php, TrackUserActivity и т.п.) читает is_admin,
      * и пока его не выпиливаем — держим в актуальном состоянии.
@@ -607,7 +628,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         // dashboard/showCourse/forUserGroups гейтят курс по этой связи — поэтому
         // «мягкий выход» из группы НЕ должен влиять на доступ к оплаченному.
         return $this->belongsToMany(Group::class)
-            ->withPivot(['left_at', 'left_reason'])
+            ->withPivot(['left_at', 'left_reason', 'b2b_self_pay'])
             ->withTimestamps();
     }
 
@@ -618,7 +639,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function activeGroups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class)
-            ->withPivot(['left_at', 'left_reason'])
+            ->withPivot(['left_at', 'left_reason', 'b2b_self_pay'])
             ->withTimestamps()
             ->wherePivotNull('left_at');
     }
@@ -627,7 +648,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function archivedGroups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class)
-            ->withPivot(['left_at', 'left_reason'])
+            ->withPivot(['left_at', 'left_reason', 'b2b_self_pay'])
             ->withTimestamps()
             ->wherePivotNotNull('left_at');
     }

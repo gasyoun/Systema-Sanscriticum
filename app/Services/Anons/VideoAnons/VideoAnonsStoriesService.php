@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Anons\VideoAnons;
 
+use App\Jobs\PublishVideoAnonsVkWallJob;
+use App\Jobs\UploadVideoAnonsShortJob;
 use App\Models\StoryPost;
 use App\Services\Access\TelegramAdminNotifier;
 use Carbon\CarbonImmutable;
@@ -25,14 +27,17 @@ use Throwable;
  *    сканом по автору, принимаются ключи младше 2 ч (старее — куратор
  *    протянул, авто-съедание чужого текста опаснее удобства).
  *
- * Заголовок MG = виза: строка StoryPost создаётся СРАЗУ approved
+ * Заголовок MG = виза. H6547: строка StoryPost создаётся СРАЗУ approved
  * (lane=persona, kind=video), публикацию делает существующий планировщик
  * stories:publish-story (ежечасно, под madeline-локом) — никаких отдельных
- * вызовов MadelineProto отсюда.
+ * вызовов MadelineProto отсюда. H6574: той же визой диспатчатся публичные
+ * поверхности — YouTube Shorts (UploadVideoAnonsShortJob) и VK-стена
+ * (PublishVideoAnonsVkWallJob) — каждый за своим флагом config/video-anons.php,
+ * VK вдобавок за механическим гейтом авторизованных групп (fail-closed).
+ * Нет визы (заголовка MG) — не уходит ничего.
  *
- * /ga/-ключ: один вечнозелёный vanons-tg-v1 (config/tracked_links.php),
- * издатель извлекает ссылку из подписи сам (trackedStoryLink). Погружение
- * в пер-видео креативы — только если MG попросит разбивку.
+ * /ga/-ключи: vanons-tg-v1 (сторис), vanons-yt-v1 (Shorts), vanons-vk-v1
+ * (VK) — config/tracked_links.php, один вечнозелёный ключ на сёрфейс.
  *
  * Возврат true = апдейт наш, вебхук отвечает ok и не прогоняет сообщение
  * через студенческие ветки.
@@ -44,7 +49,10 @@ class VideoAnonsStoriesService
 
     public function handleAdminReply(array $message): bool
     {
-        if (! config('video-anons.stories_enabled')) {
+        $storiesEnabled = (bool) config('video-anons.stories_enabled');
+        $ytEnabled = (bool) config('video-anons.yt_shorts_enabled');
+        $vkEnabled = (bool) config('video-anons.vk_wall_enabled');
+        if (! $storiesEnabled && ! $ytEnabled && ! $vkEnabled) {
             return false;
         }
 
@@ -97,43 +105,75 @@ class VideoAnonsStoriesService
             return true;
         }
 
-        $sourceKey = 'harvest:'.md5($mediaPath);
-        $existing = StoryPost::query()
-            ->where('source', StoryPost::SOURCE_HARVEST)
-            ->where('source_key', $sourceKey)
-            ->first();
-        if ($existing !== null) {
-            $this->reply($chatId, "ℹ️ Это видео уже в сторис-очереди: #{$existing->id} ({$existing->status}).");
+        if ($storiesEnabled) {
+            $sourceKey = 'harvest:'.md5($mediaPath);
+            $existing = StoryPost::query()
+                ->where('source', StoryPost::SOURCE_HARVEST)
+                ->where('source_key', $sourceKey)
+                ->first();
+            if ($existing !== null) {
+                $this->reply($chatId, "ℹ️ Это видео уже в сторис-очереди: #{$existing->id} ({$existing->status}).");
 
-            return true;
+                return true;
+            }
         }
 
-        $link = rtrim((string) config('app.url'), '/').'/ga/vanons-tg-v1';
-        $post = StoryPost::query()->create([
-            'kind' => StoryPost::KIND_VIDEO,
-            'lane' => StoryPost::LANE_PERSONA,
-            'payload' => $headline."\n\n".$link,
-            'media_path' => $mediaPath,
-            'source' => StoryPost::SOURCE_HARVEST,
-            'source_key' => $sourceKey,
-            'status' => StoryPost::STATUS_APPROVED,
-            'publish_at' => now(),
-            'journal' => now()->toDateTimeString().' source: video-anons (H6546/H6547), заголовок MG,'
-                .' курс '.$pending['course'].' — авто-approve, публикация stories:publish-story.',
-        ]);
+        $sourceChatId = (int) ($pending['source_chat_id'] ?? 0);
+        $sourceMessageId = (int) ($pending['source_message_id'] ?? 0);
+        $courseKey = (string) ($pending['course'] ?? '');
+
+        $replyLines = [];
+        if ($storiesEnabled) {
+            $link = rtrim((string) config('app.url'), '/').'/ga/vanons-tg-v1';
+            $post = StoryPost::query()->create([
+                'kind' => StoryPost::KIND_VIDEO,
+                'lane' => StoryPost::LANE_PERSONA,
+                'payload' => $headline."\n\n".$link,
+                'media_path' => $mediaPath,
+                'source' => StoryPost::SOURCE_HARVEST,
+                'source_key' => 'harvest:'.md5($mediaPath),
+                'status' => StoryPost::STATUS_APPROVED,
+                'publish_at' => now(),
+                'journal' => now()->toDateTimeString().' source: video-anons (H6546/H6547), заголовок MG,'
+                    .' курс '.$courseKey.' — авто-approve, публикация stories:publish-story.',
+            ]);
+
+            Log::info('VideoAnons stories: persona story queued from MG headline', [
+                'story_post_id' => $post->id,
+                'course' => $courseKey,
+                'media_path' => $mediaPath,
+                'resolved_by' => $replyTo !== 0 ? 'reply' : 'bare-headline-scan',
+            ]);
+            $replyLines[] = "✅ Сторис поставлена в очередь персоны: #{$post->id} (approved, kind=video).\n"
+                .'Заголовок: «'.$headline.'»'."\n"
+                .'Публикация — планировщиком stories:publish-story (тик ежечасно, ссылка '.$link.').';
+        } else {
+            $replyLines[] = '✅ Виза заголовка принята (сторис выключены).';
+        }
+
+        if ($ytEnabled) {
+            UploadVideoAnonsShortJob::dispatch($sourceChatId, $sourceMessageId, $courseKey, $mediaPath, $headline);
+            Log::info('VideoAnons shorts: upload job dispatched', [
+                'source_chat_id' => $sourceChatId,
+                'source_message_id' => $sourceMessageId,
+                'course' => $courseKey,
+            ]);
+            $replyLines[] = '▶️ Shorts: джоб загрузки в очереди YouTube (канал записей, описание с vanons-yt-v1).';
+        }
+
+        if ($vkEnabled) {
+            PublishVideoAnonsVkWallJob::dispatch($sourceChatId, $sourceMessageId, $courseKey, $mediaPath, $headline);
+            Log::info('VideoAnons vk: wall post job dispatched', [
+                'source_chat_id' => $sourceChatId,
+                'source_message_id' => $sourceMessageId,
+                'course' => $courseKey,
+            ]);
+            $replyLines[] = '🅥 VK: джоб поста в очереди (гейт авторизованных групп, vanons-vk-v1).';
+        }
 
         $this->releasePending($pendingKey);
 
-        Log::info('VideoAnons stories: persona story queued from MG headline', [
-            'story_post_id' => $post->id,
-            'course' => $pending['course'] ?? null,
-            'media_path' => $mediaPath,
-            'resolved_by' => $replyTo !== 0 ? 'reply' : 'bare-headline-scan',
-        ]);
-
-        $this->reply($chatId, "✅ Сторис поставлена в очередь персоны: #{$post->id} (approved, kind=video).\n"
-            .'Заголовок: «'.$headline.'»'."\n"
-            .'Публикация — планировщиком stories:publish-story (тик ежечасно, ссылка '.$link.').');
+        $this->reply($chatId, implode("\n", $replyLines));
 
         return true;
     }

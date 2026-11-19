@@ -6,14 +6,12 @@ namespace Tests\Feature\Support;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
-use Phar;
-use PharData;
 use Tests\TestCase;
 
 /**
- * H3445 — support:geo-update-maxmind: скачивание, распаковка tar.gz и
- * атомарная установка GeoLite2-City.mmdb. Сеть — Http::fake; архив —
- * настоящий, собирается PharData прямо в тесте.
+ * H3445/H6602 — support:geo-update-maxmind: скачивание DB-IP City Lite
+ * (.mmdb.gz, без регистрации), распаковка gzip и атомарная установка базы.
+ * Сеть — Http::fake; архив — настоящий gzip, собирается прямо в тесте.
  */
 class MaxmindUpdateCommandTest extends TestCase
 {
@@ -34,11 +32,7 @@ class MaxmindUpdateCommandTest extends TestCase
 
         $this->targetPath = $this->workDir.'/GeoLite2-City.mmdb';
 
-        config([
-            'support_geo.maxmind_account_id' => '111111',
-            'support_geo.maxmind_license_key' => 'test-license-key',
-            'support_geo.maxmind_path' => $this->targetPath,
-        ]);
+        config(['support_geo.maxmind_path' => $this->targetPath]);
     }
 
     protected function tearDown(): void
@@ -51,92 +45,94 @@ class MaxmindUpdateCommandTest extends TestCase
         parent::tearDown();
     }
 
-    /** Собирает настоящий GeoLite2-подобный tar.gz (вложенный каталог + mmdb). */
-    private function makeFixtureArchive(int $mmdbSize = 4096): string
+    /** URL месячного файла DB-IP City Lite, который запросит команда. */
+    private function monthUrl(string $month): string
     {
-        // Фикстура живёт в системном tmp: рабочая команда кладёт свои временные
-        // файлы рядом с target, и тест «нет мусора рядом» не должен их путать.
-        $base = tempnam(sys_get_temp_dir(), 'mmdbfix');
-        @unlink((string) $base);
-        $base .= '.fixture';
-        $tar = $base.'.tar';
+        return 'https://download.db-ip.com/free/dbip-city-lite-'.$month.'.mmdb.gz';
+    }
 
-        $phar = new PharData($tar);
-        $phar->addFromString('GeoLite2-City_20260824/GeoLite2-City.mmdb', str_repeat('M', $mmdbSize));
-        $phar->addFromString('GeoLite2-City_20260824/LICENSE-DATA.txt', "fixture\n");
-        $phar->compress(Phar::GZ);
-        unset($phar);
-        Phar::unlinkArchive($tar);
-
-        $gz = $base.'.tar.gz';
+    /** Настоящая .mmdb-подобная база в gzip: тело + маркер метаданных MaxMind DB. */
+    private function makeFixtureGz(int $mmdbSize = 4096): string
+    {
+        $mmdb = str_repeat('M', $mmdbSize)."\xAB\xCD\xEFMaxMind.com".'{"database_type":"DBIP.City.Lite"}';
+        $gz = $this->workDir.'/fixture-'.uniqid().'.mmdb.gz';
+        file_put_contents($gz, (string) gzencode($mmdb));
         register_shutdown_function(fn () => @unlink($gz));
 
         return $gz;
     }
 
-    public function test_fails_without_credentials_and_makes_no_request(): void
-    {
-        config(['support_geo.maxmind_account_id' => '', 'support_geo.maxmind_license_key' => '']);
-        Http::fake();
-
-        $this->artisan('support:geo-update-maxmind')->assertExitCode(1);
-
-        Http::assertNothingSent();
-        $this->assertFileDoesNotExist($this->targetPath);
-    }
-
     public function test_installs_database_atomically(): void
     {
-        $archive = $this->makeFixtureArchive();
-        Http::fake(['*' => Http::response((string) file_get_contents($archive), 200)]);
+        $gz = $this->makeFixtureGz();
+        Http::fake([$this->monthUrl(now()->format('Y-m')) => Http::response((string) file_get_contents($gz), 200)]);
 
         $this->artisan('support:geo-update-maxmind')->assertExitCode(0);
 
         $this->assertFileExists($this->targetPath);
-        $this->assertSame(str_repeat('M', 4096), (string) file_get_contents($this->targetPath));
+        $expected = gzdecode((string) file_get_contents($gz));
+        $this->assertSame($expected, (string) file_get_contents($this->targetPath));
 
         // Никакого мусора рядом (архив и staging не остаются на диске).
         $leftovers = array_diff(scandir($this->workDir) ?: [], ['.', '..', 'GeoLite2-City.mmdb']);
-        $this->assertSame([], array_values($leftovers));
+        $this->assertSame([], array_values(array_filter($leftovers, fn ($f) => ! str_starts_with((string) $f, 'fixture-'))));
+    }
+
+    public function test_falls_back_to_previous_month_when_current_missing(): void
+    {
+        $gz = $this->makeFixtureGz(2048);
+        Http::fake([
+            $this->monthUrl(now()->format('Y-m')) => Http::response('not found', 404),
+            $this->monthUrl(now()->subMonth()->format('Y-m')) => Http::response((string) file_get_contents($gz), 200),
+        ]);
+
+        $this->artisan('support:geo-update-maxmind')->assertExitCode(0);
+
+        $this->assertFileExists($this->targetPath);
+        $this->assertSame(gzdecode((string) file_get_contents($gz)), (string) file_get_contents($this->targetPath));
     }
 
     public function test_dry_run_leaves_working_file_untouched(): void
     {
         file_put_contents($this->targetPath, str_repeat('O', 4096));
 
-        $archive = $this->makeFixtureArchive(2048);
-        Http::fake(['*' => Http::response((string) file_get_contents($archive), 200)]);
+        $gz = $this->makeFixtureGz(2048);
+        Http::fake([$this->monthUrl(now()->format('Y-m')) => Http::response((string) file_get_contents($gz), 200)]);
 
         $this->artisan('support:geo-update-maxmind', ['--dry-run' => true])->assertExitCode(0);
 
         $this->assertSame(str_repeat('O', 4096), (string) file_get_contents($this->targetPath));
     }
 
-    public function test_archive_without_mmdb_entry_fails(): void
+    public function test_payload_without_mmdb_marker_fails(): void
     {
-        $base = tempnam(sys_get_temp_dir(), 'mmdbfix');
-        @unlink((string) $base);
-        $base .= '.fixture';
-        $tar = $base.'.tar';
-        $phar = new PharData($tar);
-        $phar->addFromString('README.txt', 'no database here');
-        $phar->compress(Phar::GZ);
-        unset($phar);
-        Phar::unlinkArchive($tar);
-        $archive = $base.'.tar.gz';
-        register_shutdown_function(fn () => @unlink($archive));
+        $gz = $this->workDir.'/fixture-bad-'.uniqid().'.mmdb.gz';
+        file_put_contents($gz, (string) gzencode(str_repeat('x', 4096)));
+        register_shutdown_function(fn () => @unlink($gz));
 
-        Http::fake(['*' => Http::response((string) file_get_contents($archive), 200)]);
+        // Оба месяца получают один и тот же битый payload — фолбэк не спасает.
+        Http::fake(['*' => Http::response((string) file_get_contents($gz), 200)]);
 
         $this->artisan('support:geo-update-maxmind')->assertExitCode(1);
         $this->assertFileDoesNotExist($this->targetPath);
     }
 
-    public function test_http_error_is_reported(): void
+    public function test_http_error_on_all_months_is_reported(): void
     {
-        Http::fake(['*' => Http::response('unauthorized', 401)]);
+        Http::fake(['*' => Http::response('server error', 500)]);
 
         $this->artisan('support:geo-update-maxmind')->assertExitCode(1);
+        $this->assertFileDoesNotExist($this->targetPath);
+    }
+
+    public function test_empty_target_path_fails_without_request(): void
+    {
+        config(['support_geo.maxmind_path' => '']);
+        Http::fake();
+
+        $this->artisan('support:geo-update-maxmind')->assertExitCode(1);
+
+        Http::assertNothingSent();
         $this->assertFileDoesNotExist($this->targetPath);
     }
 }

@@ -62,10 +62,21 @@ class SupportDmLlmReplyComposer
      * Сформулировать ответ студенту. null — LLM недоступен/отказался/не дал
      * текста; вызывающий обязан уйти в fallback (ack), ничего не отправляя.
      *
+     * H6918-2: $participantNames/$participantNicks — display name и username
+     * собеседника (Telegram-контакт, связанный студент). Ими засевается
+     * per-conversation словарь маскера, чтобы bare-фамилия и ник без @ не
+     * ушли в промпт сырыми.
+     *
+     * @param  list<string>  $participantNames
+     * @param  list<string>  $participantNicks
      * @return array{draft: string, model: ?string, usage: ?array{prompt_tokens: int, completion_tokens: int}, chunk_ids: list<string>}|null
      */
-    public function compose(string $questionText, KnowledgeContext $context): ?array
-    {
+    public function compose(
+        string $questionText,
+        KnowledgeContext $context,
+        array $participantNames = [],
+        array $participantNicks = [],
+    ): ?array {
         if (! $this->isEnabled()) {
             return null;
         }
@@ -75,7 +86,7 @@ class SupportDmLlmReplyComposer
             return null;
         }
 
-        [$promptText] = $this->maskedPromptText($questionText);
+        [$promptText] = $this->maskedPromptText($questionText, $participantNames, $participantNicks);
         if (trim($promptText) === '') {
             // Fail-closed: чистоту текста доказать нельзя (или текст пуст) —
             // без вопроса студента формулировать нечего, вызова LLM нет.
@@ -166,15 +177,27 @@ class SupportDmLlmReplyComposer
      * вопроса студента compose() возвращает null, полоса уходит в ack/шаблон.
      * Чистоту нельзя доказать → вызова LLM нет.
      *
+     * H6918-2: один вопрос = одна беседа; словарь имён/ников засевается
+     * участниками и чистится в начале, чтобы имя из прошлого чата не
+     * переехало в этот.
+     *
+     * @param  list<string>  $participantNames
+     * @param  list<string>  $participantNicks
      * @return array{0: string, 1: int} текст для промпта и число маскировок
      */
-    private function maskedPromptText(string $questionText): array
-    {
+    private function maskedPromptText(
+        string $questionText,
+        array $participantNames = [],
+        array $participantNicks = [],
+    ): array {
         if (trim($questionText) === '') {
             return ['', 0];
         }
 
         try {
+            $this->masker->newConversation();
+            $this->masker->seedConversation($participantNames, $participantNicks);
+
             return $this->masker->maskOrFail($questionText);
         } catch (\Throwable $e) {
             Log::warning('SupportDmLlmReplyComposer: pii-guard fail-closed, текст исключён из промпта', [

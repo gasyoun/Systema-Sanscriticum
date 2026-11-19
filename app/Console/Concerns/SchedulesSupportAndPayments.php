@@ -185,6 +185,20 @@ trait SchedulesSupportAndPayments
             ->onOneServer()
             ->name('support-business-drain');
 
+        // H5709: суточное доказательство живости вебхук-полосы Telegram
+        // Business — coverage v2 недельного отчёта требует строку охвата на
+        // каждый день окна для каждого включённого источника, а эта полоса по
+        // MTProto-скану не ходит. Проб getWebhookInfo в 00:05 MSK: к
+        // понедельничьему 09:00 отчёту все дни прошедшей недели уже закрыты.
+        // Полоса выключена → слот молчит (гейт флага и внутри команды).
+        $schedule->command('telegram-business:daily-evidence')
+            ->dailyAt('00:05')
+            ->timezone('Europe/Moscow')
+            ->when(fn () => (bool) config('features.telegram_business_bot'))
+            ->withoutOverlapping(5)
+            ->onOneServer()
+            ->name('telegram-business-daily-evidence');
+
     }
 
     /** MarketingSetting-timed payment/debt/certificate reminders. */
@@ -237,6 +251,17 @@ trait SchedulesSupportAndPayments
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('detect-missing-milestone-courses');
+
+        // H8250 — B2B-напоминания плательщику: после даты последнего урока
+        // покрытого b2b-блока — ровно одно напоминание оплатить следующий блок
+        // (без Telegram у плательщика — задача кураторам). Гейт
+        // (features.b2b_payer_reminders, дефолт OFF) и дедуп ровно-один на
+        // (плательщик, блок) — внутри команды.
+        $schedule->command('b2b:remind-payer')
+            ->dailyAt($paymentTime)
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('b2b-remind-payer');
 
     }
 }

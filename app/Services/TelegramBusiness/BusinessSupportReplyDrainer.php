@@ -33,6 +33,14 @@ final class BusinessSupportReplyDrainer
 {
     use TracksPendingDelivery;
 
+    /**
+     * Окно бизнес-полосы: Telegram не доставит сообщение пользователю через
+     * business connection, если тот давно не писал (прод, 14-10-2026: ответ на
+     * вопрос шестидневной давности трижды упал с этим кодом; автответы в тот же
+     * чат минутной давности уходят штатно). Навсегда — ретраи бессмысленны.
+     */
+    protected const WINDOW_CLOSED_ERROR = 'BUSINESS_PEER_USAGE_MISSING';
+
     public function __construct(
         private readonly TelegramBusinessSender $sender,
     ) {}
@@ -43,11 +51,11 @@ final class BusinessSupportReplyDrainer
     }
 
     /**
-     * @return array{attempted: int, delivered: int, failed: int, skipped: int}
+     * @return array{attempted: int, delivered: int, failed: int, skipped: int, window_closed: int}
      */
     public function drain(): array
     {
-        $stats = ['attempted' => 0, 'delivered' => 0, 'failed' => 0, 'skipped' => 0];
+        $stats = ['attempted' => 0, 'delivered' => 0, 'failed' => 0, 'skipped' => 0, 'window_closed' => 0];
 
         if (! $this->isEnabled()) {
             return $stats;
@@ -124,6 +132,13 @@ final class BusinessSupportReplyDrainer
                 continue;
             }
 
+            if ($result['status'] === 'error' && $result['telegram_error'] === self::WINDOW_CLOSED_ERROR) {
+                $this->markWindowClosed($message, $payload, $account, $maxAttempts);
+                $stats['window_closed']++;
+
+                continue;
+            }
+
             $stats['failed']++;
             $this->markAttemptFailed($message, $payload, new RuntimeException((string) $result['error']), $maxAttempts);
         }
@@ -140,6 +155,91 @@ final class BusinessSupportReplyDrainer
         $name = (string) config('services.telegram_business.account_name', 'telegram-business');
 
         return TelegramSupportAccount::query()->where('name', $name)->first();
+    }
+
+    /**
+     * Ответ, который бизнес-полоса не доставит НИКОГДА (см. WINDOW_CLOSED_ERROR).
+     * Пытки ретраями бессмысленны, «Доставить» у куратора — ложная надежда, а
+     * человек ответа так и не видит.
+     *
+     * Строка помечается window_closed с человеческой ошибкой, автопопытки
+     * останавливаются (pending_delivery остаётся true — после ответа студента
+     * куратор может дослать вручную), а если у бизнес-аккаунта есть фолбэк —
+     * аккаунт с ТЕМ ЖЕ файлом сессии — строка передаётся ему: ближайший заход
+     * `telegram-support:sync` доставит ответ по MTProto в тот же диалог, от
+     * имени той же персоны, без всякого окна.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function markWindowClosed(
+        TelegramSupportMessage $message,
+        array $payload,
+        TelegramSupportAccount $account,
+        int $maxAttempts,
+    ): void {
+        $fallbackId = $this->fallbackAccountId($account);
+
+        if ($fallbackId !== null) {
+            $payload['business_window_fallback'] = [
+                'from_account_id' => (int) $message->telegram_support_account_id,
+                'at' => now()->toIso8601String(),
+            ];
+        }
+
+        $payload['delivery_window_closed'] = true;
+        $payload['delivery_window_closed_at'] = now()->toIso8601String();
+        $payload['delivery_attempts'] = max((int) ($payload['delivery_attempts'] ?? 0), $maxAttempts);
+        $payload['delivery_failed_at'] = now()->toIso8601String();
+        $payload['delivery_error'] = $fallbackId !== null
+            ? 'Окно бизнес-полосы закрыто (студент давно не писал) — ответ передан юзербот-полосе: доставит от имени того же аккаунта в ближайший заход синка.'
+            : 'Окно бизнес-полосы закрыто: студент давно не писал, Telegram доставить не даст. Ответьте вручную в Telegram от имени аккаунта поддержки.';
+
+        $attributes = ['raw_payload' => $payload];
+
+        if ($fallbackId !== null) {
+            $attributes['telegram_support_account_id'] = $fallbackId;
+        }
+
+        $message->forceFill($attributes)->save();
+
+        Log::info('Окно бизнес-полосы закрыто — ответ снят с ретраев', [
+            'message_id' => $message->id,
+            'chat_id' => $message->telegram_chat_id,
+            'fallback_account_id' => $fallbackId,
+        ]);
+    }
+
+    /**
+     * Аккаунт-фолбэк для «закрытых окон». Условие жёсткое и сознательное: тот же
+     * ФАЙЛ сессии, что у бизнес-аккаунта — то есть та же персона Telegram и тот
+     * же диалог студента. Передать строку аккаунту с чужой сессией значило бы
+     * написать студенту от аккаунта, которого он не звал.
+     */
+    private function fallbackAccountId(TelegramSupportAccount $account): ?int
+    {
+        $name = trim((string) config('services.telegram_business.window_fallback_account', 'support'));
+
+        if ($name === '' || $name === $account->name) {
+            return null;
+        }
+
+        $fallback = TelegramSupportAccount::query()
+            ->where('name', $name)
+            ->where('is_enabled', true)
+            ->first();
+
+        if ($fallback === null) {
+            return null;
+        }
+
+        $fallbackSession = trim((string) $fallback->session_path);
+        $ownSession = trim((string) $account->session_path);
+
+        if ($fallbackSession === '' || $ownSession === '' || $fallbackSession !== $ownSession) {
+            return null;
+        }
+
+        return $fallback->id;
     }
 
     /**

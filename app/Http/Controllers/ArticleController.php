@@ -40,6 +40,7 @@ class ArticleController extends Controller
         }
 
         $categorySlug = null;
+        $categoryName = null;
         $search = null;
         $indexable = true;
 
@@ -49,7 +50,8 @@ class ArticleController extends Controller
 
             if (isset($parsed['rubrika'])) {
                 $categorySlug = $parsed['rubrika'];
-                abort_unless(ArticleCategory::where('slug', $categorySlug)->exists(), 404);
+                $categoryName = ArticleCategory::where('slug', $categorySlug)->value('name');
+                abort_if($categoryName === null, 404);
             }
 
             if (isset($parsed['poisk'])) {
@@ -101,7 +103,7 @@ class ArticleController extends Controller
         $totalCount = Article::published()->count();
 
         return view('articles.index', compact(
-            'articles', 'categories', 'totalCount', 'categorySlug', 'search', 'canonicalPath', 'indexable'
+            'articles', 'categories', 'totalCount', 'categorySlug', 'categoryName', 'search', 'canonicalPath', 'indexable'
         ));
     }
 

@@ -11,6 +11,7 @@ use App\Models\Lead;
 use App\Models\MarketingSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Redis;
 use Tests\TestCase;
 
 class TelegramMagnetWebhookTest extends TestCase
@@ -57,6 +58,44 @@ class TelegramMagnetWebhookTest extends TestCase
             ->assertJson(['ok' => true]);
 
         Bus::assertDispatched(ProcessTelegramMagnetUpdate::class);
+    }
+
+    /** @test */
+    public function redelivery_with_same_update_id_dispatches_only_one_job(): void
+    {
+        Bus::fake();
+        // NX-клейм: первый апдейт проходит, ределивери того же update_id — нет.
+        Redis::shouldReceive('set')->twice()->andReturn(true, false);
+
+        $payload = [
+            'update_id' => 913001,
+            'callback_query' => [
+                'id' => 'cb-policy',
+                'data' => 'policy_accepted',
+                'from' => ['id' => 999],
+                'message' => ['message_id' => 7, 'chat' => ['id' => 999, 'type' => 'private']],
+            ],
+        ];
+        $headers = ['X-Telegram-Bot-Api-Secret-Token' => $this->secret];
+
+        $this->postJson('/api/webhooks/telegram-magnet', $payload, $headers)->assertOk();
+        $this->postJson('/api/webhooks/telegram-magnet', $payload, $headers)->assertOk();
+
+        // Без клейма здесь было бы две джобы → двойной форвард в n8n и двойное
+        // «✅ Вы приняли политику конфиденциальности» студенту (прод 13-11).
+        Bus::assertDispatched(ProcessTelegramMagnetUpdate::class, 1);
+    }
+
+    /** @test */
+    public function payload_without_update_id_is_not_lost(): void
+    {
+        Bus::fake();
+
+        $this->postJson('/api/webhooks/telegram-magnet', [
+            'message' => ['chat' => ['id' => 1], 'text' => '/start ABC'],
+        ], ['X-Telegram-Bot-Api-Secret-Token' => $this->secret])->assertOk();
+
+        Bus::assertDispatched(ProcessTelegramMagnetUpdate::class, 1);
     }
 
     /** @test */

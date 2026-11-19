@@ -164,6 +164,114 @@ class StoriesPublishDueTest extends TestCase
         $this->assertStringContainsString('полоса persona', (string) $photo->fresh()->journal);
     }
 
+    /** H6915: видео-строка канальной полосы уходит sendVideo магнит-бота,
+     * квитанция message_id + permalink попадают в журнал и модель. */
+    private function makeVideoPost(string $media, string $key = '2026-10-20-VID1.md'): StoryPost
+    {
+        return StoryPost::query()->create([
+            'kind' => StoryPost::KIND_VIDEO,
+            'payload' => 'Фрагмент занятия «Деванагари с нуля» — 1:14.',
+            'media_path' => $media,
+            'source' => StoryPost::SOURCE_QUEUE,
+            'source_key' => $key,
+            'status' => StoryPost::STATUS_APPROVED,
+            'publish_at' => now()->subMinute(),
+        ]);
+    }
+
+    /** @test */
+    public function publishes_due_video_post_via_sendvideo_with_receipt(): void
+    {
+        config(['features.telegram_story_publisher' => true]);
+
+        $media = sys_get_temp_dir().'/video-post-'.uniqid().'.mp4';
+        file_put_contents($media, str_repeat('V', 4096));
+
+        try {
+            $post = $this->makeVideoPost($media);
+
+            $this->artisan('stories:publish-due')->assertSuccessful();
+
+            $videoSends = collect(self::$sent)->filter(fn (Request $r): bool => str_contains($r->url(), '/sendVideo'));
+            self::assertSame(1, $videoSends->count(), 'getChat probe + one sendVideo');
+            self::assertTrue(str_contains($videoSends->first()->url(), 'botTESTMAGNETTOKEN/sendVideo'), 'magnet bot credential');
+
+            $fresh = $post->fresh();
+            $this->assertSame(StoryPost::STATUS_PUBLISHED, $fresh->status);
+            $this->assertSame('42', (string) $fresh->telegram_message_id);
+            $this->assertStringContainsString('video-published: message_id=42', (string) $fresh->journal);
+            $this->assertStringContainsString('https://t.me/rusamskrtam/42', (string) $fresh->journal, 'permalink in journal');
+        } finally {
+            @unlink($media);
+        }
+    }
+
+    /** @test */
+    public function rerunning_the_same_video_slot_does_not_duplicate(): void
+    {
+        config(['features.telegram_story_publisher' => true]);
+
+        $media = sys_get_temp_dir().'/video-post-'.uniqid().'.mp4';
+        file_put_contents($media, str_repeat('V', 4096));
+
+        try {
+            $post = $this->makeVideoPost($media);
+
+            $this->artisan('stories:publish-due')->assertSuccessful();
+            $this->artisan('stories:publish-due')->assertSuccessful();
+
+            $videoSends = collect(self::$sent)->filter(fn (Request $r): bool => str_contains($r->url(), '/sendVideo'));
+            self::assertSame(1, $videoSends->count(), 're-run creates zero new message_ids (published leaves approved+due scope)');
+            self::assertSame(1, StoryPost::query()->count(), 'no repeat copy without repeat_rule');
+        } finally {
+            @unlink($media);
+        }
+    }
+
+    /** @test */
+    public function video_above_50mb_is_refused_journaled_and_slot_stays_open(): void
+    {
+        config(['features.telegram_story_publisher' => true]);
+
+        $media = sys_get_temp_dir().'/video-post-'.uniqid().'.mp4';
+        $h = fopen($media, 'wb');
+        assert(is_resource($h));
+        ftruncate($h, 51 * 1024 * 1024); // sparse 51 МБ
+        fclose($h);
+
+        try {
+            $post = $this->makeVideoPost($media);
+
+            $this->artisan('stories:publish-due')->assertSuccessful();
+
+            $videoSends = collect(self::$sent)->filter(fn (Request $r): bool => str_contains($r->url(), '/sendVideo'));
+            self::assertSame(0, $videoSends->count(), 'oversize video is never uploaded');
+
+            $fresh = $post->fresh();
+            $this->assertSame(StoryPost::STATUS_APPROVED, $fresh->status, 'slot NOT closed on oversize refusal');
+            $this->assertNull($fresh->posted_at);
+            $this->assertStringContainsString('video-refused', (string) $fresh->journal);
+            $this->assertStringContainsString('50MB', (string) $fresh->journal);
+        } finally {
+            @unlink($media);
+        }
+    }
+
+    /** @test */
+    public function video_with_missing_media_file_is_refused_in_journal(): void
+    {
+        config(['features.telegram_story_publisher' => true]);
+
+        $post = $this->makeVideoPost('/nonexistent/fragment.mp4', '2026-10-20-VID2.md');
+
+        $this->artisan('stories:publish-due')->assertSuccessful();
+
+        $videoSends = collect(self::$sent)->filter(fn (Request $r): bool => str_contains($r->url(), '/sendVideo'));
+        self::assertSame(0, $videoSends->count());
+        $this->assertSame(StoryPost::STATUS_APPROVED, $post->fresh()->status);
+        $this->assertStringContainsString('media_path missing/unreadable', (string) $post->fresh()->journal);
+    }
+
     /** @test */
     public function persona_lane_text_rows_are_never_sent_to_the_channel(): void
     {

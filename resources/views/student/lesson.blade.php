@@ -22,6 +22,33 @@
      heartbeat (см. onVideoTick() выше). --}}
 @push('scripts')
     <script src="{{ asset('js/video-resume.js') }}?v={{ filemtime(public_path('js/video-resume.js')) }}" defer></script>
+    {{-- H6302 (L2, UX-аудит 2026): автосейв заметок с dirty-навигационным
+          guard-ом. Тот же эндпоинт student.lesson.note; без JS форма
+          деградирует к прежнему ручному POST-сабмиту. --}}
+    <script src="{{ asset('js/lesson-note-autosave.js') }}?v={{ filemtime(public_path('js/lesson-note-autosave.js')) }}" defer></script>
+    <script defer>
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                var textarea = document.getElementById('lesson-notes-textarea');
+                var form = document.getElementById('lesson-note-form');
+                if (!textarea || !form || !window.LessonNoteAutosave) {
+                    return; // деградация к нативному POST-сабмиту формы
+                }
+                var csrfEl = document.querySelector('meta[name="csrf-token"]');
+                var csrfInput = form.querySelector('input[name="_token"]');
+                window.LessonNoteAutosave.attach({
+                    textarea: textarea,
+                    form: form,
+                    statusEl: form.querySelector('[data-note-status]'),
+                    retryEl: form.querySelector('[data-note-retry]'),
+                    url: form.getAttribute('action'),
+                    csrf: csrfEl ? csrfEl.getAttribute('content') : (csrfInput ? csrfInput.value : ''),
+                });
+            } catch (e) {
+                // Любой сбой обвязки не должен ломать ручной сабмит формы.
+            }
+        });
+    </script>
 @endpush
 
 <style>
@@ -756,14 +783,27 @@
         <i class="far fa-edit mr-2 text-yellow-600"></i> Мои заметки
     </h3>
     
-    <form action="{{ route('student.lesson.note', [$course->slug, $lesson->id]) }}" method="POST" class="flex flex-col flex-1">
+    <form id="lesson-note-form"
+          action="{{ route('student.lesson.note', [$course->slug, $lesson->id]) }}"
+          method="POST"
+          class="flex flex-col flex-1"
+          data-testid="lesson-note-form">
         @csrf
-        <textarea name="notes" 
-                  rows="{{ $showTabs ? 8 : 14 }}" 
-                  class="w-full bg-white/50 border-transparent rounded-2xl p-4 focus:ring-2 focus:ring-yellow-400 focus:bg-white text-gray-800 transition resize-y font-medium text-sm placeholder-yellow-700/50 custom-scrollbar {{ $showTabs ? 'flex-1' : '' }}" 
+        <textarea name="notes" id="lesson-notes-textarea" data-testid="lesson-notes-textarea"
+                  rows="{{ $showTabs ? 8 : 14 }}"
+                  class="w-full bg-white/50 border-transparent rounded-2xl p-4 focus:ring-2 focus:ring-yellow-400 focus:bg-white text-gray-800 transition resize-y font-medium text-sm placeholder-yellow-700/50 custom-scrollbar {{ $showTabs ? 'flex-1' : '' }}"
                   placeholder="Важные мысли из урока, инсайты, вопросы к преподавателю...">{{ $currentNote ?? '' }}</textarea>
-        
-        <button type="submit" class="mt-4 w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 py-3.5 rounded-2xl font-extrabold text-sm transition-colors shadow-sm shrink-0">
+
+        {{-- H6302: строка статуса автосейва. Пустая без JS; живой скрипт
+              показывает «Сохранение…/Сохранено ✓/Не удалось сохранить». --}}
+        <div class="mt-2 flex items-center justify-between gap-3 min-h-[18px]" data-note-statusbar>
+            <p class="text-[11px] font-semibold truncate" data-note-status aria-live="polite"></p>
+            <button type="button"
+                    class="hidden text-[11px] font-bold text-yellow-800 underline underline-offset-2 hover:text-yellow-900 shrink-0"
+                    data-note-retry>Повторить</button>
+        </div>
+
+        <button type="submit" class="mt-3 w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 py-3.5 rounded-2xl font-extrabold text-sm transition-colors shadow-sm shrink-0">
             Сохранить изменения
         </button>
     </form>

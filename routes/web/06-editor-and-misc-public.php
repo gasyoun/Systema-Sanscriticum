@@ -5,15 +5,18 @@ use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\CertificateRegistryController;
 use App\Http\Controllers\CertificateVerificationController;
+use App\Http\Controllers\ContentCalendarShareController;
 use App\Http\Controllers\Editor\LectureDraftController;
 use App\Http\Controllers\GiftCertificateController;
 use App\Http\Controllers\JoinClassController;
 use App\Http\Controllers\LlmsTxtController;
+use App\Http\Controllers\MilestoneCertificatePreviewController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PublicChatController;
 use App\Http\Controllers\PublicPresenceController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SurveyPageController;
+use App\Http\Middleware\RequireTwoFactor;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
@@ -27,7 +30,11 @@ Route::middleware(['web', 'auth'])
         Route::get('asset/{path}', [LectureDraftController::class, 'asset'])
             ->where('path', '.*')
             ->name('asset');
+        // H7830: r7 intent — поверхности изменения данных остаются под гейтом,
+        // даже когда маршрут зарегистрирован вне стека панели. GET-чтения
+        // (preview/asset) остаются открытыми по р7 (рулинг MG 07-11-2026).
         Route::post('patch', [LectureDraftController::class, 'patch'])
+            ->middleware(RequireTwoFactor::class)
             ->name('patch');
     });
 
@@ -42,6 +49,13 @@ Route::get('/llms.txt', [LlmsTxtController::class, 'index'])->name('llms.txt');
 // ВАЖНО: до catch-all /{slug}, публичный без auth.
 Route::get('/verify/{number}', [CertificateVerificationController::class, 'show'])
     ->name('certificate.verify');
+
+// --- ЖИВОЙ ПРЕДПРОСМОТР ДОКУМЕНТА ВЕХИ (iframe в форме вех в курсе) ---
+// Рендерит certificates.default — тот же блейд, что dompdf печатает в PDF.
+// auth + гейт ADMIN/TEACHER внутри контроллера.
+Route::get('/certificates/milestone-preview', [MilestoneCertificatePreviewController::class, 'show'])
+    ->middleware('auth')
+    ->name('certificates.milestone-preview');
 
 // --- ПУБЛИЧНЫЙ РЕЕСТР ВЫДАННЫХ СЕРТИФИКАТОВ/СПРАВОК ---
 // ВАЖНО: до catch-all /{slug}, публичный без auth. Полные ФИО — решение MG.
@@ -172,3 +186,11 @@ Route::post('/support/presence', [PublicPresenceController::class, 'ping'])
 Route::get('/chat/embed', [PublicChatController::class, 'embed'])
     ->middleware('throttle:30,1')
     ->name('chat.embed');
+
+// Карточка слота календаря контента для превью ссылки в VK (og:image —
+// картинка вложения): так картинка доходит до стены без права photos у
+// токена. Подпись в пути; без картинки — 404. Строго до catch-all.
+Route::get('/cc/{slot}/{sig}', [ContentCalendarShareController::class, 'show'])
+    ->whereNumber('slot')
+    ->middleware('throttle:60,1')
+    ->name('content-calendar.share');

@@ -1,6 +1,6 @@
 # SEO-аудит samskrte.ru — 05-10-2026
 
-_Created: 05-10-2026 · Last updated: 06-10-2026_
+_Created: 05-10-2026 · Last updated: 13-10-2026_
 
 **Исполнитель:** OxAlpha (ZCode, `account:zai-individual-coding-plan/GLM-5.3`) · скилл `/seo` (audit) · длительность ~25 мин.
 **Метод:** живые пробы curl (с `--compressed`) + разбор HTML/JSON-LD + PageSpeed API (квота исчерпана — CWV не измерены) + Google `site:`-выдача. Все факты ниже — первичные пробы этой сессии, не строки из документов.
@@ -61,9 +61,9 @@ _Created: 05-10-2026 · Last updated: 06-10-2026_
 
 ### Low
 
-1. **Favicon только .ico** (`favicon.ico?v=2`): добавить PNG 512×512 + `apple-touch-icon` + webmanifest — Google показывает иконку в мобильной выдаче, у .ico она мыльная/отсутствует. Проверка: Rich Results Test/GSC не ругаются на иконку, иконка видна в мобильной сниппет-выдаче.
+1. **Favicon только .ico** (`favicon.ico?v=2`): добавить PNG 512×512 + `apple-touch-icon` + webmanifest — Google показывает иконку в мобильной выдаче, у .ico она мыльная/отсутствует. Проверка: Rich Results Test/GSC не ругаются на иконку, иконка видна в мобильной сниппет-выдаче. **✅ ИСПОЛНЕНО 08-10 (H6211, [PR #3104](https://github.com/gasyoun/Systema-Sanscriticum/pull/3104)); живые пробы 13-10 — ниже.**
 2. **Лишний 301-хоп с главной:** ссылка `/online?format=recorded` редиректится на `/online/format/recorded` — ссылаться сразу на path-версию. Проверка: `grep -c 'format=recorded'` в HTML главной = 0 после правки шаблона. **✅ ИСПОЛНЕНО 06-10** (вместе с `?format=live` тем же паттерном).
-3. **WebSite SearchAction:** у графа есть WebSite-узел без `potentialAction` — поиск по `/slovar` можно объявить SearchAction (sitelinks searchbox в выдаче). Проверка: валидатор разметки не показывает ошибок на SearchAction; факультативно — сителинкс-бокс в брендовой выдаче.
+3. **WebSite SearchAction:** у графа есть WebSite-узел без `potentialAction` — поиск по `/slovar` можно объявить SearchAction (sitelinks searchbox в выдаче). Проверка: валидатор разметки не показывает ошибок на SearchAction; факультативно — сителинкс-бокс в брендовой выдаче. **✅ ЗАКРЫТО 08-10 (H6211): схема была живой с 07-2026 (находка аудита устарела), реальный дефект — 301-хоп в urlTemplate — убран [PR #3104](https://github.com/gasyoun/Systema-Sanscriticum/pull/3104).**
 
 ### Info
 
@@ -92,6 +92,21 @@ _Created: 05-10-2026 · Last updated: 06-10-2026_
 - **Medium-1 ✅ кодом (этот PR):** хаб `/slovar` (постоянный noindex по дизайну) больше не выдаётся в sitemap ни в одной волне; слова — как раньше, только при `index_enabled` + curated-гейте.
 - **Low-2 ✅ кодом (этот PR):** все внутренние ссылки фильтров (`?format=recorded`, `?format=live`) заменены на path-URL `/online/format/…` (легаси-301 в [`ShopController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/ShopController.php) остаётся для старых адресов).
 - **Medium-3 — снят** (см. пересмотр выше: тёмный запуск клубного лендинга).
-- Осталось: Medium-2 (контентная уникализация recorded-групп), Low-1/Low-3 (favicon/manifest, SearchAction), GSC-мониторинг.
+- Осталось на 06-10: Medium-2, Low-1/Low-3, GSC-мониторинг → исполнение ниже.
+
+## Правки исполнены (13-10-2026, H6211 — остатки аудита)
+
+_Код: [PR #3104](https://github.com/gasyoun/Systema-Sanscriticum/pull/3104) (смёржен 08-10-2026, задеплоен на .92). Пробы и замеры — живые, 13-10-2026._
+
+- **Low-1 ✅ favicon/manifest:** публичные проиндексированные лейауты (main, shop, promo, slovar, articles) ссылаются на PNG 512×512 + apple-touch-icon 180×180 + [`public/manifest-site.webmanifest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/manifest-site.webmanifest). Проба 13-10: все три head-ссылки на главной, манифест 200 (PNG-файлы уже лежали в проде — PR добавил ссылки).
+- **Low-3 ✅ SearchAction:** проба 13-10 — `urlTemplate: https://samskrte.ru/online/poisk/{search_term_string}`, канонический path без 301-хопа.
+- **Medium-2, порция 1 ✅ (механическая):** блок «Запись потока» на recorded-страницах — только реальные факты когорты (период по датам блоков, число занятий, модули, уровень) + перелинковка живые/записи; без дат блок не рендерится — по дизайну (жив на gr51, единственной из 14 групп с датами блоков; факты вне реальных данных не вносились).
+- **Перемер similarity 13-10** (методика аудита: difflib по видимому тексту; семейство 14 групп — gr42, gr50–63):
+  - базлайн-пара gr42 vs gr50: **71,7% → 68,0%**;
+  - 5-парная детерминированная выборка (seed 42): 63,4–79,3%, **средняя 66,8%** — порог фейла (средняя >80%) не достигнут;
+  - все 91 пара семейства: средняя **63,9%**, максимум **95,3% — gr42 vs gr59** (две короткие группы, кандидат в порцию 2);
+  - вывод: falsifiability-гейт аудита пройден; deep-уникализация (отзывы именно этой группы, отличия программы) — порция 2.
+- **GSC-снапшот 13-10:** доступ к GSC UI/API у эстейта отсутствует — отчёт «Страницы» (доля www) и полевые CWV остаются ручными индикаторами. Снятое proxy: выдача `site:www.samskrte.ru` — www-хвостов в выборке нет, все apex (High-1 301 включён 06-10); PageSpeed API (keyless) — 429 quota, полевые CWV /online (LCP/INP) не сняты.
+- Осталось после H6211: Medium-2 порция 2 (deep-уникализация групп, приоритет — аутлаер gr42/gr59 95,3%), повторный замер similarity после порции 2, GSC-мониторинг (нужен доступ к GSC).
 
 _Гасунс_

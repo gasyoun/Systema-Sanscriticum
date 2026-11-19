@@ -26,7 +26,9 @@ sql() { ${H5443_MYSQL:-mysql} "$@"; }
 if [ -n "${H5443_TCP:-}" ]; then
     export DB_CONNECTION=mysql DB_HOST="${H5443_TCP%:*}" DB_PORT="${H5443_TCP#*:}" DB_SOCKET= DB_DATABASE="$DB" DB_USERNAME=root DB_PASSWORD="${H5443_ROOT_PW:-}"
 else
-    export DB_CONNECTION=mysql DB_HOST=localhost DB_SOCKET="$(sql -N -e 'SELECT @@socket')" DB_DATABASE="$DB" DB_USERNAME=root DB_PASSWORD=
+    db_socket="$(sql -N -e 'SELECT @@socket')"
+    export DB_CONNECTION=mysql DB_HOST=localhost DB_DATABASE="$DB" DB_USERNAME=root DB_PASSWORD=
+    export DB_SOCKET="$db_socket"
 fi
 export APP_ENV=local APP_DEBUG=false APP_KEY=base64:2fl+KtvkdphvQyEfjOzf3mJCEJnA8otCLK5LpM/V8Xw=
 export CACHE_STORE=array CACHE_DRIVER=array QUEUE_CONNECTION=sync SESSION_DRIVER=array MAIL_MAILER=array

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Middleware\RequireTwoFactor;
 use App\Models\Article;
 use App\Models\ArticleView;
 use App\Models\ContentCandidate;
@@ -43,6 +44,7 @@ use App\Services\Telegram\DaemonProcessProbe;
 use App\Services\Telegram\ProcDaemonProcessProbe;
 use App\Services\Webinar\WebinarProvider;
 use App\Services\Zoom\ZoomService;
+use App\Support\Backup\BackupListCommand;
 use App\Support\Backup\BackupRunCommand;
 use App\Support\Deploy\DeployDriftInspector;
 use App\Support\NextIntroSession;
@@ -59,8 +61,10 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use League\Flysystem\Filesystem;
 use League\Flysystem\WebDAV\WebDAVAdapter;
+use Livewire\Livewire;
 use Sabre\DAV\Client;
 use Spatie\Backup\Commands\BackupCommand;
+use Spatie\Backup\Commands\ListCommand;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -125,6 +129,13 @@ class AppServiceProvider extends ServiceProvider
         // path snapshots each member next to the archive before addFile.
         $this->app->bind(BackupCommand::class, BackupRunCommand::class);
 
+        // H6916: spatie backup:list меряет каждый файл отдельным WebDAV-запросом
+        // (414 частей off-site = сотни PROPFIND, >3 минут на прогон), поэтому
+        // живая проба списка архивов непригодна. Bind нашего ListCommand, который
+        // считает строку диска из ОДНОГО Depth-1 листинга каталога off-site —
+        // `php artisan backup:list` остаётся точкой входа, vendor/ не тронут.
+        $this->app->bind(ListCommand::class, BackupListCommand::class);
+
         // H4001 (Wave 3 leverage-плана): dense-нога FAQ-ретривала. bind, а не
         // singleton: driver читается из config на момент резолва — тесты и
         // config:cache на проде подменяют ногу без пересборки контейнера.
@@ -157,6 +168,17 @@ class AppServiceProvider extends ServiceProvider
         // H4663 (аудит периметра 14-09, п.7): CSP-Report-Only живёт отдельным
         // middleware AddCspReportOnly в web-группе (Kernel.php) — closure в
         // middleware-группе не резолвится MiddlewareNameResolver'ом.
+
+        // H7830 (r7 residual, 08-11-2026): Livewire-обновления компонентов идут
+        // через вендорный POST /livewire/update, который несёт только группу
+        // `web` — гейты из стеков панелей там не выполняются. Регистрация
+        // RequireTwoFactor как persistent-middleware заставляет Livewire
+        // повторно прогонять его для тех компонентов, чей ИСХОДНЫЙ маршрут
+        // рендера его нёс (страницы панелей /admin и /editor). Публичные и
+        // кабинетные компоненты (Shop, StudentChat, StudentPayments, SrsReview,
+        // …) рендерятся через маршруты без гейта — их обновления не
+        // затрагиваются: р7 (MG 07-11) держит кабинет для админ-роли открытым.
+        Livewire::addPersistentMiddleware(RequireTwoFactor::class);
 
         // 2. Наблюдатель
         Schedule::observe(ScheduleObserver::class);

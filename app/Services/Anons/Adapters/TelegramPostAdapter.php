@@ -14,9 +14,16 @@ use RuntimeException;
  * из MarketingSetting — один бот на одну поверхность, FINDINGS §651).
  * Альбомы (media groups) поддерживаются по capability; фото-альбом
  * 2..10 медиа одним sendMessage-вызовом.
+ *
+ * H6915: видео-лейн (kind=video) — sendVideo с caption+parse_mode=HTML.
+ * Лимит Bot API на multipart-загрузку 50 МБ проверяется ДО отправки,
+ * отказ с понятной ошибкой (fail-closed, слот не закрывается).
  */
 final class TelegramPostAdapter implements PlatformAdapter
 {
+    /** Bot API: максимальный размер файла при стандартной multipart-загрузке. */
+    public const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+
     public function __construct(private readonly TelegramDeliveryChannel $channel) {}
 
     public function platform(): string
@@ -43,13 +50,17 @@ final class TelegramPostAdapter implements PlatformAdapter
             throw new RuntimeException('telegram_post: channel credentials are not configured.');
         }
 
-        $photo = (string) ($frame['asset_path'] ?? '');
         $caption = (string) ($frame['caption'] ?? '');
         $link = is_string($frame['link'] ?? null) ? (string) $frame['link'] : null;
         if ($link !== null && $caption !== '' && str_contains($caption, $link) === false) {
             $caption .= "\n".$link;
         }
 
+        if (($frame['kind'] ?? 'photo') === 'video') {
+            return $this->sendVideo($token, $chatId, (string) ($frame['asset_path'] ?? ''), $caption);
+        }
+
+        $photo = (string) ($frame['asset_path'] ?? '');
         $response = Http::asMultipart()->post(
             "https://api.telegram.org/bot{$token}/sendPhoto",
             [
@@ -67,11 +78,54 @@ final class TelegramPostAdapter implements PlatformAdapter
         return ['id' => (string) $messageId, 'raw' => $payload];
     }
 
+    /**
+     * H6915: канальный видео-пост — sendVideo с подписью (parse_mode=HTML).
+     * Лимит 50 МБ проверяется до загрузки: превышение — понятный отказ,
+     * слот не закрывается (журнал получает причину, повтор уместен после
+     * замены файла, дублей нет).
+     *
+     * @return array{id: string, raw: array<string, mixed>}
+     */
+    private function sendVideo(string $token, string $chatId, string $videoPath, string $caption): array
+    {
+        if ($videoPath === '' || ! is_file($videoPath) || ! is_readable($videoPath)) {
+            throw new RuntimeException("telegram_post: video media missing/unreadable: {$videoPath}");
+        }
+        $bytes = (int) filesize($videoPath);
+        if ($bytes > self::MAX_VIDEO_BYTES) {
+            throw new RuntimeException(sprintf(
+                'telegram_post: video exceeds Bot API 50MB upload limit (%.1f MB > 50 MB): %s — re-encode or trim the fragment, slot stays open.',
+                $bytes / 1024 / 1024,
+                $videoPath
+            ));
+        }
+
+        $response = Http::asMultipart()->post(
+            "https://api.telegram.org/bot{$token}/sendVideo",
+            [
+                ['name' => 'chat_id', 'contents' => $chatId],
+                ['name' => 'caption', 'contents' => $caption],
+                ['name' => 'parse_mode', 'contents' => 'HTML'],
+                ['name' => 'video', 'contents' => fopen($videoPath, 'rb') ?: throw new RuntimeException("Cannot read {$videoPath}")],
+            ]
+        );
+        $payload = $response->json() ?? [];
+        $messageId = data_get($payload, 'result.message_id');
+        if ($messageId === null) {
+            throw new RuntimeException('telegram_post: sendVideo returned no message_id: '.mb_substr($response->body(), 0, 200));
+        }
+
+        return ['id' => (string) $messageId, 'raw' => $payload];
+    }
+
     /** @param  list<array<string, mixed>>  $frames */
     public function publishSeries(array $frames): array
     {
         // Telegram-альбом: один sendMediaGroup на 2..10 фото (Bot API).
-        if (count($frames) >= 2 && count($frames) <= 10) {
+        // Видео-кадры в альбом не ходят (photo-only media group) — серия с
+        // видео публикуется по-кадрово.
+        $hasVideo = (bool) array_filter($frames, static fn (array $f): bool => ($f['kind'] ?? 'photo') === 'video');
+        if (! $hasVideo && count($frames) >= 2 && count($frames) <= 10) {
             return $this->sendMediaGroup($frames);
         }
 

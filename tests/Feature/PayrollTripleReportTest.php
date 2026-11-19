@@ -90,9 +90,14 @@ class PayrollTripleReportTest extends TestCase
 
         $this->assertSame(2, substr_count($out, ' DDS (kassa) ==='));
         $this->assertSame(2, substr_count($out, ' OPiU (accrual) ==='));
-        $this->assertStringContainsString('=== Balance snapshot (as of now) ===', $out);
+        // H6705: пос cycle-секция баланса (back-computation) — по одной на цикл;
+        // полный снимок остаётся одним, на сейчас.
+        $this->assertSame(2, substr_count($out, ' Balance (as of cycle end) ==='));
+        $this->assertSame(1, substr_count($out, '=== Balance snapshot (as of now'));
         $this->assertStringContainsString('outstanding_advances', $out);
         $this->assertStringContainsString('remaining_obligation', $out);
+        // Без импортов выписки строка не рендерит «ноль» — только честный статус.
+        $this->assertStringContainsString('unmapped receipts: not rendered', $out);
     }
 
     /** @test */

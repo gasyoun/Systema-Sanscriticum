@@ -91,12 +91,20 @@ _Created: 02-07-2026 · Last updated: 24-09-2026_
    `cabinet:probe --fail-on-critical` выходит 1: `fail` — это `exit 1`, и chown
    после `|| fail` не выполнится (H3194; 19-08-2026 21:01Z оставил 8 root-овых
    вьюх именно так). Финальный гард `assert_no_root_views` роняет деплой, если
-   хоть один файл под `storage/framework/views` остался не нашим.
+   хоть один файл под `storage/framework/views` остался не нашим. С H7060
+   root-овые шаги включают и apply предохранителей (шаг 9b), поэтому chown
+   остаётся после него.
 7. **`systemctl reload php{ver}-fpm`** — сброс OPcache (версия PHP определяется
    автоматически, переживет апгрейд 8.1 → 8.3).
-8. `supervisorctl restart horizon` — `horizon:terminate` на этом проде воркеры
-   не циклит (PID-ы не меняются, старый код продолжает крутиться); фолбэк на
-   terminate только там, где supervisor отсутствует.
+8. `supervisorctl stop` + `start horizon` с потолком по времени —
+   `horizon:terminate` на этом проде воркеры не циклит (PID-ы не меняются,
+   старый код продолжает крутиться); фолбэк на terminate только там, где
+   supervisor отсутствует. Голый `restart` ждал `stopwaitsecs=3600` на
+   воркере, не выходящем по SIGTERM (19-10 и 22-10-2026: деплой висел, бот
+   молчал). Теперь: пока есть зарезервированные задачи — ждём до
+   `HORIZON_STOP_MAX_SECONDS` (660), без задач — `HORIZON_STOP_IDLE_SECONDS`
+   (30), затем `pkill` процессов `artisan horizon` (заодно осиротевших
+   воркеров) и `supervisorctl start`.
 8b. `supervisorctl restart zapisi-poll` — **только если он сейчас `RUNNING`**.
    Это аварийный поллер @zapisi_ORSbot (штатно апдейты приходят вебхуком), и он
    стоит с `autostart=false`. Условие важно: `supervisorctl restart` на
@@ -113,6 +121,17 @@ _Created: 02-07-2026 · Last updated: 24-09-2026_
    (возврат на вебхук: `php artisan telegram:webhooks --set` +
    `supervisorctl stop telegram-student-poll`) поднимать нельзя. Не `fail`.
 9. Смоук: `curl` главной страницы, ожидается 200; иначе скрипт падает.
+9b. **Предохранители ОС (H7060): `guards:verify` → dry-run diff → apply → `guards:verify`.**
+   Раньше здесь была только проверка, и законный коммит, правивший managed-файл,
+   становился вечным дрейфом: код зелёный, файл на машине старый, auto-deploy
+   fuse горит, 26 алертов за 36 часов ничего не меняют (инцидент 18-10-2026,
+   row 9). Теперь `scripts/deploy_guards_sync.sh` печатает dry-run diff, применяет
+   `scripts/server_guards_apply.sh` и перепроверяет. Каждая строка `changed`
+   уходит в `deploys.log` — деплой объявляет каждое системное изменение.
+   Режим `--rollback` остаётся **verify-only**: аварийный откат не переписывает
+   системный конфиг. Если apply не закрыл дрейф, деплой по-прежнему выходит 0
+   (issue #1143: здоровый код не откатывается из-за managed-файла) и громко
+   зовёт `scripts/server_guards_apply.sh` вручную.
 10. Строка в `storage/logs/deploys.log`: дата, диапазон коммитов, версия PHP, кто.
 
 ## Правка `deploy.sh` вступает в силу только со СЛЕДУЮЩЕГО прогона

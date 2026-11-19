@@ -46,8 +46,7 @@ class KnowledgeCoverageTest extends TestCase
 
     public function test_real_corpus_has_no_silent_section_loss(): void
     {
-        // Настоящий faq.md через настоящий путь конфига (extra_paths тоже
-        // проверяются — именно там живёт faq_from_lectures.md).
+        // Настоящий faq.md через настоящий путь конфига.
         $this->artisan('knowledge:coverage')
             ->expectsOutputToContain('all present')
             ->assertExitCode(0);

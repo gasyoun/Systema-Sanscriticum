@@ -43,14 +43,17 @@ return [
                 'paths' => [
                     'k/podgotovitelnaya-gruppa-sanskrita',
                     'checkout/5135',
+                    // Быстрая запись (ссылка VK-бота, флаг mini_course_quick_enroll).
+                    'k/podgotovitelnaya-gruppa-sanskrita/start',
                 ],
                 // Клик-цели — не на всех путях пикселя: на чекауте есть свои
                 // ссылки на /checkout/* («Подарить», смена режима), и клик по
                 // ним не должен считаться кликом «Записаться» с лендинга.
                 // Ключ отсутствует = все пути пикселя; [] = клик-целей нигде.
                 'click_paths' => ['k/podgotovitelnaya-gruppa-sanskrita'],
-                'forward_goals' => ['enroll_click'],
-                'click_goals' => ['enroll_click' => 'a[href*="/checkout/"]'],
+                'forward_goals' => ['enroll_click', 'quick_enroll_submit'],
+                // Под флагом быстрой записи кнопка тарифа ведёт на …/start.
+                'click_goals' => ['enroll_click' => 'a[href*="/checkout/"], a[href$="/podgotovitelnaya-gruppa-sanskrita/start"]'],
             ],
         ],
     ],

@@ -220,14 +220,17 @@ class VitrinaWaitlistPageTest extends TestCase
             ->assertOk()
             ->assertSee('Осталось доголосовать: <span data-waitlist-count>3</span>', false);
 
-        // 8 голосов: кворум — галочка, без чисел.
+        // 8 голосов: порог достигнут — строка уходит с витрины целиком
+        // (MG 28-10-2026: «как только порог достигается, снимать»).
+        // «Кворум набран» остаётся только на карточке курса (/k/{slug}).
         foreach (range(6, 8) as $i) {
             $item->votes()->create(['user_id' => User::factory()->create()->id]);
         }
 
         $this->get(route('shop.waitlist'))
             ->assertOk()
-            ->assertSee('Кворум набран')
+            ->assertDontSee('Сказание о Нале')
+            ->assertDontSee('Кворум набран')
             ->assertDontSee('Осталось доголосовать');
     }
 

@@ -42,6 +42,9 @@ class SupportAnswerSuggesterLlmTest extends TestCase
     private function enableLlm(): void
     {
         config([
+            // LLM-полоса тестируется при выключенных шаблонных перехватах (H7591: дефолт ON).
+            'features.support_template_drafts' => false,
+            'features.support_auto_reply_templates' => false,
             'features.support_ai_assist' => true,
             'services.openrouter.api_key' => 'test-key',
             'services.openrouter.model' => 'deepseek/deepseek-chat',

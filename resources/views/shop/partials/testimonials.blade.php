@@ -1,10 +1,20 @@
-{{-- «Отзывы» — course->testimonials (пивот, по sort_order). Скрыт при пустом. --}}
-@php $items = ($course->testimonials ?? collect())->where('is_visible', true)->values(); @endphp
+{{--
+    «Отзывы» — course->testimonials (пивот, по sort_order). Скрыт при пустом.
+    Правило «1–2 конкретных отзыва, не стена» (план «маркетинговые акценты»
+    10-11-2026): на лендинге курса показываем максимум 2 карточки — по ним
+    видно контекст (автор, город, медиа) — остальные доступны по ссылке в
+    библиотеку /otzyvy. Соц-доказательство навалом измерено анти-рычагом
+    (−6); внимательно читают отзывы 51% — поэтому прячем не отзывы, а стену.
+--}}
+@php
+    $all = ($course->testimonials ?? collect())->where('is_visible', true)->values();
+    $items = $all->take(2);
+@endphp
 @if($items->isNotEmpty())
 <section class="mb-16 lg:mb-20" data-analytics="testimonials">
     <h2 class="text-3xl font-bold text-white mb-8">Отзывы учеников</h2>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         @foreach($items as $t)
             <figure class="flex flex-col rounded-2xl bg-[#111622] border border-[#1F2636] p-6">
                 @if($t->rating)
@@ -40,5 +50,15 @@
             </figure>
         @endforeach
     </div>
+
+    @if($all->count() > $items->count())
+        <p class="mt-6">
+            <a href="{{ route('shop.testimonials.library') }}"
+               class="inline-flex items-center gap-2 text-sm font-bold text-[#38BDF8] hover:text-[#2da4dd]">
+                Все отзывы ({{ $all->count() }})
+                <i class="fas fa-arrow-right text-xs"></i>
+            </a>
+        </p>
+    @endif
 </section>
 @endif

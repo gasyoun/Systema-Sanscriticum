@@ -41,6 +41,18 @@ never mistaken for versions. A heading whose DATE or prose changes is not
 reported -- only the disappearance of the version identity itself, which is the
 one property that is always wrong.
 
+A MOVING BASE IS COMPARED AT ITS FORK POINT
+
+`--base <branch>` and the pull-request default (`origin/$GITHUB_BASE_REF`)
+name a branch that keeps moving. The comparison runs against
+`git merge-base <base> HEAD` instead -- for a PR merge commit that is its
+first parent, the base GitHub actually merged onto; for a local branch it is
+where you branched. Otherwise a release cut on main after the PR's merge ref
+was built reads as a heading the PR deleted (Uprava PR #2603, 11-09-2026).
+A changelog byte-identical to that base passes at once. The push path
+(`CHANGELOG_GUARD_BASE`, a fixed pre-push sha) is compared literally, so a
+force-push that drops a released section is still caught.
+
 FAIL-OPEN ON MISSING HISTORY, LOUDLY
 
 A shallow clone, an initial commit, or a changelog that does not exist in the
@@ -155,20 +167,52 @@ def repo_root_of(start):
     return res.stdout.strip() if res.returncode == 0 else None
 
 
+def fork_point(repo_root, base):
+    """-> `git merge-base <base> HEAD`, or None when it cannot be resolved.
+
+    A branch base (`origin/main`) MOVES; the commit HEAD actually grew from
+    does not. On a pull request the checkout is GitHub's merge commit, built
+    on whatever main was when the merge ref was computed; `origin/main` is
+    fetched later, and on a busy repo a release is cut in between. Comparing
+    against the moved tip reports the new `## [x.y.z]` as GONE on a PR that
+    never touched the changelog (Uprava PR #2603 run 34591997041, 11-09-2026:
+    merge 080b67348fb built on v0.195.481 while origin/main was already at
+    v0.195.483). The merge-base of the moved tip and HEAD is exactly the
+    merge commit's first parent -- the base GitHub really merged onto -- and
+    for a local branch it is the fork point, so a heading released on main
+    after you branched is not something your change removed.
+    """
+    try:
+        res = subprocess.run(['git', 'merge-base', base, 'HEAD'], cwd=repo_root,
+                             capture_output=True, text=True, encoding='utf-8',
+                             errors='replace', timeout=30)
+    except Exception:
+        return None
+    out = res.stdout.strip()
+    return out if res.returncode == 0 and out else None
+
+
 def main():
     argv = sys.argv[1:]
     as_json = '--json' in argv
     staged = '--staged' in argv
     base = 'HEAD'
+    # A moving branch base is resolved to its fork point with HEAD (see
+    # fork_point). The push path below is NOT: `github.event.before` is a fixed
+    # sha, and after a force-push the merge-base would sit below the dropped
+    # commits and hide exactly the deletion that path exists to catch.
+    moving_base = False
     if '--base' in argv:
         i = argv.index('--base')
         if i + 1 >= len(argv):
             print('--base needs a revision', file=sys.stderr)
             return 2
         base = argv[i + 1]
+        moving_base = True
     elif os.environ.get('GITHUB_BASE_REF'):
         # Pull request: compare against the branch being merged into.
         base = 'origin/' + os.environ['GITHUB_BASE_REF']
+        moving_base = True
     elif os.environ.get('CHANGELOG_GUARD_BASE', '').strip('0 \t'):
         # Push: the workflow passes `github.event.before`, the tip BEFORE the
         # push, so a deletion buried in an earlier commit of a multi-commit push
@@ -190,6 +234,16 @@ def main():
         print('{0}: skipped — {1} set'.format(name, ALLOW_ENV))
         return 0
 
+    given = base
+    if moving_base:
+        fork = fork_point(repo, base)
+        if fork:
+            # Unresolvable (shallow clone, unrelated histories) keeps the
+            # literal base: the pre-fix behaviour, never a silent skip.
+            base = fork
+    label = (given if base == given
+             else '{0} (fork point {1})'.format(given, base[:12]))
+
     base_text = git_show(repo, '{0}:{1}'.format(base, name))
     if base_text is None:
         # Shallow clone, initial commit, or the changelog is new in this
@@ -209,22 +263,34 @@ def main():
         with open(os.path.join(repo, name), encoding='utf-8') as fh:
             head_text = fh.read()
 
+    if head_text == base_text:
+        # The change does not touch the changelog at all -- nothing can have
+        # been removed, whatever has landed on the base branch since.
+        if as_json:
+            print(json.dumps({'file': name, 'base': label, 'staged': staged,
+                              'unchanged': True, 'removed': []},
+                             ensure_ascii=False, indent=2))
+        else:
+            print('{0}: unchanged vs {1} — no released heading removed'
+                  .format(name, label))
+        return 0
+
     removed = find_removed(base_text, head_text, load_allowlist(repo))
 
     if as_json:
         print(json.dumps(
-            {'file': name, 'base': base, 'staged': staged,
+            {'file': name, 'base': label, 'staged': staged,
              'removed': [{'version': v, 'base_line': n} for v, n in removed]},
             ensure_ascii=False, indent=2))
         return 1 if removed else 0
 
     if not removed:
-        print('{0}: no released heading removed (vs {1})'.format(name, base))
+        print('{0}: no released heading removed (vs {1})'.format(name, label))
         return 0
 
     print('')
     print('{0}: {1} released heading(s) present at {2} are GONE:'
-          .format(name, len(removed), base))
+          .format(name, len(removed), label))
     print('')
     for v, n in removed:
         print('  [{0}]   (was {1}:{2} line {3})'.format(v, base, name, n))

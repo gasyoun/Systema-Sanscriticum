@@ -67,4 +67,27 @@ class SurveyCuratorToolsTest extends TestCase
         $this->assertStringContainsString('Ветеран', $csv);
         $this->assertStringNotContainsString('Остановившаяся', $csv);
     }
+
+    /** @test */
+    public function audience_command_accepts_churn_2026_10_wave(): void
+    {
+        $course = Course::factory()->create();
+        $stalled = User::factory()->create(['name' => 'Ушедшая']);
+        $progressed = User::factory()->create(['name' => 'Дошедшая']);
+
+        Payment::create(['user_id' => $stalled->id, 'course_id' => $course->id, 'amount' => 6000, 'tariff' => 'block_1', 'status' => 'paid']);
+        Payment::create(['user_id' => $progressed->id, 'course_id' => $course->id, 'amount' => 6000, 'tariff' => 'block_1', 'status' => 'paid']);
+        Payment::create(['user_id' => $progressed->id, 'course_id' => $course->id, 'amount' => 6000, 'tariff' => 'block_2', 'status' => 'paid']);
+
+        $this->artisan('survey:audience churn-2026-10')->expectsOutputToContain('Строк: 1');
+
+        $files = glob(storage_path('app/survey-audience/churn-2026-10-*.csv'));
+        $this->assertNotEmpty($files);
+        $csv = file_get_contents(end($files));
+        $this->assertStringContainsString('Ушедшая', $csv);
+
+        foreach ($files as $file) {
+            @unlink($file);
+        }
+    }
 }

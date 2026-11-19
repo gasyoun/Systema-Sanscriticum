@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Console\Commands\RemindZapisiClasses;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\MarketingSettingResource\Pages;
+use App\Filament\Support\NoAutofill;
 use App\Models\MarketingSetting;
 use App\Services\DebtorReminderDispatcher;
 use App\Support\DunningStage;
@@ -418,18 +419,28 @@ class MarketingSettingResource extends Resource
                         Forms\Components\Fieldset::make('Telegram Bot')
                             ->schema([
                                 Forms\Components\TextInput::make('tg_bot_username')
+                                    ->autocomplete('off')
+                                    ->extraInputAttributes(NoAutofill::IGNORE_MANAGERS)
                                     ->label('Username бота (без @)')
                                     ->placeholder('samskrtam_magnet_bot')
                                     ->maxLength(100),
                                 Forms\Components\TextInput::make('tg_bot_token')
                                     ->label('Bot Token')
                                     ->password()
+                                    ->autocomplete('new-password')
+                                    ->extraInputAttributes(NoAutofill::IGNORE_MANAGERS)
+                                    ->regex(NoAutofill::TELEGRAM_BOT_TOKEN)
+                                    ->validationMessages(['regex' => NoAutofill::TELEGRAM_BOT_TOKEN_MESSAGE])
                                     ->revealable()
                                     ->placeholder('Получить у @BotFather')
                                     ->maxLength(255),
                                 Forms\Components\TextInput::make('tg_webhook_secret')
                                     ->label('Webhook Secret (случайная строка 32+ символов)')
                                     ->password()
+                                    ->autocomplete('new-password')
+                                    ->extraInputAttributes(NoAutofill::IGNORE_MANAGERS)
+                                    ->regex(NoAutofill::TELEGRAM_WEBHOOK_SECRET)
+                                    ->validationMessages(['regex' => NoAutofill::TELEGRAM_WEBHOOK_SECRET_MESSAGE])
                                     ->revealable()
                                     ->helperText('Сгенерировать: php artisan tinker → Str::random(48)')
                                     ->maxLength(64),
@@ -438,6 +449,8 @@ class MarketingSettingResource extends Resource
                         Forms\Components\Fieldset::make('VK Сообщество')
                             ->schema([
                                 Forms\Components\TextInput::make('vk_group_screen_name')
+                                    ->autocomplete('off')
+                                    ->extraInputAttributes(NoAutofill::IGNORE_MANAGERS)
                                     ->label('Screen Name группы')
                                     ->placeholder('samskrtam_community')
                                     ->maxLength(100),
@@ -448,10 +461,14 @@ class MarketingSettingResource extends Resource
                                 Forms\Components\TextInput::make('vk_access_token')
                                     ->label('Access Token сообщества')
                                     ->password()
+                                    ->autocomplete('new-password')
+                                    ->extraInputAttributes(NoAutofill::IGNORE_MANAGERS)
                                     ->revealable(),
                                 Forms\Components\TextInput::make('vk_callback_secret')
                                     ->label('Callback Secret')
                                     ->password()
+                                    ->autocomplete('new-password')
+                                    ->extraInputAttributes(NoAutofill::IGNORE_MANAGERS)
                                     ->revealable()
                                     ->maxLength(64),
                                 Forms\Components\TextInput::make('vk_confirmation_code')
@@ -463,16 +480,22 @@ class MarketingSettingResource extends Resource
                         Forms\Components\Fieldset::make('Max Bot')
                             ->schema([
                                 Forms\Components\TextInput::make('max_bot_username')
+                                    ->autocomplete('off')
+                                    ->extraInputAttributes(NoAutofill::IGNORE_MANAGERS)
                                     ->label('Username бота (без @)')
                                     ->placeholder('samskrtam_magnet_bot')
                                     ->maxLength(100),
                                 Forms\Components\TextInput::make('max_bot_token')
                                     ->label('Bot Token')
                                     ->password()
+                                    ->autocomplete('new-password')
+                                    ->extraInputAttributes(NoAutofill::IGNORE_MANAGERS)
                                     ->revealable(),
                                 Forms\Components\TextInput::make('max_webhook_secret')
                                     ->label('Webhook Secret')
                                     ->password()
+                                    ->autocomplete('new-password')
+                                    ->extraInputAttributes(NoAutofill::IGNORE_MANAGERS)
                                     ->revealable()
                                     ->maxLength(64),
                             ])->columns(1),
@@ -487,17 +510,27 @@ class MarketingSettingResource extends Resource
                     ->collapsed()
                     ->schema([
                         Forms\Components\TextInput::make('zapisi_bot_username')
+                            ->autocomplete('off')
+                            ->extraInputAttributes(NoAutofill::IGNORE_MANAGERS)
                             ->label('Username бота (без @)')
                             ->placeholder('zapisi_ORSbot')
                             ->maxLength(100),
                         Forms\Components\TextInput::make('zapisi_bot_token')
                             ->label('Bot Token')
                             ->password()
+                            ->autocomplete('new-password')
+                            ->extraInputAttributes(NoAutofill::IGNORE_MANAGERS)
+                            ->regex(NoAutofill::TELEGRAM_BOT_TOKEN)
+                            ->validationMessages(['regex' => NoAutofill::TELEGRAM_BOT_TOKEN_MESSAGE])
                             ->revealable()
                             ->placeholder('Получить у @BotFather'),
                         Forms\Components\TextInput::make('zapisi_webhook_secret')
                             ->label('Webhook Secret (случайная строка 32+ символов)')
                             ->password()
+                            ->autocomplete('new-password')
+                            ->extraInputAttributes(NoAutofill::IGNORE_MANAGERS)
+                            ->regex(NoAutofill::TELEGRAM_WEBHOOK_SECRET)
+                            ->validationMessages(['regex' => NoAutofill::TELEGRAM_WEBHOOK_SECRET_MESSAGE])
                             ->revealable()
                             ->helperText('Сгенерировать: php artisan tinker → Str::random(48)'),
                         Forms\Components\TextInput::make('zapisi_reminder_lead_minutes')

@@ -135,6 +135,9 @@ final class MiniCourseProgress
                 'user_id' => $row->user_id,
                 'name' => $row->name,
                 'email' => $row->email,
+                // Без @username в TG нет публичной ссылки — остаётся числовой id.
+                'telegram' => $row->user->telegramLink() ?? ($row->user->telegram_id ?: null),
+                'vk' => $row->user->vk_id ? 'https://vk.com/id'.$row->user->vk_id : null,
                 'signup_source' => $row->signup_source,
                 'registered_at' => $row->registered_at,
                 'enrolled_at' => $row->enrolled_at,

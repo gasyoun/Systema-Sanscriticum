@@ -4,7 +4,7 @@
      item — CourseWaitlistItem с withCount('votes'); voted/myPref — состояние зрителя.
      variant=hero — крупный размер для первого экрана страницы курса
      (H6559: хиро вместо пары «Выбрать тариф / каталог»); состояния те же. --}}
-@props(['item', 'voted' => false, 'myPref' => null, 'variant' => 'card'])
+@props(['item', 'voted' => false, 'myPref' => null, 'variant' => 'card', 'application' => false])
 
 @php
     $hero = $variant === 'hero';
@@ -18,10 +18,10 @@
     <form method="POST" action="{{ route('shop.waitlist.unvote') }}">
         @csrf
         <input type="hidden" name="slug" value="{{ $item->slug }}">
-        <button type="submit" data-testid="waitlist-unvote" title="Отозвать голос"
+        <button type="submit" data-testid="waitlist-unvote" title="{{ $application ? 'Отозвать заявку' : 'Отозвать голос' }}"
                 class="flex justify-center items-center w-full {{ $size }} bg-transparent border border-emerald-500/30 hover:border-emerald-500/60 text-emerald-400 font-bold rounded-xl transition-all">
             <i class="fas fa-check mr-2"></i>
-            Голос учтен@if($myPref && isset(\App\Models\WaitlistVote::SLOT_PREFERENCES[$myPref])) · {{ \App\Models\WaitlistVote::SLOT_PREFERENCES[$myPref] }}@endif
+            {{ $application ? 'Заявка учтена' : 'Голос учтен' }}@if($myPref && isset(\App\Models\WaitlistVote::SLOT_PREFERENCES[$myPref])) · {{ \App\Models\WaitlistVote::SLOT_PREFERENCES[$myPref] }}@endif
             <i class="fas fa-times ml-2 opacity-60"></i>
         </button>
     </form>
@@ -42,7 +42,7 @@
         @csrf
         <input type="hidden" name="slug" value="{{ $item->slug }}">
         {{-- Пожелание времени — только когда слот ещё не решён (MG 24-09-2026). --}}
-        @if(! $item->slot)
+        @if(! $item->slot && ! $application)
             <select name="slot_preference" title="Когда вам удобно?"
                     class="w-full mb-2 {{ $hero ? 'text-sm' : 'text-xs' }} font-semibold text-slate-300 bg-[#141A28] border border-[#1F2636] hover:border-brand/50 rounded-lg px-2 py-2">
                 <option value="">Когда удобно?</option>
@@ -54,7 +54,10 @@
         <button type="submit" data-testid="waitlist-vote"
                 class="flex justify-center items-center w-full {{ $size }} {{ $hero ? 'bg-brand hover:bg-brand-hover hover:-translate-y-1 shadow-[0_0_20px_rgba(232,92,36,0.3)]' : 'bg-brand hover:opacity-90' }} text-white font-bold rounded-xl transition-all">
             <i class="fas fa-hand-raised mr-2"></i>
-            Намерен участвовать
+            {{ $application ? 'Подать заявку' : 'Намерен участвовать' }}
         </button>
+        @if($application)
+            <p class="text-xs text-slate-400 mt-2">Заявка сохраняется после входа или регистрации.</p>
+        @endif
     </form>
 @endif

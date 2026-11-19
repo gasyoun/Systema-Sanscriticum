@@ -1,0 +1,9 @@
+# token-size-gate: files here are not agent-authored — generated data/assets.
+# Code, docs and reports stay under the 5000-token limit.
+lecture-ui/transcription/**
+lecture-ui/output/**
+resources/data/**
+public/vendor/**
+public/build/**
+public/js/saade/**
+storage/**

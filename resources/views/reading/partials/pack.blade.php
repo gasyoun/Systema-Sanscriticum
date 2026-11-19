@@ -28,6 +28,26 @@
         Нажмите на слово, чтобы увидеть лемму, форму и значение@if($srsAdd) и добавить его в свою колоду@endif.
     </p>
 
+    {{--
+        Student onboarding — «как это использовать» (MG ruling 12-11-2026: on-site guidance
+        instead of an offline export). Open on the FIRST visit, dismissible, re-openable
+        via the «?» link forever after. Vanilla JS + localStorage; no flag of its own —
+        it lives inside the already-gated reader surfaces.
+    --}}
+    <div class="max-w-2xl mx-auto mt-4 text-left" data-reader-help>
+        <button type="button" data-reader-help-toggle aria-expanded="false"
+            class="text-xs text-[#2AABEE] hover:underline">? Как пользоваться ридером</button>
+        <div data-reader-help-panel class="hidden mt-3 rounded-2xl border border-gray-700/60 bg-[#161b28] p-5 text-sm text-gray-400 space-y-2.5">
+            <p><b class="text-gray-200">Текст разобран по словам.</b> Нажмите на любое слово — увидите лемму, грамматическую форму и значение.</p>
+            <p><b class="text-gray-200">Два режима чтения.</b> «Пословно» показывает слова по отдельности — видно, из чего состоит фраза. «В тексте (сандхи)» показывает фразу так, как она звучит в тексте: соседние слова сливаются в стыках. Переключайте режимы и сравнивайте, как одно и то же предложение выглядит в двух формах.</p>
+            @if($srsAdd)
+                <p><b class="text-gray-200">Слова — в колоду.</b> Кнопка возле разобранного слова отправляет его в вашу колоду «Старт чтения» — повторяйте её в SRS, и слова из текстов останутся с вами.</p>
+            @endif
+            <p><b class="text-gray-200">Сложность и порядок текстов</b> на странице — справочные: они показывают, от какого текста начинать, но не меняют порядок курса.</p>
+            <button type="button" data-reader-help-dismiss class="mt-1 px-3 py-1.5 rounded-lg border border-gray-600 text-gray-300 hover:border-brand hover:text-brand text-xs">Понятно</button>
+        </div>
+    </div>
+
     {{-- H2107 — student progress panel: opt-in, same $srsAdd gate as the add-to-SRS button. --}}
     @if($srsAdd)
         <p class="mt-3 text-gray-500 text-xs">
@@ -79,12 +99,33 @@
     </div>
 @endif
 
-<div class="space-y-6 max-w-3xl mx-auto">
+{{--
+    Sandhi twin (MG ruling 12-11-2026): one page-level toggle swaps the PROMINENCE of the
+    two forms every diverging sentence already carries — the segmented token chips
+    («Пословно», the word-tap surface) and the natural sandhied surface («В тексте»).
+    Both lines stay in the DOM and tappable; only size/colour/colour order swap, so the
+    morph panels and the H2107 telemetry keep working in either mode. The attribute on
+    this root is the single source of truth; vanilla JS + localStorage, no flag of its
+    own (rides the reader's existing gates).
+--}}
+<div data-sandhi-root data-sandhi-mode="split">
+    <div class="max-w-3xl mx-auto mb-5 flex flex-wrap items-center justify-center gap-2 text-xs">
+        <span class="text-gray-500">Режим чтения:</span>
+        <button type="button" data-sandhi-mode-btn="split" aria-pressed="true"
+            class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-300 hover:border-brand aria-pressed:bg-[#1d1410] aria-pressed:border-brand/60 aria-pressed:text-white transition-colors">Пословно</button>
+        <button type="button" data-sandhi-mode-btn="text" aria-pressed="false"
+            class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-300 hover:border-brand aria-pressed:bg-[#1d1410] aria-pressed:border-brand/60 aria-pressed:text-white transition-colors">В тексте (сандхи)</button>
+    </div>
+    <div class="space-y-6 max-w-3xl mx-auto">
     @foreach($pack['sentences'] as $sentence)
         @php($sentenceIndex = $loop->index)
         <article class="bg-[#161b28] border border-gray-700/60 rounded-2xl p-6">
             <div class="text-xs uppercase tracking-widest text-gray-500 mb-2">{{ $sentence['locus'] }}</div>
-            <div class="deva text-xl text-white mb-3 leading-relaxed">
+            @php($surfaceLine = trim((string) ($sentence['text'] ?? '')))
+            @php($splitLine = trim(implode(' ', array_map(fn ($t) => (string) ($t['form'] ?? ''), $sentence['tokens']))))
+            @php($hasTwin = $surfaceLine !== '' && $surfaceLine !== $splitLine)
+            <div class="flex flex-col gap-2 data-[sandhi-mode=text]:flex-col-reverse">
+            <div class="deva text-xl text-white leading-relaxed transition-all data-[sandhi-mode=text]:text-sm data-[sandhi-mode=text]:text-gray-300 data-[sandhi-mode=text]:opacity-80" data-reader-tokens>
                 @foreach($sentence['tokens'] as $token)
                     <details class="inline-block align-baseline mr-1 mb-1 group"
                         @if($srsAdd && !empty($token['lemma']))
@@ -121,9 +162,13 @@
                     </details>
                 @endforeach
             </div>
-            <div class="text-sm italic text-gray-500" lang="sa-Latn">{{ $sentence['text'] }}</div>
+            @if($hasTwin)
+                <div class="text-sm italic text-gray-500 transition-all data-[sandhi-mode=text]:text-xl data-[sandhi-mode=text]:not-italic data-[sandhi-mode=text]:text-white" lang="sa-Latn" data-reader-sandhi>{{ $surfaceLine }}</div>
+            @endif
+            </div>
         </article>
     @endforeach
+    </div>
 </div>
 
 @if(!empty($rankedPacks))
@@ -182,3 +227,51 @@
         });
     </script>
 @endif
+
+<script>
+    {{-- Sandhi twin toggle + reader onboarding. Vanilla JS, no dependency, no server call:
+         the mode and the help dismissal live in localStorage per browser. --}}
+    (function () {
+        var root = document.querySelector('[data-sandhi-root]');
+        if (root) {
+            var modeKey = 'systema_reading_sandhi_mode_v1';
+            var saved = null;
+            try { saved = localStorage.getItem(modeKey); } catch (e) { /* private mode — default */ }
+            var apply = function (mode) {
+                root.setAttribute('data-sandhi-mode', mode === 'text' ? 'text' : 'split');
+                root.querySelectorAll('[data-sandhi-mode-btn]').forEach(function (btn) {
+                    btn.setAttribute('aria-pressed', btn.getAttribute('data-sandhi-mode-btn') === mode ? 'true' : 'false');
+                });
+                try { localStorage.setItem(modeKey, mode); } catch (e) { /* no persistence, still works */ }
+            };
+            root.querySelectorAll('[data-sandhi-mode-btn]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    apply(btn.getAttribute('data-sandhi-mode-btn'));
+                });
+            });
+            apply(saved === 'text' ? 'text' : 'split');
+        }
+
+        var help = document.querySelector('[data-reader-help]');
+        if (help) {
+            var helpKey = 'systema_reading_help_seen_v1';
+            var panel = help.querySelector('[data-reader-help-panel]');
+            var toggle = help.querySelector('[data-reader-help-toggle]');
+            var dismiss = help.querySelector('[data-reader-help-dismiss]');
+            var seen = false;
+            try { seen = localStorage.getItem(helpKey) === '1'; } catch (e) { /* show it then */ }
+            var show = function (open) {
+                panel.classList.toggle('hidden', !open);
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            };
+            toggle.addEventListener('click', function () {
+                show(panel.classList.contains('hidden'));
+            });
+            dismiss.addEventListener('click', function () {
+                show(false);
+                try { localStorage.setItem(helpKey, '1'); } catch (e) { /* non-critical */ }
+            });
+            show(!seen);
+        }
+    })();
+</script>

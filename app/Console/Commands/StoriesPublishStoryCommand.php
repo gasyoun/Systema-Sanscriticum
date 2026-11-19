@@ -13,6 +13,7 @@ use App\Services\Telegram\MadelineClientFactory;
 use App\Services\Telegram\MadelineSessionReaper;
 use App\Services\Telegram\MadelineSyncPhase;
 use App\Services\Telegram\MadelineSyncWatchdog;
+use App\Support\MediaAreaMath;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -297,9 +298,21 @@ final class StoriesPublishStoryCommand extends Command
         $caption = (string) $post->payload;
         $link = $this->trackedStoryLink($caption);
 
+        // H6678: per-story клик-зона. story_posts.media_area несет валидный
+        // center-прямоугольник (MediaAreaMath) измеренной плашки этой сториз
+        // (pre-burned видео, 1474_plaque_v3.mp4: box 40,307 281x90 на
+        // 360x640 → x=50.1, y=55.0 центр). NULL/битый override → null,
+        // издатель кладет легаси-зону (совместимость прежней полосы).
+        $mediaArea = MediaAreaMath::isValidArea($post->media_area)
+            ? MediaAreaMath::normalize($post->media_area)
+            : null;
+        if ($post->media_area !== null && $mediaArea === null) {
+            $this->warn("Post #{$post->id}: invalid media_area override ignored — legacy click zone used.");
+        }
+
         return match ($post->kind) {
-            StoryPost::KIND_PHOTO => $publisher->sendPhotoStory((string) $post->media_path, $caption, 'rusamskrtam', $link),
-            StoryPost::KIND_VIDEO => $publisher->sendVideoStory((string) $post->media_path, $caption, $link),
+            StoryPost::KIND_PHOTO => $publisher->sendPhotoStory((string) $post->media_path, $caption, 'rusamskrtam', $link, $mediaArea),
+            StoryPost::KIND_VIDEO => $publisher->sendVideoStory((string) $post->media_path, $caption, $link, $mediaArea),
             default => throw new \InvalidArgumentException("Unsupported story kind {$post->kind}."),
         };
     }

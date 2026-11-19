@@ -140,6 +140,24 @@ return [
     'class_link_autopost' => (bool) env('CLASS_LINK_AUTOPOST', false),
 
     /*
+     | Автоопрос о присутствии: перед занятием @zapisi_ORSbot вешает в Telegram-чат
+     | группы опрос «Будете?» (Буду / Опоздаю / Не смогу), команда
+     | classes:post-attendance-poll. ВЫКЛЮЧЕН по умолчанию. Требует
+     | telegram_zapisi_bot и telegram_chat_id у группы. Голоса учеников с
+     | привязанным Telegram пишутся в предупреждения о занятии, если включён
+     | attendance_notices.
+     |  - attendance_poll_lead_minutes — за сколько минут до старта вешать опрос;
+     |  - attendance_poll_group_ids — id пилотных групп через запятую; пусто —
+     |    все группы с привязанным чатом.
+     */
+    'attendance_poll_autopost' => (bool) env('ATTENDANCE_POLL_AUTOPOST', false),
+    'attendance_poll_lead_minutes' => (int) env('ATTENDANCE_POLL_LEAD_MINUTES', 1440),
+    'attendance_poll_group_ids' => array_values(array_filter(array_map(
+        'intval',
+        explode(',', (string) env('ATTENDANCE_POLL_GROUP_IDS', '')),
+    ))),
+
+    /*
      | FAQ-суггестер «Отдела заботы» (H247, тикет S3): факт-черновик ответа на
      | фактологические вопросы категорий A (Zoom/ссылка), B (записи), C (расписание)
      | из данных LMS — БЕЗ единого LLM-вызова. Бот сам НЕ отвечает студенту: готовит
@@ -169,7 +187,8 @@ return [
      | байт-в-байт как до H1838, даже если привязки уже расставлены в админке.
      | Включение — SUPPORT_TEMPLATE_DRAFTS=true + config:cache после ревью.
      */
-    'support_template_drafts' => (bool) env('SUPPORT_TEMPLATE_DRAFTS', false),
+    // H7591: суггестер-полоса (черновик-подсказка куратору по шаблону) — on.
+    'support_template_drafts' => (bool) env('SUPPORT_TEMPLATE_DRAFTS', true),
 
     /*
      | FAQ RAG for Helpdesk suggester (H2448 Track B): BM25 top-3 chunks from
@@ -345,7 +364,9 @@ return [
      | разрешены владельцем на срок испытания; откат — false + config:cache,
      | либо auto_reply_enabled=false на аккаунте.
      */
-    'support_auto_reply_templates' => (bool) env('SUPPORT_AUTO_REPLY_TEMPLATES', false),
+    // H7591 (рулинг MG 01-11-2026): включено по умолчанию — бот отвечает
+    // «как оплатить» шаблоном без человека; откат: SUPPORT_AUTO_REPLY_TEMPLATES=0.
+    'support_auto_reply_templates' => (bool) env('SUPPORT_AUTO_REPLY_TEMPLATES', true),
 
     /*
      | H3380: ack «приняли, ответим» когда автоответить нечем. Не чаще одного
@@ -353,6 +374,18 @@ return [
      | linked-пользователя не шлём (некуда ставить очередь). Откат: false.
      */
     'support_auto_ack' => (bool) env('SUPPORT_AUTO_ACK', false),
+
+    /*
+     | H6767: сэмплинг вариантов ответа суфлёра. При ON ветки ack и template
+     | берут текст из одобренного пула (ack — services.telegram_support.
+     | auto_ack_variants с fallback на auto_ack_text; template — ВСЕ строки
+     | MessageTemplate категории, равномерный выбор вместо «последний
+     | updated_at выигрывает»), выбор — RNG в момент отправки, провенанс —
+     | в meta dm_auto_sent (variant_id/variant_pool_size/variant_kind).
+     | ВЫКЛ по умолчанию: пулы сначала проходят ревью человека (GTD,
+     | Отдел заботы / MG), включение — отдельным решением. Откат: false.
+     */
+    'support_reply_variant_sampling' => (bool) env('SUPPORT_REPLY_VARIANT_SAMPLING', false),
 
     /*
      | H5450: мгновенный ack вебчата samskrte.ru. Посетитель виджета получает
@@ -373,6 +406,15 @@ return [
      | Откат: false + config:cache.
      */
     'support_webchat_live_faq' => (bool) env('SUPPORT_WEBCHAT_LIVE_FAQ', false),
+
+    /*
+     | 0YW (RAG grill card 9): F-only citation in the cabinet bot (@samskrtamru_bot,
+     | CuratorAi). Category F above the shared F floor answers with the FAQ
+     | section verbatim instead of calling the LLM; D/E are banned in code.
+     | OFF by default — the live flip stays a human decision (R9/R10).
+     | Rollback: false + config:cache.
+     */
+    'bot_faq_live_f' => (bool) env('BOT_FAQ_LIVE_F', false),
 
     /*
      | H3765 A3 (рулинг R9 плана PLAN_SYSTEMA_TELEGRAM_RAG_SUPPORT_2026H2):
@@ -586,6 +628,16 @@ return [
     'newsletter_subscribe' => (bool) env('NEWSLETTER_SUBSCRIBE_ENABLED', true),
 
     /*
+     | «Книжный клуб» — оплата доставки книг кампании planeta 219924 (H8195).
+     | Книги уже оплачены на кампании; товар продаёт ТОЛЬКО доставку (РФ 300 ₽
+     | за посылку до 2 кг, заграница — по таблице в config/book_club.php).
+     | ВЫКЛЮЧЕН по умолчанию — deploy-рубильник: пока флаг OFF, маршруты
+     | /knizhny-klub/dostavka отдают 404 и на сайте ничего не меняется.
+     | Включить: BOOK_CLUB_DELIVERY=true в .env + config:cache.
+     */
+    'book_club_delivery' => (bool) env('BOOK_CLUB_DELIVERY', false),
+
+    /*
      | Консолидированный дашборд посещаемости (GetCourse-паритет GC-B2, H553):
      | rate по студенту/группе/курсу, тренд по неделям, список хронических
      | неявок, экспорт CSV — поверх уже существующих ClassAttendanceService /
@@ -698,6 +750,25 @@ return [
      | CHECKOUT_INACTIVE_TARIFF_GUARD=false. См. MONEY_FALSE_ECONOMY_DARK_FLAGS_2026.
      */
     'checkout_inactive_tariff_guard' => (bool) env('CHECKOUT_INACTIVE_TARIFF_GUARD', true),
+
+    /*
+     | Подсказка про оплату картой после перехода НСПК на сертификаты Минцифры
+     | (19-11-2026): в чекауте под кнопкой оплаты и в TG-напоминаниях об оплате —
+     | «ошибка браузера → СБП или Яндекс Браузер». Только текст, деньги и доступ
+     | не трогает. ВКЛ; выключить CHECKOUT_CARD_CERT_HINT=false, когда браузеры
+     | начнут доверять сертификатам. App\Support\CardCertHint.
+     */
+    'checkout_card_cert_hint' => (bool) env('CHECKOUT_CARD_CERT_HINT', true),
+
+    /*
+     | Чекаут целого блока, который у вошедшего студента уже оплачен (16-11-2026:
+     | сохранённые ссылки прошлого месяца → второй платёж за оплаченные блоки).
+     | Когда ВКЛ, /checkout/{tariff} вместо формы показывает «Блок N уже оплачен»
+     | и кнопку следующего неоплаченного блока, а POST /payment/create отказывает
+     | до создания Payment. Подарок и половины блоков не затрагиваются.
+     | App\Services\Checkout\AlreadyPaidBlockGuard. Money-контур: OFF по умолчанию.
+     */
+    'checkout_already_paid_block_guard' => (bool) env('CHECKOUT_ALREADY_PAID_BLOCK_GUARD', false),
 
     /*
      | Сериализация реферального кошелька в чекауте. Когда ВКЛ, транзакция первым
@@ -1131,6 +1202,14 @@ return [
     'waitlist_voting' => (bool) env('WAITLIST_VOTING', false),
 
     /*
+     | Карточки открытых занятий в @samskrte_bot: фото + «✅ Я иду» + нижнее
+     | меню, анонс / утро / ссылка Zoom (open-lessons:cards). В бот идут только
+     | занятия с галочкой schedules.bot_card_enabled. OFF по умолчанию;
+     | обкатка — OPEN_LESSON_CARDS_TEST_CHAT_IDS (config/open_lesson_cards.php).
+     */
+    'open_lesson_cards' => (bool) env('OPEN_LESSON_CARDS_ENABLED', false),
+
+    /*
      | Ждун: автооткрытие оплаты при кворуме (votes >= min_payers) для
      | строки, привязанной к курсу: статус payment_open + включение тарифов
      | курса + сигнал куратору (OpenWaitlistPayment). Срабатывает сразу на
@@ -1139,6 +1218,15 @@ return [
      | прежний путь: ручное открытие/ежедневный прогнозный прогон.
      */
     'waitlist_auto_payment' => (bool) env('WAITLIST_AUTO_PAYMENT', true),
+
+    /*
+     | Ждун: при автооткрытии оплаты (OpenWaitlistPayment) написать самим
+     | голосовавшим «оплата открыта» в привязанные TG/VK кабинета
+     | (ZhdunVoterNotifier), раз на строку. OFF — сигнал только куратору;
+     | ручная кнопка «Сообщить голосовавшим» в админке работает при любом
+     | значении. Default false — включается человеком на проде.
+     */
+    'waitlist_notify_voters' => (bool) env('WAITLIST_NOTIFY_VOTERS', false),
 
     /*
      | H5134 — «Избранное» (сердечки, MG 17-09-2026): личный список курсов +
@@ -1477,6 +1565,34 @@ return [
      | командой `membership:rehearse` до объявления запуска.
      */
     'club_membership' => (bool) env('CLUB_MEMBERSHIP', false),
+
+    // H8245: B2B-оплата «за группу целиком» — юрлицо/студия платит за всех учеников
+    // группы одним платежом (Адара → курс 463 «Грамматика по Кочергиной»).
+    // OFF (дефолт): b2b_group-платёж — чисто денежная строка, поведение живого
+    // контура прежнее. ON: ученики группы с оплаченным b2b_group-платежом получают
+    // виртуальные ключи доступа (B2bGroupEntitlement), блок-калькулятор атрибутирует
+    // платёж группе по payments.group_id, должники не считают покрытых учеников.
+    'b2b_group_payment' => (bool) env('B2B_GROUP_PAYMENT', false),
+
+    // H8250: B2B-напоминания плательщику (после последнего урока покрытого
+    // блока — ровно одно напоминание оплатить следующий блок). Собственный
+    // выключатель лейна поверх b2b_group_payment: напоминания не активируются
+    // молча вместе с b2b-контуром, только явным переворотом (DEPLOY_QUEUE).
+    'b2b_payer_reminders' => (bool) env('B2B_PAYER_REMINDERS', false),
+
+    // Смешанная группа под B2B-оплатой: отметка «платит сам» на членстве ученика
+    // (group_user.b2b_self_pay). OFF (дефолт): отметка игнорируется, групповой
+    // платёж покрывает всех членов группы. ON (только поверх b2b_group_payment):
+    // отмеченному b2b_group-платёж не даёт виртуальных ключей и не снимает его
+    // из должников — доступ только по собственным платежам.
+    'b2b_group_self_pay' => (bool) env('B2B_GROUP_SELF_PAY', false),
+
+    // B2B-оплата за группу: «открыть доступ до оплаты» (payments.access_while_pending).
+    // OFF (дефолт): групповой платёж даёт доступ только в статусе «Оплачено».
+    // ON (только поверх b2b_group_payment): b2b_group-платёж в статусе pending с
+    // отметкой уже открывает ученикам группы свои блоки и снимает их из должников.
+    // Выручка/ЗП считают платёж только после «Оплачено».
+    'b2b_group_pending_access' => (bool) env('B2B_GROUP_PENDING_ACCESS', false),
     // H2744 staged rollout. Tier interpretation is dark until legacy rows and
     // tariffs have been explicitly classified by membership:classify-tiers.
     'membership_tiered' => (bool) env('MEMBERSHIP_TIERED', false),
@@ -2002,4 +2118,142 @@ return [
      | deploy-шаг человека.
      */
     'hermes_human_send' => (bool) env('HERMES_HUMAN_SEND', false),
+
+    /*
+     | Hermes W1 роль 20 `faq-rag` (H6185, пакет hermes-24-01a10bca):
+     | RAG-сборка ответа с ПРОВЕРЯЕМЫМИ цитатами — вход маскируется ДО LLM
+     | (H6182), контур-гейт на общем классификаторе H6190, ретривал H2448 +
+     | score floor H3766 B5, ответ только с маркером [cite:chunk_id],
+     | разрешимым против утверждённого FAQ-корпуса (missing/stale/
+     | contradictory цитата = отказ или человеку). Mock-LLM путь, никаких
+     | платных API и исходящих отправок (human-send per H6183). ВЫКЛ по
+     | умолчанию (роль OFF — W1 deploy gate stays OFF): включение
+     | HERMES_FAQ_RAG=true + config:cache — deploy-шаг человека.
+     */
+    'hermes_faq_rag' => (bool) env('HERMES_FAQ_RAG', false),
+
+    /*
+     | Hermes W1 роль 85 `access-provisioner` (H6189, пакет hermes-24-01a10bca):
+     | READ-ONLY диагностика доступа + проект исправления как ДАННЫЕ для
+     | человека — действующее/истёкшее/чужое/отсутствующее право, объяснение
+     | основания (оплата), проект операции (grant/extend/revoke/rebind/none).
+     | НИКАКИХ реальных изменений доступов (access mutations запрещены
+     | абсолютно): проект исполняется только подтверждением человека. Вход
+     | маскируется ДО обработки (H6182, fail-closed), маршрутизация — общий
+     | слой H6190, квота H6174 (default OFF) ограничивает композицию
+     | черновика. Никаких платных API и исходящих отправок (human-send per
+     | H6183). ВЫКЛ по умолчанию (роль OFF — W1 deploy gate stays OFF):
+     | включение HERMES_ACCESS_DIAGNOSTICS=true + config:cache — deploy-шаг
+     | человека.
+     */
+    'hermes_access_diagnostics' => (bool) env('HERMES_ACCESS_DIAGNOSTICS', false),
+
+    /*
+     | Hermes W1 роль 65 `payment-reconciler` (H6188, пакет hermes-24-01a10bca):
+     | READ-ONLY предложение сверки оплат — синтетические payment/duplicate/
+     | refund/mismatch данные сверяются с записями Systema и ожиданиями
+     | (курс/баланс), находки адресуются человеку через human-send (H6183).
+     | ZERO money-мутаций, ZERO платёжных API и LLM-вызовов (предложение
+     | композится детерминированно), PII fail-closed (H6182), маршрутизация —
+     | общий слой H6190, квота H6174 (default OFF — log-only). ВЫКЛ по
+     | умолчанию (роль OFF — W1 deploy gate stays OFF): включение
+     | HERMES_PAYMENT_RECONCILER=true + config:cache — deploy-шаг человека.
+     */
+    'hermes_payment_reconciler' => (bool) env('HERMES_PAYMENT_RECONCILER', false),
+
+    /*
+     | Быстрая запись на бесплатный мини-курс «Подготовительная группа» для
+     | рекламного трафика из VK-бота: /k/{mini_courses.slug}/start — имя + email
+     | + согласие ПДн → кабинет, платёж 0 ₽ по штатному пути Payment (доступ,
+     | course_user = старт дрипа), автовход и сразу в курс. Существующий email
+     | не логинится — ему уходит одноразовая ссылка. Под флагом попап рассылки
+     | на лендинге мини-курса скрыт, а кнопка бесплатного тарифа ведёт на /start.
+     | ВЫКЛ по умолчанию (money-контур): MINI_COURSE_QUICK_ENROLL=true +
+     | config:cache — deploy-шаг человека.
+     */
+    'mini_course_quick_enroll' => (bool) env('MINI_COURSE_QUICK_ENROLL', false),
+
+    /*
+     | Запись в группу из лички (20-10-2026). Студент пишет «запишите меня на
+     | субботу 11» / «готова оплатить» — EnrollmentGroupResolver по номеру
+     | группы или дню+часу находит ОДНУ группу, автоответ отдаёт чекаут блока
+     | этой группы с подписанным ?group=. Неоднозначно → подсказка куратору со
+     | списком кандидатов. Сумма — только из Tariff (kind 'facts').
+     | ВЫКЛ по умолчанию (денежный контур): SUPPORT_ENROLL_PAY_LINK=true.
+     */
+    'support_enroll_pay_link' => (bool) env('SUPPORT_ENROLL_PAY_LINK', false),
+
+    /*
+     | 22-10-2026: «как оплатить? / не могу оплатить через кабинет» в личке →
+     | бот спрашивает, что именно и какой блок (варианты с ценой из Tariff),
+     | по ответу — ссылка на чекаут; неразборчивый ответ — подсказка куратору.
+     | Пилотный список enroll_pilot_telegram_ids действует и здесь.
+     | ВЫКЛ по умолчанию (денежный контур): SUPPORT_PAY_CLARIFY=true.
+     */
+    'support_pay_clarify' => (bool) env('SUPPORT_PAY_CLARIFY', false),
+
+    /*
+     | 22-10-2026: разговор об оплате/записи понимает локальная LLM (Ollama),
+     | читая весь диалог (студент, бот, куратор). off — нет; shadow — модель
+     | решает, решение пишется событием dm_pay_llm_shadow, отвечают регулярки;
+     | live — отвечает решение модели (суммы и ссылки — всё равно из Tariff).
+     */
+    'support_pay_dialog_llm' => in_array(env('SUPPORT_PAY_DIALOG_LLM', 'off'), ['shadow', 'live'], true)
+        ? (string) env('SUPPORT_PAY_DIALOG_LLM')
+        : 'off',
+
+    /*
+     | Выбранная группа в платеже: чекаут пишет payments.group_id из
+     | подписанной ссылки, grantAccess() на курсе с НЕСКОЛЬКИМИ группами
+     | выдаёт только её. Курс с одной группой — поведение прежнее.
+     | ВЫКЛ по умолчанию (money-контур): GRANT_CHOSEN_GROUP=true.
+     */
+    'grant_chosen_group' => (bool) env('GRANT_CHOSEN_GROUP', false),
+
+    /*
+     | После оплаты студенту уходит ссылка-заявка в Telegram-чат его группы
+     | (creates_join_request, бот @zapisi_ORSbot). Заявку бот одобряет сам,
+     | только если у Telegram-аккаунта есть оплаченное активное членство в
+     | этой группе и нет снятия за долг; иначе заявка висит, кураторам алерт.
+     | Требует: бот — админ с can_invite_users, вебхук с chat_join_request
+     | (php artisan zapisi:set-webhook). ВЫКЛ по умолчанию: PAID_CHAT_JOIN_REQUEST=true.
+     */
+    'paid_chat_join_request' => (bool) env('PAID_CHAT_JOIN_REQUEST', false),
+
+    /*
+     | Пилот записи через личку (21-10-2026): Telegram ID через запятую.
+     | Непусто — ссылка на оплату группы, ссылка-заявка после оплаты и
+     | автоодобрение работают ТОЛЬКО для этих аккаунтов, остальным — как при
+     | выключенных флагах (без ответов и алертов). Пусто — для всех.
+     | Пример: ENROLL_PILOT_TELEGRAM_IDS=123456789
+     */
+    'enroll_pilot_telegram_ids' => array_values(array_filter(array_map('trim', explode(',', (string) env('ENROLL_PILOT_TELEGRAM_IDS', ''))))),
+
+    /*
+     | H6395 lever 2 (GTD WIC) — доверие заявки через ClaimTrustPolicy.
+     | ВЫКЛ (default): легаси User::isEstablishedClaimStudent() — возраст
+     |   ≥ CLAIM_TRUST_MIN_AGE_DAYS (7) сут ИЛИ проведённый платёж.
+     | ВКЛ: ClaimTrustPolicy::isPreexistingVerified() с порогом ИЗ КОНФИГА КАНАЛА
+     |   (services.{paypal,bank_claim,gasuns_pay}.trust_min_account_age_hours).
+     |   Дефолт 168 ч = 7 сут, поэтому включение без env-тюнинга семантику НЕ
+     |   меняет; понижение порога — сознательное решение по денежному контуру.
+     | Включение в проде — отдельный ops-шаг (env + config:cache), не мерж PR.
+     */
+    'claim_trust_policy' => (bool) env('CLAIM_TRUST_POLICY_ENABLED', false),
+
+    /*
+     | H7803 — рантайм-флип топик-классификатора на синхронизированные правила
+     | пакета (support:rules-sync, pattern_hash NOT NULL). ВЫКЛЮЧЕН по умолчанию:
+     | OFF = ровно прежнее поведение (легаси mb_stripos, synced-строки невидимы).
+     | ON: SupportTopicClassifier матчит PCRE-паттерны в семантике reference-
+     | движка (нормализация, priority asc, negations, первый матч), синхронизи-
+     | рованный набор идёт первым, легаси-ключевые слова — фолбэк (на проде
+     | легаси-строк нет, поэтому ON = YAML-истина). Классификатор аналитика-
+     | только: автоответы/платежи/доступы не затрагиваются (H3529 фенс).
+     | Гейт включения — precision ≥0.93 на категорию при n≥30 на masked-корпусе
+     | (VERIFICATION_SELF_SERVE_CLASSIFIER_2026H2.md); процедура флипа —
+     | docs/IMPLEMENTATION_SELF_SERVE_WAVE1_2026H2.md §H7803.
+     | Включение: SUPPORT_TOPIC_SYNCED_RULES=true + php artisan config:cache.
+     */
+    'support_topic_synced_rules' => (bool) env('SUPPORT_TOPIC_SYNCED_RULES', false),
 ];
