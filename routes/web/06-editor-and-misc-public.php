@@ -16,6 +16,7 @@ use App\Http\Controllers\PublicChatController;
 use App\Http\Controllers\PublicPresenceController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SurveyPageController;
+use App\Http\Middleware\RequireTwoFactor;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
@@ -29,7 +30,11 @@ Route::middleware(['web', 'auth'])
         Route::get('asset/{path}', [LectureDraftController::class, 'asset'])
             ->where('path', '.*')
             ->name('asset');
+        // H7830: r7 intent — поверхности изменения данных остаются под гейтом,
+        // даже когда маршрут зарегистрирован вне стека панели. GET-чтения
+        // (preview/asset) остаются открытыми по р7 (рулинг MG 07-11-2026).
         Route::post('patch', [LectureDraftController::class, 'patch'])
+            ->middleware(RequireTwoFactor::class)
             ->name('patch');
     });
 

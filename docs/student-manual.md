@@ -1,6 +1,6 @@
 # Полное руководство студента — личный кабинет
 
-_Created: 06-07-2026 · Last updated: 14-10-2026_
+_Created: 06-07-2026 · Last updated: 15-11-2026_
 
 **Ученику — страница [«Как пользоваться»](https://samskrte.ru/dvaram/help) (`/dvaram/help`) в кабинете.** Этот файл — командная карта для куратора и разработчика, не продукт для человека.
 
@@ -53,8 +53,28 @@ _Created: 06-07-2026 · Last updated: 14-10-2026_
    существующий кабинет по голому знанию email не привязывается и не
    перезаписывается (мягкий отказ — тогда куратор). Прод-флаг
    `TELEGRAM_CABINET_PROVISION` включён (проба 09-10-2026; механика —
-   `CabinetProvisionBotCommand`); студенческий сценарий — шаг 7 сценария
+   `CabinetProvisionBotCommand`); студенческий сценарий — шаг 8 сценария
    «Войти в кабинет» и FAQ «Кабинета нет, хочу без сайта и без куратора» в
+   [`docs/STUDENT_CABINET_GUIDE_RU.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_GUIDE_RU.md).
+6. **Кабинет есть, письмо со ссылкой не приходит — email заказа боту** — та же
+   личка, просто текстом свой email заказа: бот привяжет Telegram к
+   существующему кабинету (матч по нормализованному email среди оплативших,
+   staff исключён) и пришлёт одноразовую ссылку входа. Щиты: существующий
+   email голым знанием не перезаписывается (это был бы угон), отказы «нет
+   адреса / не платил / staff» неразличимы снаружи, лимит 5 ссылок/15 мин.
+   Прод-флаг `TELEGRAM_CABINET_EMAIL_LINK` включён 14-11-2026 (решение MG
+   «вариант A»; механика — `TelegramLoginService`, consumer `/tg-login`);
+   студенческий сценарий — шаг 4 и строка «Письмо не пришло» в
+   [`docs/STUDENT_CABINET_GUIDE_RU.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_GUIDE_RU.md).
+7. **После входа любым способом — привязка Telegram одним выстрелом** — кнопка
+   **«Подключить Telegram»** на дашборде кабинета (или `/telegram/connect`
+   под своим входом): заполняет `telegram_id`, после чего `/вход` боту —
+   бессрочный self-service входа (новая ссылка в любой момент, куратор не
+   нужен) плюс TG-канал уведомлений и ИИ-куратор в личке. Класс «пусть
+   привяжет, пока мы всё равно выдаём ссылку» — закрывает повторные
+   обращения. Механика привязки —
+   [`docs/cabinet-bot.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/cabinet-bot.md);
+   студенческий сценарий — шаг 9 в
    [`docs/STUDENT_CABINET_GUIDE_RU.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_GUIDE_RU.md).
 
 Если ни один способ не сработал (в т.ч. студент **не помнит email и пароль**):
@@ -395,7 +415,9 @@ Week / Month / All Time, H2051):
 
 Механики карточек/SRS — часть II гида
 ([«Колода (карточки)»](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_GUIDE_RU.md));
-тренажёры-игры вне кабинета — §12 (Лила).
+тренажёры-игры вне кабинета — §12 (Лила). С 10-11-2026 колоды несут таксономию
+(тема/размер/сложность): фильтры по ней работают на публичном `/koloda` и в разделе
+«Мои колоды», а крупные системные колоды делятся на частотные сегменты (H7966).
 
 ---
 

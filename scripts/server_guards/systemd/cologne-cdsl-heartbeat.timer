@@ -1,0 +1,11 @@
+[Unit]
+Description=Run cologne-cdsl-heartbeat every 10 min (heartbeat period 15m, grace 20m)
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=10min
+RandomizedDelaySec=30
+Persistent=true
+
+[Install]
+WantedBy=timers.target

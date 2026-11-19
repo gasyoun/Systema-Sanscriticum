@@ -100,6 +100,12 @@ class RecordingsGapWatchTest extends TestCase
                 'group_id' => $group->id,
                 'start' => CarbonImmutable::now('Europe/Moscow')->subHours(5),
             ]);
+            // 17-11-2026: дневной тик ловит только no-recording (урок есть,
+            // публикации нет); no-lesson уходит утреннему 08:00 проходу.
+            Lesson::factory()->create([
+                'course_id' => $course->id,
+                'lesson_date' => CarbonImmutable::now('Europe/Moscow')->toDateString(),
+            ]);
 
             Artisan::call('recordings:gap-watch', ['--stale' => true, '--dry' => true]);
             $out = Artisan::output();
@@ -175,6 +181,50 @@ class RecordingsGapWatchTest extends TestCase
 
         $this->assertSame(0, Artisan::call('recordings:gap-watch'));
         $this->assertSame(1, collect(Http::recorded())
+            ->filter(fn ($pair) => str_contains($pair[0]->url(), 'api.telegram.org'))
+            ->count());
+    }
+
+    /**
+     * 17-11-2026: пополнение набора пробелов не перезапускает алерт уже
+     * уехавших слотов — второй TG несёт только новый слот и строку
+     * «⏸ ещё N…», третий проход (новых нет) молчит.
+     */
+    public function test_set_growth_alerts_only_new_slots(): void
+    {
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true], 200),
+        ]);
+
+        $this->seedLiveSlot(withChat: true);
+
+        $this->assertSame(0, Artisan::call('recordings:gap-watch'));
+        $this->assertSame(1, RecordingGapAlert::query()->count());
+
+        $course2 = Course::factory()->live()->create(['title' => 'Курс второй']);
+        $group2 = Group::create(['name' => 'Группа Б', 'telegram_chat_id' => '-100888']);
+        Schedule::create([
+            'title' => 'Live 2',
+            'course_id' => $course2->id,
+            'group_id' => $group2->id,
+            'start' => $this->yesterday2000,
+        ]);
+
+        $this->assertSame(0, Artisan::call('recordings:gap-watch'));
+
+        $texts = collect(Http::recorded())
+            ->filter(fn ($pair) => str_contains($pair[0]->url(), 'api.telegram.org'))
+            ->map(fn ($pair) => (string) $pair[0]['text'])
+            ->values();
+        $this->assertSame(2, $texts->count(), 'Второй проход не должен повторять уже отправленный слот.');
+        $second = (string) $texts->last();
+        $this->assertStringContainsString('Курс второй', $second);
+        $this->assertStringContainsString('уже уезжали за последние 36 ч', $second);
+        $this->assertStringNotContainsString('Группа А', $second);
+        $this->assertSame(2, RecordingGapAlert::query()->count());
+
+        $this->assertSame(0, Artisan::call('recordings:gap-watch'));
+        $this->assertSame(2, collect(Http::recorded())
             ->filter(fn ($pair) => str_contains($pair[0]->url(), 'api.telegram.org'))
             ->count());
     }

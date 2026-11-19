@@ -2,7 +2,7 @@
 {{-- что и Telegram-пост. Принимает $fullSchedulePosts — list<FullSchedulePost>. --}}
 @if(!empty($fullSchedulePosts))
 <section id="full-schedule" class="mb-16 lg:mb-20" x-data="{ open: false }" data-collapse-section>
-    @include('shop.partials.collapse-header', ['title' => 'Полное расписание курса', 'bodyId' => 'full-schedule-body'])
+    @include('shop.partials.collapse-header', ['title' => $fullScheduleTitle ?? 'Полное расписание курса', 'bodyId' => 'full-schedule-body'])
 
     <div id="full-schedule-body" x-show="open" x-cloak
          x-transition:enter="transition ease-out duration-300"

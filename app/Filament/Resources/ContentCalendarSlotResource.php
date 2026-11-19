@@ -264,12 +264,12 @@ class ContentCalendarSlotResource extends Resource
         return is_string($state) ? $state : null;
     }
 
-    /** Длина поста в Telegram вместе с префиксом рубрики, который добавится при сохранении. */
+    /** Длина поста в Telegram вместе с префиксом (добавится при сохранении) и хештегами рубрики (при публикации). */
     private static function postLength(?string $html, mixed $rubricId): int
     {
         $rubric = filled($rubricId) ? ContentCalendarRubric::find($rubricId) : null;
 
-        return PostFormatter::telegramLength($html) + ($rubric?->prefixLength($html) ?? 0);
+        return PostFormatter::telegramLength($html) + ($rubric?->prefixLength($html) ?? 0) + ($rubric?->hashtagsLength($html) ?? 0);
     }
 
     private static function publicationsReport(ContentCalendarSlot $record): HtmlString
@@ -308,7 +308,9 @@ class ContentCalendarSlotResource extends Resource
                 Tables\Columns\TextColumn::make('slot_date')->label('Дата')->date('d.m.Y')->sortable(),
                 Tables\Columns\TextColumn::make('slot_type')->label('Тип')->badge(),
                 Tables\Columns\TextColumn::make('status')->label('Статус')->badge(),
-                Tables\Columns\TextColumn::make('rubric.name')->label('Рубрика')->placeholder('—')->toggleable(),
+                Tables\Columns\TextColumn::make('rubric.name')->label('Рубрика')->placeholder('—')->toggleable()
+                    ->description(fn (ContentCalendarSlot $record): ?string => $record->isRubricPaused() ? 'пауза' : null)
+                    ->color(fn (ContentCalendarSlot $record): ?string => $record->isRubricPaused() ? 'gray' : null),
                 Tables\Columns\TextColumn::make('title')->label('Заголовок')->limit(40)->wrap(),
                 Tables\Columns\TextColumn::make('body')
                     ->label('Текст')
@@ -350,11 +352,10 @@ class ContentCalendarSlotResource extends Resource
                             ->modalWidth(MaxWidth::SevenExtraLarge)
                             ->modalHeading(fn (ContentCalendarSlot $record): string => (string) $record->title)
                             ->modalContent(fn (ContentCalendarSlot $record): HtmlString => new HtmlString(
-                                // !important обязательны: глобальный хук панели
-                                // (AdminPanelProvider) жмёт все картинки .fi-main до
-                                // 150px с !important — инлайн без него проигрывает.
+                                // Глобального хака .fi-main img больше нет (скоуп снят
+                                // в H7487, PR #3625) — обычного инлайн-стиля достаточно.
                                 '<img src="'.e((string) $record->mediaUrl()).'" alt="Обложка слота"'
-                                .' style="display:block;margin:0 auto;width:auto!important;height:auto!important;max-width:100%!important;max-height:80vh!important;border-radius:8px">'
+                                .' style="display:block;margin:0 auto;width:auto;height:auto;max-width:100%;max-height:80vh;border-radius:8px">'
                             ))
                             ->modalSubmitAction(false)
                             ->modalCancelAction(false),

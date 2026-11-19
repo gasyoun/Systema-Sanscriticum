@@ -317,6 +317,16 @@ ensure_views_dir_shared
 run_as_app_user php artisan optimize
 run_as_app_user php artisan filament:optimize 2>/dev/null || { warn "filament:optimize failed — Filament caches not warmed"; DEPLOY_SOFT_FAIL=1; }
 
+# ── 4b. LYW-паки (H7069) ─────────────────────────────────────────────────────
+# Девять zan1-паков закоммичены в resources/data/lesson_packs и читаются
+# оттуда (config('lyw.packs_path')). Если LYW_ENABLED=true, а у включённой
+# группы нет manifest.json/пак битый — это провальный деплой, а не тихие 404
+# студентам. На rollback команды может не быть в старом коммите — пропускаем.
+if [ -z "$ROLLBACK_TO" ]; then
+  say "LYW packs: php artisan lyw:verify-packs"
+  php artisan lyw:verify-packs || fail "LYW packs неполны при LYW_ENABLED=true — включённые группы остались бы без контента. Источник: resources/data/lesson_packs (tracked)"
+fi
+
 # Страховка: шаги ниже (cabinet:probe от www-data, guards:verify от root) могут
 # дособрать вьюхи. Chown идемпотентен и дёшев.
 chown_compiled_views
@@ -499,11 +509,21 @@ if [ "$(id -u)" = 0 ]; then
   fi
 fi
 
-say "Предохранители ОС: php artisan guards:verify"
+say "Предохранители ОС: guards:verify → dry-run diff → apply → guards:verify"
 GUARDS_DRIFT=0
-php artisan guards:verify || GUARDS_DRIFT=1
+GUARD_SYNC_ARGS=()
+if [ -n "$ROLLBACK_TO" ]; then
+  GUARD_SYNC_ARGS+=(--verify-only)
+fi
+if ! APP_DIR="$APP_DIR" \
+     APP_USER="${APP_USER:-www-data}" \
+     PHP_BIN="${PHP_BIN:-php}" \
+     DEPLOY_LOG="$DEPLOY_LOG" \
+     bash "$APP_DIR/scripts/deploy_guards_sync.sh" "${GUARD_SYNC_ARGS[@]}"; then
+  GUARDS_DRIFT=1
+fi
 # Последний root-овый artisan в этом скрипте: 17-08 07:38Z оставил 8 root-овых
-# вьюх после probe+guards даже с пост-probe chown.
+# вьюх после probe+guards даже с пост-probe chown. Apply тоже пишет от root.
 chown_compiled_views
 # H4848: гард, которого требовала миссия. Деплой, оставивший root-овый
 # скомпилированный view, — ПРОВАЛЬНЫЙ деплой, а не предупреждение в логе,
@@ -539,10 +559,10 @@ if [ "$GUARDS_DRIFT" = 1 ]; then
 fi
 
 if [ "$GUARDS_DRIFT" = 1 ]; then
-  printf '\n\033[1;31m%s\033[0m\n' "✖ ПРЕДОХРАНИТЕЛИ ПРОДА РАСХОДЯТСЯ С РЕПОЗИТОРИЕМ (см. список выше)"
-  printf '\033[1;31m%s\033[0m\n' "  Вернуть: sudo bash scripts/server_guards_apply.sh"
+  printf '\n\033[1;31m%s\033[0m\n' "✖ ПРЕДОХРАНИТЕЛИ ПРОДА РАСХОДЯТСЯ С РЕПОЗИТОРИЕМ (apply в этом деплое не закрыл дрейф)"
+  printf '\033[1;31m%s\033[0m\n' "  Разобрать вывод apply выше. Повторить вручную: sudo bash scripts/server_guards_apply.sh"
   printf '\033[1;31m%s\033[0m\n' "  Почему это важно: docs/server-resource-guards.md"
-  echo "$(date '+%Y-%m-%d %H:%M:%S') GUARDS DRIFT после ${NEW_COMMIT}" >> "$DEPLOY_LOG"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') GUARDS DRIFT после ${NEW_COMMIT}: apply не закрыл дрейф" >> "$DEPLOY_LOG"
 fi
 
 # ── 8. Журнал деплоев ────────────────────────────────────────────────────────

@@ -12,7 +12,7 @@
 # Ручной запуск вне расписания: bash scripts/activate_tiered_pricing.sh --force
 
 set -uo pipefail
-cd /var/www/html
+cd /var/www/html || exit 1
 LOG=storage/logs/tier_activation.log
 MARKER=storage/app/membership/tier_activation_20260901.done
 

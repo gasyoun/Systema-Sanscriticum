@@ -6,9 +6,11 @@ namespace App\Services\Content;
 
 use App\Models\ContentCalendarSlot;
 use App\Models\VkUserToken;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Sleep;
 use Throwable;
 
 /**
@@ -32,6 +34,22 @@ class CalendarVkPublisher
     private const VK_API = 'https://api.vk.com/method';
 
     /**
+     * 03-11-2026: параллельные загрузки от одного токена upload-сервер VK
+     * (фронт «kittenx») часто режет ответом HTTP 405 вместо JSON — так 02-11 в
+     * 19:00 пост «Слово с историей» трижды не ушёл ни в одно из трёх
+     * сообществ: на каждом тике три PublishCalendarSlotJob грузили фото разом.
+     * Поэтому загрузки идут по одной (блокировка на весь кэш), а отказ
+     * upload-сервера повторяется сразу, с новым upload_url.
+     */
+    private const UPLOAD_LOCK = 'vk-media-upload';
+
+    private const UPLOAD_LOCK_SECONDS = 600;
+
+    private const UPLOAD_LOCK_WAIT_SECONDS = 120;
+
+    private const PHOTO_UPLOAD_TRIES = 3;
+
+    /**
      * @param  array<string, mixed>  $destination
      * @return array{external_id: string, permalink: string, warning: ?string}
      */
@@ -50,7 +68,7 @@ class CalendarVkPublisher
         $response = $this->call('wall.post', $token, [
             'owner_id' => -$groupId,
             'from_group' => 1,
-            'message' => PostFormatter::toPlain($slot->body),
+            'message' => PostFormatter::toPlain($slot->publishBody()),
             'attachments' => implode(',', $attachments),
         ]);
 
@@ -159,9 +177,10 @@ class CalendarVkPublisher
         }
 
         try {
-            $attachment = $type === ContentCalendarSlot::MEDIA_PHOTO
-                ? $this->uploadPhoto($slot, $token, $groupId)
-                : $this->uploadVideo($slot, $token, $groupId);
+            $attachment = Cache::lock(self::UPLOAD_LOCK, self::UPLOAD_LOCK_SECONDS)
+                ->block(self::UPLOAD_LOCK_WAIT_SECONDS, fn (): string => $type === ContentCalendarSlot::MEDIA_PHOTO
+                    ? $this->uploadPhoto($slot, $token, $groupId)
+                    : $this->uploadVideo($slot, $token, $groupId));
         } catch (Throwable $e) {
             Log::warning('CalendarVkPublisher: вложение не загрузилось', [
                 'calendar_slot_id' => $slot->id,
@@ -169,9 +188,15 @@ class CalendarVkPublisher
                 'error' => $e->getMessage(),
             ]);
 
-            return $type === ContentCalendarSlot::MEDIA_PHOTO
-                ? [[$slot->shareUrl()], 'VK: фото не загрузилось ('.$e->getMessage().') — ушло карточкой-ссылкой']
-                : [[], 'VK: видео не загрузилось ('.$e->getMessage().') — пост опубликован текстом'];
+            // 02-11-2026: фото при праве photos — повтор на следующем тике, а не
+            // карточка-ссылка: VK отклоняет карточку с вертикальной обложкой
+            // (link_photo_sizing_rule), и пост не выходил вовсе. Сбой загрузки
+            // обычно разовый (пустой ответ upload-сервера).
+            if ($type === ContentCalendarSlot::MEDIA_PHOTO) {
+                throw new CalendarPublishException('vk: фото не загрузилось ('.$e->getMessage().') — повтор на следующем тике');
+            }
+
+            return [[], 'VK: видео не загрузилось ('.$e->getMessage().') — пост опубликован текстом'];
         }
 
         return [[$attachment], null];
@@ -179,18 +204,38 @@ class CalendarVkPublisher
 
     private function uploadPhoto(ContentCalendarSlot $slot, string $token, int $groupId): string
     {
-        $server = $this->call('photos.getWallUploadServer', $token, ['group_id' => $groupId]);
-        $uploadUrl = (string) ($server['upload_url'] ?? '');
-        if ($uploadUrl === '') {
-            throw new \RuntimeException('photos.getWallUploadServer: '.($server['error'] ?? 'нет upload_url'));
+        $contents = $this->fileContents($slot);
+        $uploaded = [];
+        $failure = '';
+        for ($try = 1; $try <= self::PHOTO_UPLOAD_TRIES; $try++) {
+            if ($try > 1) {
+                Sleep::for(2 * ($try - 1))->seconds();
+            }
+
+            // upload_url берём заново на каждую попытку: отказ мог быть
+            // привязан к выданному серверу.
+            $server = $this->call('photos.getWallUploadServer', $token, ['group_id' => $groupId]);
+            $uploadUrl = (string) ($server['upload_url'] ?? '');
+            if ($uploadUrl === '') {
+                throw new \RuntimeException('photos.getWallUploadServer: '.($server['error'] ?? 'нет upload_url'));
+            }
+
+            $response = Http::timeout(120)
+                ->attach('photo', $contents, basename((string) $slot->media_path))
+                ->post($uploadUrl);
+            $uploaded = $response->json();
+            if (is_array($uploaded) && ! blank($uploaded['photo'] ?? null) && ($uploaded['photo'] ?? '') !== '[]') {
+                break;
+            }
+
+            $failure = $response->successful() && is_array($uploaded)
+                ? 'пустой ответ upload-сервера'
+                : 'upload-сервер ответил HTTP '.$response->status();
+            $uploaded = [];
         }
 
-        $uploaded = Http::timeout(120)
-            ->attach('photo', $this->fileContents($slot), basename((string) $slot->media_path))
-            ->post($uploadUrl)
-            ->json() ?? [];
-        if (blank($uploaded['photo'] ?? null) || ($uploaded['photo'] ?? '') === '[]') {
-            throw new \RuntimeException('загрузка фото: пустой ответ upload-сервера');
+        if ($uploaded === []) {
+            throw new \RuntimeException('загрузка фото: '.$failure.' ('.self::PHOTO_UPLOAD_TRIES.' попытки)');
         }
 
         $saved = $this->call('photos.saveWallPhoto', $token, [

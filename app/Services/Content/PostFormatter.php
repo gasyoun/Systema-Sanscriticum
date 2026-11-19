@@ -165,9 +165,11 @@ final class PostFormatter
             'code' => $wrap('code'),
             'pre' => ($tg ? '<pre>'.self::children($node, $mode, true).'</pre>' : self::children($node, $mode, true))."\n",
             'br' => "\n",
-            'p', 'div' => $inner()."\n",
+            // 07-11-2026: абзац отделяется пустой строкой — иначе пост в TG/VK
+            // шёл «простынёй»; <br> внутри абзаца — по-прежнему перенос строки.
+            'p', 'div' => $inner()."\n\n",
             'h1', 'h2', 'h3', 'h4', 'h5', 'h6' => $wrap('b')."\n",
-            'blockquote' => ($tg ? '<blockquote>'.rtrim($inner()).'</blockquote>' : rtrim($inner()))."\n",
+            'blockquote' => ($tg ? '<blockquote>'.rtrim($inner()).'</blockquote>' : rtrim($inner()))."\n\n",
             'ul', 'ol' => $inner(),
             'li' => (strtolower((string) $node->parentNode?->nodeName) === 'ol' ? $liIndex.'. ' : '• ')
                 .rtrim($inner())."\n",
