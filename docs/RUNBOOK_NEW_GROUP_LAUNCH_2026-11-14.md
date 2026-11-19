@@ -55,6 +55,13 @@ idempotency-guard по `Course::where('title',…)`:
   `hours_count`/`level` — mirror курса-образца; `zoom_link = join_url` — мутатор
   `setZoomLinkAttribute` сам выведет `zoom_meeting_id`; `is_visible=1, is_active=1`.
 - `Group::create([name, status='forming', telegram_join_link, min_size=8])`.
+- **Название группы — по единому стандарту** ([docs/STANDING_POLICY_COURSE_NAMING_2026.md](STANDING_POLICY_COURSE_NAMING_2026.md)):
+  «Название (ч. N) YYYY» для многотомного курса, «Название (N поток, YYYY)» для
+  повторного потока, «Название гр. NN» для параллельных групп. Имя группы — источник
+  титула ВСЕЙ серии ({TITLE} генератора; инцидент 19-11-2026: «Кашмирский шиваизм,
+  часть 3 2026» уехал студентам в «Скоро занятие»). Гейт —
+  `php artisan catalog:check-naming`: прогнать ПОСЛЕ `Group::create` и ДО генерации
+  расписание; при exit 1 имя править, серию не генерить.
 - Расписание — [`ScheduleGenerator`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Schedule/ScheduleGenerator.php)
   + `GeneratorConfig(groupId, courseId, title, startDate=<первый урок>, startTime='11:00',
   durationMinutes=120, totalLessons=60, startNumber=1, startLessonIndex=1,
@@ -158,5 +165,6 @@ encrypted). Состав (эталон — msg 11 чата гр.64 от 14-11-20
 - [ ] анонс в «Оповещениях» без приватных ссылок
 - [ ] кабинеты: `group_user` count = числу учеников, `course_group` связка есть
 - [ ] окно T-60: напоминание ушло (или слот-причина объяснена)
+- [ ] `php artisan catalog:check-naming` на проде — exit 0 (названия группы/серии по стандарту)
 
 _Dr. Mārcis Gasūns_

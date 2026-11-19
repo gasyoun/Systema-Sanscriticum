@@ -11,6 +11,7 @@ use App\Models\Schedule;
 use App\Services\Schedule\DTO\GeneratorConfig;
 use App\Services\Schedule\ScheduleGenerator;
 use App\Services\Schedule\SchedulePostSender;
+use App\Support\CourseNamingStandard;
 use App\Support\RoleGate;
 use Carbon\Carbon;
 use Filament\Actions;
@@ -78,7 +79,12 @@ class ListSchedules extends ListRecords
                                 ->label('Название потока {TITLE}')
                                 ->required()
                                 ->columnSpanFull()
-                                ->helperText('Подставляется в плейсхолдер {TITLE} шаблона. По умолчанию = название группы.'),
+                                ->helperText('Подставляется в плейсхолдер {TITLE} шаблона. По умолчанию = название группы.')
+                                // Единый стандарт названий (19-11-2026): {TITLE}
+                                // уходит в титул каждого занятия серии («Скоро
+                                // занятие», записи в кабинете) — проверяем на входе.
+                                // docs/STANDING_POLICY_COURSE_NAMING_2026.md.
+                                ->rule(fn () => CourseNamingStandard::filamentRule()),
                         ]),
 
                     Section::make('Даты и время')
