@@ -1,6 +1,6 @@
 # RUNBOOK — n8n ZOOM 1.4: записи не появились / n8n упал
 
-_Created: 24-08-2026 · Last updated: 12-09-2026_
+_Created: 24-08-2026 · Last updated: 19-11-2026_
 
 **Audience:** дежурный агент / оператор. Один документ на два вопроса: «записи нет» и «n8n лежит».
 **Хосты:** n8n `root@193.232.229.91` (docker compose `/opt/n8n`, контейнер `n8n-n8n-1`, restart=unless-stopped); Laravel `root@193.232.229.92`.
@@ -105,6 +105,8 @@ cd /var/www/html && php artisan recordings:gap-watch --retry-failed --date=<се
    `curl -X POST http://127.0.0.1:5678/webhook/86446208-6c7a-432f-bcaa-f4d9536b3f55 -H 'Host: context-ai.ru' -H 'Content-Type: application/json' --data-binary @body.json` (HTTP 200 «OK»; дубли возможны ТОЛЬКО если exec успел залить YT/Rutube — сверить runData).
 2. Public API `GET /executions` **отстаёт от sqlite**: свежие running/waiting exec могут отсутствовать в выдаче (1926–1930 пропали), строка «last exec» в алерте gap-watch может быть устаревшей. Истина — sqlite-фолбэк из §8.
 3. PowerShell: `[System.IO.File]::WriteAllText(..., [System.Text.Encoding]::UTF8)` пишет **BOM** → n8n отвечает `422 Unexpected token '\ufeff'`. Писать через `UTF8Encoding($false)`.
+
+**Грабля draft-ловушки (класс 19-11-2026, харденинг [#4332](https://github.com/gasyoun/Systema-Sanscriticum/issues/4332)):** PUT на АКТИВНЫЙ воркфлоу ключом без scope `workflow:activate` (например, `oxalpha-ops`) возвращает **403 «Your change was saved as a draft»** — правка сохраняется в draft-версию: `GET /workflows` показывает её, но вебхуки исполняют `activeVersionId`. Прецедент: retryOnFail-харденинг выглядел применившимся (PASS по GET-дельте), пока sqlite не показал `activeVersionId ≠ versionId`. Правило: после каждого API-PUT деплоя проверять `sqlite3 /opt/n8n/storage/database.sqlite "SELECT active, versionId, activeVersionId FROM workflow_entity WHERE id='…'"` — правка live ⇔ `versionId = activeVersionId`. Публикация — повторный PUT тем же payload ключом со scope `workflow:activate` (ключ «Гасунс»; REST `/activate` — 403 проект-скоупу). Перед публикацией — дельта-аудит `workflow_history` (nodes published vs draft): публикация тянет ВЕСЬ draft, не одну правку.
 
 ## 3.2 Merge dead-end: обложка не найдена → exec зелёный, хвост пропущен (класс 10-09-2026)
 
