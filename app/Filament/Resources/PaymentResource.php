@@ -182,7 +182,17 @@ class PaymentResource extends Resource
                         ->visible(fn (Forms\Get $get) => $get('tariff') === Payment::TARIFF_B2B_GROUP)
                         ->required(fn (Forms\Get $get) => $get('tariff') === Payment::TARIFF_B2B_GROUP)
                         ->searchable()
-                        ->helperText('Группа, за которую платит юрлицо: ученики получают доступ виртуальными ключами (флаг b2b_group_payment), плательщику доступ не выдаётся. ДЕНЬГИ: счёт/перевод в кассу школы → received_account «school» (ЗП 30% как у обычной оплаты); нал ЛИЧНО преподавателю → «teacher_personal» + получатель (школьная ЗП не начисляется — личный заработок). Счёт юрлицу: provider «Счёт» (H2017, pending до сверки).')
+                        ->helperText('Группа, за которую платит юрлицо: ученики получают доступ виртуальными ключами (флаг b2b_group_payment), плательщику доступ не выдаётся. Ученики с отметкой «платит сам» (карточка ученика → группы, флаг b2b_group_self_pay) этим платежом не покрываются. ДЕНЬГИ: счёт/перевод в кассу школы → received_account «school» (ЗП 30% как у обычной оплаты); нал ЛИЧНО преподавателю → «teacher_personal» + получатель (школьная ЗП не начисляется — личный заработок). Счёт юрлицу: provider «Счёт» (H2017, pending до сверки).')
+                        ->columnSpanFull(),
+
+                    // «Открыть доступ до оплаты»: деньги юрлица придут позже, а
+                    // ученикам группы блоки нужны уже сейчас. Работает только при
+                    // статусе «Ожидает оплаты» и флаге b2b_group_pending_access.
+                    Forms\Components\Toggle::make('access_while_pending')
+                        ->label('Открыть доступ до оплаты')
+                        ->visible(fn (Forms\Get $get) => $get('tariff') === Payment::TARIFF_B2B_GROUP
+                            && B2bGroupEntitlement::pendingAccessEnabled())
+                        ->helperText('Для статуса «Ожидает оплаты»: ученики группы сразу получают доступ к блокам этого платежа, долг остаётся на юрлице. В выручку и ЗП платёж попадёт, когда смените статус на «Оплачено» (и поставите дату поступления денег). Статус «Отменено» закрывает доступ.')
                         ->columnSpanFull(),
                 ])->columns(2),
 
