@@ -7,9 +7,11 @@ use App\Jobs\SendTelegramMessageJob;
 use App\Mail\DepositTransferredMail;
 use App\Models\Course;
 use App\Models\FiscalReceipt;
+use App\Models\Group;
 use App\Models\Payment;
 use App\Models\Teacher;
 use App\Services\CuratorNotifier;
+use App\Services\Payments\B2bGroupEntitlement;
 use App\Services\Reconciliation\RefundAccessPolicy;
 use App\Services\Reconciliation\RefundAccessViolation;
 use App\Support\RoleGate;
@@ -123,6 +125,12 @@ class PaymentResource extends Resource
                                 'salary_payout' => '👨‍🏫 Выплата преподавателю',
                             ];
 
+                            // H8245: B2B-оплата «за группу целиком» — опция появляется
+                            // только под флагом features.b2b_group_payment.
+                            if (B2bGroupEntitlement::enabled()) {
+                                $options[Payment::TARIFF_B2B_GROUP] = '🏢 B2B: оплата за группу целиком (юрлицо, без чекаута учеников)';
+                            }
+
                             for ($i = 1; $i <= 100; $i++) {
                                 $startLesson = ($i - 1) * 4 + 1;
                                 $endLesson = $i * 4;
@@ -141,7 +149,9 @@ class PaymentResource extends Resource
                         ->required()
                         ->live()
                         ->afterStateUpdated(function ($state, callable $set) {
-                            if ($state === 'full' || $state === 'Расход') {
+                            // H8245: b2b_group — весь курс целиком, диапазон блоков
+                            // пуст (покрытие платёжем решает BlockMonthRecognition).
+                            if ($state === 'full' || $state === 'Расход' || $state === Payment::TARIFF_B2B_GROUP) {
                                 $set('start_block', null);
                                 $set('end_block', null);
                             } elseif (str_starts_with($state ?? '', 'block_')) {
@@ -150,6 +160,39 @@ class PaymentResource extends Resource
                                 $set('end_block', $blockNum);
                             }
                         })
+                        ->columnSpanFull(),
+
+                    // H8245: за какую группу платит юрлицо. Обязательна только для
+                    // b2b_group; её ученики получают доступ виртуальными ключами
+                    // (B2bGroupEntitlement), плательщику доступ не выдаётся.
+                    Forms\Components\Select::make('group_id')
+                        ->label('Группа (B2B-оплата)')
+                        ->options(function (Forms\Get $get) {
+                            $courseId = $get('course_id');
+                            if (! $courseId) {
+                                return [];
+                            }
+
+                            return Group::query()
+                                ->whereHas('courses', fn ($q) => $q->where('courses.id', (int) $courseId))
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->all();
+                        })
+                        ->visible(fn (Forms\Get $get) => $get('tariff') === Payment::TARIFF_B2B_GROUP)
+                        ->required(fn (Forms\Get $get) => $get('tariff') === Payment::TARIFF_B2B_GROUP)
+                        ->searchable()
+                        ->helperText('Группа, за которую платит юрлицо: ученики получают доступ виртуальными ключами (флаг b2b_group_payment), плательщику доступ не выдаётся. Ученики с отметкой «платит сам» (карточка ученика → группы, флаг b2b_group_self_pay) этим платежом не покрываются. ДЕНЬГИ: счёт/перевод в кассу школы → received_account «school» (ЗП 30% как у обычной оплаты); нал ЛИЧНО преподавателю → «teacher_personal» + получатель (школьная ЗП не начисляется — личный заработок). Счёт юрлицу: provider «Счёт» (H2017, pending до сверки).')
+                        ->columnSpanFull(),
+
+                    // «Открыть доступ до оплаты»: деньги юрлица придут позже, а
+                    // ученикам группы блоки нужны уже сейчас. Работает только при
+                    // статусе «Ожидает оплаты» и флаге b2b_group_pending_access.
+                    Forms\Components\Toggle::make('access_while_pending')
+                        ->label('Открыть доступ до оплаты')
+                        ->visible(fn (Forms\Get $get) => $get('tariff') === Payment::TARIFF_B2B_GROUP
+                            && B2bGroupEntitlement::pendingAccessEnabled())
+                        ->helperText('Для статуса «Ожидает оплаты»: ученики группы сразу получают доступ к блокам этого платежа, долг остаётся на юрлице. В выручку и ЗП платёж попадёт, когда смените статус на «Оплачено» (и поставите дату поступления денег). Статус «Отменено» закрывает доступ.')
                         ->columnSpanFull(),
                 ])->columns(2),
 

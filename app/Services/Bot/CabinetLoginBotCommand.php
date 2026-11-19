@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services\Bot;
 
+use App\Mail\TelegramBindingMail;
 use App\Models\User;
 use App\Services\Access\TelegramLoginService;
 use App\Support\Roles;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * «Telegram-вход» в кабинет со стороны студент-бота (CABINET_ADOPTION_ROADMAP
@@ -14,11 +16,14 @@ use App\Support\Roles;
  *
  *  1. Уже привязанный студент пишет /start или /вход → одноразовая ссылка входа
  *     в тот же чат (владение Telegram = фактор подлинности).
- *  2. (отдельный флаг, @DECIDE владельца) Непривязанный студент присылает email
+ *  2. (отдельный флаг, @DECIDE владельца) НЕПРИВЯЗАННЫЙ студент присылает email
  *     заказа → матч по нормализованному email СРЕДИ ОПЛАЧИВАВШИХ (кабинетная
  *     аудитория), staff (admin/super_admin) исключён; привязываем telegram_id и
  *     выдаём ту же ссылку. Размен «знает email = получит доступ» — осознанный,
  *     сильнее разрешённой «самопроверки входа», поэтому за отдельным флагом.
+ *     Щиты H8294 (MG 14-11-2026, «вариант A» + «вариант B»): уже привязанный
+ *     кабинет не перепривязывается (мягкий отказ — /вход сам всё решит), и на
+ *     email аккаунта уходит уведомление о привязке.
  *
  * Класс только РЕШАЕТ и возвращает тексты; отправку в чат делает вебхук (единый
  * sendMessage с TelegramFormatter-фолбэком). Email наружу не эхом — ответ не
@@ -100,6 +105,16 @@ class CabinetLoginBotCommand
             return 'Не нашёл оплат по этому email. Проверьте адрес — тот, что вы указывали при оплате курса, — или напишите куратору.';
         }
 
+        // Щит H8294 («вариант A», MG 14-11-2026): уже привязанный кабинет НЕ
+        // перепривязывается по голому знанию email — иначе знание оплаченной
+        // почты отнимало бы кабинет даже у привязанного студента, без всякого
+        // взлома. Легитимный привязанный студент получает ссылку через /вход
+        // из своего чата, поэтому «уже привязан — напишите /вход» ничего
+        // легитимному не ломает и статус привязки наружу не раскрывает.
+        if ($candidate->telegram_id !== null) {
+            return 'Этот кабинет уже привязан к Telegram. Напишите /вход — пришлю одноразовую ссылку для входа.';
+        }
+
         // Привязываем тем же набором полей, что и deep-link привязка из кабинета.
         $candidate->update([
             'telegram_id' => $chatId,
@@ -107,6 +122,12 @@ class CabinetLoginBotCommand
             'telegram_auth_token' => null,
             'telegram_connected_at' => now(),
         ]);
+
+        // Щит обнаружения («вариант B»): письмо на email аккаунта — владелец
+        // узнаёт о привязке, даже если его Telegram не при нём.
+        Mail::to($candidate->email)->send(
+            new TelegramBindingMail($candidate, User::normalizeTelegramUsername($fromUsername))
+        );
 
         return "Намасте, {$candidate->greetingName()}! 🙏 Ваш аккаунт привязан к Telegram.\n\n"
             .$this->loginLinkMessage($this->logins->issueLoginLink($candidate));

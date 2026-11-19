@@ -1,6 +1,6 @@
 # RUNBOOK_N8N_RECORDING_STALL — metadoc
 
-_Created: 26-08-2026 · Last updated: 26-08-2026_
+_Created: 26-08-2026 · Last updated: 14-11-2026_
 
 **Purpose:** канонический ранбук для класса «занятие прошло, запись не доехала до Telegram/кабинета» — что триажить на `.91` (n8n) и `.92` (Laravel), какие классы падений бывают (egress-flap на Sheets, OpenRouter credits/TOS, стёртый бинарник, протухший `download_token`, passcode), и где граница «агент чинит сам» vs «только человек» (resume с AI Agent1 / корзина Zoom).
 
@@ -10,6 +10,6 @@ _Created: 26-08-2026 · Last updated: 26-08-2026_
 1. Авто-догон stuck-записей авторизованным скачиванием внутри ретрай-плеча (сейчас человек перезапускает replay после восстановления из корзины).
 2. Алерт при уходе записи в корзину хост-аккаунта (сейчас узнаём постфактум по 404 мета-ноды).
 
-**History:** 26-08-2026 §8 переписан под персистентный дедуп + t.me-ссылки + получателей H3557.
+**History:** 26-08-2026 §8 переписан под персистентный дедуп + t.me-ссылки + получателей H3557. 14-11-2026 §3.3 — класс полупустой Settings-строки (пустой `drive_folder_id` → Drive-404 до гарда; exec 15242, issue #4179) + гард «Folder id есть?» ([scripts/n8n_zoom14_folder_id_guard.py](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/n8n_zoom14_folder_id_guard.py)).
 
 _Dr. Mārcis Gasūns_

@@ -216,7 +216,7 @@ class SitemapController extends Controller
                 DictionaryWord::query()
                     ->whereNotNull('slug')
                     ->whereHas('dictionary', fn ($q) => $q->where('is_active', true))
-                    ->select(['slug', 'translation', 'updated_at'])
+                    ->select(['slug', 'translation', 'is_indexable', 'updated_at'])
                     ->orderBy('slug')
                     ->chunk(1000, function ($words) use (&$urls) {
                         $seen = [];

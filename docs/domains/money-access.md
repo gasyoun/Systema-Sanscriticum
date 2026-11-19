@@ -60,3 +60,45 @@ php artisan catalog:mirror-recording-lessons <source> <target>
 - [money-core-adversarial-review.md](../money-core-adversarial-review.md)
 - [revenue-recognition.md](../revenue-recognition.md)
 - [ARCHITECTURE_SYSTEMA_TEACHER_STUDENT_SETTLEMENT_GROUP_REVIEWERS.md](../ARCHITECTURE_SYSTEMA_TEACHER_STUDENT_SETTLEMENT_GROUP_REVIEWERS.md)
+
+## B2B-оплата «за группу целиком» (H8245)
+
+Юрлицо/студия платит за всех учеников группы одним платежом (Адара → курс 463,
+гр. «Грамматика по Кочергиной»), без чекаута учеников.
+
+- **Тариф-ключ платежа:** `b2b_group` (константа `Payment::TARIFF_B2B_GROUP`,
+  `Payment::isB2bGroup()`). Платёж несёт `group_id` — за какую группу платят.
+- **Флаг `features.b2b_group_payment`** (env `B2B_GROUP_PAYMENT`, дефолт OFF).
+  OFF: b2b_group-платёж — чисто денежная строка, контур прежний. ON:
+  - ученики группы получают виртуальные ключи доступа через
+    `B2bGroupEntitlement::extraTariffKeysFor()` (зеркало клубного контура:
+    ключ живёт только на запросе, откат платежа закрывает доступ немедленно);
+  - блок-калькулятор атрибутирует b2b-платёж группе по `payments.group_id`
+    (плательщик — юрлицо, в group_user не состоит);
+  - должники не считают (user, course), покрытые b2b-платежом группы.
+- **Деньги всегда считаются** (вне флага): b2b_group не входит в
+  `NON_REVENUE_TARIFFS`, курсовой accrual и 30% ЗП работают как у обычной
+  оплаты. Приём — существующие пути: нал (`payment_method='cash'`,
+  `received_account=school`), счёт юрлицу (`provider=invoice`, H2017), Точка.
+- **Плательщику доступ не выдаётся** (не студент): `processB2bGroupPaid()` —
+  только curator-уведомление; `grantsCourseAccess()` отсекает b2b_group, поэтому
+  откат b2b-платежа НЕ детачит учеников группы.
+- **Смешанная группа — отметка «платит сам»** (флаг `features.b2b_group_self_pay`,
+  env `B2B_GROUP_SELF_PAY`, дефолт OFF, действует только поверх
+  `b2b_group_payment`). На членстве ученика в группе — `group_user.b2b_self_pay`
+  (дефолт `false`). ON: отмеченному b2b_group-платёж не даёт виртуальных ключей
+  и не снимает его из должников — он живёт по обычным правилам (доступ по
+  своим платежам, обычная оплата блока в кабинете). Неотмеченные члены группы
+  покрыты как раньше. Выручка не меняется: блок-калькулятор складывает личные
+  платежи членов группы и групповой платёж. Ставится в админке: карточка
+  ученика → «Группы (активный состав)» → «Платит сам» / «Вернуть под групповую
+  оплату». OFF: отметка игнорируется.
+- **Доступ до оплаты** (флаг `features.b2b_group_pending_access`, env
+  `B2B_GROUP_PENDING_ACCESS`, дефолт OFF, только поверх `b2b_group_payment`).
+  Отметка на платеже — `payments.access_while_pending` (дефолт `false`), в
+  админке «Открыть доступ до оплаты» у b2b_group-платежа. ON: b2b_group-платёж
+  в статусе `pending` с отметкой даёт ученикам группы ключи своих блоков и
+  снимает их из должников, как оплаченный. Выручка и ЗП его не считают, пока
+  статус не «Оплачено»; «Отменено» закрывает доступ. Чистка зависших оплат
+  (`payments:expire-stale-checkouts`) b2b_group-платежи не трогает (вне флага).
+- **Проверка:** `php artisan test --filter="B2bGroupPaymentTest|B2bGroupSelfPayTest|B2bGroupPendingAccessTest"`.

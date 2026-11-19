@@ -1,10 +1,11 @@
 # meta — PLAYBOOK_DR_BACKUP_VERIFICATION_09-10-2026.md
 
-_Created: 09-10-2026 · Last updated: 09-10-2026_
+_Created: 09-10-2026 · Last updated: 17-11-2026_
 
 - **Что это:** плейбук регулярных DR-учений и бэкап-верификации (restic + spatie + cold-drill) из волны H6312; до него регулярную проверку восстановления путал с аварийным переездом [ops/migrate/RUNBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/ops/migrate/RUNBOOK.md).
-- **Заказ:** [H6312](https://github.com/gasyoun/Uprava/blob/main/handoffs/H6312-OxAlpha_Systema-Sanscriticum_playbooks-five-new-surfaces_09.10.26.md) (Uprava), исполнен GLM (GLM-5.3-Flash), 09-10-2026.
+- **Заказ:** [H6312](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H6312-OxAlpha_Systema-Sanscriticum_playbooks-five-new-surfaces_09.10.26.md) (Uprava), исполнен GLM (GLM-5.3-Flash), 09-10-2026.
 - **Источники фактов:** живые пробы .92 09-10 (`tail /var/log/restic-backup.log`: run_complete systema=OK samudra=OK s3=SKIP; `php artisan backup:list`: оба диска unhealthy по лимиту, newest 4 дня; `restic-forget.timer` disabled; `/root/.restic-s3.env` ABSENT; `BACKUP_ARCHIVE_PASSWORD` в `.env` отсутствует), [RESTORE_DRILL_COLD_2026-08-24](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RESTORE_DRILL_COLD_2026-08-24.md) (H3390 PASS), аудит прод-стойкости 05-10.
-- **Не является:** аварийным переездом (тот — ops/migrate/RUNBOOK.md); чинилкойstorage-лимитов/шифрования архива — обе раны помечены и вынесены в отдельные юниты по визе MG.
+- **Сверка свежести:** 17-11-2026 (H8085, OxAlpha MiMo v2.6 Flash) — владельцы: Systema-Sanscriticum (текст), Uprava (процедура), остатки у H7058/GTD `Y8H`; триггеры: новое датированное доказательство / SLA Tier-0/1 14 дней / закрытие H7058; дата доказательств: **09-11-2026** (read-only SSH-проба, presence-only, значения `.env` не копировались) + GTD `Y8H`; устаревшие утверждения: retention-на-.92-выключен — superseded (retention на .91 с 13-09), нешифрованный архив — resolved 02-11-2026, unhealthy-диски и resume-тик — not re-probed; обработка остатков: S3-нога + свежий cold-drill остаются UNVERIFIED (H7058 NOT PASS), сверка ничего не закрывает и ничего не включает на сервере. Процедура: [Uprava STANDING_POLICY_DOC_ARCHIVE_FRESHNESS_2026](https://github.com/gasyoun/Uprava/blob/main/docs/STANDING_POLICY_DOC_ARCHIVE_FRESHNESS_2026.md); исполняющий раздел: `PLAYBOOK_DR_BACKUP_VERIFICATION_09-10-2026.md §Сверка свежести`. Исходные показатели 09-10 выше сохранены как история пробы и не переписаны.
+- **Не является:** аварийным переездом (тот — ops/migrate/RUNBOOK.md); чинилкой storage-лимитов/шифрования архива — обе раны помечены и вынесены в отдельные юниты по визе MG.
 
 _Dr. Mārcis Gasūns_

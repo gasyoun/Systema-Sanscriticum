@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -100,6 +101,22 @@ class LandingBotMagnetTest extends TestCase
             ProcessTelegramMagnetUpdate::class,
             fn (ProcessTelegramMagnetUpdate $job) => $job->landingBotId === $this->bot->id
         );
+    }
+
+    /** @test */
+    public function per_bot_redelivery_with_same_update_id_dispatches_once(): void
+    {
+        Bus::fake();
+        Redis::shouldReceive('set')->twice()->andReturn(true, false);
+
+        $payload = ['update_id' => 42, 'callback_query' => ['id' => 'x', 'data' => 'policy_accepted']];
+        $headers = ['X-Telegram-Bot-Api-Secret-Token' => self::SECRET];
+        $url = '/api/webhooks/telegram-magnet/'.$this->bot->webhook_key;
+
+        $this->postJson($url, $payload, $headers)->assertOk();
+        $this->postJson($url, $payload, $headers)->assertOk();
+
+        Bus::assertDispatched(ProcessTelegramMagnetUpdate::class, 1);
     }
 
     /** @test */

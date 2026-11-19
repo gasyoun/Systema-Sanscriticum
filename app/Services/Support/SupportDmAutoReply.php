@@ -14,6 +14,7 @@ use App\Models\TelegramSupportContact;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\Access\TelegramAdminNotifier;
+use App\Services\Support\Faq\FaqScoreFloor;
 use App\Services\Support\Faq\HybridRetriever;
 use App\Services\Support\Faq\SharedKnowledgeBase;
 use App\Services\Support\Sufler\Ceilings;
@@ -1403,14 +1404,8 @@ final class SupportDmAutoReply
 
     private function scoreFloor(string $category): float
     {
-        $global = (float) config('support.faq_rag.shadow_min_score', 8.0);
-
-        $perCategory = config('support.faq_rag.shadow_min_score_by_category', []);
-        if (! is_array($perCategory) || ! isset($perCategory[$category])) {
-            return $global;
-        }
-
-        return max($global, (float) $perCategory[$category]);
+        // H3766 B5: один lookup — FaqScoreFloor (H6185), общий с web-полосой.
+        return FaqScoreFloor::for($category);
     }
 
     /**

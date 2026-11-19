@@ -10,6 +10,7 @@ use App\Models\StudentDiscount;
 use App\Models\Tariff;
 use App\Services\Activity\FunnelTelemetry;
 use App\Services\Activity\StorefrontAnalytics;
+use App\Services\Checkout\AlreadyPaidBlockGuard;
 use App\Services\Consent\ConsentRecorder;
 use App\Services\CuratorNotifier;
 use App\Services\Membership\MembershipFunnelAnalytics;
@@ -104,10 +105,15 @@ class CheckoutController extends Controller
             ? EnrollmentGroupLink::resolveContact($tariff, $chosenGroup, $request->query('tgc'), $request->query('csig'))
             : null;
 
+        // 16-11-2026: целый блок, который студент уже оплатил, — вместо формы
+        // «Блок N уже оплачен» + кнопка следующего. Флаг OFF → всегда null.
+        $alreadyPaidBlock = $isGift ? null : app(AlreadyPaidBlockGuard::class)->check(Auth::user(), $tariff);
+
         return view('checkout.show', array_merge([
             'tariff' => $tariff,
             'page' => $page,
             'isGift' => $isGift,
+            'alreadyPaidBlock' => $alreadyPaidBlock,
             'chosenGroup' => $chosenGroup,
             'chosenContact' => $chosenContact,
         ], $state));
