@@ -10,6 +10,7 @@ use App\Models\Tariff;
 use App\Models\TelegramSupportContact;
 use App\Models\User;
 use App\Services\AttributionService;
+use App\Services\Checkout\AlreadyPaidBlockGuard;
 use App\Services\Consent\ConsentRecorder;
 use App\Services\CuratorNotifier;
 use App\Services\NearDuplicateEmailDetector;
@@ -125,6 +126,21 @@ class PaymentController extends Controller
             throw ValidationException::withMessages([
                 'tariff_id' => 'Оплата этого курса временно недоступна: группа доступа ещё не настроена.',
             ]);
+        }
+
+        // 16-11-2026: повторная оплата уже оплаченного целого блока (форма могла
+        // быть открыта по старой ссылке или до оплаты) — отказ до Payment и банка.
+        // Флаг OFF → guard всегда null.
+        if (! $isGift) {
+            $alreadyPaid = app(AlreadyPaidBlockGuard::class)->check(auth()->user(), $tariff);
+            if ($alreadyPaid !== null) {
+                $message = "Блок №{$alreadyPaid['block']} у вас уже оплачен.";
+                if ($alreadyPaid['next'] !== null) {
+                    $message .= " Следующий неоплаченный — блок №{$alreadyPaid['next']['number']}.";
+                }
+
+                throw ValidationException::withMessages(['tariff_id' => $message]);
+            }
         }
 
         // H1396 §1 — the checkout page survives its own session. The applied promo
