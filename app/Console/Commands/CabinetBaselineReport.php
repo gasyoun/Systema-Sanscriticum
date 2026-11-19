@@ -108,9 +108,9 @@ class CabinetBaselineReport extends Command
         $this->line('');
         $this->line(
             'Атрибуция офферов (H7968): флаг cabinet_offer_attribution '
-            . ($flag ? 'ON' : 'OFF — offer.purchase не пишется')
-            . ". Правило связки: пользователь + oффер (course при наличии) + confirmed paid; "
-            . "окно «клик → подтверждение оплаты» — {$windowDays} сут. от подтверждения."
+            .($flag ? 'ON' : 'OFF — offer.purchase не пишется')
+            .'. Правило связки: пользователь + oффер (course при наличии) + confirmed paid; '
+            ."окно «клик → подтверждение оплаты» — {$windowDays} сут. от подтверждения."
         );
 
         $purchases = DB::table('activity_events')
@@ -140,11 +140,11 @@ class CabinetBaselineReport extends Command
 
         $this->line(
             "Клики офферов (offer.click) за окно отчёта: {$clicks->count()}, "
-            . "из них без атрибуции: {$unmatched} (ноль — тоже результат)."
+            ."из них без атрибуции: {$unmatched} (ноль — тоже результат)."
         );
         $this->line(
             'Это НАБЛЮДАЕМЫЕ атрибутированные конверсии, НЕ причинный revenue lift: '
-            . 'связка «пользователь+окно» причинность не измеряет, влияние оффера на выручку не измерялось.'
+            .'связка «пользователь+окно» причинность не измеряет, влияние оффера на выручку не измерялось.'
         );
     }
 }
