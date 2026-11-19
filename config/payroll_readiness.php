@@ -53,8 +53,20 @@ return [
 
     // Private, gitignored manifest prepared by accounting. It contains hashes
     // and dates, not credentials. See docs/TEACHER_PAYROLL_READINESS_2026.md.
+    // H7205 P1: every source must ALSO name its evidence file (relative to
+    // the manifest), the file's bytes are re-hashed against the claimed
+    // sha256, and a hash carried by a different manifest is rejected.
     'evidence_manifest_path' => env(
         'TEACHER_PAYROLL_EVIDENCE_MANIFEST',
         storage_path('app/private/payroll/evidence-manifest.json'),
+    ),
+
+    // H7205 P1: private sidecar ledger of manifest source hashes bound to the
+    // manifest that first approved them. Written only by the readiness
+    // command on a fresh-manifest approval; read by every census to reject a
+    // hash replayed across two manifests.
+    'evidence_hash_ledger_path' => env(
+        'TEACHER_PAYROLL_EVIDENCE_HASH_LEDGER',
+        storage_path('app/private/payroll/evidence-hash-ledger.json'),
     ),
 ];
