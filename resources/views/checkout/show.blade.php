@@ -626,6 +626,18 @@ document.addEventListener('alpine:init', () => {
                             и подтверждаете, что ознакомлены с
                             <a href="{{ route('docs.show', 'privacy') }}" target="_blank" class="underline hover:text-gray-600">политикой конфиденциальности</a>.
                         </p>
+
+                        @if(\App\Support\CardCertHint::enabled())
+                            {{-- 19-11-2026: НСПК перешла на сертификаты Минцифры — оплата
+                                 картой в Chrome/Safari без них падает с ошибкой браузера. --}}
+                            <div class="mt-4 flex items-start gap-2 rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3 text-xs sm:text-sm text-amber-800 leading-relaxed" data-testid="card-cert-hint">
+                                <i class="fas fa-circle-info mt-0.5 text-amber-500"></i>
+                                <span>
+                                    {{ \App\Support\CardCertHint::TEXT }}
+                                    <a href="{{ \App\Support\CardCertHint::GUIDE_URL }}" target="_blank" rel="noopener" class="underline hover:text-amber-900">Инструкция</a>
+                                </span>
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Оплата по частям (H1290) — под кнопкой оплаты, где сумма ощущается целиком --}}
