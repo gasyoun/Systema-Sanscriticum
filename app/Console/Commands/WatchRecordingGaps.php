@@ -23,10 +23,19 @@ use Throwable;
  *
  * H3557: дедуп переехал из Redis-кэша в таблицу recording_gap_alerts —
  * автодеплой сбрасывает кэш (~20 деплоев за 25-08-2026), и hourly --stale
- * проходы отправляли один и тот же алерт заново. Ключ — sha256 отпечатка
- * набора пробелов (schedule_id+дата), одинаковый для утреннего и дневного
- * окна одного инцидента. Успешная отправка = exit 0; FAILURE остался для
- * --dry и для случая «пробелы есть, но в TG уйти не удалось».
+ * проходы отправляли один и тот же алерт заново. Успешная отправка = exit 0;
+ * FAILURE остался для --dry и для случая «пробелы есть, но в TG уйти не удалось».
+ *
+ * 17-11-2026, пер-slot дедуп: старый sha256 от НАБОРА пробелов перезапускал
+ * алерт целиком при каждом изменении набора — каждый час очередной слот
+ * проходит SLA (+stale_hours) и набор «дышит», поэтому учебный день давал
+ * серию почти одинаковых TG (прод 17-11: 13:41/14:41/15:41 подряд). Теперь
+ * ключ — sha256 schedule_id+дата ОДНОГО пробела: повторно уезжают только
+ * новые слоты, уже отправленные помечаются строкой «⏸ ещё N…». --stale
+ * следит только за сбоем конвейера (no-recording): у no-lesson («не отметили
+ * занятие»/«занятия не было») нет SLA конвейера записи — они накрываются
+ * утренним 08:00 проходом, иначе каждый учебный день даёт hourly-шторм по
+ * неотмеченным данным.
  */
 class WatchRecordingGaps extends Command
 {
@@ -108,46 +117,63 @@ class WatchRecordingGaps extends Command
             return self::FAILURE;
         }
 
-        $fingerprint = $this->fingerprint($gaps);
+        // Пер-slot дедуп (17-11-2026): каждый schedule_id+дата — свой инцидент.
+        // Старый отпечаток всего набора отправлял заново каждый уже уехавший
+        // слот при каждом пополнении набора (hourly-тики: слоты проходят SLA
+        // по очереди) — до N почти одинаковых TG за день.
+        $newGaps = $gaps;
+        $suppressed = 0;
         if (! $this->option('force')) {
-            $recent = RecordingGapAlert::query()
-                ->where('fingerprint', $fingerprint)
+            $keys = array_map(fn (array $gap): string => $this->slotKey($gap), $gaps);
+            $recentKeys = RecordingGapAlert::query()
+                ->whereIn('fingerprint', $keys)
                 ->where('last_sent_at', '>=', now()->subHours(36))
-                ->first();
-            if ($recent !== null) {
-                $this->comment(sprintf(
-                    'Дедуп recording_gap_alerts #%d (%s) — тот же набор пробелов уже уехал, повторный алерт не шлем.',
-                    $recent->id,
-                    $recent->last_sent_at->timezone((string) config('app.timezone', 'Europe/Moscow'))->format('d-m-Y H:i'),
+                ->pluck('fingerprint')
+                ->all();
+            if ($recentKeys !== []) {
+                $newGaps = array_values(array_filter(
+                    $gaps,
+                    fn (array $gap): bool => ! in_array($this->slotKey($gap), $recentKeys, true),
                 ));
-
-                return self::SUCCESS;
+                $suppressed = count($gaps) - count($newGaps);
             }
         }
 
-        $sent = $this->sendTelegram($payload);
+        if ($newGaps === []) {
+            $this->comment(sprintf(
+                'Все %d пробелов этого окна уже уезжали за последние 36 ч — повторный алерт не шлем.',
+                count($gaps),
+            ));
+
+            return self::SUCCESS;
+        }
+
+        $sent = $this->sendTelegram($this->buildTelegram($newGaps, $n8nExec, $from, $until, $retryReport['items'], $suppressed));
         if ($sent) {
-            $alert = RecordingGapAlert::query()->updateOrCreate(
-                ['fingerprint' => $fingerprint],
-                [
-                    'window_label' => $from->toDateString().'…'.$until->toDateString(),
-                    'first_sent_at' => now(),
-                    'last_sent_at' => now(),
-                ],
-            );
-            if ($alert->wasRecentlyCreated === false) {
-                $alert->fill([
-                    'send_count' => $alert->send_count + 1,
-                    'last_sent_at' => now(),
-                ])->save();
+            $alertIds = [];
+            foreach ($newGaps as $gap) {
+                $alert = RecordingGapAlert::query()->updateOrCreate(
+                    ['fingerprint' => $this->slotKey($gap)],
+                    [
+                        'window_label' => $from->toDateString().'…'.$until->toDateString(),
+                        'first_sent_at' => now(),
+                        'last_sent_at' => now(),
+                    ],
+                );
+                if ($alert->wasRecentlyCreated === false) {
+                    $alert->fill([
+                        'send_count' => $alert->send_count + 1,
+                        'last_sent_at' => now(),
+                    ])->save();
+                }
+                $alertIds[] = $alert->id;
             }
 
             Log::info('recordings:gap-watch alert sent', [
-                'fingerprint' => $fingerprint,
-                'gaps' => count($gaps),
+                'alert_ids' => $alertIds,
+                'gaps' => count($newGaps),
+                'suppressed' => $suppressed,
                 'window' => $from->toDateString().'…'.$until->toDateString(),
-                'alert_id' => $alert->id,
-                'send_count' => $alert->send_count,
             ]);
 
             return self::SUCCESS;
@@ -157,26 +183,23 @@ class WatchRecordingGaps extends Command
     }
 
     /**
-     * Отпечаток набора пробелов: не зависит от окна (утреннее «вчера» против
-     * дневного --stale «сегодня» дают один ключ на один инцидент) и меняется,
-     * когда к инциденту добавляется новый слот.
+     * Ключ дедупа одного пробела: schedule_id + дата урока. Смена набора
+     * пробелов окна больше не перезапускает алерт уже отправленных слотов.
      *
-     * @param  list<array{schedule_id: int, lesson_date: string, start: string, course_id: int, course: string, group_id: ?int, group: string, chat_id: string, reason: string}>  $gaps
+     * @param  array{schedule_id: int, lesson_date: string, start: string, course_id: int, course: string, group_id: ?int, group: string, chat_id: string, reason: string}  $gap
      */
-    private function fingerprint(array $gaps): string
+    private function slotKey(array $gap): string
     {
-        $parts = array_map(
-            static fn (array $gap): string => $gap['schedule_id'].':'.$gap['lesson_date'],
-            $gaps,
-        );
-        sort($parts);
-
-        return hash('sha256', implode('|', $parts));
+        return hash('sha256', $gap['schedule_id'].':'.$gap['lesson_date']);
     }
 
     /**
-     * --stale pass keeps only today's slots whose start is at least
-     * stale_hours in the past (Zoom+pipeline SLA) and still has no recording.
+     * --stale pass keeps only today's pipeline failures: a lesson row exists
+     * (no-recording) but nothing is published, and the slot's start is at
+     * least stale_hours in the past (Zoom+pipeline SLA). no-lesson slots have
+     * no pipeline SLA («не отметили занятие» либо «занятия не было») — они
+     * покрываются утренним 08:00 проходом; дневной hourly-тик по ним молчал
+     * бы бесконечно на каждом учебном дне.
      *
      * @param  list<array{schedule_id: int, lesson_date: string, start: string, course_id: int, course: string, group_id: ?int, group: string, chat_id: string, reason: string}>  $gaps
      * @return list<array{schedule_id: int, lesson_date: string, start: string, course_id: int, course: string, group_id: ?int, group: string, chat_id: string, reason: string}>
@@ -188,7 +211,8 @@ class WatchRecordingGaps extends Command
 
         return array_values(array_filter(
             $gaps,
-            static fn (array $gap): bool => CarbonImmutable::parse($gap['start'], $tz)->lte($threshold),
+            static fn (array $gap): bool => $gap['reason'] === 'no-recording'
+                && CarbonImmutable::parse($gap['start'], $tz)->lte($threshold),
         ));
     }
 
@@ -228,8 +252,9 @@ class WatchRecordingGaps extends Command
      * @param  list<array{schedule_id: int, lesson_date: string, start: string, course_id: int, course: string, group_id: ?int, group: string, chat_id: string, reason: string}>  $gaps
      * @param  array{reachable: bool, skipped: bool, id:?string, status:?string, started_at:?string, error_class:?string, note:?string, webhook_token:?string}  $n8n
      * @param  list<array{id: string, started_at: ?string, last_node: ?string, safe: bool, superseded: bool, retried_before: bool, error_class: ?string, action: string}>  $retryItems
+     * @param  int  $suppressed  сколько пробелов окна уже уезжали за 36 ч и не вошли в это сообщение
      */
-    private function buildTelegram(array $gaps, array $n8n, CarbonImmutable $from, CarbonImmutable $until, array $retryItems = []): string
+    private function buildTelegram(array $gaps, array $n8n, CarbonImmutable $from, CarbonImmutable $until, array $retryItems = [], int $suppressed = 0): string
     {
         $range = $from->toDateString() === $until->toDateString()
             ? $from->format('d-m-Y')
@@ -254,6 +279,10 @@ class WatchRecordingGaps extends Command
                 .' · course '.$gap['course_id'].' '.$course
                 .' · group '.$gid.' '.$group
                 .' · '.$gap['reason'].$aging;
+        }
+        if ($suppressed > 0) {
+            $lines[] = '';
+            $lines[] = '⏸ ещё '.$suppressed.' пробел(ов) этого окна уже уезжали за последние 36 ч — здесь не повторяю.';
         }
         if ($retryItems !== []) {
             $lines[] = '';

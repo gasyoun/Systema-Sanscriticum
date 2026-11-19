@@ -140,6 +140,24 @@ return [
     'class_link_autopost' => (bool) env('CLASS_LINK_AUTOPOST', false),
 
     /*
+     | Автоопрос о присутствии: перед занятием @zapisi_ORSbot вешает в Telegram-чат
+     | группы опрос «Будете?» (Буду / Опоздаю / Не смогу), команда
+     | classes:post-attendance-poll. ВЫКЛЮЧЕН по умолчанию. Требует
+     | telegram_zapisi_bot и telegram_chat_id у группы. Голоса учеников с
+     | привязанным Telegram пишутся в предупреждения о занятии, если включён
+     | attendance_notices.
+     |  - attendance_poll_lead_minutes — за сколько минут до старта вешать опрос;
+     |  - attendance_poll_group_ids — id пилотных групп через запятую; пусто —
+     |    все группы с привязанным чатом.
+     */
+    'attendance_poll_autopost' => (bool) env('ATTENDANCE_POLL_AUTOPOST', false),
+    'attendance_poll_lead_minutes' => (int) env('ATTENDANCE_POLL_LEAD_MINUTES', 1440),
+    'attendance_poll_group_ids' => array_values(array_filter(array_map(
+        'intval',
+        explode(',', (string) env('ATTENDANCE_POLL_GROUP_IDS', '')),
+    ))),
+
+    /*
      | FAQ-суггестер «Отдела заботы» (H247, тикет S3): факт-черновик ответа на
      | фактологические вопросы категорий A (Zoom/ссылка), B (записи), C (расписание)
      | из данных LMS — БЕЗ единого LLM-вызова. Бот сам НЕ отвечает студенту: готовит
@@ -732,6 +750,25 @@ return [
      | CHECKOUT_INACTIVE_TARIFF_GUARD=false. См. MONEY_FALSE_ECONOMY_DARK_FLAGS_2026.
      */
     'checkout_inactive_tariff_guard' => (bool) env('CHECKOUT_INACTIVE_TARIFF_GUARD', true),
+
+    /*
+     | Подсказка про оплату картой после перехода НСПК на сертификаты Минцифры
+     | (19-11-2026): в чекауте под кнопкой оплаты и в TG-напоминаниях об оплате —
+     | «ошибка браузера → СБП или Яндекс Браузер». Только текст, деньги и доступ
+     | не трогает. ВКЛ; выключить CHECKOUT_CARD_CERT_HINT=false, когда браузеры
+     | начнут доверять сертификатам. App\Support\CardCertHint.
+     */
+    'checkout_card_cert_hint' => (bool) env('CHECKOUT_CARD_CERT_HINT', true),
+
+    /*
+     | Чекаут целого блока, который у вошедшего студента уже оплачен (16-11-2026:
+     | сохранённые ссылки прошлого месяца → второй платёж за оплаченные блоки).
+     | Когда ВКЛ, /checkout/{tariff} вместо формы показывает «Блок N уже оплачен»
+     | и кнопку следующего неоплаченного блока, а POST /payment/create отказывает
+     | до создания Payment. Подарок и половины блоков не затрагиваются.
+     | App\Services\Checkout\AlreadyPaidBlockGuard. Money-контур: OFF по умолчанию.
+     */
+    'checkout_already_paid_block_guard' => (bool) env('CHECKOUT_ALREADY_PAID_BLOCK_GUARD', false),
 
     /*
      | Сериализация реферального кошелька в чекауте. Когда ВКЛ, транзакция первым
@@ -1542,6 +1579,20 @@ return [
     // выключатель лейна поверх b2b_group_payment: напоминания не активируются
     // молча вместе с b2b-контуром, только явным переворотом (DEPLOY_QUEUE).
     'b2b_payer_reminders' => (bool) env('B2B_PAYER_REMINDERS', false),
+
+    // Смешанная группа под B2B-оплатой: отметка «платит сам» на членстве ученика
+    // (group_user.b2b_self_pay). OFF (дефолт): отметка игнорируется, групповой
+    // платёж покрывает всех членов группы. ON (только поверх b2b_group_payment):
+    // отмеченному b2b_group-платёж не даёт виртуальных ключей и не снимает его
+    // из должников — доступ только по собственным платежам.
+    'b2b_group_self_pay' => (bool) env('B2B_GROUP_SELF_PAY', false),
+
+    // B2B-оплата за группу: «открыть доступ до оплаты» (payments.access_while_pending).
+    // OFF (дефолт): групповой платёж даёт доступ только в статусе «Оплачено».
+    // ON (только поверх b2b_group_payment): b2b_group-платёж в статусе pending с
+    // отметкой уже открывает ученикам группы свои блоки и снимает их из должников.
+    // Выручка/ЗП считают платёж только после «Оплачено».
+    'b2b_group_pending_access' => (bool) env('B2B_GROUP_PENDING_ACCESS', false),
     // H2744 staged rollout. Tier interpretation is dark until legacy rows and
     // tariffs have been explicitly classified by membership:classify-tiers.
     'membership_tiered' => (bool) env('MEMBERSHIP_TIERED', false),

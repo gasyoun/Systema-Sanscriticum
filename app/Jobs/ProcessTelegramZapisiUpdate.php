@@ -17,6 +17,7 @@ use App\Services\Telegram\CancelUsageHint;
 use App\Services\Telegram\ChatJoinRequestApprover;
 use App\Services\Telegram\DateAwareCancelService;
 use App\Services\Telegram\VacationCommandService;
+use App\Services\Telegram\ZapisiPollService;
 use App\Services\TelegramHarvest\HarvestStoreWriter;
 use App\Services\VacationQuorumService;
 use App\Support\TelegramSendGuard;
@@ -72,6 +73,14 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
         // его сценарий («ловим названия» → Google Sheets) остался бы без данных.
         // Отсекать здесь ничего нельзя: n8n сам решает, что ему интересно.
         $this->forwardToN8n();
+
+        // Голос в опросе бота (ZapisiPollService). Чата в poll_answer нет — до
+        // ветки message не дошёл бы, поэтому ловим здесь.
+        if (isset($this->update['poll_answer']) && is_array($this->update['poll_answer'])) {
+            app(ZapisiPollService::class)->recordAnswer($this->update['poll_answer']);
+
+            return;
+        }
 
         // Календарь контента: пост, вышедший в канале «Оповещение», становится
         // слотом и разносится по остальным площадкам. Джоб сам гейтится флагом

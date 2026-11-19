@@ -354,8 +354,16 @@ class DebtorsReport
         // курсе своих payments нет). ВАЖНО: guard — второй AND NOT EXISTS (не OR!):
         // должник = (нет личной оплаты) И (группа не покрыта b2b) И (не non-debt
         // статус); OR дал бы неверный приоритет относительно AND cu-условия.
+        // Отметка «платит сам» (group_user.b2b_self_pay, флаг b2b_group_self_pay):
+        // групповой платёж снимает из должников только неотмеченных членов группы.
         $b2bGroupGuard = '';
         $b2bGroupBindings = [];
+        $b2bSelfPayGuard = B2bGroupEntitlement::selfPayEnabled() ? 'AND gu.b2b_self_pay = 0' : '';
+        // «Открыть доступ до оплаты»: ожидающий групповой платёж с отметкой тоже
+        // снимает покрытых учеников из должников — долг на юрлице, не на них.
+        $b2bPendingAccess = B2bGroupEntitlement::pendingAccessEnabled()
+            ? "OR (p3.status = 'pending' AND p3.access_while_pending = 1)"
+            : '';
         if (B2bGroupEntitlement::enabled()) {
             $b2bGroupGuard = "
                   AND NOT EXISTS (
@@ -363,8 +371,9 @@ class DebtorsReport
                     WHERE p3.group_id = gu.group_id
                       AND p3.course_id = cg.course_id
                       AND p3.tariff = ?
-                      AND p3.status IN ({$paidIn})
+                      AND (p3.status IN ({$paidIn}) {$b2bPendingAccess})
                       AND p3.is_conditional = 0
+                      {$b2bSelfPayGuard}
                       AND (
                         (p3.start_block IS NULL AND p3.end_block IS NULL)
                         OR (p3.start_block <= ref.ref_number AND (p3.end_block >= ref.ref_number OR p3.end_block IS NULL))
