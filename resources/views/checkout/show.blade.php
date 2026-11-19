@@ -28,7 +28,13 @@ document.addEventListener('alpine:init', () => {
             return Math.floor((this.prana || 0) / this.rate);
         },
         get total() {
-            return Math.max(1, this.basePrice - this.pranaRubles);
+            // Бесплатный тариф (цена 0) честно показывает 0 ₽; платный —
+            // минимум 1 ₽ в отображении (историческое поведение для полного
+            // покрытия праной). Сервер при 0 всё равно проводит оплату как
+            // бесплатную (zero-price ветка PaymentController).
+            const floor = this.listPrice > 0 ? 1 : 0;
+
+            return Math.max(floor, this.basePrice - this.pranaRubles);
         },
         get totalSavings() {
             return this.loyaltyDiscount + this.promoDiscount + this.pranaRubles;
@@ -277,7 +283,7 @@ document.addEventListener('alpine:init', () => {
             </div>
         @endguest
 
-        @if($finalPrice == 0 && auth()->check())
+        @if($finalPrice == 0 && auth()->check() && $alreadyOwned)
             <div class="bg-white p-8 rounded-3xl shadow-xl shadow-gray-100/30 border border-gray-100 text-center flex flex-col items-center">
                 <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 border border-green-100">
                     <i class="fas fa-check text-4xl text-green-500"></i>
@@ -287,6 +293,27 @@ document.addEventListener('alpine:init', () => {
                 <a href="{{ route('student.dashboard') }}" class="inline-flex justify-center items-center px-10 py-4 text-lg font-bold rounded-2xl text-white bg-indigo-600 hover:bg-indigo-700 transition-all duration-200 shadow-lg shadow-indigo-200">
                     Перейти в личный кабинет
                 </a>
+            </div>
+        @elseif(!empty($alreadyPaidBlock))
+            {{-- 16-11-2026: целый блок уже оплачен (старая ссылка) — форму не даём,
+                 ведём на следующий неоплаченный блок. AlreadyPaidBlockGuard. --}}
+            <div class="bg-white p-8 rounded-3xl shadow-xl shadow-gray-100/30 border border-gray-100 text-center flex flex-col items-center" data-testid="already-paid-block">
+                <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 border border-green-100">
+                    <i class="fas fa-check text-4xl text-green-500"></i>
+                </div>
+                <h2 class="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">Блок №{{ $alreadyPaidBlock['block'] }} уже оплачен</h2>
+                @if($alreadyPaidBlock['next'])
+                    <p class="text-gray-500 text-base mb-8 max-w-md">Возможно, вы открыли ссылку прошлой оплаты. Следующий неоплаченный блок — №{{ $alreadyPaidBlock['next']['number'] }}.</p>
+                    <a href="{{ $alreadyPaidBlock['next']['url'] }}" class="inline-flex justify-center items-center px-10 py-4 text-lg font-bold rounded-2xl text-white bg-indigo-600 hover:bg-indigo-700 transition-all duration-200 shadow-lg shadow-indigo-200">
+                        Оплатить блок №{{ $alreadyPaidBlock['next']['number'] }} — {{ number_format($alreadyPaidBlock['next']['amount'], 0, ',', ' ') }} ₽
+                    </a>
+                    <a href="{{ route('student.dashboard') }}" class="mt-4 text-sm font-medium text-gray-500 hover:text-gray-700">Перейти в личный кабинет</a>
+                @else
+                    <p class="text-gray-500 text-base mb-8 max-w-md">Возможно, вы открыли ссылку прошлой оплаты. Оплата следующего блока пока не открыта — напишите куратору.</p>
+                    <a href="{{ route('student.dashboard') }}" class="inline-flex justify-center items-center px-10 py-4 text-lg font-bold rounded-2xl text-white bg-indigo-600 hover:bg-indigo-700 transition-all duration-200 shadow-lg shadow-indigo-200">
+                        Перейти в личный кабинет
+                    </a>
+                @endif
             </div>
         @else
             @if(session('error'))
@@ -337,6 +364,17 @@ document.addEventListener('alpine:init', () => {
                              lose it, which used to charge full price silently. Re-resolved
                              authoritatively server-side (it is client-supplied). --}}
                         <input type="hidden" name="promo_code" value="{{ $appliedPromo?->code }}">
+                        {{-- 20-10-2026: группа из ссылки бота лички (подписана). Сервер
+                             перепроверяет подпись и курс; флаг features.grant_chosen_group. --}}
+                        @if(!empty($chosenGroup))
+                            <input type="hidden" name="group_id" value="{{ $chosenGroup->id }}">
+                            <input type="hidden" name="gsig" value="{{ request()->query('gsig') }}">
+                            @if(!empty($chosenContact))
+                                <input type="hidden" name="tgc" value="{{ $chosenContact->id }}">
+                                <input type="hidden" name="csig" value="{{ request()->query('csig') }}">
+                            @endif
+                            <p class="text-sm text-gray-600">Группа: <strong>{{ $chosenGroup->name }}</strong></p>
+                        @endif
 
                         @auth
                             {{-- H1396 §2 — mark that this form was rendered for a logged-in
@@ -414,12 +452,12 @@ document.addEventListener('alpine:init', () => {
                                         </label>
                                         @include('partials.signup-source-select')
                                     </div>
-                                    <div class="sm:col-span-2">
-                                        <label class="flex items-start gap-3 cursor-pointer">
-                                            <input type="checkbox" name="wants_announcements" value="1" {{ old('wants_announcements', true) ? 'checked' : '' }}
-                                                   class="mt-0.5 h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition">
-                                            <span class="text-sm text-gray-600">Получать анонсы, новости и расписание на email</span>
-                                        </label>
+                                    {{-- 152-ФЗ: город и год рождения для договора не нужны — на них
+                                         нужно согласие (галочка ПДн). Рассылка — только по явной
+                                         галочке, по умолчанию НЕ отмечена (38-ФЗ ст. 18). --}}
+                                    <div class="sm:col-span-2 space-y-2">
+                                        <x-consent.pd class="text-sm" :required="(bool) config('features.checkout_pd_consent_enforce')" />
+                                        <x-consent.promo name="wants_announcements" class="text-sm" />
                                     </div>
                                 </div>
                             </div>
@@ -583,10 +621,23 @@ document.addEventListener('alpine:init', () => {
                         </button>
 
                         <p class="text-center text-xs text-gray-400 mt-4 leading-relaxed">
-                            Нажимая на кнопку, вы соглашаетесь с
-                            <a href="/docs/oferta.pdf" target="_blank" class="underline hover:text-gray-600">офертой</a> и
-                            <a href="/docs/privacy.pdf" target="_blank" class="underline hover:text-gray-600">политикой конфиденциальности</a>.
+                            Нажимая на кнопку, вы принимаете
+                            <a href="{{ route('docs.show', 'oferta') }}" target="_blank" class="underline hover:text-gray-600">публичную оферту</a>
+                            и подтверждаете, что ознакомлены с
+                            <a href="{{ route('docs.show', 'privacy') }}" target="_blank" class="underline hover:text-gray-600">политикой конфиденциальности</a>.
                         </p>
+
+                        @if(\App\Support\CardCertHint::enabled())
+                            {{-- 19-11-2026: НСПК перешла на сертификаты Минцифры — оплата
+                                 картой в Chrome/Safari без них падает с ошибкой браузера. --}}
+                            <div class="mt-4 flex items-start gap-2 rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3 text-xs sm:text-sm text-amber-800 leading-relaxed" data-testid="card-cert-hint">
+                                <i class="fas fa-circle-info mt-0.5 text-amber-500"></i>
+                                <span>
+                                    {{ \App\Support\CardCertHint::TEXT }}
+                                    <a href="{{ \App\Support\CardCertHint::GUIDE_URL }}" target="_blank" rel="noopener" class="underline hover:text-amber-900">Инструкция</a>
+                                </span>
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Оплата по частям (H1290) — под кнопкой оплаты, где сумма ощущается целиком --}}

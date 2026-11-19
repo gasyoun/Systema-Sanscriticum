@@ -121,6 +121,10 @@ class EmailNormalizationTest extends TestCase
     /** @test */
     public function normalize_command_does_not_flag_already_normalized_phone_as_email(): void
     {
+        if (DB::connection()->getDriverName() === 'mysql') {
+            $this->markTestSkipped('Пост-гвард (users_email_valid, MG 04-10) телефон-как-email на mysql недостижим (миграция переводит в import-*@no-email.com); int-coercion фикс покрыт на sqlite.');
+        }
+
         // Legacy phone stored as email: digits only. PHP would coerce the
         // grouping key to int without a string-safe key prefix, false-flagging
         // a no-op row forever on dry-run (prod #5944 class).

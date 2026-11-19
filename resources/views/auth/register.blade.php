@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Регистрация | ОРС LMS</title>
     @include('partials.tailwind-cdn')
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    @vite('resources/css/fonts.css')
 </head>
 <body class="bg-gray-50 min-h-screen flex items-center justify-center p-4 font-sans text-[#101010]">
 
@@ -94,6 +94,9 @@
                     @include('partials.signup-source-select')
                 </div>
 
+                <x-consent.pd :offer="true" />
+                <x-consent.promo />
+
                 <div class="pt-2">
                     <button type="submit"
                         class="w-full bg-brand hover:bg-brand-hover text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 text-sm uppercase tracking-wider">
@@ -138,5 +141,7 @@
         })();
     </script>
 
+    {{-- 152-ФЗ: баннер cookie — без него здесь нельзя дать/отозвать согласие на аналитику. --}}
+    @include('partials.cookie-consent')
 </body>
 </html>

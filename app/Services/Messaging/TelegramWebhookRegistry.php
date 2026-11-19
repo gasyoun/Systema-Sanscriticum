@@ -73,7 +73,9 @@ class TelegramWebhookRegistry
             token: $token,
             secret: $secret,
             url: TelegramWebhooks::url('/api/webhooks/telegram-magnet'),
-            allowedUpdates: ['message'],
+            // callback_query — inline-кнопки ждуна и карточек открытых занятий:
+            // без него Telegram их нажатия боту просто не доставляет.
+            allowedUpdates: ['message', 'callback_query'],
             problem: $this->problemFor($token, $secret, 'MarketingSetting.tg_bot_token', 'MarketingSetting.tg_webhook_secret'),
         );
     }
@@ -90,8 +92,8 @@ class TelegramWebhookRegistry
             token: $token,
             secret: $secret,
             url: TelegramWebhooks::url('/api/webhooks/telegram-zapisi'),
-            // Группа шлёт message, канал — channel_post (как в zapisi:set-webhook).
-            allowedUpdates: ['message', 'channel_post'],
+            // Тот же список, что у zapisi:set-webhook и zapisi:poll.
+            allowedUpdates: TelegramWebhooks::ZAPISI_ALLOWED_UPDATES,
             problem: $this->problemFor($token, $secret, 'MarketingSetting.zapisi_bot_token', 'MarketingSetting.zapisi_webhook_secret'),
         );
     }

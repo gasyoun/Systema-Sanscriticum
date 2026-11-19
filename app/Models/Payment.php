@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Jobs\SendGroupChatInviteJob;
 use App\Jobs\SendTelegramMessageJob;
 use App\Mail\CourseWelcomeMail;
 use App\Mail\DepositReceivedMail;
@@ -43,6 +44,10 @@ class Payment extends Model
         'user_id',
         'lead_id',
         'course_id',
+        // Группа, выбранная в личке (подписанная ссылка бота), 20-10-2026.
+        'group_id',
+        'chat_invite_sent_at',
+        'telegram_support_contact_id',
         'promo_code_id',
         'amount',
         // Справочная сумма в валюте (USD/EUR) — только для отчёта, в расчётах не участвует.
@@ -79,6 +84,8 @@ class Payment extends Model
         'salary_recognition_month',
         // --- Conditional access под обещание/рассрочку ---
         'is_conditional',
+        // B2B-оплата за группу: доступ ученикам до поступления денег (pending).
+        'access_while_pending',
         'linked_promise_id',
         // Платёж создан должником самостоятельно из кабинета (self-service).
         'is_self_service',
@@ -139,6 +146,12 @@ class Payment extends Model
     public const PROVIDER_TEACHER_TRANSFER = 'teacher_transfer';
 
     /**
+     * H6198 — уведомление «перевёл рублями лично Гасунсу» (мимо Точки):
+     * деньги школы (received_account=school), pending до ручной сверки.
+     */
+    public const PROVIDER_GASUNS_TRANSFER = 'gasuns_transfer';
+
+    /**
      * Providers that wait for human reconciliation and must never be reaped by
      * payments:expire-stale-checkouts (they are not abandoned bank links).
      *
@@ -149,10 +162,12 @@ class Payment extends Model
         self::PROVIDER_INVOICE,
         self::PROVIDER_BANK_SEPA,
         self::PROVIDER_TEACHER_TRANSFER,
+        self::PROVIDER_GASUNS_TRANSFER,
     ];
 
     protected $casts = [
         'is_conditional' => 'boolean',
+        'access_while_pending' => 'boolean',
         'is_self_service' => 'boolean',
         'discount_percent' => 'decimal:2',
         'discount_amount' => 'decimal:2',
@@ -163,6 +178,7 @@ class Payment extends Model
         'consumed_amount' => 'decimal:2',
         'deposit_credit_applied' => 'decimal:2',
         'payment_link_expires_at' => 'datetime',
+        'chat_invite_sent_at' => 'datetime',
         'claim_meta' => 'array',
         // Поблочная оплата: в БД nullable int, но без каста Eloquent отдаёт
         // строку и ломает strict-typed ?int в CuratorNotifier::blocksLabel().
@@ -178,6 +194,18 @@ class Payment extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    /** Группа, выбранная студентом при записи (features.grant_chosen_group). */
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
+    }
+
+    /** Контакт лички, которому бот выдал ссылку на оплату (21-10-2026). */
+    public function telegramSupportContact(): BelongsTo
+    {
+        return $this->belongsTo(TelegramSupportContact::class);
     }
 
     public function fiscalReceipt(): HasOne
@@ -312,6 +340,34 @@ class Payment extends Model
     public function isDonation(): bool
     {
         return $this->tariff === 'donation';
+    }
+
+    /** H8195 — «Книжный клуб»: оплата доставки книг кампании planeta 219924. Не учебный продукт: доступа/праны не даёт. */
+    public function isBookClubDelivery(): bool
+    {
+        return $this->tariff === 'book_club_delivery';
+    }
+
+    /**
+     * H8245 — B2B-оплата «за группу целиком»: юрлицо/студия платит за ВСЕХ
+     * учеников группы одним платежом (Адара → гр. «Грамматика по Кочергиной»,
+     * курс 463). Ключ самоописывающий в payments.tariff — по образцу
+     * 'book_club_delivery' / 'club_{N}m': payments не хранит tariff_id.
+     */
+    public const TARIFF_B2B_GROUP = 'b2b_group';
+
+    /**
+     * B2B-платёж за группу — чисто денежная строка. Плательщик (представитель
+     * юрлица) НЕ студент: доступ ему не выдаётся, учеников группы открывают
+     * виртуальные ключи B2bGroupEntitlement (зеркало клубного контура H2646,
+     * флаг features.b2b_group_payment). Деньги при этом настоящая выручка курса
+     * — ЗП/финансы считают её как обычную оплату. Пути приёма денег существующие:
+     * нал (payment_method='cash', received_account=school), счёт юрлицу
+     * (provider=invoice, H2017), Точка — новых проводок не заводится.
+     */
+    public function isB2bGroup(): bool
+    {
+        return $this->tariff === self::TARIFF_B2B_GROUP;
     }
 
     /** Заявка об оплате из-за рубежа (PayPal), поданная студентом. */
@@ -491,6 +547,7 @@ class Payment extends Model
             $this->isExpense() => '💸 Технический расход / возврат',
             $this->isSalaryPayout() => '👨‍🏫 Выплата преподавателю',
             $this->isGiftCertificate() => '🎁 Подарочный сертификат',
+            $this->isB2bGroup() => '🏢 B2B: оплата за группу целиком',
             $this->tariff === 'full' => 'Весь курс',
             default => $this->blockLabel(),
         };
@@ -770,6 +827,15 @@ class Payment extends Model
                 $payment->received_by_teacher_id = null;
             }
 
+            // PayPal-канал (валютная заявка студента / авто-списание подписки) —
+            // в способе оплаты всегда «paypal»: раньше колонка была пуста для
+            // всего, что не пришло с вебхука Точки, и PayPal-платежи висели в
+            // админке как «Не определён». Перезаписать card/sbp не может — Точка
+            // не участвует в этом канале.
+            if (in_array($payment->provider, [self::PROVIDER_PAYPAL, self::PROVIDER_PAYPAL_SUBSCRIPTION], true)) {
+                $payment->payment_method = 'paypal';
+            }
+
             // H5445 (P3, D10): частичный возврат — только с блоками (флаг
             // money_refund_access_rules, дефолт OFF).
             app(RefundAccessPolicy::class)->guardLegacyRefund($payment);
@@ -900,6 +966,16 @@ class Payment extends Model
             return;
         }
 
+        // H8245: B2B-оплата за группу — только денежная строка. Плательщик не
+        // студент: grantAccess/enroll/письма/прана/Telegram не срабатывают,
+        // учеников группы открывают виртуальные ключи B2bGroupEntitlement.
+        // Куратору уходит обычное уведомление о деньгах.
+        if ($payment->isB2bGroup()) {
+            $payment->processB2bGroupPaid();
+
+            return;
+        }
+
         if ($payment->isDeposit()) {
             $payment->processDeposit();
 
@@ -926,6 +1002,15 @@ class Payment extends Model
         // модели (см. GiftCertificateService::redeem).
         if ($payment->isGiftCertificate()) {
             $payment->processGiftCertificate();
+
+            return;
+        }
+
+        // «Книжный клуб» (H8195): оплата доставки — не учебный продукт, поэтому
+        // общий путь (доступ/группы/депозиты/промо/прана) НЕ запускается.
+        // Только welcome-письмо с паролем для созданного на чекауте аккаунта.
+        if ($payment->isBookClubDelivery()) {
+            $payment->processBookClubDelivery();
 
             return;
         }
@@ -1069,6 +1154,29 @@ class Payment extends Model
         }
 
         SendTelegramMessageJob::dispatch($this->user_id, $text);
+
+        // 20-10-2026: ссылка-заявка в чат группы. Только реальная оплата;
+        // джоб идемпотентен по chat_invite_sent_at. Флаг OFF → no-op.
+        if (! $this->is_conditional && config('features.paid_chat_join_request')) {
+            SendGroupChatInviteJob::dispatch($this->id);
+        }
+    }
+
+    /**
+     * H8245 — paid-проводка b2b_group-платежа «за группу»: только curator-уведомление
+     * о деньгах (как у обычных оплат). Никаких side-effect'ов ученического контура:
+     * доступ группы — чистая функция оплаченного платежа (виртуальные ключи
+     * B2bGroupEntitlement появляются/исчезают сами), письма/прана/Telegram плательщику
+     * не нужны — он не студент.
+     */
+    public function processB2bGroupPaid(): void
+    {
+        app(CuratorNotifier::class)->paymentPaid($this);
+
+        Log::info(
+            'B2B-оплата за группу: платёж #'.$this->id
+            .' (курс #'.$this->course_id.', группа #'.$this->group_id.') — доступ ученикам открывают виртуальные ключи, плательщику доступ не выдан.'
+        );
     }
 
     // ==========================================
@@ -1238,6 +1346,21 @@ class Payment extends Model
     }
 
     // ==========================================
+    // «КНИЖНЫЙ КЛУБ» — ОПЛАТА ДОСТАВКИ (H8195)
+    // ==========================================
+    /**
+     * Доставка книг кампании planeta 219924 — НЕ учебный продукт: общий путь
+     * processSuccessfulPayment (доступ/группы/депозиты/промо/прана) не
+     * запускается. Из побочных эффектов оставляем только welcome-письмо с
+     * паролем: аккаунт создаётся на чекауте, и гость должен вернуться в кабинет.
+     * Матчинг с planeta и отправка — ручные (book_club_orders).
+     */
+    public function processBookClubDelivery(): void
+    {
+        $this->sendWelcomeEmailIfNeeded();
+    }
+
+    // ==========================================
     // МАРАФОН «С ПРОВЕРКОЙ» ₽500 — отдельный путь (H471)
     // ==========================================
     /**
@@ -1249,7 +1372,6 @@ class Payment extends Model
     public function processMarathonPaid(): void
     {
         $enrollment = MarathonEnrollment::where('lead_id', $this->lead_id)->first();
-
         if (! $enrollment) {
             Log::warning('Payment::processMarathonPaid — MarathonEnrollment не найден', [
                 'payment_id' => $this->id,
@@ -1593,6 +1715,18 @@ class Payment extends Model
             return;
         }
 
+        // 20-10-2026: на курсе с НЕСКОЛЬКИМИ группами (набор 2026: суббота /
+        // вторник) выбранная в личке группа — единственная выдаваемая. Группа
+        // обязана быть среди групп курса; иначе (и на курсе с одной группой)
+        // поведение прежнее. Флаг money-контура, дефолт OFF.
+        if (config('features.grant_chosen_group')
+            && $this->group_id !== null
+            && count($groupIds) > 1
+            && in_array((int) $this->group_id, array_map('intval', $groupIds), true)
+        ) {
+            $groupIds = [(int) $this->group_id];
+        }
+
         // syncWithoutDetaching — добавляет новые связи, не удаляя существующие
         $user->groups()->syncWithoutDetaching($groupIds);
 
@@ -1674,10 +1808,15 @@ class Payment extends Model
 
     private function grantsCourseAccess(): bool
     {
+        // H8245: b2b_group не открывает доступ и плательщику: учеников группы
+        // открывают виртуальные ключи (B2bGroupEntitlement), плательщик — не
+        // студент. Отсекая здесь, гарантируем: откат b2b-платежа вернётся из
+        // reconcileAccessAfterReversal(), НЕ детача учеников группы.
         return ! $this->isDeposit()
             && ! $this->isTrial()
             && ! $this->isExpense()
-            && ! $this->isSalaryPayout();
+            && ! $this->isSalaryPayout()
+            && ! $this->isB2bGroup();
     }
 
     private function userHasRemainingCourseAccess(int $courseId): bool
@@ -1690,10 +1829,13 @@ class Payment extends Model
 
     private function accessGrantingPaymentsForUser(Builder $query): Builder
     {
+        // H8245: b2b_group не грант плательщику — платёж юрлица за группу не
+        // должен участвовать ни в «есть ли у юзера доступ-оплата курса», ни в
+        // откатах этой проверки.
         return RefundAccessPolicy::excludeRefundedAccess($query
             ->where('user_id', $this->user_id)
             ->paid()
-            ->whereNotIn('tariff', ['deposit', 'trial', 'Расход', 'salary_payout']));
+            ->whereNotIn('tariff', ['deposit', 'trial', 'Расход', 'salary_payout', self::TARIFF_B2B_GROUP]));
     }
 
     // ==========================================

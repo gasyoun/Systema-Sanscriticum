@@ -25,6 +25,13 @@ return [
     // владелец сокета — sshd-session, см. EXPERIMENT_OLLAMA_GPU_OCT1_2026.md).
     'base_url' => env('KNOWLEDGE_OLLAMA_BASE_URL', 'http://127.0.0.1:11434'),
 
+    // H5703: отдельный base_url ГЕНЕРАЦИИ (CuratorAi localChatWithUsage —
+    // локальные ответы и LLM-реранк суфлёра), когда эмбеддинги и генерация
+    // живут на разных узлах: Mac — nomic-embed-text локально, qwen3:14b за
+    // прод-туннелем .92 (ssh -L). Пусто/не задано → base_url: прод
+    // байт-в-байт не меняется. Эмбеддинги и cabinet:probe остаются на base_url.
+    'generation_base_url' => env('KNOWLEDGE_GENERATION_BASE_URL'),
+
     // H4845: рабочее окно GPU-узла «HH:MM-HH:MM» (часовой пояс приложения,
     // МСК). Узел живёт 9–21 МСК; по полчаса запаса с краёв, чтобы утренний
     // подъём туннеля и вечерний отбой не будили cabinet:probe. Вне окна

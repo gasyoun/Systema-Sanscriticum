@@ -29,12 +29,24 @@ class MaxMagnetWebhookTest extends TestCase
         ]);
     }
 
-    /** @test */
+    /**
+     * H5297 seam 2 (capability/secret exposure): the 403 status alone does not
+     * prove the update was never PROCESSED — a verify-after-dispatch ordering
+     * bug in the middleware could still return 403 to the caller while the job
+     * already ran. Forbidden side effect: ProcessMaxMagnetUpdate must never be
+     * dispatched for a wrong secret, regardless of the response status.
+     *
+     * @test
+     */
     public function wrong_secret_in_url_returns_403(): void
     {
+        Bus::fake();
+
         $this->postJson('/api/webhooks/max-magnet/wrong-secret', [
             'update_type' => 'message_created',
         ])->assertStatus(403);
+
+        Bus::assertNotDispatched(ProcessMaxMagnetUpdate::class);
     }
 
     /** @test */

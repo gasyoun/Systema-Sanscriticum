@@ -45,6 +45,11 @@ done
 
 [ -f "$CONF_FILE" ] || { echo "нет файла значений: $CONF_FILE" >&2; exit 1; }
 
+# H7059: чистые решающие функции (cgroup-budget, cert-expiry) вынесены ради
+# deliberate-fail selftest без Docker/сети: sbin/test_guard_checks_refuse.sh.
+# shellcheck source=/dev/null
+. "$SCRIPT_DIR/server_guards_n8n/sbin/guard_checks.sh"
+
 BOLD=$(printf '\033[1m'); RED=$(printf '\033[1;31m'); GRN=$(printf '\033[1;32m')
 YLW=$(printf '\033[1;33m'); CYA=$(printf '\033[1;36m'); OFF=$(printf '\033[0m')
 CRIT=0; WARN=0; OKN=0
@@ -137,6 +142,35 @@ for c in "${G[N8N_CONTAINER]}" "${G[CADDY_CONTAINER]}"; do
   esac
 done
 
+# ── 2b. cgroup-budget (H7059) ───────────────────────────────────────────────
+# Потолок в HostConfig — это ещё не «группа внутри потолка». Спрашиваем ядро:
+# memory.current против memory.max. Класс L10: контейнер/ребёнок жил в чужом
+# бюджете и ядро тормозило всех, а проверки видели только «потолок записан».
+say "Бюджеты памяти контейнеров (cgroup v2)"
+cgroup_budget_one() { # <human-name> <container>
+  local name="$1" c="$2" cid base current max line sev subj detail
+  cid=$(docker inspect -f '{{.Id}}' "$c" 2>/dev/null || true)
+  [ -n "$cid" ] || return 0
+  base=""
+  for candidate in \
+    "/sys/fs/cgroup/system.slice/docker-${cid}.scope" \
+    "/sys/fs/cgroup/docker/${cid}"; do
+    [ -r "$candidate/memory.current" ] && { base="$candidate"; break; }
+  done
+  [ -n "$base" ] || return 0 # не cgroup v2 / иная раскладка — молчим, как на .92
+  current=$(cat "$base/memory.current" 2>/dev/null || true)
+  max=$(cat "$base/memory.max" 2>/dev/null || true)
+  while IFS='|' read -r sev subj detail; do
+    case "$sev" in
+      critical) crit "$subj" "$detail" ;;
+      warning)  warn "$subj" "$detail" ;;
+    esac
+  done < <(guard_cgroup_budget "$name" "$current" "$max" "${G[CGROUP_BUDGET_WARN_PCT]:-90}")
+  [ -n "$current" ] && [ -n "$max" ] && [ "$max" != max ] && ok "$name cgroup ${current} / ${max} B"
+}
+cgroup_budget_one "${G[N8N_CONTAINER]}" "${G[N8N_CONTAINER]}"
+cgroup_budget_one "${G[CADDY_CONTAINER]}" "${G[CADDY_CONTAINER]}"
+
 # ── 3. earlyoom и юниты ─────────────────────────────────────────────────────
 say "Юниты и таймеры"
 for u in ${G[REQUIRED_ACTIVE_UNITS]//,/ }; do
@@ -156,9 +190,14 @@ if [ -z "$newest" ]; then
 else
   age_h=$(( ( $(date +%s) - $(stat -c '%Y' "$newest") ) / 3600 ))
   size_mb=$(( $(stat -c '%s' "$newest") / 1048576 ))
+  while IFS='|' read -r sev subj detail; do
+    case "$sev" in
+      critical) crit "$subj" "$detail" ;;
+      warning)  warn "$subj" "$detail" ;;
+    esac
+  done < <(guard_backup_age "новейший локальный архив n8n" "$age_h" "${G[N8N_BACKUP_MAX_AGE_HOURS]}")
   [ "$age_h" -le "${G[N8N_BACKUP_MAX_AGE_HOURS]}" ] \
-    && ok "новейший архив $age_h ч назад" \
-    || crit "backup" "новейший архив $age_h ч назад, порог ${G[N8N_BACKUP_MAX_AGE_HOURS]} ч"
+    && ok "новейший архив $age_h ч назад" || true
   [ "$size_mb" -ge "${G[N8N_BACKUP_MIN_MB]}" ] \
     && ok "новейший архив $size_mb МиБ" \
     || crit "backup" "новейший архив $size_mb МиБ — меньше пола ${G[N8N_BACKUP_MIN_MB]} МиБ, похоже на обрезок"
@@ -187,13 +226,45 @@ if [ -n "${G[N8N_BACKUP_OFFSITE_REPO]:-}" ]; then
     else
       last_s=$(date -d "$last" +%s 2>/dev/null || echo 0)
       age_h=$(( ( $(date +%s) - last_s ) / 3600 ))
+      while IFS='|' read -r sev subj detail; do
+        case "$sev" in
+          critical) crit "$subj" "$detail" ;;
+          warning)  warn "$subj" "$detail" ;;
+        esac
+      done < <(guard_backup_age "новейший off-site снимок n8n (${G[N8N_BACKUP_OFFSITE_REPO]})" "$age_h" "${G[N8N_BACKUP_MAX_AGE_HOURS]}")
       [ "$age_h" -le "${G[N8N_BACKUP_MAX_AGE_HOURS]}" ] \
-        && ok "off-site снимок $age_h ч назад (${G[N8N_BACKUP_OFFSITE_REPO]})" \
-        || crit "backup-offsite" "новейший off-site снимок $age_h ч назад, порог ${G[N8N_BACKUP_MAX_AGE_HOURS]} ч"
+        && ok "off-site снимок $age_h ч назад (${G[N8N_BACKUP_OFFSITE_REPO]})" || true
     fi
   fi
 else
   crit "backup-offsite" "off-site назначение НЕ задано: копия локальная и делит судьбу машины. Что делать — см. секцию off-site в server_guards_n8n.conf"
+fi
+
+# ── 4b. cert-expiry (H7059) ─────────────────────────────────────────────────
+# Срок TLS-сертификата — класс, который до сих пор замечал только внешний
+# монитор. Здесь он едет на уже существующем ежечасном verify: без нового
+# таймера и без нового демона.
+say "TLS-сертификаты"
+if [ -n "${G[CERT_EXPIRY_HOSTS]:-}" ] && [ -n "${G[CERT_EXPIRY_MIN_DAYS]:-}" ]; then
+  for target in ${G[CERT_EXPIRY_HOSTS]//,/ }; do
+    thost=${target%%:*}; tport=${target##*:}; [ "$tport" = "$target" ] && tport=443
+    end=$(echo | timeout 15 openssl s_client -servername "$thost" -connect "$thost:$tport" 2>/dev/null \
+          | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)
+    end_epoch=$(date -d "$end" +%s 2>/dev/null || true)
+    if [ -n "$end_epoch" ]; then
+      days=$(( (end_epoch - $(date -u +%s)) / 86400 ))
+    else
+      days=""
+    fi
+    while IFS='|' read -r sev subj detail; do
+      case "$sev" in
+        critical) crit "$subj" "$detail" ;;
+        warning)  warn "$subj" "$detail" ;;
+      esac
+    done < <(guard_cert_expiry "$target" "$days" "${G[CERT_EXPIRY_MIN_DAYS]}")
+    [ -n "$days" ] && [ "$days" -ge "${G[CERT_EXPIRY_MIN_DAYS]}" ] \
+      && ok "сертификат $target: $days дн (мин ${G[CERT_EXPIRY_MIN_DAYS]})"
+  done
 fi
 
 # ── 5. Память и /tmp ────────────────────────────────────────────────────────

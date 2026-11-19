@@ -141,6 +141,10 @@ class ConfigHardeningTest extends TestCase
     /** @test */
     public function preflight_passes_in_production_with_secure_cookie_true(): void
     {
+        // H6306: прод-posture теперь включает и пароль архива при включённой
+        // off-site ноге — без него preflight красит деплой.
+        config(['backup.backup.password' => 'test-archive-password']);
+
         foreach ([true, 1, 'true', '1'] as $good) {
             config(['app.env' => 'production', 'session.secure' => $good]);
 
@@ -163,6 +167,9 @@ class ConfigHardeningTest extends TestCase
             'app.env' => 'production',
             'session.secure' => true,
             'security.trusted_proxies' => '',
+            // H6306: пароль архива задан — проверяем ИМЕННО предупреждение
+            // о проксях, а не новый hard-fail.
+            'backup.backup.password' => 'test-archive-password',
         ]);
 
         $this->artisan('deploy:config-preflight')

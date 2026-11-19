@@ -8,7 +8,6 @@ use App\Models\Group;
 use App\Services\Discipline\DisciplineScore;
 use App\Services\DisciplineScoreService;
 use App\Support\RoleGate;
-use App\Support\Roles;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -31,7 +30,12 @@ class DisciplineByGroupWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
+        // Fail-closed для teacher без карточки (users.teacher_id = null) —
+        // тот же паттерн, что TeacherAnalytics/TeacherCoursePayments (PR #3032,
+        // H6212). Срез и так пуст через Course::scopeForTeacher(null) = 1=0.
+        $user = auth()->user();
+
+        return (bool) (($user?->isTeacher() && $user->teacher_id !== null) || RoleGate::adminOnly());
     }
 
     public function table(Table $table): Table

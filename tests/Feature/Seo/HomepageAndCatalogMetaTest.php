@@ -43,4 +43,16 @@ class HomepageAndCatalogMetaTest extends TestCase
         $this->assertStringContainsString('курсы санскрита онлайн', mb_strtolower($onlineTitle[1]));
         $this->assertStringContainsString('name="description"', $online);
     }
+
+    public function test_online_h1_names_the_catalog_not_the_org(): void
+    {
+        $html = $this->get('/online')->assertOk()->getContent();
+
+        // H6160 High-2: H1 каталога подтверждает интент страницы («курсы … онлайн»),
+        // бренд остаётся в title, а не в заголовке первого уровня.
+        $this->assertMatchesRegularExpression(
+            '/<h1[^>]*>.*курсы санскрита и хинди онлайн/su',
+            mb_strtolower($html)
+        );
+    }
 }

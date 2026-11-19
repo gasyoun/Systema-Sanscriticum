@@ -186,7 +186,65 @@ class StoriesPublishStoryTest extends TestCase
         self::assertSame($url, FakeStoriesMadelineProtoClient::$sentStories[0]['media_areas'][0]['url']);
         self::assertStringEndsWith($url, FakeStoriesMadelineProtoClient::$sentStories[0]['caption']);
         self::assertGreaterThan(0, FakeStoriesMadelineProtoClient::$sentStories[0]['entities'][0]['offset']);
-        self::assertSame(55.0, FakeStoriesMadelineProtoClient::$sentStories[0]['media_areas'][0]['coordinates']['y']);
+        // H6678: легаси-зона в center-семантике — y-центр = 55 + 14/2 = 62
+        // (прежде 55.0 клал центр зоны на верхнюю кромку отрисовки).
+        self::assertSame(62.0, FakeStoriesMadelineProtoClient::$sentStories[0]['media_areas'][0]['coordinates']['y']);
+    }
+
+    /** @test */
+    public function per_story_media_area_override_is_sent_verbatim(): void
+    {
+        config(['features.telegram_story_stories' => true]);
+
+        // Измеренная плашка сториз 1474 v3: box 40,307 281x90 на 360x640 →
+        // center-семантика (MediaAreaMath::fromPlaqueBoxPx).
+        $url = 'https://samskrte.ru/ga/m26-st-online-20261015-01';
+        $this->personaPhotoPost([
+            'payload' => "Онлайн-курс\n{$url}",
+            'media_area' => ['x' => 50.1, 'y' => 55.0, 'w' => 78.1, 'h' => 14.1],
+        ]);
+
+        $this->artisan('stories:publish-story')->assertSuccessful();
+
+        $coordinates = FakeStoriesMadelineProtoClient::$sentStories[0]['media_areas'][0]['coordinates'];
+        self::assertSame(50.1, $coordinates['x']);
+        self::assertSame(55.0, $coordinates['y']);
+        self::assertSame(78.1, $coordinates['w']);
+        self::assertSame(14.1, $coordinates['h']);
+        self::assertSame(7.0, $coordinates['radius']);
+    }
+
+    /** @test */
+    public function invalid_media_area_override_falls_back_to_legacy_zone(): void
+    {
+        config(['features.telegram_story_stories' => true]);
+
+        $url = 'https://samskrte.ru/ga/m26-st-online-20261015-02';
+        $this->personaPhotoPost([
+            'payload' => "Онлайн-курс\n{$url}",
+            'media_area' => ['x' => 50.1, 'y' => 55.0, 'w' => 0.0, 'h' => 14.1], // нулевая ширина — fail-closed
+        ]);
+
+        $this->artisan('stories:publish-story')
+            ->expectsOutputToContain('invalid media_area override ignored')
+            ->assertSuccessful();
+
+        $coordinates = FakeStoriesMadelineProtoClient::$sentStories[0]['media_areas'][0]['coordinates'];
+        self::assertSame(62.0, $coordinates['y'], 'битый override → легаси-зона (center y=62), публикация не срывается');
+    }
+
+    /** @test */
+    public function null_media_area_keeps_the_legacy_click_zone(): void
+    {
+        config(['features.telegram_story_stories' => true]);
+
+        $url = 'https://samskrte.ru/ga/m26-rs-st-gita-20260917-02';
+        $this->personaPhotoPost(['payload' => "Чантинг\n{$url}"]);
+
+        $this->artisan('stories:publish-story')->assertSuccessful();
+
+        self::assertSame(62.0, FakeStoriesMadelineProtoClient::$sentStories[0]['media_areas'][0]['coordinates']['y']);
+        self::assertSame(78.0, FakeStoriesMadelineProtoClient::$sentStories[0]['media_areas'][0]['coordinates']['w']);
     }
 
     /** @test */

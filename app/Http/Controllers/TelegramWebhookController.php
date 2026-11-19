@@ -10,6 +10,7 @@ use App\Models\ScheduleAttendanceNotice;
 use App\Models\User;
 use App\Models\VacationQuorumPoll;
 use App\Services\Access\TelegramAdminNotifier;
+use App\Services\Anons\VideoAnons\VideoAnonsStoriesService;
 use App\Services\AttendanceNoticeService;
 use App\Services\Bot\CabinetLoginBotCommand;
 use App\Services\Bot\CabinetProvisionBotCommand;
@@ -21,6 +22,7 @@ use App\Services\Bot\RosterBotCommand;
 use App\Services\Bot\StudentSelfService;
 use App\Services\Bot\TelegramFormatter;
 use App\Services\Bot\UnblockBotCommand; // Добавили для переключения на человека
+use App\Services\Discipline\ChatSilenceRemovalService;
 use App\Services\HomeworkTelegramTagService;
 use App\Services\Support\HomeworkPauseNoteRecorder;
 use App\Services\Support\SupportDmAutoReply;
@@ -81,6 +83,17 @@ class TelegramWebhookController extends Controller
             $text = $data['message']['text'];
             // @username отправителя (необязателен в Telegram; может отсутствовать).
             $fromUsername = $data['message']['from']['username'] ?? null;
+
+            // H6547: ответ MG заголовком на черновик видео-анонса → сторис-очередь
+            // персоны. Сервис сам фильтрует (флаг / админ / reply на черновик);
+            // true = апдейт наш, студенческие ветки не трогаем.
+            try {
+                if (app(VideoAnonsStoriesService::class)->handleAdminReply($data['message'])) {
+                    return response()->json(['status' => 'ok']);
+                }
+            } catch (Throwable $e) {
+                report($e);
+            }
 
             // #ДЗ / /dz в чате группы (волна 2): до student-AI и «привяжите аккаунт».
             // Не-теговые сообщения группы тоже глушим здесь — иначе chat.id группы
@@ -760,6 +773,11 @@ class TelegramWebhookController extends Controller
             || str_starts_with($data, VacationQuorumService::CALLBACK_DECLINE)) {
             $this->handleVacationQuorumCallback($callback, $notifier);
 
+            return;
+        }
+
+        // «Молчит в учебном чате, урок закрыт»: исключить / не трогать.
+        if (app(ChatSilenceRemovalService::class)->handleCallback($callback)) {
             return;
         }
 

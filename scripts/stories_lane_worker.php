@@ -45,6 +45,38 @@ if (! is_array($task) || ! isset($task['action'])) {
 /** @var StoryPublisher $publisher */
 $publisher = app(StoryPublisher::class);
 
+/**
+ * H6678: прогрев MTProto-полосы ПЕРЕД одиночным вызовом.
+ *
+ * Живой репро 13-10-2026: `delete` и `get_story_views` в свежем процессе
+ * падали «Event loop terminated without resuming the current suspension»
+ * (Revolt DriverSuspension) — одиночный plain-вызов methodCallAsyncRead
+ * на холодной сессии подвешивал fiber, у которого не оказывалось живого
+ * цикла. Send-полоса не страдала: upload() фактически прогревает тот же
+ * конвейер (много раундов через одну связь), и sendStory после него
+ * проходит чисто. Лечение — реальный MTProto-раунд users.getUsers
+ * (fullGetSelf, тот же methodCallAsyncRead-конвейер, что у целевого
+ * вызова) ДО целевого вызова и ВСЕ вызовы задачи на ОДНОМ клиенте:
+ * второй open() того же session-файла в одном процессе плодит борющихся
+ * за сессию инстансов.
+ */
+$warmedClient = null;
+$warmUp = function () use (&$warmedClient): object {
+    if ($warmedClient !== null) {
+        return $warmedClient;
+    }
+    $factory = app(MadelineClientFactory::class);
+    if (! $factory->isConfigured()) {
+        fail('MadelineProto is not configured');
+    }
+    $warmedClient = $factory->open();
+    // users.getUsers — реальный раунд через methodCallAsyncRead; прогрев
+    // заодно громко падает на мёртвой сессии (AUTH_KEY_UNREGISTERED).
+    $warmedClient->fullGetSelf();
+
+    return $warmedClient;
+};
+
 try {
     $result = match ($task['action']) {
         'send_photo' => ['ok' => true, 'story_id' => $publisher->sendPhotoStoryDirect(
@@ -60,22 +92,20 @@ try {
             isset($task['link']) ? (string) $task['link'] : null,
             is_array($task['media_area'] ?? null) ? $task['media_area'] : null,
         )],
-        'delete' => tap(['ok' => true, 'story_id' => null], function () use ($publisher, $task): void {
+        'delete' => tap(['ok' => true, 'story_id' => null], function () use ($publisher, $warmUp, $task): void {
             $publisher->deleteStoryDirect(
                 (int) ($task['story_id'] ?? 0),
                 isset($task['account']) ? (string) $task['account'] : null,
+                $warmUp(),
             );
         }),
-        'get_story_views' => (function () use ($task) {
+        'get_story_views' => (function () use ($task, $warmUp) {
             $ids = array_values(array_unique(array_map('intval', is_array($task['story_ids'] ?? null) ? $task['story_ids'] : [])));
             if ($ids === [] || count($ids) > 50 || min($ids) < 1) {
                 fail('story_ids must contain 1–50 positive IDs');
             }
-            $factory = app(MadelineClientFactory::class);
-            if (! $factory->isConfigured()) {
-                fail('MadelineProto is not configured');
-            }
-            $result = $factory->open()->stories->getStoriesByID(['peer' => 'me', 'id' => $ids]);
+            $client = $warmUp();
+            $result = $client->stories->getStoriesByID(['peer' => 'me', 'id' => $ids]);
             $views = [];
             foreach (($result['stories'] ?? []) as $story) {
                 if (! is_array($story) || ($story['_'] ?? '') !== 'storyItem') {

@@ -8,33 +8,29 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
 /**
- * Скачивает и атомарно кладет GeoLite2-City.mmdb для драйвера 'maxmind'
- * (H3445, решение MG 24-08-2026). Нужны MAXMIND_ACCOUNT_ID + MAXMIND_LICENSE_KEY
- * (бесплатная регистрация на maxmind.com). База — gitignored-файл в storage.
+ * Скачивает и атомарно кладёт справочник IP→город для драйвера 'maxmind'
+ * (H3445). Источник — DB-IP City Lite (H6602, решение MG 13-10-2026 по гриллу
+ * H6577): тот же формат MaxMind DB (читает maxmind-db/reader), файл выходит
+ * ежемесячно, скачивание БЕЗ регистрации и ключей, лицензия CC BY 4.0
+ * (атрибуция — в политике конфиденциальности). База — gitignored-файл в storage.
  *
  *   php artisan support:geo-update-maxmind [--dry-run]
  *
- * Расписание: еженедельно вс 04:40 (Kernel), только когда driver=maxmind.
+ * Файл месяца называется dbip-city-lite-YYYY-MM.mmdb.gz; в начале месяца
+ * свежий ещё не опубликован — тогда берём предыдущий месяц. Имя команды
+ * сохранено (расписание и ручные прогоны не переучиваем).
  */
 class UpdateMaxMindGeoDatabase extends Command
 {
     protected $signature = 'support:geo-update-maxmind {--dry-run : Скачать и проверить, но не заменять рабочий файл}';
 
-    protected $description = 'Download and install the MaxMind GeoLite2-City .mmdb database for SUPPORT_GEO_DRIVER=maxmind';
+    protected $description = 'Download and install the DB-IP City Lite .mmdb database (MaxMind DB format) for SUPPORT_GEO_DRIVER=maxmind';
 
-    private const DOWNLOAD_URL = 'https://download.maxmind.com/geoip/databases/GeoLite2-City/download?suffix=tar.gz';
+    private const DOWNLOAD_BASE_URL = 'https://download.db-ip.com/free/dbip-city-lite-';
 
     public function handle(): int
     {
-        $accountId = (string) config('support_geo.maxmind_account_id', '');
-        $licenseKey = (string) config('support_geo.maxmind_license_key', '');
         $targetPath = (string) config('support_geo.maxmind_path', '');
-
-        if ($accountId === '' || $licenseKey === '') {
-            $this->error('MAXMIND_ACCOUNT_ID / MAXMIND_LICENSE_KEY не заданы (.env).');
-
-            return self::FAILURE;
-        }
 
         if ($targetPath === '') {
             $this->error('SUPPORT_GEO_MAXMIND_PATH пуст — некуда класть базу.');
@@ -47,35 +43,51 @@ class UpdateMaxMindGeoDatabase extends Command
             mkdir($tmpDir, 0755, true);
         }
 
-        $archivePath = $tmpDir.'/GeoLite2-City.'.uniqid().'.tar.gz';
+        // Текущий месяц → предыдущий (в первые дни месяца свежего ещё нет).
+        $months = [now()->format('Y-m'), now()->subMonth()->format('Y-m')];
 
-        $this->info('Downloading GeoLite2-City…');
+        $mmdb = null;
 
-        $response = Http::withBasicAuth($accountId, $licenseKey)
-            ->timeout(300)
-            ->sink($archivePath)
-            ->get(self::DOWNLOAD_URL);
+        foreach ($months as $month) {
+            $url = self::DOWNLOAD_BASE_URL.$month.'.mmdb.gz';
+            $this->info("Downloading DB-IP City Lite {$month}…");
 
-        if (! $response->ok()) {
-            $this->error('Download failed: HTTP '.$response->status());
+            $archivePath = $tmpDir.'/dbip-city-lite-'.uniqid().'.mmdb.gz';
 
+            try {
+                $response = Http::timeout(300)->sink($archivePath)->get($url);
+            } catch (\Throwable $e) {
+                $this->warn("Download failed: {$e->getMessage()}");
+                @unlink($archivePath);
+
+                continue;
+            }
+
+            if (! $response->ok()) {
+                $this->warn("Download failed: HTTP {$response->status()}");
+                @unlink($archivePath);
+
+                continue;
+            }
+
+            // Страховка: некоторые клиенты/обертки не наполняют sink — тогда
+            // пишем тело ответа вручную (не меняет поведение при настоящей закачке).
+            if (! is_file($archivePath) || (filesize($archivePath) ?: 0) === 0) {
+                file_put_contents($archivePath, $response->body());
+            }
+
+            $mmdb = $this->extractMmdb($archivePath, $tmpDir);
             @unlink($archivePath);
 
-            return self::FAILURE;
+            if ($mmdb !== null) {
+                break;
+            }
+
+            $this->warn('Архив не содержит валидного .mmdb — пробуем предыдущий месяц.');
         }
-
-        // Страховка: некоторые клиенты/обертки не наполняют sink — тогда пишем
-        // тело ответа вручную (не меняет поведение при настоящей закачке).
-        if (! is_file($archivePath) || (filesize($archivePath) ?: 0) === 0) {
-            file_put_contents($archivePath, $response->body());
-        }
-
-        $mmdb = $this->extractMmdb($archivePath, $tmpDir);
-
-        @unlink($archivePath);
 
         if ($mmdb === null) {
-            $this->error('Архив не содержит валидного GeoLite2-City.mmdb.');
+            $this->error('Ни один источник DB-IP City Lite не дал валидной базы.');
 
             return self::FAILURE;
         }
@@ -99,48 +111,77 @@ class UpdateMaxMindGeoDatabase extends Command
         chmod($targetPath, 0640);
 
         clearstatcache();
-        $this->info('Установлена GeoLite2-City: '.$targetPath.' ('.number_format((float) (filesize($targetPath) ?: 0) / 1048576, 1).' MiB).');
+        $this->info('Установлена DB-IP City Lite (формат MaxMind DB): '.$targetPath.' ('.number_format((float) (filesize($targetPath) ?: 0) / 1048576, 1).' MiB).');
 
         return self::SUCCESS;
     }
 
     /**
-     * Разворачивает tar.gz и возвращает путь к СКОПИРОВАННОМУ .mmdb во временном
-     * каталоге (не внутри архива), либо null. Валидность проверяется размером:
-     * настоящую .mmdb-структуру проверит Reader при первом резолве.
+     * Распаковывает .mmdb.gz и возвращает путь к РАСПАКОВАННОЙ базе во временном
+     * каталоге, либо null. Валидность проверяется структурно: настоящий
+     * MaxMind-формат заканчивается метаданными за маркером \xAB\xCD\xEFMaxMind.com
+     * (DB-IP пишет им же); размер отсекает обрезанные/пустые ответы. Полную
+     * валидность проверит Reader при первом резолве.
      */
     private function extractMmdb(string $archivePath, string $workDir): ?string
     {
-        $tarPath = dirname($archivePath).'/'.basename($archivePath, '.gz');
-        copy($archivePath, $tarPath);
+        $gz = @gzopen($archivePath, 'rb');
 
-        try {
-            $phar = new \PharData($tarPath);
-
-            foreach (new \RecursiveIteratorIterator($phar) as $file) {
-                /** @var \SplFileInfo $file */
-                if ($file->getFilename() !== 'GeoLite2-City.mmdb') {
-                    continue;
-                }
-
-                $content = @file_get_contents($file->getPathname());
-
-                if ($content === false || strlen($content) < 1024) {
-                    continue;
-                }
-
-                $staged = $workDir.'/'.uniqid('geolite-staged-').'.mmdb';
-
-                return file_put_contents($staged, $content) !== false ? $staged : null;
-            }
+        if ($gz === false) {
+            $this->error('Extract failed: не gzip.');
 
             return null;
-        } catch (\Throwable $e) {
-            $this->error('Extract failed: '.$e->getMessage());
-
-            return null;
-        } finally {
-            @unlink($tarPath);
         }
+
+        $staged = $workDir.'/'.uniqid('dbip-staged-').'.mmdb';
+        $out = @fopen($staged, 'wb');
+
+        if ($out === false) {
+            gzclose($gz);
+            $this->error('Extract failed: не открыть staging-файл.');
+
+            return null;
+        }
+
+        while (! gzeof($gz)) {
+            $chunk = gzread($gz, 65536);
+
+            if ($chunk === false || $chunk === '') {
+                break;
+            }
+            fwrite($out, $chunk);
+        }
+
+        fclose($out);
+        gzclose($gz);
+
+        $size = filesize($staged) ?: 0;
+
+        if ($size < 1024 || ! $this->hasMaxMindMetadataMarker($staged)) {
+            @unlink($staged);
+
+            return null;
+        }
+
+        return $staged;
+    }
+
+    /** Маркер метаданных MaxMind DB (\xAB\xCD\xEFMaxMind.com) — в конце файла. */
+    private function hasMaxMindMetadataMarker(string $path): bool
+    {
+        $handle = @fopen($path, 'rb');
+
+        if ($handle === false) {
+            return false;
+        }
+
+        $window = 131072;
+        fseek($handle, 0, SEEK_END);
+        $size = ftell($handle) ?: 0;
+        fseek($handle, max(0, $size - $window), SEEK_SET);
+        $tail = (string) stream_get_contents($handle);
+        fclose($handle);
+
+        return str_contains($tail, "\xAB\xCD\xEFMaxMind.com");
     }
 }

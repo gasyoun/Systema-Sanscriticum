@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Support\Consent\ConsentRules;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -33,6 +34,12 @@ final class StorePaypalClaimRequest extends FormRequest
             'paypal_txn' => ['nullable', 'string', 'max:255'],
             'proof' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
             'comment' => ['nullable', 'string', 'max:1000'],
+            // H6534: один перевод может покрывать несколько блоков курса —
+            // id тарифов из селектора формы. Глубокая валидация (тот же курс,
+            // активный блочный тариф) — в контроллере, у него есть контекст
+            // якорного тарифа; здесь только форма и целость.
+            'blocks' => ['nullable', 'array', 'min:1'],
+            'blocks.*' => ['integer'],
         ];
 
         // Гость → создаём аккаунт, поэтому нужны имя и email (как в депозите).
@@ -40,6 +47,8 @@ final class StorePaypalClaimRequest extends FormRequest
         if (! auth()->check()) {
             $rules['name'] = ['required', 'string', 'max:255'];
             $rules['email'] = ['required', 'email', 'max:255'];
+            // 152-ФЗ: путь оплаты — обязательность по флагу money-контура.
+            $rules['pd_consent'] = ConsentRules::pd(checkout: true);
         }
 
         return $rules;

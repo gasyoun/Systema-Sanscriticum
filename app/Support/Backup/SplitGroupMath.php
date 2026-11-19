@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Support\Backup;
 
+use DateTimeImmutable;
+use DateTimeZone;
+
 /**
  * Чистая математика групп частей split-upload: разбор имён
  * `<stem>.part-NN-of-NN.zip`, полнота группы, новейшая ПОЛНАЯ запись.
@@ -17,10 +20,30 @@ final class SplitGroupMath
     public const PART_PATTERN = '/^(?<stem>\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})\.part-(?<index>\d+)-of-(?<total>\d+)\.zip$/';
 
     /**
+     * Зона, в которой записаны имена архивов (Y71).
+     *
+     * spatie/laravel-backup снимает бэкап в 02:00 МСК, поэтому `HH-MM-SS` в
+     * имени — настенные часы Москвы, а не ambient-зона процесса. Пока разбор
+     * шёл через `strtotime()`, результат зависел от `date_default_timezone`
+     * (в проде её выставлял bootstrap, а в тестах — порядок прогона), и один
+     * и тот же файл получал три разных timestamp'а. Держим зону константой,
+     * а не `config('app.timezone')`: разбор имён — чистая функция, ей нельзя
+     * зависеть от загруженного приложения. Значение обязано совпадать с
+     * `config/app.php → timezone`.
+     */
+    public const ARCHIVE_TIMEZONE = 'Europe/Moscow';
+
+    /**
      * Дата архива из имени файла — `YYYY-MM-DD-HH-MM-SS.zip` или
      * `YYYY-MM-DD-HH-MM-SS.part-N-of-M.zip`. Именно из ИМЕНИ, а не из mtime:
      * mtime на WebDAV — время загрузки в облако, и свежесть поехала бы
      * (spatie `Backup::date()` парсил имя же — 0bn, 16-09-2026).
+     *
+     * Имя читается как настенные часы {@see self::ARCHIVE_TIMEZONE} — так же,
+     * как их пишет spatie. Ambient `date_default_timezone` на результат не
+     * влияет (Y71: раньше влияла, и 3 теста падали на 10800 с ровно из-за
+     * UTC-окружения). Невозможная дата/время в имени (`2026-13-01`, `25:00:00`)
+     * — мусор, а не повод к переносу: отдаём null.
      */
     public static function timestampFromBasename(string $basename): ?int
     {
@@ -28,9 +51,25 @@ final class SplitGroupMath
             return null;
         }
 
-        $parsed = strtotime(sprintf('%s %s:%s:%s', $m[1], $m[2], $m[3], $m[4]));
+        $parsed = DateTimeImmutable::createFromFormat(
+            '!Y-m-d H:i:s',
+            sprintf('%s %s:%s:%s', $m[1], $m[2], $m[3], $m[4]),
+            new DateTimeZone(self::ARCHIVE_TIMEZONE),
+        );
 
-        return $parsed === false ? null : $parsed;
+        if ($parsed === false) {
+            return null;
+        }
+
+        // До PHP 8.2 getLastErrors() отдаёт массив с нулями вместо false —
+        // поэтому проверяем и форму, и счётчики.
+        $errors = DateTimeImmutable::getLastErrors();
+
+        if (is_array($errors) && ($errors['warning_count'] > 0 || $errors['error_count'] > 0)) {
+            return null;
+        }
+
+        return $parsed->getTimestamp();
     }
 
     /**

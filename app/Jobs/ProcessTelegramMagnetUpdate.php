@@ -11,6 +11,8 @@ use App\Services\Leads\LeadMagnetDispatcher;
 use App\Services\Leads\WaitlistWelcome;
 use App\Services\Marathon\MarathonDay1Sender;
 use App\Services\Messaging\DeliveryChannelManager;
+use App\Services\OpenLessonCards\OpenLessonBotService;
+use App\Services\Telegram\WaitlistBotService;
 use App\Support\CareChatReplyLog;
 use App\Support\TelegramChannelEcho;
 use Illuminate\Bus\Queueable;
@@ -54,6 +56,19 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
             }
         }
 
+        // Карточки открытых занятий: callback "ol:*", нижнее меню, /start ol_<id>.
+        // РАНЬШЕ ждуна — тот забирает себе любой callback_query.
+        if ($this->landingBotId === null && app(OpenLessonBotService::class)->handleUpdate($this->update)) {
+            return;
+        }
+
+        // Ждун в боте (MG 04-10-2026: функции ждуна — дублировать в бот, кому
+        // как удобнее). Только глобальный бот: per-bot лендинги живут в n8n.
+        // /zhdun и callback_query "wl:*" обслуживает WaitlistBotService.
+        if ($this->landingBotId === null && app(WaitlistBotService::class)->handleUpdate($this->update)) {
+            return;
+        }
+
         $message = $this->update['message'] ?? null;
         if (! $message) {
             return;
@@ -87,11 +102,31 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
             return;
         }
 
+        // Любой /start глобального бота — в аудиторию карточек открытых занятий.
+        if ($this->landingBotId === null) {
+            app(OpenLessonBotService::class)->remember($message);
+        }
+
         $parts = explode(' ', $text, 2);
         $token = $parts[1] ?? null;
 
+        // H6466 — deep-link t.me/<бот>?start=wl_<slug>: сразу карточка одного
+        // курса ждуна, без списка. Префикс wl_ зарезервирован за ждуном и
+        // в магнитный поиск не попадает.
+        if ($token !== null && str_starts_with($token, 'wl_')) {
+            app(WaitlistBotService::class)->sendCourseBySlug((string) $chatId, substr($token, 3));
+
+            return;
+        }
+
         if (! $token) {
             // /start без токена — юзер нашёл бота сам, не через форму.
+            // Короткое приветствие с меню ждуна (MG 04-10-2026).
+            // Флаг карточек ON — приветствие-воронка (карточка занятия +
+            // подарки + меню), иначе короткое приветствие ждуна, как раньше.
+            if ($this->landingBotId !== null || ! app(OpenLessonBotService::class)->welcome((string) $chatId)) {
+                app(WaitlistBotService::class)->sendWelcome((string) $chatId);
+            }
             Log::info('Telegram /start without token', ['chat_id' => $chatId]);
 
             return;

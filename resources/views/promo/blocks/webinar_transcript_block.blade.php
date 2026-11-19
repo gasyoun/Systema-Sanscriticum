@@ -113,7 +113,7 @@
                 @endif
                 @if($ytId)
                 <iframe x-ref="ytPlayer" x-show="player === 'youtube'"
-                        src="https://www.youtube.com/embed/{{ $ytId }}?enablejsapi=1&rel=0"
+                        src="https://www.youtube-nocookie.com/embed/{{ $ytId }}?enablejsapi=1&rel=0"
                         class="absolute inset-0 w-full h-full" frameborder="0"
                         allow="autoplay; encrypted-media; fullscreen; picture-in-picture;" allowfullscreen></iframe>
                 @endif

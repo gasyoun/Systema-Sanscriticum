@@ -1,0 +1,37 @@
+{
+  "_comment": "H6320 template of the live /root/.config/backrest/config.json on vps92 (backrest v1.14.1). Placeholders in <...>. Secrets are NOT committed: UI credentials live in /root/.backrest-ui-credentials (0600), the restic password is passed via RESTIC_PASSWORD_FILE env, never inline. NOTE: auth.users[].passwordBcrypt must be base64 of the ASCII $2b$ bcrypt hash (backrest base64-decodes it before bcrypt-compare).",
+  "version": 6,
+  "modno": 1,
+  "instance": "vps-samskrte92",
+  "repos": [
+    {
+      "id": "systema-sftp",
+      "uri": "sftp:restic-push@192.168.200.91:/systema",
+      "guid": "<restic cat config --json -> id>",
+      "env": [
+        "RESTIC_PASSWORD_FILE=/root/.restic-pass"
+      ],
+      "flags": [],
+      "checkPolicy": {
+        "schedule": { "cron": "7 7 * * 0", "clock": "CLOCK_UTC" }
+      },
+      "autoUnlock": false,
+      "hooks": [
+        {
+          "conditions": ["CONDITION_ANY_ERROR"],
+          "onError": "ON_ERROR_IGNORE",
+          "actionCommand": {
+            "command": "/usr/local/sbin/backrest-hook-notify.sh {{ .ShellEscape .Task }} {{ .ShellEscape .Error }}"
+          }
+        }
+      ]
+    }
+  ],
+  "plans": [],
+  "auth": {
+    "disabled": false,
+    "users": [
+      { "name": "mg", "passwordBcrypt": "<base64(bcrypt-hash)>" }
+    ]
+  }
+}

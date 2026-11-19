@@ -291,11 +291,30 @@ trait StudentDashboardConcerns
         $user = auth()->user();
         $debtsService = app(StudentDebtsService::class);
         $debts = $debtsService->forUser($user);
+        $debtsByCourseId = $debts->keyBy('course_id');
         $debtPayResolver = app(DebtPaymentResolver::class);
         $debtPayOptions = $debts->mapWithKeys(
             fn ($d) => [$d->course_id => $debtPayResolver->optionsFor($d, $user)]
         );
         $recovery = app(RecoveryStateResolver::class)->resolve($user);
+
+        // «Продление» (MG 12-10-2026): курсы без долга, где следующий блок уже
+        // можно оплатить самому. Курсы — та же выборка, что на «Сегодня»
+        // (is_active + группы студента), чтобы обе страницы говорили одно.
+        $courses = Course::query()
+            ->where('is_active', true)
+            ->whereHas('groups', fn ($query) => $query->whereIn('groups.id', $user->groups->pluck('id')))
+            ->get(['id', 'title']);
+        $renewals = $debtsService->paidUntilForUser($user, $courses->pluck('id'))
+            ->reject(fn ($p) => $debtsByCourseId->has($p->course_id))
+            ->filter(fn ($p) => ! empty($p->next_block_pay))
+            ->map(fn ($p) => (object) [
+                'courseTitle' => $courses->find($p->course_id)?->title ?? 'Курс',
+                'paidBlock' => $p->block,
+                'deadline' => $p->next_payment_deadline,
+                'pay' => $p->next_block_pay,
+            ])
+            ->values();
 
         // Access page is always offer-suppressed (R2 / B v2 access.html).
         return view('student.hybrid.access', [
@@ -303,6 +322,7 @@ trait StudentDashboardConcerns
             'debtPayOptions' => $debtPayOptions,
             'recovery' => $recovery,
             'suppressOffers' => true,
+            'renewals' => $renewals,
         ]);
     }
 

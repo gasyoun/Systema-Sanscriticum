@@ -19,6 +19,13 @@ final class ShellSystemInspector implements SystemInspector
     /** Как долго держать ответ off-site назначения, секунд. */
     private const BACKUP_PROBE_TTL_SECONDS = 3600;
 
+    /**
+     * H6905: имя синтетического назначения для restic-SFTP ноги. Живёт не в
+     * config/backup.php: restic — не spatie-диск, у него нет каталога архивов,
+     * свежесть берётся из журнала прогонов (см. resticOffsiteDestination()).
+     */
+    public const RESTIC_OFFSITE_DISK = 'restic_sftp';
+
     /** @var array<string, string|null> */
     private array $unitPropertyCache = [];
 
@@ -287,7 +294,129 @@ final class ShellSystemInspector implements SystemInspector
             }
         }
 
+        // H6905: restic-SFTP — вторая (и на 17-10-2026 единственная работающая)
+        // off-site нога. Без неё guards 12 суток подряд объявляли «нет ни одного
+        // живого off-site назначения», хотя дамп БД уезжал на другой хост
+        // каждый час: мерилась только spatie-ветка WebDAV.
+        $restic = $this->resticOffsiteDestination();
+        if ($restic !== null) {
+            $rows[] = $restic;
+        }
+
         return $rows;
+    }
+
+    /**
+     * Живость restic-SFTP ноги по журналу её собственного прогона.
+     *
+     * Замер 17-10-2026 (.92): spatie-ветка off-site структурно не доставляет
+     * 4-ГБ недельный архив — аплинк ~130 КБ/с на поток (H3371), часовой бюджет
+     * докатки 900 с при слоте части 420 с даёт ~2 части/час, а окно проверки
+     * VERIFY_PROBE_DELAYS=[0] против лага листинга Яндекса заставляет части
+     * переливаться: группа 2026-10-15-07-11-16 за двое суток набрала 47 частей
+     * из 198, группа 12-10 — ноль, целых зипов на диске нет. В это же время
+     * restic-backup.timer каждый час отгружает дамп БД + .env + storage/app на
+     * ДРУГОЙ хост (sftp:restic-push@192.168.200.91:/systema) и пишет
+     * `run_complete ... systema=OK ... sftp=OK`.
+     *
+     * Поэтому свежесть здесь = время последней УСПЕШНОЙ строки run_complete с
+     * обоими OK. bytes = null осознанно: restic-снапшот атомарен, класс
+     * 11-МиБ обрезков (ради которого стоит BACKUP_MIN_ARCHIVE_MB) к нему
+     * неприменим, и порог размера не должен его красить.
+     *
+     * Журнала нет / в нём нет успешной строки — строку НЕ добавляем: нечем
+     * доказать, значит не заявляем (честный прежний красный, а не зелёный
+     * без данных).
+     *
+     * @return array{disk: string, reachable: bool, newestAt: int, newestBytes: int|null}|null
+     */
+    private function resticOffsiteDestination(): ?array
+    {
+        $path = (string) config('server_guards.restic_backup_log', '/var/log/restic-backup.log');
+        $log = $this->fileContents($path);
+        if ($log === null || $log === '') {
+            return null;
+        }
+
+        $newestAt = null;
+        foreach (preg_split('/\r\n|\n|\r/', $log) ?: [] as $line) {
+            if (! str_contains($line, 'run_complete')) {
+                continue;
+            }
+            if (! str_contains($line, 'systema=OK') || ! str_contains($line, 'sftp=OK')) {
+                continue;
+            }
+            $stamp = strtok($line, ' ');
+            if (! is_string($stamp)) {
+                continue;
+            }
+            $ts = strtotime($stamp);
+            if ($ts === false) {
+                continue;
+            }
+            if ($newestAt === null || $ts > $newestAt) {
+                $newestAt = $ts;
+            }
+        }
+
+        if ($newestAt === null) {
+            return null;
+        }
+
+        return [
+            'disk' => self::RESTIC_OFFSITE_DISK,
+            'reachable' => true,
+            'newestAt' => $newestAt,
+            'newestBytes' => null,
+        ];
+    }
+
+    public function certificateDaysLeft(string $host, int $port): ?int
+    {
+        if (! \function_exists('stream_socket_client') || ! \function_exists('openssl_x509_parse')) {
+            return null;
+        }
+
+        $context = stream_context_create([
+            'ssl' => [
+                'capture_peer_cert' => true,
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'SNI_enabled' => true,
+                'peer_name' => $host,
+            ],
+        ]);
+
+        $client = @stream_socket_client(
+            'ssl://'.$host.':'.$port,
+            $errno,
+            $errstr,
+            max(3, $this->timeout),
+            STREAM_CLIENT_CONNECT,
+            $context,
+        );
+        if ($client === false) {
+            return null;
+        }
+
+        try {
+            $params = stream_context_get_params($client);
+            $certificate = $params['options']['ssl']['peer_certificate'] ?? null;
+            if (! \is_resource($certificate) && ! $certificate instanceof \OpenSSLCertificate) {
+                return null;
+            }
+            $parsed = openssl_x509_parse($certificate);
+            $validTo = $parsed['validTo_time_t'] ?? null;
+            if (! \is_int($validTo)) {
+                return null;
+            }
+
+            return (int) floor(($validTo - time()) / 86400);
+        } catch (Throwable) {
+            return null;
+        } finally {
+            @fclose($client);
+        }
     }
 
     public function trackedDirtyPaths(string $repoDir): ?array

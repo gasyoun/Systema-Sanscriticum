@@ -62,7 +62,9 @@ class StorageGrowthWidgetTest extends TestCase
     public function growth_buckets_files_by_mtime_and_counts_recent_window(): void
     {
         $now = time();
-        $this->touchFile('fresh.bin', 100, $now - 5 * 86400);      // в окне 30 дней
+        // fresh — на now, а не «now − 5 дней»: на 1–5 числах месяца такой mtime
+        // уезжает в прошлый месяц, и тест падает на границе (сломалось 01-10-2026).
+        $this->touchFile('fresh.bin', 100, $now);                   // в окне 30 дней и в текущем месяце
         $this->touchFile('last-month.bin', 200, $now - 40 * 86400); // вне окна
         $this->touchFile('old.bin', 400, $now - 70 * 86400);        // вне окна
 

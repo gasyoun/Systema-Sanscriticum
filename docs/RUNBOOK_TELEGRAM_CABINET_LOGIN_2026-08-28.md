@@ -1,6 +1,22 @@
 # RUNBOOK: «Telegram-вход» и самообслуживание кабинета (/кабинет)
 
-_Created: 28-08-2026 · Last updated: 02-09-2026_
+> **Статус на 05-10 (H6091): флаг ВКЛЮЧЁН на проде.** Проба `grep TELEGRAM_CABINET_LOGIN /var/www/html/.env`
+> на .92 → `TELEGRAM_CABINET_LOGIN=true`; кабинетный бот жив (привязка `/telegram/connect`,
+> покрытие см. карту ботов). Ранбук ниже писался при флагах OFF — шаги включения оставлены
+> как задокументированная история и путь отката.
+
+> **14-11-2026: под-режим email-привязки ВКЛЮЧЕН (решение MG, «вариант A»).**
+> `TELEGRAM_CABINET_EMAIL_LINK=true` + config:cache на .92 (бэкап `.env.bak-emaillink-*`).
+> Сценарий 2 жив: непривязанный платящий шлёт боту email заказа → привязка + ссылка.
+> ⚠️➡️✅ В тот же день найден и ПОЧИНЕН сломанный вебхук-канал: вебхук кабинет-бота был
+> перекатан на URL ТУКАН-воркфлоу n8n (`duck:8443/tg91/webhook/c23daadb-…`) без сертификата —
+> Telegram не доставлял ничего (`SSL verify failed`, `pending_update_count=115`, канал молчал —
+> потому и 0 `tg_login` за 30 дней). Восстановлено штатно: `php artisan telegram:webhooks --set`
+> (все боты на `https://103.112.71.201`, серт узла, секрет проектный, «Совпадает: да»).
+> Остаток: `tg91-webhook-guard` не знает кабинет-бота — источник переката не защищён.
+
+
+_Created: 28-08-2026 · Last updated: 14-11-2026_
 
 Источник требования: ORS-FAQ
 [CABINET_ADOPTION_ROADMAP.md](https://github.com/gasyoun/ORS-FAQ/blob/main/CABINET_ADOPTION_ROADMAP.md)

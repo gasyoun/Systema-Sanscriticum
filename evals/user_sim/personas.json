@@ -1,0 +1,98 @@
+{
+  "version": "1.0.0",
+  "handoff": "H6851",
+  "fence": "152-FZ: all personas are SYNTHETIC. Utterances are copied verbatim from the ANONYMISED fixture tests/fixtures/faq_rag_eval.json (H2448/H3766; handles/emails/phones/links already scrubbed) or hand-written generic text. No student correspondence, transcripts, payments or credentials anywhere.",
+  "provenance": {
+    "fixture": "tests/fixtures/faq_rag_eval.json",
+    "utterance_rule": "turn_1 utterances are verbatim fixture questions (id cited per persona); follow-up turns are hand-written synthetic rephrases",
+    "goal_rule": "goal_chunk equals that question's hand-checked expected_chunk_ids[0]"
+  },
+  "personas": [
+    {
+      "id": "PS-01",
+      "name": "Поблочная оплата",
+      "category": "D",
+      "goal_chunk": "политика-и-поддержка/оплата-блоки-поблочно-vs-целиком",
+      "goal_reachable": true,
+      "max_turns": 2,
+      "turns": [
+        {"utterance": "Как оплатить курс поблочно? Что такое блок?", "source": "fixture q001"},
+        {"utterance": "То есть можно платить не за весь курс сразу, а за каждый блок отдельно?", "source": "synthetic rephrase"}
+      ]
+    },
+    {
+      "id": "PS-02",
+      "name": "Пропущенное занятие",
+      "category": "B",
+      "goal_chunk": "политика-и-поддержка/записи-уроков-и-пропуски",
+      "goal_reachable": true,
+      "max_turns": 2,
+      "turns": [
+        {"utterance": "Где смотреть запись занятия если пропустил урок?", "source": "fixture q002"},
+        {"utterance": "Записи уроков где находятся, если я не смог присутствовать?", "source": "synthetic rephrase"}
+      ]
+    },
+    {
+      "id": "PS-03",
+      "name": "Вход в кабинет",
+      "category": "A",
+      "goal_chunk": "политика-и-поддержка/личный-кабинет-на-сайте",
+      "goal_reachable": true,
+      "max_turns": 2,
+      "turns": [
+        {"utterance": "Как зайти в личный кабинет на сайте?", "source": "fixture q013"},
+        {"utterance": "Подскажите, где вход в личный кабинет?", "source": "synthetic rephrase"}
+      ]
+    },
+    {
+      "id": "PS-04",
+      "name": "Сертификат",
+      "category": "F",
+      "goal_chunk": "политика-и-поддержка/сертификат",
+      "goal_reachable": true,
+      "max_turns": 2,
+      "turns": [
+        {"utterance": "Дают ли сертификат после курса?", "source": "fixture q011"},
+        {"utterance": "А выдают ли документ или сертификат по окончании курса?", "source": "synthetic rephrase"}
+      ]
+    },
+    {
+      "id": "PS-05",
+      "name": "Расписание занятий",
+      "category": "C",
+      "goal_chunk": "политика-и-поддержка/часовой-пояс-город-формат",
+      "goal_reachable": true,
+      "max_turns": 2,
+      "turns": [
+        {"utterance": "Вы во сколько занимаетесь?", "source": "fixture q049"},
+        {"utterance": "В какое время проходят занятия?", "source": "synthetic rephrase"}
+      ]
+    },
+    {
+      "id": "PS-06",
+      "name": "Персональный факт (недостижимо в FAQ)",
+      "category": "-",
+      "goal_chunk": "политика-и-поддержка/оплата-блоки-поблочно-vs-целиком",
+      "goal_reachable": false,
+      "unreachable_reason": "Per-student fact (balance). Fixture description: questions whose true answer is per-student fact are NOT answerable by the FAQ corpus by construction. Target must refuse; dialog is excluded from the pass denominator (INCONCLUSIVE).",
+      "max_turns": 2,
+      "turns": [
+        {"utterance": "Подскажите, какой у меня сейчас баланс по оплате?", "source": "synthetic generic (per-student fact)"},
+        {"utterance": "Ну сколько мне ещё доплачивать за текущий блок?", "source": "synthetic generic (per-student fact)"}
+      ]
+    },
+    {
+      "id": "PS-07",
+      "name": "Болтун (перерасход бюджета ходов)",
+      "category": "A",
+      "goal_chunk": "политика-и-поддержка/личный-кабинет-на-сайте",
+      "goal_reachable": true,
+      "max_turns": 1,
+      "turns": [
+        {"utterance": "Здравствуйте!", "source": "synthetic greeting (never states the goal)"},
+        {"utterance": "Алло, вы тут?", "source": "synthetic greeting"},
+        {"utterance": "Ну так что, поможете?", "source": "synthetic greeting"}
+      ]
+    }
+  ]
+}

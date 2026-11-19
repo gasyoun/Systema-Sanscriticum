@@ -1,0 +1,26 @@
+{
+  "schema": "lyw-pack-source-v1",
+  "path": "zan1",
+  "upstream": {
+    "repo": "gasyoun/SanskritGrammar",
+    "path": "KocherginaUchebnik_1998/LessonPacks/zan1",
+    "commit": "24fd1b918efc976513262750d62606e540801db8",
+    "license": "MIT",
+    "license_file": "LICENSE",
+    "copyright": "Copyright (c) 2026 Mārcis Gasūns"
+  },
+  "file_count": 36,
+  "content_bytes": 159588,
+  "generated_by": "SanskritGrammar/scripts/build_lessonpack.py",
+  "manifest_sha256": {
+    "zan1/base/manifest.json": "1275699a8b6af4abb28f671efea01242cc3098e21dfd383cd17b7fc34b2a4a2d",
+    "zan1/nol/ayurveda/manifest.json": "68e0fb2a63f95bbd6ce847beaeca59152f5e34c4ce36b6e92d3a10e4b623e7c9",
+    "zan1/nol/kino/manifest.json": "922669616cc6cf47411b633277cda7949ad82437574076e86b080eafd42d651b",
+    "zan1/nol/palomnichestvo/manifest.json": "4f3c3e8535c54a7cd1d7f58746255f54fb53d6d3a4df0b68debd071058781d2c",
+    "zan1/nol/yoga/manifest.json": "6258ba5f05e209edde8264e3de2aa80b47d17d977248c440fd5bc35f68fbea17",
+    "zan1/prodolzhayushchiy/ayurveda/manifest.json": "56f9d60037944fe932b817e642dd188eda5d216c9efadec41019c301dc3c7972",
+    "zan1/prodolzhayushchiy/kino/manifest.json": "23e916477d57fc30709f9875f3430ed330f6bab47c0df127e9035efbb0288b00",
+    "zan1/prodolzhayushchiy/palomnichestvo/manifest.json": "3b064afdcf4bf082912f210dffc99fc3b7e9775a7b2035b93d2ef5612df99181",
+    "zan1/prodolzhayushchiy/yoga/manifest.json": "03975fd1dcd07a3e14b52ef67a6964d8ca109cbc7bb7f31ebee681d2d18123ef"
+  }
+}

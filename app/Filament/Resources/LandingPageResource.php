@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\LandingPageResource\Pages;
+use App\Filament\Support\NoAutofill;
 use App\Models\Course;
 use App\Models\LandingPage;
 use App\Models\PromoCode;
@@ -1504,12 +1505,20 @@ class LandingPageResource extends Resource
                         TextInput::make('tg_bot_token')
                             ->label('Bot Token')
                             ->password()
+                            ->autocomplete('new-password')
+                            ->extraInputAttributes(NoAutofill::IGNORE_MANAGERS)
+                            ->regex(NoAutofill::TELEGRAM_BOT_TOKEN)
+                            ->validationMessages(['regex' => NoAutofill::TELEGRAM_BOT_TOKEN_MESSAGE])
                             ->revealable()
                             ->placeholder('Получить у @BotFather')
                             ->maxLength(255),
                         TextInput::make('tg_webhook_secret')
                             ->label('Webhook Secret (случайная строка 32+ символов)')
                             ->password()
+                            ->autocomplete('new-password')
+                            ->extraInputAttributes(NoAutofill::IGNORE_MANAGERS)
+                            ->regex(NoAutofill::TELEGRAM_WEBHOOK_SECRET)
+                            ->validationMessages(['regex' => NoAutofill::TELEGRAM_WEBHOOK_SECRET_MESSAGE])
                             ->revealable()
                             ->maxLength(255)
                             ->helperText('Та же строка ставится в Telegram setWebhook. После заполнения запусти на проде: php artisan telegram:set-magnet-webhook <slug>'),
@@ -1606,6 +1615,16 @@ class LandingPageResource extends Resource
                 Tables\Columns\TextColumn::make('slug')->label('URL'),
                 Tables\Columns\IconColumn::make('is_active')->boolean()->label('Активен'),
                 Tables\Columns\IconColumn::make('is_listed')->boolean()->label('В каталоге'),
+                Tables\Columns\IconColumn::make('webinar_invite_ready')
+                    ->boolean()
+                    ->state(fn (LandingPage $record): bool => $record->canSendWebinarInvite())
+                    ->label('Инвайт готов')
+                    ->tooltip('Заполнена «Ссылка на вебинар» — шаг бота webinar_invite уйдёт лиду'),
+                Tables\Columns\IconColumn::make('webinar_recording_ready')
+                    ->boolean()
+                    ->state(fn (LandingPage $record): bool => $record->canSendWebinarRecording())
+                    ->label('Запись готова')
+                    ->tooltip('Заполнена «Ссылка на запись» — лидам уйдёт письмо со ссылкой на запись'),
             ])
             ->filters([])
             ->actions([

@@ -15,6 +15,7 @@ class PromoCode extends Model
         'type',
         'value',
         'course_id',
+        'block_number',
         'usage_limit',
         'used_count',
         'expires_at',
@@ -27,6 +28,7 @@ class PromoCode extends Model
         'used_count' => 'integer',
         'expires_at' => 'datetime',
         'is_active' => 'boolean',
+        'block_number' => 'integer',
     ];
 
     // Курс, к которому привязан код. NULL = код общий.
@@ -36,10 +38,16 @@ class PromoCode extends Model
     }
 
     // Применим ли код к данному курсу: общий код (course_id = null) — всегда,
-    // иначе курс тарифа должен совпасть с привязанным курсом.
-    public function appliesToCourse(?int $courseId): bool
+    // иначе курс тарифа должен совпасть с привязанным курсом. Если у кода задан
+    // block_number — совпасть должен ещё и номер блока тарифа (скидка «на
+    // первый блок» не должна гасить блоки 2+).
+    public function appliesToCourse(?int $courseId, ?int $blockNumber = null): bool
     {
-        return $this->course_id === null || (int) $this->course_id === (int) $courseId;
+        if ($this->course_id !== null && (int) $this->course_id !== (int) $courseId) {
+            return false;
+        }
+
+        return $this->block_number === null || (int) $this->block_number === (int) $blockNumber;
     }
 
     /** Срок жизни промо-ссылки Точки; API принимает ttl в минутах. */

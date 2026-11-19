@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\FinanceSnapshot;
 use App\Models\Group;
+use App\Models\MoneyReconException;
 use App\Models\MoneyReconRun;
 use App\Models\Payment;
 use App\Models\Teacher;
@@ -32,6 +33,8 @@ final class PayrollReadinessServiceTest extends TestCase
         parent::setUp();
         config()->set('payroll_readiness.expected_teacher_count', 23);
         config()->set('payroll_readiness.evidence_manifest_path', storage_path('framework/testing/missing-payroll-evidence.json'));
+        config()->set('payroll_readiness.evidence_hash_ledger_path', storage_path('framework/testing/payroll-evidence-hash-ledger.json'));
+        File::delete((string) config('payroll_readiness.evidence_hash_ledger_path'));
         config()->set('services.tochka.token', '');
     }
 
@@ -424,6 +427,41 @@ final class PayrollReadinessServiceTest extends TestCase
         $this->assertSame(2760.0, $payable[1]['remaining_obligation']);
     }
 
+    public function test_funding_pool_excludes_configured_tax_wallet_account(): void
+    {
+        $teacher = Teacher::factory()->create(['name' => 'Трефилова Елена']);
+        Teacher::factory()->count(21)->create();
+        $this->seedPayable($teacher, '2026-09-01');
+        $this->seedFreshEvidence();
+
+        // …123456 = operating account (1000 ₽), …877617 = tax wallet
+        // (100000 ₽). H5554 gap [2]: only the operating account funds
+        // payouts, so a 2760 ₽ payable must stay unfunded.
+        Http::fake(['*' => Http::response([
+            'Data' => ['Balance' => [
+                [
+                    'accountId' => '40702810000000123456/RUB',
+                    'type' => 'ClosingAvailable',
+                    'Amount' => ['amount' => 1000, 'currency' => 'RUB'],
+                    'dateTime' => '2026-10-01T08:00:00+03:00',
+                ],
+                [
+                    'accountId' => '408028103000000877617/RUB',
+                    'type' => 'ClosingAvailable',
+                    'Amount' => ['amount' => 100000, 'currency' => 'RUB'],
+                    'dateTime' => '2026-10-01T08:00:00+03:00',
+                ],
+            ]],
+        ])]);
+        Cache::forget('tochka.open_banking.balances');
+
+        $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
+        $row = collect($report['teachers'])->firstWhere('teacher_id', $teacher->id);
+
+        $this->assertSame('unfunded', $row['funding_state']);
+        $this->assertSame(2760.0, $row['remaining_obligation']);
+    }
+
     public function test_paid_without_access_holds_only_the_affected_teacher_line(): void
     {
         $affected = Teacher::factory()->create(['name' => 'Трефилова Елена']);
@@ -490,6 +528,19 @@ final class PayrollReadinessServiceTest extends TestCase
 
     private function seedFreshEvidence(bool $includeXoom = true): void
     {
+        $dir = storage_path('framework/testing/payroll-evidence-src');
+        File::ensureDirectoryExists($dir);
+        $keys = $includeXoom ? ['payout_sheets', 'xoom_edgar'] : ['payout_sheets'];
+        $sources = [];
+        foreach ($keys as $key) {
+            $file = $dir.'/'.$key.'.txt';
+            File::put($file, $key);
+            $sources[$key] = [
+                'as_of' => '2026-10-01',
+                'sha256' => hash_file('sha256', $file),
+                'path' => 'payroll-evidence-src/'.$key.'.txt',
+            ];
+        }
         $path = storage_path('framework/testing/payroll-readiness-evidence.json');
         config()->set('payroll_readiness.evidence_manifest_path', $path);
         config()->set('features.money_bank_statement_credits', true);
@@ -497,11 +548,12 @@ final class PayrollReadinessServiceTest extends TestCase
         config()->set('services.tochka.token', 'fixture-token');
         File::put($path, json_encode([
             'generated_at' => '2026-10-01T08:00:00+03:00',
-            'sources' => collect($includeXoom ? ['payout_sheets', 'xoom_edgar'] : ['payout_sheets'])
-                ->mapWithKeys(fn (string $key): array => [$key => ['as_of' => '2026-10-01', 'sha256' => hash('sha256', $key)]])
-                ->all(),
+            'sources' => $sources,
         ], JSON_THROW_ON_ERROR));
-        $this->beforeApplicationDestroyed(fn () => File::delete($path));
+        $this->beforeApplicationDestroyed(function () use ($path, $dir): void {
+            File::delete($path);
+            File::deleteDirectory($dir);
+        });
         BankStatementImport::query()->create([
             'file_sha256' => hash('sha256', 'bank'),
             'file_name' => 'private-fixture.csv',
@@ -525,5 +577,124 @@ final class PayrollReadinessServiceTest extends TestCase
             'classification' => [],
             'exceptions_opened' => 0,
         ]);
+    }
+
+    public function test_an_open_reconciliation_exception_holds_every_line_even_with_a_complete_cutoff_run(): void
+    {
+        $teacher = Teacher::factory()->create(['name' => 'Трефилова Елена']);
+        Teacher::factory()->count(22)->create();
+        $this->seedPayable($teacher, '2026-09-01');
+        $this->seedFreshEvidence();
+        MoneyReconException::query()->create([
+            'exception_key' => 'fixture-open-exception-1',
+            'type' => MoneyReconException::CURRENCY_AMOUNT_MISMATCH,
+            'source' => 'fixture',
+            'source_ref' => 'fixture-ref-1',
+            'evidence' => [],
+            'state' => MoneyReconException::OPEN,
+        ]);
+
+        $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
+        $row = collect($report['teachers'])->firstWhere('teacher_id', $teacher->id);
+
+        $this->assertSame('incomplete', $report['evidence']['reconciliation']['status']);
+        $this->assertStringContainsString(
+            'currency_amount_mismatch',
+            (string) $report['evidence']['reconciliation']['note'],
+        );
+        $this->assertSame('held', $row['disposition']);
+        $this->assertSame(0, $report['totals']['by_disposition']['payable'] ?? 0);
+        $this->assertContains('reconciliation_open_exception:currency_amount_mismatch', $row['holds']);
+        $this->assertTrue(collect($report['teachers'])->every(
+            fn (array $line): bool => in_array('reconciliation_open_exception:currency_amount_mismatch', $line['holds'], true)
+        ));
+    }
+
+    public function test_manifest_sources_are_rehashed_and_a_hash_replayed_across_manifests_is_rejected(): void
+    {
+        Teacher::factory()->count(23)->create();
+        $dir = storage_path('framework/testing/payroll-evidence-src');
+        File::ensureDirectoryExists($dir);
+        $sheet = $dir.'/payout-sheets-v1.txt';
+        File::put($sheet, 'payout-sheets-v1-bytes');
+        $sources = [
+            'payout_sheets' => [
+                'as_of' => '2026-10-01',
+                'sha256' => hash_file('sha256', $sheet),
+                'path' => 'payroll-evidence-src/payout-sheets-v1.txt',
+            ],
+        ];
+        $path = storage_path('framework/testing/payroll-readiness-evidence.json');
+        config()->set('payroll_readiness.evidence_manifest_path', $path);
+        $this->beforeApplicationDestroyed(function () use ($path, $dir): void {
+            File::delete($path);
+            File::deleteDirectory($dir);
+        });
+
+        // First approval: the named file re-hashes to the claimed sha256.
+        File::put($path, json_encode(['generated_at' => 'first-approval', 'sources' => $sources], JSON_THROW_ON_ERROR));
+        $first = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
+        $this->assertSame('fresh', $first['evidence']['private_manifest']['status']);
+
+        // The approval binds the hash in the private ledger.
+        app(PayrollReadinessService::class)->recordEvidenceHashLedger($first['evidence']['private_manifest']);
+        $ledger = json_decode(File::get((string) config('payroll_readiness.evidence_hash_ledger_path')), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertIsArray($ledger['entries'] ?? null);
+        $this->assertArrayHasKey($sources['payout_sheets']['sha256'], $ledger['entries']);
+        $this->assertSame(
+            $first['evidence']['private_manifest']['sha256'],
+            $ledger['entries'][$sources['payout_sheets']['sha256']]['manifest_sha256'],
+        );
+
+        // A different manifest replaying the same source hash is rejected.
+        File::put($path, json_encode(['generated_at' => 'second-approval', 'sources' => $sources], JSON_THROW_ON_ERROR));
+        $second = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
+        $this->assertSame('incomplete', $second['evidence']['private_manifest']['status']);
+        $this->assertStringContainsString('replayed across manifests', (string) $second['evidence']['private_manifest']['note']);
+
+        // A claim that does not match the named file's bytes is rejected.
+        File::put($sheet, 'genuine-bytes-v2');
+        $claimed = hash_file('sha256', $sheet);
+        File::put($sheet, 'tampered-bytes-v2');
+        File::put($path, json_encode(['generated_at' => 'third-approval', 'sources' => [
+            'payout_sheets' => ['sha256' => $claimed] + $sources['payout_sheets'],
+        ]], JSON_THROW_ON_ERROR));
+        $third = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
+        $this->assertSame('incomplete', $third['evidence']['private_manifest']['status']);
+        $this->assertStringContainsString('do not match the manifest claim', (string) $third['evidence']['private_manifest']['note']);
+
+        // A source that names no file cannot be bound and fails closed.
+        File::put($path, json_encode(['generated_at' => 'fourth-approval', 'sources' => [
+            'payout_sheets' => ['as_of' => '2026-10-01', 'sha256' => hash('sha256', 'pathless-source')],
+        ]], JSON_THROW_ON_ERROR));
+        $fourth = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
+        $this->assertSame('incomplete', $fourth['evidence']['private_manifest']['status']);
+        $this->assertStringContainsString('path missing', (string) $fourth['evidence']['private_manifest']['note']);
+    }
+
+    public function test_the_read_only_proof_detects_a_payment_update_mid_census(): void
+    {
+        $teacher = Teacher::factory()->create(['name' => 'Трефилова Елена']);
+        Teacher::factory()->count(22)->create();
+        $this->seedPayable($teacher, '2026-09-01');
+        $course = Course::query()->where('teacher_id', $teacher->id)->firstOrFail();
+        $group = Group::query()->create(['name' => 'Read-only proof fixture']);
+        $course->groups()->attach($group->id);
+        $mutated = false;
+        Payment::retrieved(function (Payment $payment) use (&$mutated): void {
+            if (! $mutated) {
+                $mutated = true;
+                Payment::withoutEvents(fn () => $payment->update(['amount' => (float) $payment->amount + 500]));
+            }
+        });
+        $this->beforeApplicationDestroyed(function (): void {
+            Payment::clearBootedModels();
+        });
+
+        $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
+
+        // Counts and max ids never moved on this UPDATE; the amount sums must.
+        $this->assertTrue($report['read_only']['moved']);
+        $this->assertSame(0, $report['totals']['by_disposition']['payable'] ?? 0);
     }
 }

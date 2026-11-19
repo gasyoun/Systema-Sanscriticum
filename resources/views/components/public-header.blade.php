@@ -33,10 +33,12 @@
 
     $isHome  = request()->is('/');
     $isShop  = request()->is('online') || request()->is('online/*');
+    $isTeachers = request()->is('prepodavately') || request()->is('prepodavately/*');
     $isBlog  = request()->is('s') || request()->is('s/*');
     $isGames = request()->is('lila') || request()->is('lila/*');
 
     $shopUrl     = \Illuminate\Support\Facades\Route::has('shop.index')      ? route('shop.index')      : '/online';
+    $teachersUrl = \Illuminate\Support\Facades\Route::has('teachers.index')  ? route('teachers.index')  : '/prepodavately';
     $articlesUrl = \Illuminate\Support\Facades\Route::has('articles.index')  ? route('articles.index')  : '/s';
     $cabinetUrl  = \Illuminate\Support\Facades\Route::has('student.dashboard') ? route('student.dashboard') : '/dvaram';
 @endphp
@@ -71,6 +73,10 @@
                    class="px-4 py-2 text-sm font-semibold rounded-lg transition-all {{ $isShop ? $navActive : $navIdle }}">
                     Все курсы
                 </a>
+                <a href="{{ $teachersUrl }}"
+                   class="px-4 py-2 text-sm font-semibold rounded-lg transition-all {{ $isTeachers ? $navActive : $navIdle }}">
+                    Преподаватели
+                </a>
                 <a href="{{ $articlesUrl }}"
                    class="px-4 py-2 text-sm font-semibold rounded-lg transition-all {{ $isBlog ? $navActive : $navIdle }}">
                     Блог
@@ -92,6 +98,9 @@
         @endif
 
         <div x-data="{ mobileNav: false }" class="flex items-center gap-2 shrink-0">
+
+            {{-- H7590 — глобальный поиск (клиентский индекс + /poisk/{q}) --}}
+            @include('partials.global-search', ['variant' => $contactsVariant])
 
             {{-- Контакты (телефон + email) --}}
             @include('partials.contacts-bar', ['variant' => $contactsVariant])
@@ -144,6 +153,7 @@
                     @if($showNav)
                         <a href="/" class="px-4 py-2.5 rounded-lg text-sm font-semibold {{ $isHome ? $navActive : $navIdle }}">Главная</a>
                         <a href="{{ $shopUrl }}" class="px-4 py-2.5 rounded-lg text-sm font-semibold {{ $isShop ? $navActive : $navIdle }}">Все курсы</a>
+                        <a href="{{ $teachersUrl }}" class="px-4 py-2.5 rounded-lg text-sm font-semibold {{ $isTeachers ? $navActive : $navIdle }}">Преподаватели</a>
                         <a href="{{ $articlesUrl }}" class="px-4 py-2.5 rounded-lg text-sm font-semibold {{ $isBlog ? $navActive : $navIdle }}">Блог</a>
                         <a href="/lila/" class="px-4 py-2.5 rounded-lg text-sm font-semibold {{ $isGames ? $navActive : $navIdle }}">Игры</a>
                         <div class="border-t {{ $isDark ? 'border-[#1F2636]' : 'border-brand/10' }} my-2"></div>

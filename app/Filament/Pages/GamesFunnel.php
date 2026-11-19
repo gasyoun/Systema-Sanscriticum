@@ -34,6 +34,9 @@ class GamesFunnel extends Page
     /** Окно отчёта в днях (совпадает с games:funnel --days). */
     public int $days = 14;
 
+    /** H6393: сколько строк по-лигатурной трудности показывать. */
+    private const LIGATURE_ROWS_LIMIT = 15;
+
     public static function canAccess(): bool
     {
         return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
@@ -74,5 +77,23 @@ class GamesFunnel extends Page
     public function getConversionProperty(): array
     {
         return GameEvent::ctaRegistrationRate(now()->subDays(max(1, $this->days)));
+    }
+
+    /**
+     * H6393 (lila v2): per-ligature difficulty rows — same GameEvent::
+     * difficulty() source as games:difficulty, scoped to the ligature
+     * drill (all bands incl. the twins discrimination mode). Item text
+     * is the IAST reading the learner linked the ligature to.
+     *
+     * @return array<int, array{drill:string, band:?string, item:string, rounds:int, median_ms:int, avg_ms:int, wrong_rate:float}>
+     */
+    public function getLigatureRowsProperty(): array
+    {
+        $rows = array_values(array_filter(
+            GameEvent::difficulty(now()->subDays(max(1, $this->days))),
+            static fn (array $r): bool => ($r['drill'] ?? '') === 'ligatures',
+        ));
+
+        return array_slice($rows, 0, self::LIGATURE_ROWS_LIMIT);
     }
 }

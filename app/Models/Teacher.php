@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\TeacherSalaryService;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -22,12 +23,37 @@ class Teacher extends Model
         'payout_currency',
         // H4253: окно каникул/отпуска. from без until — дата выхода неизвестна.
         'on_vacation_from', 'on_vacation_until',
+        // Публичная страница /prepodavately: карточка в списке + страница преподавателя.
+        'page_enabled', 'page_slug', 'page_role', 'page_excerpt', 'page_html',
+        'page_facts', 'youtube_url', 'page_sort',
     ];
 
     protected $casts = [
         'on_vacation_from' => 'date',
         'on_vacation_until' => 'date',
+        'page_enabled' => 'boolean',
+        'page_facts' => 'array',
     ];
+
+    /**
+     * Преподаватели с включённой публичной страницей: карточка на /prepodavately
+     * и прямая страница /prepodavately/{page_slug}. Слаг без включённого флага —
+     * ещё не опубликованная заготовка, наружу её не отдаём.
+     */
+    public function scopeWithPublicPage(Builder $query): Builder
+    {
+        return $query->where('page_enabled', true)->whereNotNull('page_slug');
+    }
+
+    /** URL публичной страницы или null, пока она выключена или без слага. */
+    public function publicPageUrl(): ?string
+    {
+        if (! $this->page_enabled || blank($this->page_slug)) {
+            return null;
+        }
+
+        return route('teachers.show', ['slug' => $this->page_slug]);
+    }
 
     /**
      * H4253: попадает ли дата в отпускное окно преподавателя. Границы включительно

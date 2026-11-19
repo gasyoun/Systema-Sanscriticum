@@ -1,6 +1,6 @@
 # Безопасность вебхуков — матрица доступа и fail-policy
 
-_Created: 07-07-2026 · Last updated: 16-08-2026_
+_Created: 07-07-2026 · Last updated: 05-10-2026_
 
 Сводка по всем входящим вебхук-/push-эндпоинтам: чем аутентифицируется, что
 происходит при **пустом** секрете (fail-open / fail-closed) и где это покрыто
@@ -66,3 +66,17 @@ with the provider (`setWebhook` secret_token / VK Callback API secret / Zoom
 Event Subscription secret).
 
 _Dr. Mārcis Gasūns_
+
+## Telegram Business endpoint (дописано 05-10, H6091)
+
+Кабинетный контур Business-обновлений идёт через отдельный verify-эндпоинт
+(`verify.tg.business`, см. [RUNBOOK_TELEGRAM_BUSINESS_ENABLE_2026-09-17](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_TELEGRAM_BUSINESS_ENABLE_2026-09-17.md)):
+секрет в `.env`, проверка fail-closed — запрос без валидного секрета = 403, обновление
+не применяется. Это четвёртая поверхность после строк ниже и стоит в матрице рядом
+с Telegram-вебхуком основного бота.
+
+Сверка High-Risk списка [AGENTS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/AGENTS.md)
+по состоянию 05-10: строки **Tochka** и **MAX** в таблице вебхуков ниже присутствуют
+(сигнатура/fail-policy), Zoom/VK — тоже; Business-endpoint добавлен этим обновлением.
+
+_Гасунс_

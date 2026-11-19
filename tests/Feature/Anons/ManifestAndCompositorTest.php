@@ -154,12 +154,14 @@ class ManifestAndCompositorTest extends TestCase
 
         $this->assertSame([], $problems, 'Plaqued artifact must pass pixel inspection: '.implode('; ', $problems));
 
-        // Медиа-зона из измеренной плашки: left-edge семантика Telegram
-        // (x = левая кромка в %), центр-X по layout-константе.
+        // Медиа-зона из измеренной плашки: H6678 — center-семантика Telegram
+        // (x/y = ЦЕНТР зоны в %): x-центр = 50 (layout-константа), y-центр =
+        // верхняя кромка 55 + h/2 = 62. Прежние ожидания (x=11/y=55 — кромки)
+        // клали клик-зону на пол-плашки выше отрисовки (тап-тест 13-10-2026).
         $mediaArea = $compositor->bounds->asMediaAreaCoordinates();
-        $expectedLeft = CtaPlaqueCompositor::RECT['x'] - CtaPlaqueCompositor::RECT['w'] / 2.0; // 50 − 39 = 11
-        $this->assertEqualsWithDelta($expectedLeft, $mediaArea['x'], 0.5);
-        $this->assertEqualsWithDelta(CtaPlaqueCompositor::RECT['y'], $mediaArea['y'], 0.5);
+        $this->assertEqualsWithDelta(CtaPlaqueCompositor::RECT['x'], $mediaArea['x'], 0.5);
+        $expectedCenterY = CtaPlaqueCompositor::RECT['y'] + CtaPlaqueCompositor::RECT['h'] / 2.0; // 55 + 7 = 62
+        $this->assertEqualsWithDelta($expectedCenterY, $mediaArea['y'], 0.5);
         $this->assertEqualsWithDelta(CtaPlaqueCompositor::RECT['w'], $mediaArea['w'], 0.5);
         $this->assertEqualsWithDelta(CtaPlaqueCompositor::RECT['h'], $mediaArea['h'], 0.5);
 

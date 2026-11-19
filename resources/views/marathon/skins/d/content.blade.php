@@ -169,6 +169,9 @@
                         <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                     @enderror
                 </div>
+                {{-- 152-ФЗ: согласие на ПДн + необязательная рассылка (MarathonController читает is_promo_agreed). --}}
+                <x-consent.pd theme="light" />
+                <x-consent.promo theme="light" />
                 <div class="flex gap-2">
                     <button type="button" @click="step = 2" class="px-5 py-3 border border-stone-300 text-stone-600 font-bold rounded-xl hover:bg-stone-100 transition-colors">Назад</button>
                     <button type="submit" :disabled="name.trim().length < 2 || !contact.trim()"

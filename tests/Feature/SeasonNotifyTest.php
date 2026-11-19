@@ -66,7 +66,7 @@ class SeasonNotifyTest extends TestCase
     /** @test */
     public function dry_run_prints_counts_and_samples_without_sending(): void
     {
-        User::factory()->create(['telegram_id' => '123456', 'last_activity_at' => now()]);
+        User::factory()->create(['telegram_id' => '123456', 'last_activity_at' => now(), 'wants_email_announcements' => true, 'wants_messenger_announcements' => true]);
 
         $this->artisan('season:notify-start', ['--dry-run' => true])
             ->expectsOutputToContain('Аудитория (актив за 90 дней ИЛИ любое /lila-событие): 1')
@@ -82,9 +82,9 @@ class SeasonNotifyTest extends TestCase
     {
         config(['season.notify.enabled' => true]);
 
-        // a: и email, и Telegram; b: только email.
-        User::factory()->create(['telegram_id' => '111111', 'last_login_at' => now()]);
-        User::factory()->create(['last_login_at' => now()]);
+        // a: и email, и Telegram; b: только email (оба дали согласие на рассылку).
+        User::factory()->create(['telegram_id' => '111111', 'last_login_at' => now(), 'wants_email_announcements' => true, 'wants_messenger_announcements' => true]);
+        User::factory()->create(['last_login_at' => now(), 'wants_email_announcements' => true]);
 
         Mail::fake();
         Queue::fake();
@@ -101,6 +101,25 @@ class SeasonNotifyTest extends TestCase
         Mail::assertQueued(SeasonStartMail::class, 2);
         Queue::assertPushed(SendTelegramMessageJob::class, 1);
         $this->assertDatabaseCount('season_notifications', 3);
+    }
+
+    /** @test */
+    public function users_without_marketing_consent_are_not_notified(): void
+    {
+        config(['season.notify.enabled' => true]);
+
+        // 152-ФЗ / 38-ФЗ: активен, но согласия на рассылку не давал — ни письма, ни Telegram.
+        User::factory()->create(['telegram_id' => '222222', 'last_login_at' => now()]);
+
+        Mail::fake();
+        Queue::fake();
+
+        $this->artisan('season:notify-start')->assertExitCode(0);
+
+        Mail::assertNothingQueued();
+        Mail::assertNothingSent();
+        Queue::assertNotPushed(SendTelegramMessageJob::class);
+        $this->assertDatabaseCount('season_notifications', 0);
     }
 
     /** @test */

@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace Tests\Feature\Bot;
 
 use App\Services\Bot\CuratorAi;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class CuratorAiUsageTest extends TestCase
 {
+    // H6352-r3: chatWithUsage() теперь маскирует PII через живой users-сет.
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();

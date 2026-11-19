@@ -94,13 +94,15 @@ class AttributionService
         $user->forceFill(['signup_source' => $source])->save();
     }
 
-    /** Последний Lead с этим email — тот же человек, что оставлял заявку на лендинге. */
+    /** Однозначный Lead с этим email; несколько заявок нельзя молча свести к последней. */
     private function matchLead(User $user): ?Lead
     {
         if (blank($user->email)) {
             return null;
         }
 
-        return Lead::where('email', $user->email)->latest()->first();
+        $matches = Lead::query()->where('email', $user->email)->limit(2)->get();
+
+        return $matches->count() === 1 ? $matches->first() : null;
     }
 }

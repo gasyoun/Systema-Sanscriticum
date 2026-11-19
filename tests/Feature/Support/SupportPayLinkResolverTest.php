@@ -216,4 +216,80 @@ class SupportPayLinkResolverTest extends TestCase
         $this->assertSame($template->render($user), $template->renderForSupport($user, 'как оплатить 4'));
         $this->assertStringContainsString('«»', $template->renderForSupport($user, 'как оплатить 4'));
     }
+
+    /**
+     * Прод, 01-10-2026: «Перевела вам деньги для продолжение работы над
+     * Рамаяной. Это октябрьской оплаты.» — стем «продо» из обычного слова
+     * «продолжение» совпал с единственным курсом «…продолжающие», и шаблон D2
+     * уехал со ссылкой на него. Слово не из названия курса курс не называет;
+     * курс, названный по существенному слову, опознаётся по-прежнему.
+     */
+    public function test_generic_continue_word_does_not_guess_the_course(): void
+    {
+        $user = User::factory()->create();
+        $hindi = Course::factory()->create(['is_active' => true, 'title' => 'Грамматика хинди гр. 4, суббота, продолжающие (2025)']);
+        Tariff::create(['course_id' => $hindi->id, 'title' => 'Весь курс', 'type' => 'full', 'price' => 20000, 'is_active' => true]);
+
+        $this->assertNull($this->resolve($user, 'Перевела вам деньги для продолжение работы над Рамаяной. Это октябрьской оплаты.'));
+        $this->assertSame($hindi->id, $this->resolve($user, 'как оплатить курс хинди')['course']->id);
+    }
+
+    /**
+     * Тот же класс, что «продо» (прод 01-10-2026): дни недели в названиях
+     * групп («гр. 3, пятница», «гр. 4, суббота») — время занятий, не курс.
+     * «В субботу» с единственным курсом с «суббота» в названии опознало
+     * хинди-группу так же, как «продолжение» — «продолжающие».
+     */
+    public function test_day_words_do_not_guess_the_course(): void
+    {
+        $user = User::factory()->create();
+        foreach (['Грамматика хинди гр. 3, пятница (2025)', 'Грамматика хинди гр. 4, суббота, продолжающие (2025)'] as $title) {
+            $course = Course::factory()->create(['is_active' => true, 'title' => $title]);
+            Tariff::create(['course_id' => $course->id, 'title' => 'Весь курс', 'type' => 'full', 'price' => 20000, 'is_active' => true]);
+        }
+
+        $this->assertNull($this->resolve($user, 'оплатить занятие в субботу'));
+        $this->assertNull($this->resolve($user, 'не смогла в пятницу, как оплатить?'));
+        // Название группы числом по-прежнему работает.
+        $this->assertNotNull($this->resolve($user, 'как оплатить гр. 3?'));
+    }
+
+    /**
+     * Прод, 02-10-2026: «Оплатила блоки 9-12» — номера блоков; но «занятие
+     * в 15:00», дата «02.10» и ссылка на чек цифры блоков не называют.
+     */
+    public function test_times_dates_and_links_are_not_block_numbers(): void
+    {
+        $user = User::factory()->create();
+        $this->debtorCourse($user, 'Лейтан', 5, 2); // долг — блоки 3–5
+
+        $time = $this->resolve($user, 'занятие в 15:00 я не смогла, как оплатить?');
+        $this->assertNull($time['block'], '«15:00» — это время, а не блок 15');
+
+        $date = $this->resolve($user, 'оплата 02.10 прошла, как оплатить дальше?');
+        $this->assertNull($date['block'], '«02.10» — это дата, а не блоки 2 и 10');
+
+        $link = $this->resolve($user, 'чек: https://samskrte.ru/pay/15 — всё верно?');
+        $this->assertNull($link['block'], 'число в ссылке — не номер блока');
+
+        $this->assertSame(3, $this->resolve($user, 'как оплатить 3')['block']);
+    }
+
+    /**
+     * Прод, 02-10-2026: курс не опознали — а студенту дважды ушло «Оплатить
+     * курс «» удобнее из личного кабинета» со ссылкой на /login. Без курса
+     * пустые кавычки схлопываются, {pay_link} ведёт в кабинет.
+     */
+    public function test_unresolved_course_collapses_quotes_and_links_the_cabinet(): void
+    {
+        $user = User::factory()->create(['name' => 'Студент Тест']);
+        $template = new MessageTemplate(['body' => self::D2]);
+
+        $text = $template->renderForSupport($user, 'как оплатить?');
+
+        $this->assertStringNotContainsString('«»', $text);
+        $this->assertStringContainsString('Оплатить курс удобнее', $text);
+        $this->assertStringContainsString(route('student.access'), $text);
+        $this->assertStringNotContainsString(url('/login'), $text);
+    }
 }

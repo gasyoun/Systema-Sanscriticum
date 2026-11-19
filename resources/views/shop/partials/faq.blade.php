@@ -1,12 +1,19 @@
-{{-- «FAQ по курсу» — course->faqs, иначе flagship overlay (H2761). --}}
+{{-- «FAQ по курсу» — course->faqs, иначе T1-анонс (H6580), иначе flagship overlay (H2761). --}}
 @php
     $dbFaqs = ($course->faqs ?? collect())->where('is_visible', true)->values();
+    // H6580: T5-тизеры поста → FAQ (контент-JSON по slug), между БД и flagship.
+    $anonsFaqs = collect($pageContent['faqs'] ?? [])->map(fn ($faq) => [
+        'question' => $faq['q'] ?? '',
+        'answer' => $faq['a'] ?? '',
+    ])->filter(fn ($faq) => filled($faq['question']))->values();
     $faqs = $dbFaqs->isNotEmpty()
         ? $dbFaqs->map(fn ($faq) => ['question' => $faq->question, 'answer' => $faq->answer])->values()
-        : collect($flagship['faqs'] ?? [])->map(fn ($faq) => [
-            'question' => $faq['q'] ?? $faq['question'] ?? '',
-            'answer' => $faq['a'] ?? $faq['answer'] ?? '',
-        ])->filter(fn ($faq) => filled($faq['question']))->values();
+        : ($anonsFaqs->isNotEmpty()
+            ? $anonsFaqs
+            : collect($flagship['faqs'] ?? [])->map(fn ($faq) => [
+                'question' => $faq['q'] ?? $faq['question'] ?? '',
+                'answer' => $faq['a'] ?? $faq['answer'] ?? '',
+            ])->filter(fn ($faq) => filled($faq['question']))->values());
 @endphp
 @if($faqs->isNotEmpty())
 <section id="course-faq" class="mb-16 lg:mb-20" data-analytics="faq" x-data="{ open: null }">

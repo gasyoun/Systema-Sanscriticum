@@ -72,7 +72,7 @@ class SurveyStudentEmailInviteTest extends TestCase
 
         $this->emailStudent(['role' => 'teacher']);
         $this->emailStudent(['role' => 'admin']);
-        $this->emailStudent(['wants_messenger_announcements' => false]);
+        $this->emailStudent(['wants_email_announcements' => false]); // 152-ФЗ: email-канал — email-согласие
         $this->emailStudent(['email' => '']);
         $this->telegramStudent();
 
@@ -162,8 +162,22 @@ class SurveyStudentEmailInviteTest extends TestCase
     /** @test */
     public function invalid_email_marks_failed_without_sending_and_suppresses_future_waves(): void
     {
+        if (DB::connection()->getDriverName() === 'mysql') {
+            $this->markTestSkipped('Пост-гвард (users_email_valid, MG 04-10) состояние «не-адрес в users.email» на mysql недостижимо; логика команды покрыта на sqlite.');
+        }
+
         Mail::fake();
-        $this->emailStudent(['email' => 'not-an-email']);
+        // Legacy-строка (класс импорта 22-04): raw-update в обход мутатора и CHECK.
+        $legacy = User::factory()->create([
+            'email' => 'legacy@example.com',
+            'wants_email_announcements' => true,
+            'role' => null,
+            'is_admin' => false,
+        ]);
+        DB::table('users')->where('id', $legacy->id)->update(['email' => 'not-an-email']);
+        $group = Group::factory()->create(['status' => 'active']);
+        $group->users()->attach($legacy->id);
+        $legacy->refresh();
 
         $this->artisan('surveys:send-student-email-invites', ['--send' => true])->assertExitCode(0);
 
@@ -357,6 +371,7 @@ class SurveyStudentEmailInviteTest extends TestCase
     private function bareUser(array $attrs = []): User
     {
         return User::factory()->create(array_merge([
+            'wants_email_announcements' => true,
             'wants_messenger_announcements' => true,
             'role' => null,
             'is_admin' => false,

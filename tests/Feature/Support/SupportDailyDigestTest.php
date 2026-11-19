@@ -65,7 +65,8 @@ class SupportDailyDigestTest extends TestCase
         $out = Artisan::output();
         $this->assertStringContainsString('Обращений: 1', $out);
         $this->assertStringContainsString('Неотвеченных: 0', $out);
-        $this->assertStringContainsString('Горбаченко', $out);
+        $this->assertStringNotContainsString('Горбаченко', $out);
+        $this->assertStringContainsString('Иван '.SupportOutgoingAttribution::TURTLE_MARKER.': 1', $out);
         $this->assertStringContainsString('Гасунс: 1', $out);
         $this->assertStringContainsString('telegram-support/telegram-support-analytics', $out);
         Http::assertNothingSent();
@@ -86,8 +87,8 @@ class SupportDailyDigestTest extends TestCase
                 && (string) $request['chat_id'] === '111'
                 && (string) $request['parse_mode'] === 'HTML'
                 && str_contains($text, 'Сводка поддержки за')
-                && str_contains($text, 'Горбаченко')
-                && str_contains($text, SupportOutgoingAttribution::APPLE_MARKER.': 1')
+                && ! str_contains($text, 'Горбаченко')
+                && str_contains($text, 'Иван '.SupportOutgoingAttribution::TURTLE_MARKER.': 1')
                 && str_contains($text, 'Гасунс: 1')
                 && str_contains($text, 'ИИ отправил: 1')
                 && str_contains($text, '/admin/telegram-support/telegram-support-analytics');
@@ -143,6 +144,11 @@ class SupportDailyDigestTest extends TestCase
             'responder_type' => 'human',
             'responder_marker' => SupportOutgoingAttribution::GASUNS_MARKER,
             'text' => 'Вот ссылка на занятие',
+        ]);
+        $this->outgoing($account->id, $chat->id, 4, $day->setTime(11, 30), [
+            'responder_type' => 'human',
+            'responder_marker' => SupportOutgoingAttribution::TURTLE_MARKER,
+            'text' => 'Проверил расписание '.SupportOutgoingAttribution::TURTLE_MARKER,
         ]);
         $this->outgoing($account->id, $chat->id, 3, $day->setTime(12, 0), [
             'responder_type' => 'ai',

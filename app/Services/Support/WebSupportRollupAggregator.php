@@ -80,6 +80,10 @@ class WebSupportRollupAggregator
                     SupportRollupMetrics::fromMessages($unified, $unresolvedAfterHours, $now) + [
                         'telegram_support_chat_id' => null,
                         'has_new_contact' => $this->isFirstEverDay($sample, $day),
+                        // H6601 — метрика «проактив → входящее»: дневные счётчики
+                        // по proактивным первым записям куратора в этот тред.
+                        'proactive_count' => $this->proactiveCount($group),
+                        'proactive_converted' => $this->proactiveConverted($sample, $group),
                     ],
                 );
 
@@ -134,5 +138,46 @@ class WebSupportRollupAggregator
         return CarbonImmutable::parse($firstEver)
             ->timezone(config('app.timezone'))
             ->toDateString() === $day->toDateString();
+    }
+
+    /**
+     * H6601: сколько проактивных первых записей куратора пришлось на этот день.
+     * Считаем по факту is_proactive (ставит VisitorsOnline::sendProactive за
+     * гейтом SupportProactiveGate) — никаких задним числом домеченных метрик.
+     *
+     * @param  Collection<int, ChatMessage>  $group
+     */
+    private function proactiveCount(Collection $group): int
+    {
+        return $group->filter(fn (ChatMessage $message): bool => (bool) $message->is_proactive)->count();
+    }
+
+    /**
+     * H6601: ответил ли посетитель после первой проактивной записи треда.
+     * Смотрим ВЕСЬ тред, а не только день группы: ответ может прийти назавтра —
+     * агрегатор перечитывает окно с перекрытием и строка переведётся в true.
+     * Входящее = role 'user' (гость или студент пишут им; см. UnifiedMessage).
+     *
+     * @param  Collection<int, ChatMessage>  $group
+     */
+    private function proactiveConverted(ChatMessage $sample, Collection $group): bool
+    {
+        if ($sample->support_conversation_id === null) {
+            return false;
+        }
+
+        $firstProactiveAt = $group
+            ->filter(fn (ChatMessage $message): bool => (bool) $message->is_proactive)
+            ->min('created_at');
+
+        if ($firstProactiveAt === null) {
+            return false;
+        }
+
+        return ChatMessage::query()
+            ->where('support_conversation_id', $sample->support_conversation_id)
+            ->where('role', 'user')
+            ->where('created_at', '>', $firstProactiveAt)
+            ->exists();
     }
 }

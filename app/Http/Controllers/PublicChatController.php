@@ -8,6 +8,8 @@ use App\Events\ChatMessageSent;
 use App\Jobs\ResolveVisitorGeoJob;
 use App\Models\ChatMessage;
 use App\Models\SupportConversation;
+use App\Rules\HouseEmail;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\Support\MicShadowClassifier;
 use App\Services\Support\SupportConversationManager;
 use App\Services\Support\SupportLeadCaptureService;
@@ -98,7 +100,7 @@ class PublicChatController extends Controller
             'text' => ['required', 'string', 'max:2000'],
             'name' => ['nullable', 'string', 'max:120'],
             'page' => ['nullable', 'string', 'max:2048'],
-            'email' => ['nullable', 'string', 'email', 'max:255'],
+            'email' => ['nullable', 'string', 'max:255', new HouseEmail],
             'phone' => ['nullable', 'string', 'max:40'],
         ]);
 
@@ -108,6 +110,22 @@ class PublicChatController extends Controller
         }
 
         $user = $request->user();
+
+        // 152-ФЗ: гость ставит галочку ПДн перед первым сообщением (виджет шлёт
+        // pd_consent только с ним) — пишем в журнал. Обязательность не проверяем:
+        // последующие сообщения той же беседы галочку уже не несут.
+        // H6487: подтверждение записи возвращаем клиенту — виджет запоминает
+        // «согласие дано» в localStorage только когда строка журнала реально
+        // легла (ст. 9 ч. 3: доказательство не должно жить лишь в браузере).
+        $consentRecorded = false;
+        if ($user === null) {
+            $consentRecorded = app(ConsentRecorder::class)->fromForm(
+                $request,
+                'support-chat',
+                null,
+                $validated['email'] ?? null,
+            ) !== null;
+        }
 
         $message = ChatMessage::create([
             'user_id' => $user?->id,
@@ -167,6 +185,12 @@ class PublicChatController extends Controller
             'conversation_id' => $thread->id,
             'message' => $this->present($message),
         ];
+
+        // H6487: ключ только у гостя, приславшего галочку, — ответы остальных
+        // клиентов остаются прежними построчно (инвариант тестом).
+        if ($user === null && $request->boolean('pd_consent')) {
+            $payload['consent_recorded'] = $consentRecorded;
+        }
 
         // Ключ добавляется только при отправленном bot-сообщении: OFF-ответ
         // остаётся прежним построчно (инвариант тестом).

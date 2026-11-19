@@ -1,0 +1,39 @@
+{
+  "name": "Общество ревнителей санскрита",
+  "short_name": "ОРС",
+  "description": "Курсы санскрита и хинди онлайн: живые группы и записи, учебные материалы и словарь. 21+ лет сообществу, 5 000+ учеников.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "background_color": "#0F1420",
+  "theme_color": "#E85C24",
+  "lang": "ru",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon",
+      "purpose": "any"
+    }
+  ]
+}
