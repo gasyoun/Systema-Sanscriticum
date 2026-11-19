@@ -10,6 +10,7 @@ use App\Models\Schedule;
 use App\Models\User;
 use App\Services\Schedule\LessonSeriesInfo;
 use App\Services\TeacherVacation;
+use App\Support\CardCertHint;
 use App\Support\TelegramSendGuard;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Log;
@@ -285,7 +286,13 @@ final class SlotNoticeService
     /** Строка-ссылка на кабинет: чат групповой, у каждого своя кнопка/цена — ведём в /dvaram. */
     private static function cabinetPayLine(): string
     {
-        return '👉 <a href="'.route('student.dashboard').'">Оплатить в личном кабинете</a>'."\n";
+        $line = '👉 <a href="'.route('student.dashboard').'">Оплатить в личном кабинете</a>'."\n";
+
+        if (CardCertHint::enabled()) {
+            $line .= 'ℹ️ '.e(CardCertHint::TEXT)."\n";
+        }
+
+        return $line;
     }
 
     private static function accessClosingLine(): string

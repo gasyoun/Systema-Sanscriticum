@@ -46,8 +46,20 @@ final class B2bGroupEntitlement
     }
 
     /**
+     * «Открыть доступ до оплаты»: b2b_group-платёж в статусе pending с отметкой
+     * payments.access_while_pending покрывает группу так же, как оплаченный.
+     * Собственный флаг features.b2b_group_pending_access, только поверх
+     * b2b-контура. Выручка/ЗП такой платёж не считают, пока он не «Оплачено».
+     */
+    public static function pendingAccessEnabled(): bool
+    {
+        return self::enabled() && (bool) config('features.b2b_group_pending_access');
+    }
+
+    /**
      * Виртуальные ключи ученика по его группам курса. Покрытие группы =
-     * оплаченный (paid) не-conditional b2b_group-платёж курса с group_id одной
+     * оплаченный (paid; при pendingAccessEnabled() — и pending с access_while_pending)
+     * не-conditional b2b_group-платёж курса с group_id одной
      * из групп ученика (кроме членств с отметкой «платит сам», selfPayEnabled()). (null, null) → 'full' (весь курс); диапазон
      * start_block..end_block → 'block_N' на каждый покрытый блок
      * (BlockMonthRecognition::coveredBlockNumbers — тот же предикат, что у
@@ -82,7 +94,14 @@ final class B2bGroupEntitlement
             ->where('course_id', $course->id)
             ->whereIn('group_id', $coveredGroupIds)
             ->where('tariff', Payment::TARIFF_B2B_GROUP)
-            ->paid()
+            ->where(function ($status): void {
+                $status->whereIn('status', Payment::PAID_STATUSES);
+                if (self::pendingAccessEnabled()) {
+                    $status->orWhere(fn ($pending) => $pending
+                        ->where('status', 'pending')
+                        ->where('access_while_pending', true));
+                }
+            })
             ->real()
             ->get();
 

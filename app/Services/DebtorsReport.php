@@ -359,6 +359,11 @@ class DebtorsReport
         $b2bGroupGuard = '';
         $b2bGroupBindings = [];
         $b2bSelfPayGuard = B2bGroupEntitlement::selfPayEnabled() ? 'AND gu.b2b_self_pay = 0' : '';
+        // «Открыть доступ до оплаты»: ожидающий групповой платёж с отметкой тоже
+        // снимает покрытых учеников из должников — долг на юрлице, не на них.
+        $b2bPendingAccess = B2bGroupEntitlement::pendingAccessEnabled()
+            ? "OR (p3.status = 'pending' AND p3.access_while_pending = 1)"
+            : '';
         if (B2bGroupEntitlement::enabled()) {
             $b2bGroupGuard = "
                   AND NOT EXISTS (
@@ -366,7 +371,7 @@ class DebtorsReport
                     WHERE p3.group_id = gu.group_id
                       AND p3.course_id = cg.course_id
                       AND p3.tariff = ?
-                      AND p3.status IN ({$paidIn})
+                      AND (p3.status IN ({$paidIn}) {$b2bPendingAccess})
                       AND p3.is_conditional = 0
                       {$b2bSelfPayGuard}
                       AND (
