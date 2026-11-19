@@ -84,6 +84,8 @@ class Payment extends Model
         'salary_recognition_month',
         // --- Conditional access под обещание/рассрочку ---
         'is_conditional',
+        // B2B-оплата за группу: доступ ученикам до поступления денег (pending).
+        'access_while_pending',
         'linked_promise_id',
         // Платёж создан должником самостоятельно из кабинета (self-service).
         'is_self_service',
@@ -165,6 +167,7 @@ class Payment extends Model
 
     protected $casts = [
         'is_conditional' => 'boolean',
+        'access_while_pending' => 'boolean',
         'is_self_service' => 'boolean',
         'discount_percent' => 'decimal:2',
         'discount_amount' => 'decimal:2',
