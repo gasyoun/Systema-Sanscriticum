@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Consent;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\Support\CallbackRequestService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,6 +40,8 @@ class CallbackRequestController extends Controller
             'note' => ['nullable', 'string', 'max:500'],
             'consent' => ['required', 'accepted'],
         ]);
+
+        app(ConsentRecorder::class)->given(Consent::TYPE_PD, 'support-callback', $request, $user);
 
         $callbacks->requestCallback($user, $data['phone'], $data['note'] ?? null, $request);
 

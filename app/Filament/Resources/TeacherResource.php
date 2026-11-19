@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\TeacherResource\Pages;
+use App\Filament\Support\NoAutofill;
 use App\Models\Teacher;
 use App\Models\TeacherPayout;
 use App\Models\User;
@@ -143,6 +144,8 @@ class TeacherResource extends Resource
                         TextInput::make('account_password')
                             ->label('Пароль')
                             ->password()
+                            ->autocomplete('new-password')
+                            ->extraInputAttributes(NoAutofill::IGNORE_MANAGERS)
                             ->revealable()
                             ->minLength(6)
                             ->maxLength(255)

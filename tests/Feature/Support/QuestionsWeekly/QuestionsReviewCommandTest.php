@@ -145,8 +145,11 @@ class QuestionsReviewCommandTest extends TestCase
         $output = Artisan::output();
 
         $this->assertSame(0, $exit, $output);
-        // 4/5 = 0.8 < 0.93 → гейт честно провален (один промах).
-        $this->assertStringContainsString('"gate": "fail"', $output);
+        // H5768: 5 полностью размеченных строк < требуемых 100 — гейт
+        // inconclusive (частичная выборка не может PASS); точность при
+        // этом честная: знаменатель — все предсказания A–I, 4/5 = 0.8.
+        $this->assertStringContainsString('"gate": "inconclusive"', $output);
+        $this->assertStringContainsString('"gate_reason": "insufficient_labeled_rows"', $output);
         $this->assertStringContainsString('"precision": 0.8', $output);
         // json round-trip: round(x,4) печатается int-ом без дробной части.
         $this->assertStringContainsString('"coverage": 1,', $output);

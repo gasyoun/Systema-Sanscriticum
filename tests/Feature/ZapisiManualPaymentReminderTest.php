@@ -79,6 +79,9 @@ class ZapisiManualPaymentReminderTest extends TestCase
         $this->assertStringContainsString('Блок занятий завершён — 8-е из 9', $draft['text']);
         $this->assertStringContainsString('21.09.2026', $draft['text']);
         $this->assertStringContainsString('игры, просмотр бесплатных вебинаров', $draft['text']);
+        // MG 12-10-2026: ссылка на кабинет в черновике — как в автонапоминании.
+        $this->assertStringContainsString('Оплатить в личном кабинете', $draft['text']);
+        $this->assertStringContainsString(route('student.dashboard'), $draft['text']);
     }
 
     public function test_draft_mid_block_names_current_block(): void

@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Models\Lead;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\Reports\ChannelPaymentPeriodReport;
 use App\Support\Roles;
 use Filament\Notifications\Notification;
 use Illuminate\Console\Command;
@@ -38,6 +39,9 @@ final class ReportChannelRoi extends Command
 
     protected $signature = 'report:channel-roi
         {--days= : Restrict leads created within the last N days (default: all time)}
+        {--payments-from= : Inclusive payment date YYYY-MM-DD (requires --payments-to)}
+        {--payments-to= : Inclusive payment date YYYY-MM-DD (requires --payments-from)}
+        {--format=table : table or json; json requires an explicit payment period}
         {--source= : Filter by source key (utm_source / source / inferred_source, e.g. vk)}
         {--by-source : Group by source only (collapse campaigns)}
         {--digest : Send the per-channel summary to KPI-digest recipients (database notification)}';
@@ -46,6 +50,10 @@ final class ReportChannelRoi extends Command
 
     public function handle(): int
     {
+        if ($this->option('payments-from') !== null || $this->option('payments-to') !== null
+            || $this->option('format') !== 'table') {
+            return $this->paymentPeriod();
+        }
         $days = (int) $this->option('days');
         $source = trim((string) $this->option('source'));
 
@@ -109,7 +117,7 @@ final class ReportChannelRoi extends Command
 
         $this->info('Channel ROI — '.now()->format('Y-m-d H:i')
             .($days > 0 ? " · leads created last {$days} d" : ' · all time')
-            .($source !== '' ? " · source={$source}" : ''));
+            .($source !== '' ? " · source={$source}" : '').' · lifetime revenue of selected lead cohort');
 
         $this->table(
             ['channel (source/campaign)', 'leads', 'users', 'payers', 'revenue, ₽', 'rev/lead, ₽', 'first lead'],
@@ -128,6 +136,37 @@ final class ReportChannelRoi extends Command
                 'caveat: %d/%d (%s%%) leads link to users — attribution gaps before H324 magic-link remain in history.',
                 $usersByLead->count(), $leads->count(), number_format((float) $knownEmailShare, 1, ',', ' '),
             ));
+        }
+
+        return self::SUCCESS;
+    }
+
+    private function paymentPeriod(): int
+    {
+        $from = (string) $this->option('payments-from');
+        $to = (string) $this->option('payments-to');
+        foreach ([$from, $to] as $date) {
+            $parsed = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
+            if (! $parsed || $parsed->format('Y-m-d') !== $date) {
+                $this->error('Both payment dates must be valid YYYY-MM-DD dates.');
+
+                return self::FAILURE;
+            }
+        }
+        if ($from > $to || ! in_array($this->option('format'), ['table', 'json'], true)
+            || $this->option('digest') || $this->option('days') !== null || $this->option('source') !== null) {
+            $this->error('Payment period requires from <= to; use table/json, without days/source/digest.');
+
+            return self::FAILURE;
+        }
+        $report = app(ChannelPaymentPeriodReport::class)->build($from, $to);
+        if ($this->option('format') === 'json') {
+            $this->line(json_encode($report, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+        } else {
+            $this->info("Payments {$from} through {$to}; amounts in kopecks; not bank cash or profit.");
+            $this->table(['source', 'campaign', 'evidence', 'payments', 'receipts', 'refunds', 'net', 'unclassified'],
+                array_map(fn ($r) => array_values($r), $report['rows']));
+            $this->line('Missing payment date: '.$report['missing_date_count'].' rows (not assigned to period).');
         }
 
         return self::SUCCESS;

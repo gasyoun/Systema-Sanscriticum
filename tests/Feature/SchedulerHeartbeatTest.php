@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Laravel\Horizon\Contracts\MasterSupervisorRepository;
 use Tests\TestCase;
@@ -134,6 +135,41 @@ class SchedulerHeartbeatTest extends TestCase
     public function test_it_stays_successful_when_healthchecks_answers_with_an_error(): void
     {
         Http::fake([self::URL => Http::response('nope', 500)]);
+
+        $this->artisan('heartbeat:ping')->assertSuccessful();
+    }
+
+    /**
+     * H7565 (обводка SNI-фильтра апстрима): прямая нога легла транспортно —
+     * пинг уходит через EGRESS_PING_PROXY второй попыткой.
+     */
+    public function test_it_delivers_via_the_proxy_leg_when_direct_transport_is_dead(): void
+    {
+        config()->set('egress.ping_proxy', 'socks5h://127.0.0.1:1055');
+
+        $attempts = 0;
+        Http::fake(function () use (&$attempts) {
+            $attempts++;
+
+            return $attempts === 1
+                ? throw new ConnectionException('cURL error 28: Connection timed out')
+                : Http::response('OK', 200);
+        });
+
+        $this->artisan('heartbeat:ping')->assertSuccessful();
+
+        $this->assertSame(2, $attempts);
+    }
+
+    /**
+     * Обе ноги мертвы — контракт прежний: команда успешна, тревогу поднимет
+     * молчание на стороне приёмника, а не упавший слот планировщика.
+     */
+    public function test_it_stays_successful_when_both_legs_are_dead(): void
+    {
+        config()->set('egress.ping_proxy', 'socks5h://127.0.0.1:1055');
+
+        Http::fake(fn () => throw new ConnectionException('cURL error 28: Connection timed out'));
 
         $this->artisan('heartbeat:ping')->assertSuccessful();
     }

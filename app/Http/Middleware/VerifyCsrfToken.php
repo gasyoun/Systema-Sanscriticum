@@ -26,5 +26,8 @@ class VerifyCsrfToken extends Middleware
         // что games/event: web-сессия нужна (ключ бюджета = сессия), токена у
         // gate.js нет; POST идемпотентно-добавляющий, затроттлён.
         '/api/games/round',
+        // 152-ФЗ / RFC 8058: One-Click отписка из почтового клиента приходит POST-ом
+        // без токена. Защита — подпись URL (middleware signed), а не CSRF.
+        '/otpiska',
     ];
 }

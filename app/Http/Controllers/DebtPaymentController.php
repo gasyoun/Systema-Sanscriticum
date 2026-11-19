@@ -302,6 +302,24 @@ class DebtPaymentController extends Controller
         // не применяем — цена фиксирована куратором). Максимум считаем на сервере,
         // клиенту не верим (зеркалит PaymentController::createPayment).
         $result = DB::transaction(function () use ($user, $courseId, $amount, $tariffKey, $startBlock, $endBlock, $leadPromiseId, $pranaRequested) {
+            // bughunt 04-10-2026 M1: the anti-duplicate check above runs BEFORE
+            // this transaction, so two parallel requests (double click / retry)
+            // both pass it. Serialize on the user row and re-check inside the
+            // transaction; null means "a fresh self-service order already exists".
+            User::query()->whereKey($user->getKey())->lockForUpdate()->first();
+
+            $existsUnderLock = Payment::query()
+                ->where('user_id', $user->id)
+                ->where('course_id', $courseId)
+                ->where('status', 'pending')
+                ->where('is_self_service', true)
+                ->where('created_at', '>=', now()->subMinutes(self::PENDING_HOLD_MINUTES))
+                ->exists();
+
+            if ($existsUnderLock) {
+                return null;
+            }
+
             $finalAmount = $amount;
             $pranaToSpend = 0;
 
@@ -345,6 +363,10 @@ class DebtPaymentController extends Controller
 
             return [$payment, $finalAmount];
         });
+
+        if ($result === null) {
+            return $this->backToDebts('error', 'У вас уже есть незавершённый заказ по этому курсу. Завершите оплату или подождите несколько минут, прежде чем начинать новый.');
+        }
 
         [$payment, $finalAmount] = $result;
 

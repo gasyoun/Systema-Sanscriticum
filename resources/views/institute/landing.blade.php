@@ -63,12 +63,10 @@
             <textarea name="experience" rows="3" maxlength="2000"
                       placeholder="Роль и опыт (необязательно): чем занимаетесь, какой у вас санскрит"
                       class="w-full rounded-lg bg-slate-800 border border-slate-600 text-slate-200 p-2"></textarea>
-            <label class="flex items-start gap-2 text-sm text-slate-400">
-                <input type="checkbox" name="is_promo_agreed" value="1" required
-                       class="mt-1 rounded bg-slate-800 border-slate-600">
-                <span>Согласен(на) на обработку персональных данных для связи по заявке.</span>
-            </label>
-            @error('is_promo_agreed')<p class="text-red-400 text-sm">{{ $message }}</p>@enderror
+            {{-- 152-ФЗ: раньше одна галочка is_promo_agreed означала согласие на ПДн —
+                 теперь ПДн и рассылка разделены. --}}
+            <x-consent.pd theme="dark" class="text-sm" />
+            <x-consent.promo theme="dark" class="text-sm" />
             <button type="submit"
                     class="px-5 py-2 rounded-xl bg-brand text-white font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand">
                 Подать заявку

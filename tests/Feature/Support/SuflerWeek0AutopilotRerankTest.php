@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Support;
 
 use App\Services\Bot\CuratorAi;
+use App\Services\Support\Faq\FaqLlmReranker;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -16,6 +17,9 @@ use Tests\TestCase;
  * Локальный узел — Http::fake (тот же паттерн, что SupportDmLlmLocalGeneration
  * / KnowledgeLocalGenerationTest): реранк обязан ходить через существующий
  * CuratorAi-клиент, а не собственный HTTP.
+ *
+ * H5771 — срыв транспорта (raw=null/пустой ответ) ретраится ровно один раз;
+ * повторный срыв = фолбэк; разобранный ответ ретраю не подлежит.
  */
 class SuflerWeek0AutopilotRerankTest extends TestCase
 {
@@ -139,6 +143,82 @@ class SuflerWeek0AutopilotRerankTest extends TestCase
 
         $this->assertSame("A — прямо\nB — нет\n\nОтвет: A", $result['content']);
         Http::assertSent(fn ($request) => str_contains((string) $request->url(), '127.0.0.1:11435/v1/chat/completions'));
+    }
+
+    public function test_rerank_retries_once_on_transport_failure_and_sums_usage(): void
+    {
+        // H5771: первая попытка — пустой контент при живом usage (срыв узла),
+        // ретрай отвечает «Ответ: B»; токены обеих попыток суммируются в леджер.
+        Http::fake([
+            '127.0.0.1:11434/*' => Http::sequence()
+                ->push([
+                    'model' => 'qwen2.5:7b-instruct',
+                    'choices' => [['message' => ['content' => '   ']]],
+                    'usage' => ['prompt_tokens' => 7, 'completion_tokens' => 3],
+                ], 200)
+                ->push([
+                    'model' => 'qwen2.5:7b-instruct',
+                    'choices' => [['message' => ['content' => "A — нет\nB — прямо\n\nОтвет: B"]]],
+                    'usage' => ['prompt_tokens' => 10, 'completion_tokens' => 5],
+                ], 200),
+        ]);
+
+        $verdict = app(FaqLlmReranker::class)->rerank('Сколько длится блок занятий?', $this->hits());
+
+        $this->assertFalse($verdict['fallback']);
+        $this->assertSame('c-b', $verdict['pick']);
+        $this->assertSame(1, $verdict['rank']);
+        $this->assertSame(17, $verdict['usage']['prompt_tokens']);
+        $this->assertSame(8, $verdict['usage']['completion_tokens']);
+        $this->assertSame("A — нет\nB — прямо\n\nОтвет: B", $verdict['raw']);
+        Http::assertSentCount(2);
+    }
+
+    public function test_rerank_falls_back_after_second_transport_failure(): void
+    {
+        // Обе попытки сорвались → обычный фолбэк к порядку retrieval, usage пуст.
+        Http::fake([
+            '127.0.0.1:11434/*' => Http::response(['error' => 'node down'], 500),
+        ]);
+
+        $verdict = app(FaqLlmReranker::class)->rerank('Сколько длится блок занятий?', $this->hits());
+
+        $this->assertTrue($verdict['fallback']);
+        $this->assertSame('c-a', $verdict['pick']);
+        $this->assertSame(0, $verdict['rank']);
+        $this->assertNull($verdict['usage']);
+        $this->assertNull($verdict['raw']);
+        Http::assertSentCount(2);
+    }
+
+    public function test_rerank_does_not_retry_a_parsed_answer(): void
+    {
+        // Разобранный ответ — не транспортный срыв: ретрая нет, ровно один вызов.
+        Http::fake([
+            '127.0.0.1:11434/*' => Http::response([
+                'model' => 'qwen2.5:7b-instruct',
+                'choices' => [['message' => ['content' => "A — прямо\nB — нет\n\nОтвет: A"]]],
+                'usage' => ['prompt_tokens' => 10, 'completion_tokens' => 5],
+            ], 200),
+        ]);
+
+        $verdict = app(FaqLlmReranker::class)->rerank('Сколько длится блок занятий?', $this->hits());
+
+        $this->assertFalse($verdict['fallback']);
+        $this->assertSame('c-a', $verdict['pick']);
+        Http::assertSentCount(1);
+    }
+
+    /**
+     * @return list<array{chunk_id: string, title: string, heading_path: list<string>, snippet: string, source: string}>
+     */
+    private function hits(): array
+    {
+        return [
+            ['chunk_id' => 'c-a', 'title' => 'Блок занятий', 'heading_path' => ['Оплата'], 'snippet' => 'Блок = 4 занятия, оплата поблочно.', 'source' => 'faq'],
+            ['chunk_id' => 'c-b', 'title' => 'Расписание', 'heading_path' => ['Занятия'], 'snippet' => 'Занятия идут по вечерам.', 'source' => 'faq'],
+            ['chunk_id' => 'c-c', 'title' => 'Тетради', 'heading_path' => ['Материалы'], 'snippet' => 'Тетради студент приносит сам.', 'source' => 'faq'],
+        ];
     }
 
     /**

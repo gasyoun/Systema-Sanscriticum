@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Вход в кабинет | ОРС LMS</title>
     @include('partials.tailwind-cdn')
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    @vite('resources/css/fonts.css')
 </head>
 @php
     // Бегущие отзывы фоном на весь экран — только если их хватает на три колонки;
@@ -182,6 +182,8 @@
                             </div>
                         @endforeach
                     </div>
+                    <x-consent.pd :offer="true" class="text-[11px]" />
+                    <x-consent.promo class="text-[11px]" />
                     <div class="pt-1">
                         <button type="submit"
                             class="w-full bg-brand hover:bg-brand-hover text-white font-extrabold py-2.5 px-4 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 text-xs uppercase tracking-wider">
@@ -310,5 +312,7 @@
         })();
     </script>
 
+    {{-- 152-ФЗ: баннер cookie — без него здесь нельзя дать/отозвать согласие на аналитику. --}}
+    @include('partials.cookie-consent')
 </body>
 </html>

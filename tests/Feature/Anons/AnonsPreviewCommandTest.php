@@ -104,9 +104,11 @@ class AnonsPreviewCommandTest extends TestCase
         $problems = (new PlaqueInspector)->inspect($frame['artifact'], $frame['plaque_rect_px']);
         $this->assertSame([], $problems, implode('; ', $problems));
 
-        // Геометрия: медиа-зона из измеренной плашки (left=11 %, top=55 %).
-        $this->assertEqualsWithDelta(11.0, $frame['media_area']['x'], 0.5);
-        $this->assertEqualsWithDelta(55.0, $frame['media_area']['y'], 0.5);
+        // Геометрия: медиа-зона из измеренной плашки, H6678 center-семантика
+        // (x/y = ЦЕНТР зоны в %: 50, 62) — прежде кромки (11, 55) клали зону
+        // на пол-плашки выше отрисовки.
+        $this->assertEqualsWithDelta(50.0, $frame['media_area']['x'], 0.5);
+        $this->assertEqualsWithDelta(62.0, $frame['media_area']['y'], 0.5);
         $this->assertEqualsWithDelta(78.0, $frame['media_area']['w'], 0.5);
         $this->assertEqualsWithDelta(14.0, $frame['media_area']['h'], 0.5);
         $this->assertEqualsWithDelta(8.0, $frame['safe_zones']['top_pct'], 0.01);

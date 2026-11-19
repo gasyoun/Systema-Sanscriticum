@@ -23,8 +23,12 @@
 
 @section('title', 'Клуб — вся библиотека записей')
 
+@php
+    $metaDescription = 'Клуб Общества ревнителей санскрита: вся библиотека записей курсов, полка в кабинете и тренажеры — за '.number_format((float) $monthly->price, 0, '.', ' ').' ₽ в месяц. Без живых потоков, без проверки домашних заданий, без сертификата — поэтому и цена такая.';
+@endphp
+@section('meta_description', $metaDescription)
+
 @push('head')
-    <meta name="description" content="Клуб Общества ревнителей санскрита: вся библиотека записей курсов, полка в кабинете и тренажеры — за {{ number_format((float) $monthly->price, 0, '.', ' ') }} ₽ в месяц. Без живых потоков, без проверки домашних заданий, без сертификата — поэтому и цена такая.">
     {{-- H3650: Club + Basic share stills. Primary og:image is Club (page title). Basic 1200×630 is a second OG image for clients that pick an alternate. Home preview stays og-main-preview.jpg. --}}
     <meta property="og:title" content="Клуб — вся библиотека записей">
     <meta property="og:image" content="{{ asset('images/og-membership-club.webp') }}?v=h3650">

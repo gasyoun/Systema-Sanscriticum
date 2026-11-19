@@ -8,6 +8,7 @@ use App\Services\SupportQuestions\WeeklyReportComposer;
 use App\Services\SupportQuestions\WeeklyReportDeliverer;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 /**
  * H5709 — недельная аналитика студенческих вопросов Telegram.
@@ -30,7 +31,8 @@ class QuestionsWeeklyCommand extends Command
         {--backfill : пересчитать исторические недельные снапшоты; БЕЗ отправки}
         {--backfill-from=2026-07-06 : дата старта бэкфилла (ISO, дефолт 2026-07-06)}
         {--send : отправить сводку в чат «Отдел заботы» (явно; требует совместимого окна)}
-        {--reconcile= : sent|not_sent — разрешить неоднозначную доставку недели (--from)}';
+        {--reconcile= : sent|not_sent — разрешить неоднозначную доставку недели (--from)}
+        {--reconcile-message-id= : реальный message_id из чата (к --reconcile=sent)}';
 
     protected $description = 'Недельная аналитика студенческих вопросов Telegram (H5709): снапшот, отчёт, exactly-once доставка.';
 
@@ -135,7 +137,9 @@ class QuestionsWeeklyCommand extends Command
             }
 
             $this->line(json_encode([
-                'delivered' => true,
+                // delivered=true только при реальном подтверждении из
+                // леджера (H5768): unknown-состояния не «доставлены».
+                'delivered' => $delivery['state'] === 'acknowledged',
                 'week_start' => $from->toDateString(),
                 'state' => $delivery['state'],
                 'telegram_message_id' => $delivery['message_id'],
@@ -240,11 +244,17 @@ class QuestionsWeeklyCommand extends Command
         }
 
         $weekStart = CarbonImmutable::parse($fromRaw, 'Europe/Moscow')->startOfWeek(CarbonImmutable::MONDAY)->toDateString();
+        $messageIdRaw = (string) ($this->option('reconcile-message-id') ?? '');
+        $messageId = $messageIdRaw !== '' ? (int) $messageIdRaw : null;
 
         try {
-            $result = $deliverer->reconcile($weekStart, $verdict === 'sent');
-        } catch (\Throwable $e) {
+            $result = $deliverer->reconcile($weekStart, $verdict === 'sent', $messageId);
+        } catch (ModelNotFoundException $e) {
             $this->error('No delivery row for week '.$weekStart.' — nothing to reconcile.');
+
+            return self::FAILURE;
+        } catch (\RuntimeException $e) {
+            $this->error($e->getMessage());
 
             return self::FAILURE;
         }

@@ -99,6 +99,9 @@
 
         <div x-data="{ mobileNav: false }" class="flex items-center gap-2 shrink-0">
 
+            {{-- H7590 — глобальный поиск (клиентский индекс + /poisk/{q}) --}}
+            @include('partials.global-search', ['variant' => $contactsVariant])
+
             {{-- Контакты (телефон + email) --}}
             @include('partials.contacts-bar', ['variant' => $contactsVariant])
 

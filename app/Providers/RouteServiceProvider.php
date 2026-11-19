@@ -20,11 +20,38 @@ class RouteServiceProvider extends ServiceProvider
     public const HOME = '/home';
 
     /**
+     * Вебхуки с проверкой подписи на маршруте (routes/api.php: verify.vk.bot,
+     * verify.vk.magnet, verify.tg.bot, verify.tg.magnet, verify.max.magnet) —
+     * вне общего api-лимита. Платёжные/Zoom-вебхуки сюда НЕ входят: у них свой
+     * throttle на маршруте.
+     *
+     * @var list<string>
+     */
+    public const SIGNED_MESSENGER_WEBHOOKS = [
+        'api/vk-webhook',
+        'api/webhooks/vk-magnet',
+        'api/telegram/webhook',
+        'api/webhooks/telegram-magnet',
+        'api/webhooks/telegram-magnet/*',
+        'api/webhooks/max-magnet/*',
+    ];
+
+    /**
      * Define your route model bindings, pattern filters, and other route configuration.
      */
     public function boot(): void
     {
         RateLimiter::for('api', function (Request $request) {
+            // Вебхуки мессенджеров с проверкой подписи/секрета (verify.* на
+            // маршруте) общим IP-лимитом не режем: ВК шлёт события с горстки
+            // своих адресов, и массовая рассылка даёт ~2000 событий в минуту.
+            // Лимит 60/мин отбивал их 429 — 07.10 и 13.10.2026 потеряно
+            // ~15 тыс. событий (ответы учеников на рассылку в том числе).
+            // Чужие запросы отсекает подпись, а не лимит.
+            if ($request->is(...self::SIGNED_MESSENGER_WEBHOOKS)) {
+                return Limit::none();
+            }
+
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 

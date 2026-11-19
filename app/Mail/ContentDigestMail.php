@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Mail\Concerns\Unsubscribable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -21,6 +22,7 @@ use Illuminate\Queue\SerializesModels;
 class ContentDigestMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+    use Unsubscribable;
 
     public function __construct(
         public string $digestTitle,

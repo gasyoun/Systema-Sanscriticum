@@ -84,7 +84,7 @@ class QuestionPopulationResolver
     }
 
     /**
-     * @return array{population: string, exclusion_reason: string|null, note: string|null}
+     * @return array{population: string, exclusion_reason: string|null, note: string|null, user_id: int|null}
      */
     public function resolve(TelegramSupportMessage $message): array
     {
@@ -137,15 +137,15 @@ class QuestionPopulationResolver
     }
 
     /**
-     * @return array{population: string, exclusion_reason: null, note: string|null}
+     * @return array{population: string, exclusion_reason: null, note: string|null, user_id: int|null}
      */
     private function studentOrEnquiry(User $user): array
     {
         if ($this->studentById[$user->id] ?? false) {
-            return ['population' => SupportQuestionClassification::POPULATION_STUDENT, 'exclusion_reason' => null, 'note' => null];
+            return ['population' => SupportQuestionClassification::POPULATION_STUDENT, 'exclusion_reason' => null, 'note' => null, 'user_id' => (int) $user->id];
         }
 
-        return ['population' => SupportQuestionClassification::POPULATION_ENQUIRY, 'exclusion_reason' => null, 'note' => 'linked but not confirmed student'];
+        return ['population' => SupportQuestionClassification::POPULATION_ENQUIRY, 'exclusion_reason' => null, 'note' => 'linked but not confirmed student', 'user_id' => (int) $user->id];
     }
 
     private function isStaff(User $user): bool

@@ -9,6 +9,7 @@ use App\Models\DonationGratitude;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\AttributionService;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\Payments\TochkaPaymentService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
@@ -150,6 +151,7 @@ final class InstituteDonateController extends Controller
             'name' => $request->input('name'),
             'password' => Hash::make(Str::random(12)),
         ]);
+        app(ConsentRecorder::class)->fromForm($request, 'institute:donate', $user);
 
         app(AttributionService::class)->applyToNewUser($user);
 

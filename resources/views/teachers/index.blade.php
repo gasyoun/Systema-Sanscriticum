@@ -2,9 +2,15 @@
 
 @section('title', 'Преподаватели Общества ревнителей санскрита')
 
+@section('meta_description', 'Преподаватели Общества ревнителей санскрита: санскритская грамматика, индийская философия, хинди. Образование, курсы, научные интересы и контакты каждого преподавателя.')
+
 @push('head')
-    <meta name="description" content="Преподаватели Общества ревнителей санскрита: санскритская грамматика, индийская философия, хинди. Образование, курсы, научные интересы и контакты каждого преподавателя.">
     <link rel="canonical" href="{{ url('/prepodavately') }}">
+
+    @include('partials.schema-breadcrumbs', ['crumbs' => [
+        ['name' => 'Главная', 'url' => url('/')],
+        ['name' => 'Преподаватели'],
+    ]])
     <meta name="robots" content="index, follow">
 
     {{-- SEO: ItemList из персон — поисковики собирают из него «карусель» преподавателей --}}
@@ -33,7 +39,10 @@
             })->all(),
         ];
     @endphp
-    <script type="application/ld+json">{{ json_encode($teachersSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</script>
+    {{-- Сырой вывод {{ }} HTML-экранировал JSON до &quot;@context&quot; — см.
+         комментарий в teachers/show.blade.php. HEX-флаги держат payload
+         валидным JSON и безопасным для тега </script>. --}}
+    <script type="application/ld+json">{!! json_encode($teachersSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
 @endpush
 
 @section('content')

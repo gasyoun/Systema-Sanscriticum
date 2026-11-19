@@ -128,6 +128,12 @@
             line-height: 1.3;
         }
     </style>
+    @if(! empty($preview))
+    {{-- Браузерное превью (iframe в форме вех): dompdf считает height:100%
+         от страницы A4, а браузер — от html/body без высоты, и контейнер
+         с overflow:hidden схлопывается в 0 px. Задаем холст A4 landscape @96dpi. --}}
+    <style>html, body { width: 1122px; height: 793px; overflow: hidden; }</style>
+    @endif
 </head>
 <body>
 

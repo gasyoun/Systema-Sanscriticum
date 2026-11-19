@@ -9,6 +9,7 @@ use App\Models\MessageTemplate;
 use App\Models\User;
 use App\Services\Reactivation\WinBackSender;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -67,7 +68,14 @@ class WinBackSenderTest extends TestCase
     /** @test */
     public function no_channels_when_no_contacts(): void
     {
-        $user = User::factory()->create(['email' => 'not-an-email', 'telegram_id' => null, 'vk_id' => null]);
+        if (DB::connection()->getDriverName() === 'mysql') {
+            $this->markTestSkipped('Пост-гвард (users_email_valid, MG 04-10) состояние «не-адрес в users.email» на mysql недостижимо.');
+        }
+
+        // Legacy-строка: raw-update в обход мутатора и CHECK (класс импорта 22-04).
+        $user = User::factory()->create(['email' => 'winback-legacy@example.com', 'telegram_id' => null, 'vk_id' => null]);
+        DB::table('users')->where('id', $user->id)->update(['email' => 'not-an-email']);
+        $user->refresh();
         $tpl = MessageTemplate::factory()->create();
 
         $res = $this->sender()->send($user->id, null, null, $tpl, null);

@@ -1,0 +1,229 @@
+{
+  "tool": "tools/document_check.py",
+  "skill": "/document",
+  "legacy_name": "/artifact-propagate",
+  "generated": "2026-10-10 21:49:22",
+  "artifacts": [
+    {
+      "artifact": "/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h6408-94352/app/Services/Telegram/WaitlistBotService.php",
+      "repo": "/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h6408-94352",
+      "kind": "interface",
+      "surfaces": [
+        {
+          "id": "readme",
+          "phase": 1,
+          "label": "README.md",
+          "scope": "repo",
+          "status": "n/a",
+          "evidence": "README не описывает флоу ждун-бота вовсе (grep ждун/waitlist пуст) — UX-итерация существующей функции, новой строки не порождает"
+        },
+        {
+          "id": "claude_md",
+          "phase": 1,
+          "label": "CLAUDE.md",
+          "scope": "repo",
+          "status": "n/a",
+          "evidence": "CLAUDE.md — агентные правила репо; сервис самодокументирован docblock (H6408-порядок шагов там указан)"
+        },
+        {
+          "id": "cold_start",
+          "phase": 1,
+          "label": "Cold-start doc (GEMINI.md / equivalent)",
+          "scope": "repo",
+          "status": "n/a",
+          "evidence": "AGENTS.md описывает деплой/стиль, не фичи бота"
+        },
+        {
+          "id": "sibling_domain_docs",
+          "phase": 1,
+          "label": "Sibling domain docs (manual/roadmap/method docs)",
+          "scope": "repo",
+          "status": "n/a",
+          "evidence": "docs/ не описывает бот-флоу; живая поверхность = .ai_state.md, обновлена строкой 10-10-2026"
+        },
+        {
+          "id": "metadoc",
+          "phase": 1,
+          "label": "Metadoc (<name>.meta.md)",
+          "scope": "repo",
+          "status": "n/a",
+          "evidence": "исходник сервиса (код), метадок-жанр — для авторских markdown-доков"
+        },
+        {
+          "id": "changelog",
+          "phase": 1,
+          "label": "CHANGELOG.md -> release (/cut-release)",
+          "scope": "repo",
+          "status": "n/a",
+          "evidence": "запись в changelog_queue/2026-10-10-h6408-zhdun-slot-after-vote.md (прямые буллеты в CHANGELOG заблокированы хуком; потребит cut_release.py на релизе)"
+        },
+        {
+          "id": "ai_state",
+          "phase": 1,
+          "label": ".ai_state.md",
+          "scope": "repo",
+          "status": "present",
+          "evidence": "/Users/mac/Documents/GitHub-worktrees/Systema-Sanscriticum/Systema-Sanscriticum-h6408-94352/.ai_state.md:2899: **10-10-2026 — ждун-бот: слот мягким шагом после голоса (H6408, слот OxAlpha; executed by GLM-5.3 Flash, ZCode):** голосование в @samskrte_bot стало в одно нажа"
+        },
+        {
+          "id": "issues",
+          "phase": 1,
+          "label": "Issues (per-person task issues)",
+          "scope": "repo",
+          "status": "n/a",
+          "evidence": "пер-персон task-issue по ждуну нет; внешние постинги без standing"
+        },
+        {
+          "id": "gtd",
+          "phase": 2,
+          "label": "Uprava/GTD_NEXT_ACTIONS.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "H6408 минчен и исполнен одним днём, @DO-строк не порождал; реестр закрыт handoff_close"
+        },
+        {
+          "id": "handoffs_registry",
+          "phase": 2,
+          "label": "Uprava/handoffs/README.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "закрыто handoff_close-пайплайном: ✅-строка в REGISTRY_ARCHIVE, файл в archive/ — в живом README строки больше нет по построению"
+        },
+        {
+          "id": "features_index",
+          "phase": 2,
+          "label": "SanskritLexicography/FEATURES_INDEX.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "индекс фич лексикографического эстейта; Systema-бот не его поверхность"
+        },
+        {
+          "id": "reuse_index",
+          "phase": 2,
+          "label": "Uprava/REUSE_INDEX.md (reusable assets)",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "переиспользуемой структуры нет — правка флоу одного сервиса"
+        },
+        {
+          "id": "kosha_manifest",
+          "phase": 2,
+          "label": "kosha/data/manifest/datasets.json",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "not a derived dataset"
+        },
+        {
+          "id": "data_layers_census",
+          "phase": 2,
+          "label": "Uprava/DATA_LAYERS_CENSUS.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "not large/local-only data (risk) and no open statistics cell to close"
+        },
+        {
+          "id": "project_interlinks",
+          "phase": 2,
+          "label": "Uprava/PROJECT_INTERLINKS.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "рёбра владения между репо не менялись"
+        },
+        {
+          "id": "skills_index",
+          "phase": 2,
+          "label": "root SKILLS_INDEX.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "artifact is not itself a skill/command"
+        },
+        {
+          "id": "articles",
+          "phase": 2,
+          "label": "Uprava/ARTICLES.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "artifact is not a paper (delegate to /articles-update when it is)"
+        },
+        {
+          "id": "danger_facts",
+          "phase": 2,
+          "label": "Uprava/DANGER_FACTS.md + context_facts.yaml",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "деструктивного риска нет; guards-drift .92 погашен тем же пассом (server_guards_apply.sh), отражён в .ai_state"
+        },
+        {
+          "id": "questions_log",
+          "phase": 2,
+          "label": "Uprava/QUESTIONS_LOG.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "открытых вопросов не породил"
+        },
+        {
+          "id": "megabook",
+          "phase": 2,
+          "label": "Uprava/MEGABOOK.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "тезисный уровень; операционный статус туда не пишется"
+        },
+        {
+          "id": "skills_manual_ru",
+          "phase": 2,
+          "label": "Uprava/SKILLS_MANUAL_RU.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "no skill/tool contract changed"
+        },
+        {
+          "id": "hooks_index",
+          "phase": 2,
+          "label": "claude-config HOOKS_INDEX.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "хуки не менялись"
+        },
+        {
+          "id": "repo_status_rollup",
+          "phase": 2,
+          "label": "Uprava/REPO_STATUS_ROLLUP.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "статус репо не менялся"
+        },
+        {
+          "id": "hub_manifest",
+          "phase": 2,
+          "label": "Uprava/tools/hub_manifest.json",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "хаб-файлы не добавлялись и не удалялись"
+        },
+        {
+          "id": "auto_derived_views",
+          "phase": 2,
+          "label": "Auto-derived views (NEXT_UP/BOTTLENECKS/kanban/dashboards/HUB_STALENESS_REPORT)",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "auto -- never hand-edit; verify their SOURCES carry the change instead"
+        },
+        {
+          "id": "epistemic_registries",
+          "phase": 2,
+          "label": "FINDINGS x2 + 7 epistemic registries (ASSUMPTIONS/CONTRADICTIONS/GAPS/DEAD_ENDS/RECIPES/STALENESS/GLOSSARY, Uprava + SanskritLexicography)",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "новой посылки/рецепта нет: деплой×guards интеракция уже кодифицирована в deploy.sh и docs/server-resource-guards.md (issue #1143)"
+        }
+      ]
+    }
+  ],
+  "provenance": {
+    "host": "MacBook-Air.local",
+    "git_head": "276f349e4eeeaf5b3a0e3a669c3f8e7ffb724c92",
+    "git_branch": "doc/h6408-sweep",
+    "handoff": "H6408"
+  }
+}

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Support\Egress\EgressPinger;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Laravel\Horizon\Contracts\MasterSupervisorRepository;
 use Throwable;
@@ -77,19 +77,25 @@ class PingSchedulerHeartbeat extends Command
         }
 
         try {
-            $response = Http::timeout((int) config('heartbeat.timeout', 10))
-                ->withBody($body, 'text/plain')
-                ->post($target);
+            // H7565: транспорт общий с cabinet:probe / money:sli — прямая нога,
+            // при транспортном отказе нога через EGRESS_PING_PROXY (config/egress.php).
+            $delivery = app(EgressPinger::class)->send($target, $body, (int) config('heartbeat.timeout', 10));
 
-            if ($response->successful()) {
-                $this->info('Пинг доставлен: '.$target);
-            } else {
+            if ($delivery->delivered) {
+                $this->info($delivery->via === 'proxy'
+                    ? 'Пинг доставлен (нога прокси): '.$target
+                    : 'Пинг доставлен: '.$target);
+            } elseif ($delivery->status !== null) {
                 // Не роняем команду: пропущенный пинг сам по себе и есть сигнал,
                 // healthchecks.io поднимет тревогу по истечении периода.
-                $this->error('healthchecks.io ответил '.$response->status().' — пинг не засчитан.');
+                $this->error('healthchecks.io ответил '.$delivery->status.' — пинг не засчитан.');
                 Log::warning('Пульс планировщика: healthchecks.io вернул ошибку', [
-                    'status' => $response->status(),
+                    'status' => $delivery->status,
+                    'via' => $delivery->via,
                 ]);
+            } else {
+                $this->error('Пинг не ушел: '.$delivery->detail);
+                Log::warning('Пульс планировщика: пинг не отправлен', ['error' => $delivery->detail]);
             }
         } catch (Throwable $e) {
             $this->error('Пинг не ушел: '.$e->getMessage());

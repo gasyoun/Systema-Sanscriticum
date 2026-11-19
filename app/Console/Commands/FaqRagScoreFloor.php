@@ -45,7 +45,16 @@ class FaqRagScoreFloor extends Command
 
         /** @var array<string, list<array{score: float, correct: bool}>> $byCategory */
         $byCategory = [];
+        $skippedRefusals = 0;
         foreach ($fixture['items'] as $item) {
+            // Refusal cards (0YS) have no expected chunk and are not a precision
+            // denominator: they measure refusal accuracy, not top-1 correctness.
+            if (($item['expected_chunk_ids'] ?? []) === [] && ! empty($item['must_refuse'])) {
+                $skippedRefusals++;
+
+                continue;
+            }
+
             $hits = $retriever->retrieve((string) $item['question'], 1);
             if ($hits === []) {
                 continue;
@@ -79,6 +88,11 @@ class FaqRagScoreFloor extends Command
                 $best['precision'] * 100,
                 $best['coverage'] * 100,
             ));
+        }
+
+        if ($skippedRefusals > 0) {
+            $this->line('');
+            $this->line(sprintf('refusal cards skipped (measured by faq:eval refusal accuracy, not top-1 precision): %d', $skippedRefusals));
         }
 
         return self::SUCCESS;

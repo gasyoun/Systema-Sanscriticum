@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Actions\Waitlist\OpenWaitlistPayment;
 use App\Models\CourseWaitlistItem;
 use App\Models\Payment;
 use Illuminate\Console\Command;
@@ -13,9 +14,12 @@ use Illuminate\Support\Carbon;
  * Ежедневный прогон делает три вещи по каждой активной строке:
  *
  *  1. Порог голосов достигнут (votes >= min_payers), статус collecting →
- *     payment_open. Открывается оплата только когда прогноз (голоса × k=0.5,
- *     потолок 60 % исторического набора) достигает минимума — не жечь
- *     доверие преждевременным сбором денег при слабой конверсии.
+ *     payment_open. Строка с привязанным курсом: чистый порог — оплату
+ *     открывает OpenWaitlistPayment (включает тарифы, зовёт куратора;
+ *     флаг waitlist_auto_payment, тот же путь, что и кворумный голос).
+ *     Непривязанная строка: как раньше, только когда прогноз (голоса ×
+ *     k=0.5, потолок 60 % исторического набора) достигает минимума —
+ *     не жечь доверие преждевременным сбором денег при слабой конверсии.
  *
  *  2. payment_open + нужное число ОПЛАТ (block payments, paid) к плановой
  *     дате → scheduled: создаются Schedule-потоки не раньше earliest_start_at.
@@ -51,14 +55,29 @@ class WaitlistProcessCommand extends Command
             $votes = $item->votesCount();
 
             if ($item->status === CourseWaitlistItem::STATUS_COLLECTING
-                && $item->hasThreshold()
-                && $this->forecastMeetsMinimum($item)) {
-                $actions[] = "[{$item->slug}] collecting → payment_open (голосов {$votes}/{$item->min_payers})";
-                if (! $dryRun) {
-                    $item->update(['status' => CourseWaitlistItem::STATUS_PAYMENT_OPEN]);
+                && $item->hasThreshold()) {
+                // Привязанный курс: чистый порог, без прогноз-гейта —
+                // автооткрытие оплаты (тарифы + сигнал куратору).
+                if ($item->course_id !== null
+                    && config('features.waitlist_auto_payment', true)) {
+                    $actions[] = "[{$item->slug}] collecting: порог набран (голосов {$votes}/{$item->min_payers}) → автооткрытие оплаты";
+                    if (! $dryRun) {
+                        $this->line("[{$item->slug}] → ".$this->resultLabel(
+                            app(OpenWaitlistPayment::class)->handle($item)
+                        ));
+                    }
+
+                    continue;
                 }
 
-                continue;
+                if ($this->forecastMeetsMinimum($item)) {
+                    $actions[] = "[{$item->slug}] collecting → payment_open (голосов {$votes}/{$item->min_payers})";
+                    if (! $dryRun) {
+                        $item->update(['status' => CourseWaitlistItem::STATUS_PAYMENT_OPEN]);
+                    }
+
+                    continue;
+                }
             }
 
             $paid = $this->countPaidPayments($item);
@@ -100,6 +119,21 @@ class WaitlistProcessCommand extends Command
     }
 
     private const MAX_ATTEMPTS = 16; // 4 попытки × 4 года
+
+    /** Человекочитаемый итог OpenWaitlistPayment для лога прогона. */
+    private function resultLabel(string $result): string
+    {
+        return match ($result) {
+            OpenWaitlistPayment::RESULT_OPENED => 'оплата открыта (тарифы включены, куратор уведомлён)',
+            OpenWaitlistPayment::RESULT_ALREADY_OPEN => 'оплата уже открыта',
+            OpenWaitlistPayment::RESULT_THRESHOLD_NOT_MET => 'порог ещё не набран',
+            OpenWaitlistPayment::RESULT_NOT_BOUND => 'курс не привязан',
+            OpenWaitlistPayment::RESULT_NO_TARIFFS => 'нет тарифов — куратору уведомление',
+            OpenWaitlistPayment::RESULT_COURSE_HIDDEN => 'курс скрыт с витрины — куратору уведомление',
+            OpenWaitlistPayment::RESULT_DISABLED => 'автооткрытие выключено флагом',
+            default => $result,
+        };
+    }
 
     private function forecastMeetsMinimum(CourseWaitlistItem $item): bool
     {

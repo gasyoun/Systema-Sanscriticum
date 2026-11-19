@@ -50,7 +50,9 @@ class SrsController extends Controller
 
         $decks = SrsDeck::query()
             ->whereIn('visibility', ['system', 'public'])
+            ->whereDoesntHave('children') // H7966: сегменты мега-деков вместо пустого родителя
             ->tap(fn ($q) => $this->applyLanguageFilter($q, $lang))
+            ->tap(fn ($q) => $this->applyTaxonomyFilters($q, $request))
             ->withCount('cards')
             ->orderByRaw("CASE WHEN visibility = 'system' THEN 0 ELSE 1 END")
             ->orderBy('name')
@@ -60,6 +62,10 @@ class SrsController extends Controller
             'decks' => $decks,
             'lang' => $lang,
             'langWord' => $word,
+            'filters' => $this->activeTaxonomy($request),
+            'topicOptions' => SrsDeck::TOPICS,
+            'sizeOptions' => SrsDeck::SIZE_TIERS,
+            'difficultyOptions' => SrsDeck::DIFFICULTIES,
         ]);
     }
 
@@ -70,7 +76,14 @@ class SrsController extends Controller
     {
         abort_unless((bool) config('srs.enabled'), 404);
 
-        return view('srs.public-review', ['slug' => $slug]);
+        // SEO-META-1: the page title/description used to be one hardcoded string for
+        // every deck. Resolve the deck here so the shell can emit per-deck meta.
+        $deck = SrsDeck::query()
+            ->where('slug', $slug)
+            ->whereIn('visibility', ['system', 'public'])
+            ->first();
+
+        return view('srs.public-review', ['slug' => $slug, 'deck' => $deck]);
     }
 
     /**
@@ -88,7 +101,9 @@ class SrsController extends Controller
                 $q->whereIn('visibility', ['system', 'public'])
                     ->orWhere('user_id', $userId);
             })
+            ->whereDoesntHave('children') // H7966: сегменты мега-деков вместо пустого родителя
             ->tap(fn ($q) => $this->applyLanguageFilter($q, $lang))
+            ->tap(fn ($q) => $this->applyTaxonomyFilters($q, $request))
             ->withCount('cards')
             ->orderByRaw("CASE WHEN visibility = 'system' THEN 0 ELSE 1 END")
             ->orderBy('name')
@@ -97,6 +112,10 @@ class SrsController extends Controller
         return view('student.srs-hub', [
             'decks' => $decks,
             'lang' => $lang,
+            'filters' => $this->activeTaxonomy($request),
+            'topicOptions' => SrsDeck::TOPICS,
+            'sizeOptions' => SrsDeck::SIZE_TIERS,
+            'difficultyOptions' => SrsDeck::DIFFICULTIES,
         ]);
     }
 
@@ -201,6 +220,43 @@ class SrsController extends Controller
         $lang = strtolower((string) $request->query('lang', 'sa'));
 
         return in_array($lang, ['sa', 'hi', 'all'], true) ? $lang : 'sa';
+    }
+
+    /**
+     * H7966 (трек А) — discovery-фильтры таксономии на обеих поверхностях
+     * (/koloda и /dvaram/koloda), ?topic= / ?size= / ?difficulty=. Значения
+     * сверяются со словарями SrsDeck::* — мимо словаря фильтр не фильтрует
+     * (инъекция невозможна, колонка не участвует).
+     *
+     * @param  Builder<SrsDeck>  $query
+     * @return Builder<SrsDeck>
+     */
+    private function applyTaxonomyFilters($query, Request $request)
+    {
+        $filters = $this->activeTaxonomy($request);
+
+        return $query
+            ->when($filters['topic'], fn ($q, $v) => $q->where('topic', $v))
+            ->when($filters['size'], fn ($q, $v) => $q->where('size_tier', $v))
+            ->when($filters['difficulty'], fn ($q, $v) => $q->where('difficulty', $v));
+    }
+
+    /**
+     * Активные значения фильтров, уже сверенные со словарями (для вью и ссылок).
+     *
+     * @return array{topic: ?string, size: ?string, difficulty: ?string}
+     */
+    private function activeTaxonomy(Request $request): array
+    {
+        $topic = (string) $request->query('topic', '');
+        $size = (string) $request->query('size', '');
+        $difficulty = (string) $request->query('difficulty', '');
+
+        return [
+            'topic' => isset(SrsDeck::TOPICS[$topic]) ? $topic : null,
+            'size' => isset(SrsDeck::SIZE_TIERS[$size]) ? $size : null,
+            'difficulty' => isset(SrsDeck::DIFFICULTIES[$difficulty]) ? $difficulty : null,
+        ];
     }
 
     /**

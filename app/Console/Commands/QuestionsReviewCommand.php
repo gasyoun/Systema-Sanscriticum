@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\SupportQuestionClassification;
+use App\Models\SupportQuestionReviewItem;
+use App\Models\SupportQuestionReviewSample;
 use App\Services\SupportQuestions\QuestionMessageClassifier;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
@@ -21,6 +23,12 @@ use Illuminate\Support\Facades\DB;
  * unclassified | not_question | other) и печатает вердикт гейта ≥93 %.
  * Если подходящих сообщений меньше N — gate_inconclusive, наблюдения не
  * фабрикуются.
+ *
+ * Семантика гейта (H5768): знаменатель точности — ВСЕ предсказания A–I;
+ * любое несовпадение gold (вкл. not_question/other/unclassified) — ошибка.
+ * PASS требует ≥100 уникальных полностью размеченных строк, ноль
+ * неразмеченных и валидные предсказанные метки; ноль предсказаний —
+ * inconclusive. Recall и покрытие публикуются отдельно, в гейт не входят.
  */
 class QuestionsReviewCommand extends Command
 {
@@ -30,11 +38,14 @@ class QuestionsReviewCommand extends Command
         {--to= : ISO-дата конца окна выборки (эксклюзивно)}
         {--sample=100 : размер стратифицированной выборки}
         {--sheet= : путь листа ревью (дефолт storage/app/support-questions/review-<week>.tsv)}
-        {--import= : путь заполненного листа с колонкой gold_label — печатает только агрегаты}';
+        {--import= : путь заполненного листа с колонкой gold_label — печатает только агрегаты}
+        {--carryover-gold= : id замороженного сэмпла — перенос human gold на предсказания ТЕКУЩЕЙ версии классификатора (те же сообщения, те же метки, новый predicted-столбец)}';
 
     protected $description = 'Стратифицированное ревью точности классификации недельных вопросов (только агрегаты наружу).';
 
     private const GOLD_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'unclassified', 'not_question', 'other'];
+
+    private const TOPIC_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
 
     public function handle(): int
     {
@@ -43,7 +54,137 @@ class QuestionsReviewCommand extends Command
             return $this->importSheet($import);
         }
 
+        $carryover = (string) ($this->option('carryover-gold') ?? '');
+        if ($carryover !== '') {
+            return $this->carryoverGold((int) $carryover);
+        }
+
         return $this->writeSheet();
+    }
+
+    /**
+     * Перенос human gold (H5781): тот же замороженный сэмпл, те же genuine
+     * human-метки, но predicted-столбец — от ТЕКУЩЕЙ версии классификатора.
+     * Так одна и та же независимая разметка человека меряет починенный
+     * классификатор без повторного ревью. Наружу — агрегаты импортёра;
+     * собранный лист остаётся в защищённом storage (одобренное окружение).
+     */
+    private function carryoverGold(int $sampleId): int
+    {
+        $sample = SupportQuestionReviewSample::query()->find($sampleId);
+        if ($sample === null) {
+            $this->error("Review sample {$sampleId} not found.");
+
+            return self::FAILURE;
+        }
+
+        $fromVersion = (string) $sample->classifier_version;
+        $toVersion = QuestionMessageClassifier::VERSION;
+
+        // Полнота меряется ТОЛЬКО замороженным sample_size самого сэмпла
+        // (DeepSeek D1): --sample — опция СТРАТИФИКАЦИИ нового листа, к
+        // переносу готовности ревью отношения не имеет. Метки джойнятся
+        // строго своего сэмпла (DeepSeek D2): чужая sample_id у метки не
+        // считается (unique item_id гарантирует единственную живую метку).
+        $rows = SupportQuestionReviewItem::query()
+            ->where('support_question_review_items.sample_id', $sample->id)
+            ->leftJoin('support_question_review_labels', function ($join) use ($sample): void {
+                $join->on('support_question_review_labels.item_id', '=', 'support_question_review_items.id')
+                    ->where('support_question_review_labels.sample_id', $sample->id);
+            })
+            ->get([
+                'support_question_review_items.classification_id',
+                'support_question_review_items.population',
+                'support_question_review_labels.gold_label',
+            ]);
+
+        $labeled = $rows->filter(fn ($r): bool => (string) $r->gold_label !== '');
+        $required = (int) $sample->sample_size;
+        if ($required < 1) {
+            $this->error(sprintf(
+                'Sample %d has sample_size=%d — carry-over refuses a sample without a frozen size.',
+                $sample->id,
+                $required,
+            ));
+
+            return self::FAILURE;
+        }
+        if ($labeled->count() < $required) {
+            $this->error(sprintf(
+                'Sample %d is incomplete (%d/%d labeled) — carry-over refused until the review finishes.',
+                $sample->id,
+                $labeled->count(),
+                $required,
+            ));
+
+            return self::FAILURE;
+        }
+
+        // Исходные classification-строки сэмпла дают message id; предсказание
+        // берём от ТЕКУЩЕЙ версии по тому же сообщению (нет строки — unclassified).
+        $messageIds = SupportQuestionClassification::query()
+            ->whereIn('id', $rows->pluck('classification_id'))
+            ->pluck('telegram_support_message_id', 'id');
+        $current = SupportQuestionClassification::query()
+            ->where('classifier_version', $toVersion)
+            ->whereIn('telegram_support_message_id', $messageIds->values())
+            ->get(['telegram_support_message_id', 'primary_category'])
+            ->keyBy('telegram_support_message_id');
+
+        $sheetRows = [];
+        foreach ($rows as $row) {
+            $gold = trim((string) $row->gold_label);
+            if ($gold === '') {
+                continue;
+            }
+            $gold = mb_strlen($gold) === 1 ? mb_strtoupper($gold) : mb_strtolower($gold);
+            $messageId = $messageIds->get($row->classification_id);
+            if ($messageId === null) {
+                $this->error("Classification {$row->classification_id} vanished — carry-over refused.");
+
+                return self::FAILURE;
+            }
+            $predicted = (string) ($current->get($messageId)?->primary_category ?? 'unclassified');
+            $sheetRows[] = [
+                'id' => (int) $row->classification_id,
+                'population' => (string) $row->population,
+                'predicted' => $predicted,
+                'gold' => $gold,
+            ];
+        }
+
+        $ids = array_map(static fn (array $r): int => $r['id'], $sheetRows);
+        if (count($ids) !== count(array_unique($ids))) {
+            $this->error('Carry-over sheet would have duplicate ids — refusing.');
+
+            return self::FAILURE;
+        }
+
+        $path = storage_path('app/support-questions/carryover-sample'.$sample->id.'-'.$fromVersion.'-to-'.$toVersion.'.tsv');
+        if (! is_dir(dirname($path))) {
+            mkdir(dirname($path), 0775, true);
+        }
+        $fh = fopen($path, 'w');
+        fwrite($fh, "id\tpopulation\tpredicted_primary\tgold_label\n");
+        foreach ($sheetRows as $r) {
+            fwrite($fh, implode("\t", [$r['id'], $r['population'], $r['predicted'], $r['gold']])."\n");
+        }
+        fclose($fh);
+
+        $this->line(json_encode([
+            'carryover' => [
+                'sample_id' => $sample->id,
+                'frozen_version' => $fromVersion,
+                'measured_version' => $toVersion,
+                'carried_labels' => count($sheetRows),
+                // DeepSeek D5: наружу — только имя файла; лист с per-row
+                // gold живёт в защищённом storage, полный путь не печатается.
+                'sheet' => basename($path),
+                'note' => 'same protected sample, same genuine human gold, predictions from the current classifier version',
+            ],
+        ], JSON_UNESCAPED_UNICODE));
+
+        return $this->importSheet($path);
     }
 
     /**
@@ -210,9 +351,13 @@ class QuestionsReviewCommand extends Command
             }
             $rows[] = [
                 'id' => (int) $line[$idx['id']],
-                'predicted' => trim((string) $line[$idx['predicted_primary']]),
                 // Буквы A–I — вверх, слова (unclassified/…) — вниз:
                 // единый регистр для сравнения со списком допустимых меток.
+                'predicted' => (static function (string $raw): string {
+                    $raw = trim($raw);
+
+                    return mb_strlen($raw) === 1 ? mb_strtoupper($raw) : mb_strtolower($raw);
+                })((string) $line[$idx['predicted_primary']]),
                 'gold' => (static function (string $raw): string {
                     $raw = trim($raw);
 
@@ -222,6 +367,37 @@ class QuestionsReviewCommand extends Command
         }
         fclose($fh);
 
+        // Структурная валидация (H5768): лист с дубликатами id или
+        // невалидными предсказаниями не может дать PASS ни при каких
+        // метриках — импорт отказывает сразу.
+        $ids = array_map(static fn (array $r): int => $r['id'], $rows);
+        if (count($ids) !== count(array_unique($ids))) {
+            $duplicates = array_values(array_unique(array_diff_key($ids, array_unique($ids))));
+            $this->error(sprintf('Sheet has duplicate row ids (e.g. %s) — a review with duplicate IDs cannot PASS.', implode(', ', array_slice($duplicates, 0, 5))));
+
+            return self::FAILURE;
+        }
+        if (array_filter($ids, static fn (int $id): bool => $id <= 0) !== []) {
+            $this->error('Sheet has non-positive row ids — every reviewed row must carry a valid message id.');
+
+            return self::FAILURE;
+        }
+        $validPredicted = array_merge(self::TOPIC_LABELS, ['unclassified']);
+        $invalidPredicted = array_values(array_filter(
+            $rows,
+            static fn (array $r): bool => ! in_array($r['predicted'], $validPredicted, true)
+        ));
+        if ($invalidPredicted !== []) {
+            $this->error(sprintf(
+                '%d rows have predicted labels outside %s — predicted labels must be validated before any verdict.',
+                count($invalidPredicted),
+                implode('|', $validPredicted),
+            ));
+
+            return self::FAILURE;
+        }
+
+        $unlabeled = array_values(array_filter($rows, static fn (array $r): bool => $r['gold'] === ''));
         $labeled = array_values(array_filter($rows, static fn (array $r): bool => $r['gold'] !== ''));
         if ($labeled === []) {
             $this->error('No labeled rows found (gold_label column is empty).');
@@ -239,42 +415,82 @@ class QuestionsReviewCommand extends Command
             return self::FAILURE;
         }
 
+        // Знаменатель точности (H5768) = ВСЕ строки с предсказанием A–I.
+        // Любое несовпадение gold — ошибка, ВКЛЮЧАЯ not_question/other/
+        // unclassified: прежний знаменатель (строки с gold A–I) прятал до
+        // 99 ложных срабатываний из 100 за precision=1.0.
+        $predictedTopic = array_values(array_filter(
+            $labeled,
+            static fn (array $r): bool => in_array($r['predicted'], self::TOPIC_LABELS, true)
+        ));
+
+        $matches = 0;
+        $errorsByGoldLabel = [];
+        foreach ($predictedTopic as $r) {
+            if ($r['predicted'] === $r['gold']) {
+                $matches++;
+            } else {
+                $key = $r['gold'] === '' ? '(empty)' : $r['gold'];
+                $errorsByGoldLabel[$key] = ($errorsByGoldLabel[$key] ?? 0) + 1;
+            }
+        }
+
+        // Recall и покрытие публикуются ОТДЕЛЬНО и в гейт не входят.
         $goldTopic = array_values(array_filter(
             $labeled,
-            static fn (array $r): bool => in_array($r['gold'], ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'], true)
+            static fn (array $r): bool => in_array($r['gold'], self::TOPIC_LABELS, true)
         ));
-        $classifiedGoldTopic = array_values(array_filter(
+        $goldTopicMatched = array_values(array_filter(
+            $goldTopic,
+            static fn (array $r): bool => $r['predicted'] === $r['gold']
+        ));
+        $goldTopicClassified = array_values(array_filter(
             $goldTopic,
             static fn (array $r): bool => $r['predicted'] !== 'unclassified'
         ));
 
-        $matches = 0;
-        $missesByCategory = [];
-        foreach ($classifiedGoldTopic as $r) {
-            if ($r['predicted'] === $r['gold']) {
-                $matches++;
-            } else {
-                $missesByCategory[$r['gold']] = ($missesByCategory[$r['gold']] ?? 0) + 1;
-            }
-        }
-
-        $precision = count($classifiedGoldTopic) > 0
-            ? round($matches / count($classifiedGoldTopic), 4)
+        $precision = count($predictedTopic) > 0
+            ? round($matches / count($predictedTopic), 4)
+            : null;
+        $recall = count($goldTopic) > 0
+            ? round(count($goldTopicMatched) / count($goldTopic), 4)
             : null;
         $coverage = count($goldTopic) > 0
-            ? round(count($classifiedGoldTopic) / count($goldTopic), 4)
+            ? round(count($goldTopicClassified) / count($goldTopic), 4)
             : null;
 
+        // Гейт: минимум 100 УНИКАЛЬНЫХ полностью размеченных строк, ноль
+        // неразмеченных, хотя бы одно предсказание — иначе inconclusive
+        // (наблюдения не фабрикуются); при достаточной выборке и precision
+        // < 0.93 — честный fail.
+        $required = max(1, (int) ($this->option('sample') ?: 100));
+        $gateReason = null;
+        if (count($labeled) < $required) {
+            $gateReason = 'insufficient_labeled_rows';
+        } elseif ($unlabeled !== []) {
+            $gateReason = 'partially_labeled_sheet';
+        } elseif ($predictedTopic === []) {
+            $gateReason = 'zero_predictions';
+        }
+
         $verdict = [
+            'n_rows' => count($rows),
             'n_labeled' => count($labeled),
-            'n_gold_topic' => count($goldTopic),
-            'n_classified' => count($classifiedGoldTopic),
+            'n_unlabeled' => count($unlabeled),
+            'required_labeled_rows' => $required,
+            'n_predictions' => count($predictedTopic),
             'matches' => $matches,
+            'n_gold_topic' => count($goldTopic),
+            'n_classified' => count($goldTopicClassified),
             'precision' => $precision,
+            'recall' => $recall,
             'coverage' => $coverage,
-            'misses_by_gold_category' => $missesByCategory,
+            'errors_by_gold_label' => $errorsByGoldLabel,
             'gate_min_precision' => 0.93,
-            'gate' => $precision !== null && $precision >= 0.93 ? 'pass' : 'fail',
+            'gate' => $gateReason !== null
+                ? 'inconclusive'
+                : ($precision !== null && $precision >= 0.93 ? 'pass' : 'fail'),
+            'gate_reason' => $gateReason,
         ];
 
         $this->line(json_encode($verdict, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));

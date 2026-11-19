@@ -41,13 +41,17 @@ def unit_tests() -> None:
     # §1 decision-5 exclusions
     for p in ("public/vendor/jquery.js", "tools/message-intent-classifier/lib.py",
               "public/app.min.js", "js/app.min.js", "composer.lock", "package-lock.json",
-              "docs/notes.md", "CHANGELOG.md", "tests/fixtures/data.json", ".ai_state.md"):
+              "docs/notes.md", "CHANGELOG.md", "tests/fixtures/data.json", ".ai_state.md",
+              "config/tracked_links.php"):
         check(f"exclude: {p}", matches(p, [
             "public/vendor/**", "tools/*/**", "**/*.min.js", "composer.lock",
             "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb", "docs/**",
             "CHANGELOG*", "*/CHANGELOG*", "tests/fixtures/**", "tests/Fixtures/**",
             "*/tests/fixtures/**", "*/tests/Fixtures/**", "tests/**/fixtures/**",
-            ".ai_state.md"]))
+            ".ai_state.md", "config/tracked_links.php"]))
+    check("exact-path exclusion stays contained (H6096)",
+          not matches("config/anons.php", ["config/tracked_links.php"])
+          and not matches("config/tracked_links.php.bak", ["config/tracked_links.php"]))
     check("top-level tools/*.py stays first-party",
           not matches("tools/oxalpha_gate_match.py", ["tools/*/**"]))
     # §3 sensitive patterns (intent globs: star crosses directories)
@@ -141,6 +145,35 @@ def integration_tests() -> None:
         check("deploy.sh: not executable (§1)", not res3["has_executable"], json.dumps(res3))
         check("deploy.sh: STILL sensitive (§3, P1 fix)",
               res3["has_sensitive"] and "deploy.sh" in res3["sensitive"], json.dumps(res3))
+
+        # data-only config slice (H6096): tracked_links.php alone -> skip path;
+        # a sibling config file keeps the slice executable. Branched from the
+        # pristine base, not main: earlier blocks left deploy.sh on main.
+        g("checkout", "-q", "-b", "data-only", base)
+        w("config/tracked_links.php", "<?php\nreturn ['links' => []];\n")
+        g("add", "-A")
+        g("commit", "-qm", "campaign keys only")
+        head4 = g("rev-parse", "HEAD").strip()
+        res4 = classify(str(tmp), base, head4)
+        check("data-only config: not executable (skip path)",
+              not res4["has_executable"], json.dumps(res4))
+        check("data-only config: excluded with note path",
+              "config/tracked_links.php" in res4["excluded"], json.dumps(res4))
+        check("data-only config: not sensitive",
+              not res4["has_sensitive"], json.dumps(res4))
+
+        g("checkout", "-q", "-b", "data-only-sibling", base)
+        w("config/tracked_links.php", "<?php\nreturn ['links' => []];\n")
+        w("config/anons.php", "<?php\nreturn [];\n")
+        g("add", "-A")
+        g("commit", "-qm", "keys + sibling config")
+        head5 = g("rev-parse", "HEAD").strip()
+        res5 = classify(str(tmp), base, head5)
+        check("sibling config keeps slice executable",
+              res5["has_executable"] and "config/anons.php" in res5["executable"],
+              json.dumps(res5))
+        check("tracked_links excluded next to executable sibling",
+              "config/tracked_links.php" in res5["excluded"], json.dumps(res5))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

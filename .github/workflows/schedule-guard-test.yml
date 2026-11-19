@@ -84,6 +84,23 @@ jobs:
       - name: Run test_systema_ib_balance_watch.sh
         run: bash scripts/server_guards/sbin/test_systema_ib_balance_watch.sh
 
+  restore-drill-test:
+    name: restore drill password-file contract (H6307)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # H6307 (10-10-2026): the monthly restore drill only understood the legacy
+      # literal RESTIC_PASSWORD while the working lane authenticates with
+      # RESTIC_PASSWORD_FILE — every monthly run printed SKIPPED-NO-ACCESS
+      # (live 2026-10-01 report, H6286 census). The suite also proves the P1
+      # paging on broken creds, scratch cleanup confinement, secret-free logs
+      # and — when a restic binary exists — a real encrypted fixture restoring
+      # to a matching sha256. On ubuntu runners restic is absent, so case 9
+      # is expected to print SKIP-NO-RESTIC (portable-only evidence).
+      - name: Run test_restore_drill.sh
+        run: bash scripts/server_guards/sbin/test_restore_drill.sh
+
   n8n-verify-offsite-parser-test:
     name: n8n verify off-site parser (newest snapshot, not first JSON entry)
     runs-on: ubuntu-latest

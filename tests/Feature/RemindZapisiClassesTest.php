@@ -275,4 +275,53 @@ class RemindZapisiClassesTest extends TestCase
         $this->artisan('zapisi:remind-classes')->assertSuccessful();
         Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
     }
+
+    /**
+     * Инцидент 04-11-2026 (гр.62, S#1218): метка zapisi_reminded_at осталась от
+     * прежней даты строки (21.10), строку вернули на 4.11 в обход модели — и
+     * напоминание 4.11 не ушло. Метка старше REMINDER_MARK_FRESH_HOURS до старта
+     * не считается дедупом.
+     */
+    public function test_stale_own_mark_from_previous_date_does_not_suppress_reminder(): void
+    {
+        Queue::fake();
+        $this->enable();
+
+        $group = Group::create(['name' => 'гр.62', 'telegram_chat_id' => '-100062']);
+        $schedule = Schedule::create([
+            'title' => 'Грамматика гр.62',
+            'start' => now()->addMinutes(10),
+            'group_id' => $group->id,
+            'link' => 'https://zoom.us/j/62',
+            'zapisi_reminded_at' => now()->subDays(14),
+        ]);
+
+        $this->artisan('zapisi:remind-classes')->assertSuccessful();
+
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
+        $this->assertTrue($schedule->fresh()->zapisi_reminded_at->gt(now()->subMinute()), 'метка обновлена к текущему старту');
+
+        // После свежей метки — обычный дедуп.
+        $this->artisan('zapisi:remind-classes')->assertSuccessful();
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
+    }
+
+    public function test_stale_group_link_mark_does_not_block_reminder(): void
+    {
+        Queue::fake();
+        $this->enable();
+
+        $group = Group::create(['name' => 'гр.62', 'telegram_chat_id' => '-100062']);
+        Schedule::create([
+            'title' => 'Грамматика гр.62',
+            'start' => now()->addMinutes(10),
+            'group_id' => $group->id,
+            'link' => 'https://zoom.us/j/62',
+            'group_link_posted_at' => now()->subDays(14),
+        ]);
+
+        $this->artisan('zapisi:remind-classes')->assertSuccessful();
+
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
+    }
 }

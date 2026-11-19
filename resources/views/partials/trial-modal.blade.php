@@ -128,11 +128,10 @@
                     @include('partials.signup-source-select', ['dark' => true])
                 </div>
 
-                <label class="flex items-start gap-2.5 cursor-pointer">
-                    <input type="checkbox" name="wants_announcements" value="1" @checked(old('wants_announcements', true))
-                           class="mt-0.5 h-5 w-5 rounded border-[#1F2636] bg-[#0A0D14] text-[#38BDF8] focus:ring-[#38BDF8]">
-                    <span class="text-[13px] text-slate-400">Получать анонсы, новости и расписание на email</span>
-                </label>
+                {{-- 152-ФЗ: согласие на ПДн (обязательность — по флагу money-контура, путь оплаты);
+                     рассылка по умолчанию НЕ отмечена (38-ФЗ ст. 18). --}}
+                <x-consent.pd theme="dark" class="text-[13px]" :required="(bool) config('features.checkout_pd_consent_enforce')" />
+                <x-consent.promo theme="dark" name="wants_announcements" class="text-[13px]" />
 
                 <p class="text-[11px] text-slate-500 leading-relaxed">
                     После оплаты пришлем пароль на email — войдете в личный кабинет и откроете пробное занятие.

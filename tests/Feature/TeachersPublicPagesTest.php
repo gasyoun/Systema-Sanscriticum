@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Course;
+use App\Models\CourseWaitlistItem;
 use App\Models\Teacher;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -157,5 +159,238 @@ class TeachersPublicPagesTest extends TestCase
             ->assertOk()
             ->assertSee('/prepodavately/ivan-tolchelnikov', false)
             ->assertDontSee('skrytyy-prepodavatel', false);
+    }
+
+    /**
+     * SEO-разметка обязана уходить сырым JSON ({!! !!}), а не через экранирующий
+     * {{ }}: иначе браузер получает {&quot;@context&quot;...} и поисковики не
+     * парсят схему. HEX-флаги json_encode кодируют <, >, &, ' и " в значениях,
+     * поэтому имя с кавычками, деванагари и даже </script> остаётся валидным
+     * JSON и не рвёт тег скрипта.
+     */
+    public function test_json_ld_is_raw_parseable_and_safe_for_names_with_quotes_and_devanagari(): void
+    {
+        Teacher::factory()->create([
+            'name' => 'Панини "Аштадхьяйи" व्याकरण </script>',
+            'page_enabled' => true,
+            'page_slug' => 'panini-jsonld-check',
+            'page_role' => 'Ведёт санскрит',
+        ]);
+
+        $index = $this->get('/prepodavately');
+        $index->assertOk()
+            // Сырой, не &quot;-экранированный payload:
+            ->assertSee('"@context"', false);
+
+        $itemList = $this->findSchema(
+            $this->decodeLdJson($this->ldJsonBlocks($index->getContent())),
+            'ItemList'
+        );
+        $this->assertNotNull($itemList);
+        $this->assertSame(
+            'Панини "Аштадхьяйи" व्याकरण </script>',
+            $itemList['itemListElement'][0]['item']['name']
+        );
+
+        $show = $this->get('/prepodavately/panini-jsonld-check');
+        $show->assertOk()
+            ->assertSee('"@context"', false);
+
+        $showSchemas = $this->decodeLdJson($this->ldJsonBlocks($show->getContent()));
+
+        $person = $this->findSchema($showSchemas, 'Person');
+        $this->assertNotNull($person);
+        $this->assertSame('Панини "Аштадхьяйи" व्याकरण </script>', $person['name']);
+
+        $breadcrumbs = $this->findSchema($showSchemas, 'BreadcrumbList');
+        $this->assertNotNull($breadcrumbs);
+        $this->assertSame(
+            'Панини "Аштадхьяйи" व्याकरण </script>',
+            $breadcrumbs['itemListElement'][2]['name']
+        );
+    }
+
+    // ================= ждун на карточке курса преподавателя =================
+
+    /**
+     * Курс без тарифов, привязанный к строке списка ожидания, на странице
+     * преподавателя не тупик «Набор закрыт»: статус ждуна, прогресс голосов
+     * и кнопка «Намерен участвовать» — как на карточке каталога (прод-кейс
+     * «Философия санкхьи» Леонова).
+     */
+    public function test_course_card_on_teacher_page_shows_waitlist_vote_instead_of_lock(): void
+    {
+        config(['features.waitlist_voting' => true]);
+
+        $teacher = Teacher::factory()->create([
+            'page_enabled' => true,
+            'page_slug' => 'leonov',
+        ]);
+        $course = Course::factory()->create([
+            'title' => 'Философия санкхьи',
+            'teacher_id' => $teacher->id,
+            'is_visible' => true,
+            'is_active' => true,
+        ]);
+        $item = CourseWaitlistItem::create([
+            'slug' => 'sankhya-zhdun',
+            'course_id' => $course->id,
+            'course_title' => 'Философия санкхьи',
+            'teacher_name' => 'Леонов Максим Владимирович',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'status' => CourseWaitlistItem::STATUS_COLLECTING,
+            'earliest_start_at' => '2026-11-01',
+        ]);
+        foreach (User::factory()->count(3)->create() as $voter) {
+            $item->votes()->create(['user_id' => $voter->id]);
+        }
+
+        $this->get('/prepodavately/leonov')
+            ->assertOk()
+            ->assertSee('Сбор голосов')
+            ->assertSee('3 из 8')
+            ->assertSee('Старт не раньше 01.11.2026')
+            ->assertSee('data-testid="waitlist-vote-form"', false)
+            ->assertSee('Намерен участвовать')
+            ->assertDontSee('Набор закрыт');
+    }
+
+    public function test_voted_course_card_on_teacher_page_shows_vote_taken(): void
+    {
+        config(['features.waitlist_voting' => true]);
+
+        $teacher = Teacher::factory()->create([
+            'page_enabled' => true,
+            'page_slug' => 'leonov',
+        ]);
+        $course = Course::factory()->create([
+            'teacher_id' => $teacher->id,
+            'is_visible' => true,
+            'is_active' => true,
+        ]);
+        $item = CourseWaitlistItem::create([
+            'slug' => 'sankhya-zhdun',
+            'course_id' => $course->id,
+            'course_title' => 'Философия санкхьи',
+            'teacher_name' => 'Леонов Максим Владимирович',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'status' => CourseWaitlistItem::STATUS_COLLECTING,
+        ]);
+        $voter = User::factory()->create();
+        $item->votes()->create(['user_id' => $voter->id]);
+
+        $this->actingAs($voter)
+            ->get('/prepodavately/leonov')
+            ->assertOk()
+            ->assertSee('Голос учтен')
+            ->assertSee('data-testid="waitlist-unvote"', false)
+            ->assertDontSee('data-testid="waitlist-vote-form"', false);
+    }
+
+    /**
+     * Не витринная ждун-строка (closed) ничего не меняет: замок остаётся —
+     * тот же скоуп, что в каталоге и на /online/zhdun.
+     */
+    public function test_closed_waitlist_item_keeps_lock_on_teacher_page(): void
+    {
+        config(['features.waitlist_voting' => true]);
+
+        $teacher = Teacher::factory()->create([
+            'page_enabled' => true,
+            'page_slug' => 'leonov',
+        ]);
+        $course = Course::factory()->create([
+            'teacher_id' => $teacher->id,
+            'is_visible' => true,
+            'is_active' => true,
+        ]);
+        CourseWaitlistItem::create([
+            'slug' => 'sankhya-closed',
+            'course_id' => $course->id,
+            'course_title' => 'Философия санкхьи',
+            'teacher_name' => 'Леонов Максим Владимирович',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'status' => CourseWaitlistItem::STATUS_CLOSED,
+        ]);
+
+        $this->get('/prepodavately/leonov')
+            ->assertOk()
+            ->assertSee('Набор закрыт')
+            ->assertDontSee('data-testid="waitlist-vote-form"', false);
+    }
+
+    public function test_waitlist_voting_flag_off_keeps_lock_on_teacher_page(): void
+    {
+        config(['features.waitlist_voting' => false]);
+
+        $teacher = Teacher::factory()->create([
+            'page_enabled' => true,
+            'page_slug' => 'leonov',
+        ]);
+        $course = Course::factory()->create([
+            'teacher_id' => $teacher->id,
+            'is_visible' => true,
+            'is_active' => true,
+        ]);
+        CourseWaitlistItem::create([
+            'slug' => 'sankhya-zhdun',
+            'course_id' => $course->id,
+            'course_title' => 'Философия санкхьи',
+            'teacher_name' => 'Леонов Максим Владимирович',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'status' => CourseWaitlistItem::STATUS_COLLECTING,
+        ]);
+
+        $this->get('/prepodavately/leonov')
+            ->assertOk()
+            ->assertSee('Набор закрыт')
+            ->assertDontSee('data-testid="waitlist-vote-form"', false);
+    }
+
+    /**
+     * @return list<string> содержимое всех ld+json блоков ответа
+     */
+    private function ldJsonBlocks(string $html): array
+    {
+        preg_match_all('/<script type="application\/ld\+json">(.*?)<\/script>/s', $html, $matches);
+
+        return $matches[1];
+    }
+
+    /**
+     * Каждый ld+json блок обязан декодироваться — это заодно и проверка,
+     * что экранированные значения не порвали структуру payload.
+     *
+     * @param  list<string>  $blocks
+     * @return list<array<string, mixed>>
+     */
+    private function decodeLdJson(array $blocks): array
+    {
+        $decoded = [];
+        foreach ($blocks as $block) {
+            $payload = json_decode(trim($block), true);
+            $this->assertIsArray($payload, 'ld+json не парсится: '.substr($block, 0, 200));
+            $decoded[] = $payload;
+        }
+
+        return $decoded;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $schemas
+     */
+    private function findSchema(array $schemas, string $type): ?array
+    {
+        foreach ($schemas as $schema) {
+            if (($schema['@type'] ?? null) === $type) {
+                return $schema;
+            }
+        }
+
+        return null;
     }
 }

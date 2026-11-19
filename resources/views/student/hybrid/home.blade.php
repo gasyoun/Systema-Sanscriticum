@@ -172,6 +172,9 @@
             @php
                 $next = $nextLessonByCourseId[$course->id] ?? null;
                 $debt = $debtsByCourseId[$course->id] ?? null;
+                // Долг показываем своей веткой (вкладка долгов), кнопку продления — без долга.
+                $paidUntil = $debt === null ? ($paidUntilByCourseId[$course->id] ?? null) : null;
+                $nbPay = $paidUntil->next_block_pay ?? null;
             @endphp
             <article class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
                 <div class="min-w-0">
@@ -187,6 +190,21 @@
                             все доступные уроки пройдены
                         @endif
                     </p>
+                    {{-- Оплатить следующий блок (MG 12-10-2026): тариф block_N + цена
+                         как в чекауте; null — тарифа нет, оплата через куратора. --}}
+                    @if ($nbPay !== null)
+                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                            <span class="text-xs font-semibold text-emerald-700">
+                                Оплачено до блока №{{ $paidUntil->block->number }}@if($paidUntil->block->ends_at) (до {{ $paidUntil->block->ends_at->format('d.m.Y') }})@endif
+                            </span>
+                            <a href="{{ $nbPay['url'] }}"
+                               data-track-event="access.renewal.start" data-track-kind="block" data-track-surface="hybrid-home"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand hover:bg-brand-hover text-white text-xs font-bold rounded-lg transition-colors">
+                                <i class="fas fa-credit-card text-[10px]"></i>
+                                <span>Оплатить блок №{{ $nbPay['number'] }}@if($nbPay['amount'] > 0) — {{ number_format($nbPay['amount'], 0, ',', ' ') }} ₽@endif</span>
+                            </a>
+                        </div>
+                    @endif
                 </div>
                 <a href="{{ route('student.course', $course->slug) }}"
                    class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:border-brand hover:text-brand">
