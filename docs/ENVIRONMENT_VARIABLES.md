@@ -81,6 +81,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `BOT_OLLAMA_SHADOW` | optional | `false` | config/features.php:226 |
 | `BROADCAST_DRIVER` | optional | `'null'` | config/broadcasting.php:18 |
 | `CABINET_HYBRID` | optional | `false` | config/features.php:1116 |
+| `CABINET_OFFER_ATTRIBUTION` | optional | `false` | config/features.php:2271 |
+| `CABINET_OFFER_ATTRIBUTION_WINDOW_DAYS` | optional | `7` | config/features.php:2277 |
 | `CABINET_PROBE_CHECK_DEPLOY_DRIFT` | optional | `true` | config/cabinet_probe.php:156 |
 | `CABINET_PROBE_CHECK_GUARDS` | optional | `true` | config/cabinet_probe.php:64 |
 | `CABINET_PROBE_CHECK_HOMEWORK_UPLOAD` | optional | `true` | config/cabinet_probe.php:102 |
