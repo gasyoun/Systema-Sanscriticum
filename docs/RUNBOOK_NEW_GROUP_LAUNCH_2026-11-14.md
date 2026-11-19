@@ -60,8 +60,10 @@ idempotency-guard по `Course::where('title',…)`:
   повторного потока, «Название гр. NN» для параллельных групп. Имя группы — источник
   титула ВСЕЙ серии ({TITLE} генератора; инцидент 19-11-2026: «Кашмирский шиваизм,
   часть 3 2026» уехал студентам в «Скоро занятие»). Гейт —
-  `php artisan catalog:check-naming`: прогнать ПОСЛЕ `Group::create` и ДО генерации
-  расписание; при exit 1 имя править, серию не генерить.
+  `php artisan catalog:check-naming --group=<ID>`: прогнать ПОСЛЕ `Group::create` и
+  ДО генерации расписание; exit 1 = строки ИМЕННО этой группы нестандартны — имя
+  править, серию не генерить. Полный цензус без `--group` (вся БД) перечисляет и
+  исторические строки — это отчёт человеку, не гейт запуска.
 - Расписание — [`ScheduleGenerator`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Schedule/ScheduleGenerator.php)
   + `GeneratorConfig(groupId, courseId, title, startDate=<первый урок>, startTime='11:00',
   durationMinutes=120, totalLessons=60, startNumber=1, startLessonIndex=1,
@@ -165,6 +167,6 @@ encrypted). Состав (эталон — msg 11 чата гр.64 от 14-11-20
 - [ ] анонс в «Оповещениях» без приватных ссылок
 - [ ] кабинеты: `group_user` count = числу учеников, `course_group` связка есть
 - [ ] окно T-60: напоминание ушло (или слот-причина объяснена)
-- [ ] `php artisan catalog:check-naming` на проде — exit 0 (названия группы/серии по стандарту)
+- [ ] `php artisan catalog:check-naming --group=<ID>` — exit 0 (названия группы/серии по стандарту)
 
 _Dr. Mārcis Gasūns_

@@ -10,6 +10,7 @@ use App\Models\Lesson;
 use App\Models\Schedule;
 use App\Support\CourseNamingStandard;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -109,5 +110,55 @@ class CourseNamingStandardTest extends TestCase
         $this->artisan('catalog:check-naming')
             ->expectsOutputToContain('Нарушений стандарта названий нет.')
             ->assertExitCode(0);
+    }
+
+    /**
+     * Скоуп --group (гейт запуска новой группы): исторический красный В ДРУГОЙ
+     * группе не должен гасить запуск — иначе постоянно-красный гейт приучает
+     * игнорировать красное.
+     */
+    public function test_group_scope_is_immune_to_legacy_violations_elsewhere(): void
+    {
+        $legacy = Group::create(['name' => 'Кашмирский шиваизм, часть 2 2026']);
+        $clean = Group::create(['name' => 'Кашмирский шиваизм (ч. 3) 2026']);
+        Schedule::create([
+            'title' => 'Кашмирский шиваизм ч.2 (#1, 19.11.26)',
+            'start' => now()->addMinutes(10),
+            'group_id' => $legacy->id,
+        ]);
+
+        // Полный цензус — красный: исторические строки перечислены.
+        $this->artisan('catalog:check-naming')->assertExitCode(1);
+
+        // Гейт запуска новой группы — зелёный: её строк в списке нет.
+        $this->artisan('catalog:check-naming', ['--group' => $clean->id])
+            ->expectsOutputToContain('Нарушений стандарта названий в строках группы #'.$clean->id.' нет.')
+            ->assertExitCode(0);
+
+        // Скоуп красной группы — красный только по её строкам.
+        $this->artisan('catalog:check-naming', ['--group' => $legacy->id])
+            ->expectsOutputToContain('groups #'.$legacy->id)
+            ->assertExitCode(1);
+    }
+
+    /**
+     * Скоуп группы ловит и урока-запись её курса (course_group pivot): у записей
+     * потоков group_id бывает пуст, курс привязан через pivot.
+     */
+    public function test_group_scope_covers_lessons_via_course_pivot(): void
+    {
+        $group = Group::create(['name' => 'Кашмирский шиваизм (ч. 3) 2026']);
+        $course = Course::create(['title' => 'Курс', 'slug' => 'k']);
+        DB::table('course_group')->insert(['course_id' => $course->id, 'group_id' => $group->id]);
+        Lesson::create([
+            'title' => 'Кашмирский шиваизм ч.2 (#1, 19.11.26)',
+            'course_id' => $course->id,
+            'is_published' => true,
+            'lesson_date' => now()->format('Y-m-d H:i:s'),
+        ]);
+
+        $this->artisan('catalog:check-naming', ['--group' => $group->id])
+            ->expectsOutputToContain('«ч.N» без скобок')
+            ->assertExitCode(1);
     }
 }
