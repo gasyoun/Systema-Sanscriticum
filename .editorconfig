@@ -2,9 +2,9 @@ root = true
 
 [*]
 charset = utf-8
-end_of_line = lf
 indent_size = 4
 indent_style = space
+end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
@@ -14,5 +14,9 @@ trim_trailing_whitespace = false
 [*.{yml,yaml}]
 indent_size = 2
 
+# Single sanctioned repo-specific extension (H8382 legacy-variant
+# normalization, MG 17-11-2026): the committed docker-compose.yml data is
+# 4-space per level (Laravel Sail, 8-space at services entries) — the
+# canonical 2-space YAML default would fight it on every edit.
 [docker-compose.yml]
 indent_size = 4

@@ -36,6 +36,9 @@ class ScheduleAttendanceNotice extends Model
 
     public const SOURCE_TELEGRAM_GROUP = 'telegram_group';
 
+    /** Голос в автоопросе о присутствии в чате группы (classes:post-attendance-poll). */
+    public const SOURCE_TELEGRAM_POLL = 'telegram_poll';
+
     protected $fillable = [
         'user_id',
         'schedule_id',
