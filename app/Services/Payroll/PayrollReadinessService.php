@@ -54,6 +54,14 @@ final class PayrollReadinessService
             ->map(fn (string $source): string => 'evidence_'.$source.'_'.($evidence[$source]['status'] ?? 'incomplete'))
             ->values()
             ->all();
+        // H7205 P0-2: an OPEN money-reconciliation exception is part of the
+        // release decision, not a report-only field. Every census line
+        // carries the open-exception hold, so nothing is releasable while an
+        // exception of any type stands — even when a COMPLETE reconciliation
+        // run exists for the cutoff date.
+        foreach (array_keys($evidence['reconciliation']['open_exceptions_by_type'] ?? []) as $type) {
+            $globalHolds[] = 'reconciliation_open_exception:'.$type;
+        }
 
         $rows = [];
         foreach (Teacher::query()->orderBy('id')->get() as $teacher) {
@@ -431,9 +439,12 @@ final class PayrollReadinessService
             ->map(fn ($count): int => (int) $count)
             ->sortKeys()
             ->all();
+        // H7205 P0-2: "fresh" requires zero OPEN exceptions. A COMPLETE run
+        // for the cutoff date no longer overrides an outstanding exception.
         $reconciliationFresh = (bool) config('features.money_daily_reconciliation')
             && $reconciliation?->status === MoneyReconRun::COMPLETE
-            && $reconciliation->business_date?->toDateString() === $cutoff->toDateString();
+            && $reconciliation->business_date?->toDateString() === $cutoff->toDateString()
+            && $openByType === [];
 
         $paypal = $this->paypalStudentEvidence($cutoff);
 
@@ -456,7 +467,11 @@ final class PayrollReadinessService
                 'input_fingerprint' => $reconciliation?->input_fingerprint,
                 'totals_checksum' => $reconciliation?->totals_checksum,
                 'open_exceptions_by_type' => $openByType,
-                'note' => $reconciliationFresh ? null : 'complete transfer-day reconciliation is missing or disabled',
+                'note' => $reconciliationFresh ? null : (
+                    $openByType !== []
+                        ? 'open reconciliation exceptions hold every line: '.implode(', ', array_keys($openByType))
+                        : 'complete transfer-day reconciliation is missing or disabled'
+                ),
             ],
         ];
     }
@@ -474,59 +489,190 @@ final class PayrollReadinessService
         } catch (JsonException) {
             return ['status' => 'incomplete', 'path' => $path, 'note' => 'private payout evidence manifest is invalid JSON'];
         }
+        $manifestSha = hash('sha256', $raw);
+        $manifestDir = dirname($path);
+        $ledger = $this->hashLedgerEntries();
         $required = ['payout_sheets'];
         $sources = (array) ($data['sources'] ?? []);
         $hashes = [];
-        try {
-            $complete = collect($required)->every(function (string $key) use ($sources, $cutoff, &$hashes): bool {
-                $source = (array) ($sources[$key] ?? []);
-                $hash = strtolower((string) ($source['sha256'] ?? ''));
-                if (! preg_match('/^[a-f0-9]{64}$/', $hash) || in_array($hash, $hashes, true)) {
-                    return false;
-                }
-                $hashes[] = $hash;
-                $asOf = Carbon::parse((string) ($source['as_of'] ?? ''));
-
-                return $asOf->betweenIncluded(
-                    $cutoff->copy()->subDays((int) config('payroll_readiness.evidence_max_age_days', 7)),
-                    $cutoff,
-                );
-            });
-        } catch (\Throwable) {
-            $complete = false;
+        $failures = [];
+        foreach ($required as $key) {
+            $source = (array) ($sources[$key] ?? []);
+            $reason = $source === []
+                ? 'required source is absent'
+                : $this->verifyManifestSource($source, $cutoff, $manifestDir, $manifestSha, $ledger, $hashes);
+            if ($reason !== null) {
+                $failures[] = $key.': '.$reason;
+            }
         }
 
         return [
-            'status' => $complete ? 'fresh' : 'incomplete',
+            'status' => $failures === [] ? 'fresh' : 'incomplete',
             'path' => $path,
-            'sha256' => hash('sha256', $raw),
+            'sha256' => $manifestSha,
             'generated_at' => $data['generated_at'] ?? null,
             'sources' => $sources,
-            'note' => $complete ? null : 'required source hash/date is missing, stale, future-dated, invalid, or replayed',
+            'note' => $failures === [] ? null : 'required source hash/date/path is missing, stale, future-dated, invalid, replayed, or unverified: '.implode('; ', $failures),
         ];
+    }
+
+    /**
+     * H7205 P1: a manifest source is trusted only when it names its evidence
+     * file, the file's bytes re-hash to the claimed sha256, the file stays
+     * inside the private evidence directory, and the hash was never carried by
+     * a different manifest. Returns null when the source verifies.
+     *
+     * @param  list<string>  $hashes  collected hashes, in/out, for per-manifest uniqueness
+     */
+    private function verifyManifestSource(array $source, Carbon $cutoff, string $manifestDir, string $manifestSha, array $ledger, array &$hashes): ?string
+    {
+        $hash = strtolower((string) ($source['sha256'] ?? ''));
+        if (! preg_match('/^[a-f0-9]{64}$/', $hash)) {
+            return 'sha256 is missing or malformed';
+        }
+        if (in_array($hash, $hashes, true)) {
+            return 'sha256 is repeated inside this manifest';
+        }
+        $hashes[] = $hash;
+        if (isset($ledger[$hash]) && (string) ($ledger[$hash]['manifest_sha256'] ?? '') !== $manifestSha) {
+            return 'sha256 was already carried by a different manifest (replayed across manifests)';
+        }
+        try {
+            $asOf = Carbon::parse((string) ($source['as_of'] ?? ''));
+        } catch (\Throwable) {
+            return 'as_of is missing or unparsable';
+        }
+        if (! $asOf->betweenIncluded(
+            $cutoff->copy()->subDays((int) config('payroll_readiness.evidence_max_age_days', 7)),
+            $cutoff,
+        )) {
+            return 'as_of is stale, future-dated, or outside the freshness window';
+        }
+        $claimed = trim((string) ($source['path'] ?? ''));
+        if ($claimed === '') {
+            return 'source does not name its evidence file (path missing)';
+        }
+        $file = str_starts_with(str_replace('\\', '/', $claimed), '/')
+            ? $claimed
+            : $manifestDir.'/'.$claimed;
+        if (! File::isFile($file)) {
+            return 'named evidence file is missing: '.$claimed;
+        }
+        $base = (string) realpath($manifestDir);
+        $resolved = (string) realpath($file);
+        if ($base === '' || $resolved === '' || ! str_starts_with($resolved.DIRECTORY_SEPARATOR, $base.DIRECTORY_SEPARATOR)) {
+            return 'named evidence file escapes the private evidence directory';
+        }
+        if (hash_file('sha256', $file) !== $hash) {
+            return 'evidence file bytes do not match the manifest claim';
+        }
+
+        return null;
+    }
+
+    /**
+     * H7205 P1: hash ledger over approved manifests. Keyed by source sha256,
+     * carrying the manifest sha256 that first bound the hash — a later
+     * manifest replaying the same hash is rejected by verifyManifestSource.
+     *
+     * @return array<string, array<string, string>>
+     */
+    private function hashLedgerEntries(): array
+    {
+        $path = (string) config('payroll_readiness.evidence_hash_ledger_path');
+        if ($path === '' || ! File::isFile($path)) {
+            return [];
+        }
+        try {
+            $data = json_decode(File::get($path), true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            return [];
+        }
+        $entries = (array) ($data['entries'] ?? []);
+
+        return is_array($entries) ? $entries : [];
+    }
+
+    /**
+     * H7205 P1: called by the readiness command after a census whose manifest
+     * verified fresh — binds every manifest source hash to this approval so a
+     * later manifest cannot silently replay it. Read-only for the census
+     * itself: no database row is touched, only the private ledger sidecar.
+     *
+     * @param  array<string, mixed>  $manifest  the private_manifest evidence block
+     */
+    public function recordEvidenceHashLedger(array $manifest): void
+    {
+        $manifestSha = (string) ($manifest['sha256'] ?? '');
+        if ($manifestSha === '' || ($manifest['status'] ?? 'incomplete') !== 'fresh') {
+            return;
+        }
+        $entries = $this->hashLedgerEntries();
+        $changed = false;
+        foreach ((array) ($manifest['sources'] ?? []) as $source) {
+            if (! is_array($source)) {
+                continue;
+            }
+            $hash = strtolower((string) ($source['sha256'] ?? ''));
+            if (! preg_match('/^[a-f0-9]{64}$/', $hash) || isset($entries[$hash])) {
+                continue;
+            }
+            $entries[$hash] = [
+                'manifest_sha256' => $manifestSha,
+                'first_seen' => now()->toIso8601String(),
+            ];
+            $changed = true;
+        }
+        if (! $changed) {
+            return;
+        }
+        $path = (string) config('payroll_readiness.evidence_hash_ledger_path');
+        if ($path === '') {
+            return;
+        }
+        File::ensureDirectoryExists(dirname($path), 0700, true);
+        File::put($path, json_encode([
+            'schema' => 'payroll/evidence-hash-ledger/v1',
+            'entries' => $entries,
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
     }
 
     /** @return array<string, mixed> */
     private function manifestSource(array $manifest, string $key, Carbon $cutoff): array
     {
         $source = (array) (($manifest['sources'] ?? [])[$key] ?? []);
-        $hash = strtolower((string) ($source['sha256'] ?? ''));
-        try {
-            $asOf = Carbon::parse((string) ($source['as_of'] ?? ''));
-            $fresh = preg_match('/^[a-f0-9]{64}$/', $hash) === 1
-                && $asOf->betweenIncluded(
-                    $cutoff->copy()->subDays((int) config('payroll_readiness.evidence_max_age_days', 7)),
-                    $cutoff,
-                );
-        } catch (\Throwable) {
-            $fresh = false;
+        if ($source === []) {
+            return [
+                'status' => 'incomplete',
+                'as_of' => null,
+                'sha256' => null,
+                'note' => "private {$key} evidence is absent from the manifest",
+            ];
         }
+        // Cross-source hash uniqueness inside one manifest.
+        $hashes = [];
+        foreach ((array) ($manifest['sources'] ?? []) as $name => $other) {
+            if ($name !== $key && is_array($other)) {
+                $otherHash = strtolower((string) ($other['sha256'] ?? ''));
+                if (preg_match('/^[a-f0-9]{64}$/', $otherHash)) {
+                    $hashes[] = $otherHash;
+                }
+            }
+        }
+        $reason = $this->verifyManifestSource(
+            $source,
+            $cutoff,
+            dirname((string) ($manifest['path'] ?? '')),
+            (string) ($manifest['sha256'] ?? ''),
+            $this->hashLedgerEntries(),
+            $hashes,
+        );
 
         return [
-            'status' => $fresh ? 'fresh' : 'incomplete',
+            'status' => $reason === null ? 'fresh' : 'incomplete',
             'as_of' => $source['as_of'] ?? null,
             'sha256' => $source['sha256'] ?? null,
-            'note' => $fresh ? null : "private {$key} evidence is missing, stale, future-dated, or invalid",
+            'note' => $reason === null ? null : "private {$key} evidence is missing, stale, future-dated, replayed, unverified, or invalid: {$reason}",
         ];
     }
 
@@ -730,14 +876,24 @@ final class PayrollReadinessService
             ->all();
     }
 
-    /** @return array<string, int|string|null> */
+    /**
+     * H7205 P2: the proof counts rows AND sums the money columns. Counting
+     * rows and max ids alone is blind to UPDATEs — an edit to an existing
+     * payment amount or status must move this fingerprint so the census
+     * fails its own read-only check instead of silently blessing a mutation.
+     *
+     * @return array<string, float|int|string|null>
+     */
     private function moneyFingerprint(): array
     {
         return [
             'payments_count' => Payment::query()->count(),
             'payments_max_id' => Payment::query()->max('id'),
+            'payments_amount_sum' => Money::round((float) (Payment::query()->sum('amount') ?? 0)),
             'payouts_count' => TeacherPayout::query()->count(),
             'payouts_max_id' => TeacherPayout::query()->max('id'),
+            'payouts_amount_sum' => Money::round((float) (TeacherPayout::query()->sum('amount') ?? 0)),
+            'payouts_amount_foreign_sum' => Money::round((float) (TeacherPayout::query()->sum('amount_foreign') ?? 0)),
             'users_count' => User::query()->count(),
             'bank_imports_count' => BankStatementImport::query()->count(),
             'bank_credits_count' => BankStatementCredit::query()->count(),

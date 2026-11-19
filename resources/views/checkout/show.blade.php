@@ -294,6 +294,27 @@ document.addEventListener('alpine:init', () => {
                     Перейти в личный кабинет
                 </a>
             </div>
+        @elseif(!empty($alreadyPaidBlock))
+            {{-- 16-11-2026: целый блок уже оплачен (старая ссылка) — форму не даём,
+                 ведём на следующий неоплаченный блок. AlreadyPaidBlockGuard. --}}
+            <div class="bg-white p-8 rounded-3xl shadow-xl shadow-gray-100/30 border border-gray-100 text-center flex flex-col items-center" data-testid="already-paid-block">
+                <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 border border-green-100">
+                    <i class="fas fa-check text-4xl text-green-500"></i>
+                </div>
+                <h2 class="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">Блок №{{ $alreadyPaidBlock['block'] }} уже оплачен</h2>
+                @if($alreadyPaidBlock['next'])
+                    <p class="text-gray-500 text-base mb-8 max-w-md">Возможно, вы открыли ссылку прошлой оплаты. Следующий неоплаченный блок — №{{ $alreadyPaidBlock['next']['number'] }}.</p>
+                    <a href="{{ $alreadyPaidBlock['next']['url'] }}" class="inline-flex justify-center items-center px-10 py-4 text-lg font-bold rounded-2xl text-white bg-indigo-600 hover:bg-indigo-700 transition-all duration-200 shadow-lg shadow-indigo-200">
+                        Оплатить блок №{{ $alreadyPaidBlock['next']['number'] }} — {{ number_format($alreadyPaidBlock['next']['amount'], 0, ',', ' ') }} ₽
+                    </a>
+                    <a href="{{ route('student.dashboard') }}" class="mt-4 text-sm font-medium text-gray-500 hover:text-gray-700">Перейти в личный кабинет</a>
+                @else
+                    <p class="text-gray-500 text-base mb-8 max-w-md">Возможно, вы открыли ссылку прошлой оплаты. Оплата следующего блока пока не открыта — напишите куратору.</p>
+                    <a href="{{ route('student.dashboard') }}" class="inline-flex justify-center items-center px-10 py-4 text-lg font-bold rounded-2xl text-white bg-indigo-600 hover:bg-indigo-700 transition-all duration-200 shadow-lg shadow-indigo-200">
+                        Перейти в личный кабинет
+                    </a>
+                @endif
+            </div>
         @else
             @if(session('error'))
                 <div class="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-sm font-medium flex items-start gap-2">
@@ -605,6 +626,18 @@ document.addEventListener('alpine:init', () => {
                             и подтверждаете, что ознакомлены с
                             <a href="{{ route('docs.show', 'privacy') }}" target="_blank" class="underline hover:text-gray-600">политикой конфиденциальности</a>.
                         </p>
+
+                        @if(\App\Support\CardCertHint::enabled())
+                            {{-- 19-11-2026: НСПК перешла на сертификаты Минцифры — оплата
+                                 картой в Chrome/Safari без них падает с ошибкой браузера. --}}
+                            <div class="mt-4 flex items-start gap-2 rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3 text-xs sm:text-sm text-amber-800 leading-relaxed" data-testid="card-cert-hint">
+                                <i class="fas fa-circle-info mt-0.5 text-amber-500"></i>
+                                <span>
+                                    {{ \App\Support\CardCertHint::TEXT }}
+                                    <a href="{{ \App\Support\CardCertHint::GUIDE_URL }}" target="_blank" rel="noopener" class="underline hover:text-amber-900">Инструкция</a>
+                                </span>
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Оплата по частям (H1290) — под кнопкой оплаты, где сумма ощущается целиком --}}
