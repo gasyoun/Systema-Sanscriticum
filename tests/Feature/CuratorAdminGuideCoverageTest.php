@@ -93,7 +93,7 @@ class CuratorAdminGuideCoverageTest extends TestCase
         return filter_var($raw, FILTER_VALIDATE_BOOLEAN);
     }
 
-    /** H3761: сценариев стало восемь — добавлен «Ученик ходил, а посещаемость пустая». */
+    /** H3761: сценариев стало восемь — добавлен «Ученик ходил, а посещаемость пустая». H6297: девять — «Дать кабинет новому человеку». H6327: десять — «Доска прописи» (Excalidraw вместо webwhiteboard.com). */
     public function test_guide_file_exists_and_has_four_parts_and_eight_scenarios(): void
     {
         $text = $this->guideText();
@@ -103,9 +103,13 @@ class CuratorAdminGuideCoverageTest extends TestCase
         }
 
         preg_match_all('/^### Шаги\s*$/mu', $this->partOne($text), $matches);
-        $this->assertCount(9, $matches[0], 'В части I должно быть девять сценариев (заголовок «### Шаги»).');
+        $this->assertCount(10, $matches[0], 'В части I должно быть десять сценариев (заголовок «### Шаги»).');
         $this->assertStringContainsString('Ученик ходил, а посещаемость пустая', $text);
         $this->assertStringContainsString('Дать кабинет новому человеку', $text);
+        $this->assertStringContainsString('Доска прописи', $text);
+        // H6327: webwhiteboard.com больше не рекомендован — гид прямо запрещает его давать ученикам.
+        $this->assertStringContainsString('webwhiteboard.com', $text);
+        $this->assertStringContainsString('samskrte.ru/dvaram/propisi', $text);
         $this->assertStringContainsString('samskrtamru_bot', $text);
 
         $this->assertStringContainsString('login-link', $text);
