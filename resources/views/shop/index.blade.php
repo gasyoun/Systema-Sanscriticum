@@ -97,6 +97,11 @@
         {{-- Первые вопросы новичка (H1868, custdev-обоснованная ориентация) --}}
         @include('shop.partials.first-questions')
 
+        {{-- H8473: НСПК → сертификаты Минцифры (19-11-2026); подсказка до ухода
+             с витрины на платёжную страницу Точки — там браузер без сертификатов
+             уже падает, помочь на месте сбоя нельзя. --}}
+        @include('partials.card-cert-banner')
+
         @livewire('shop.course-catalog', [
             'initialCategoryIds' => $initialCategoryIds,
             'initialTeacherId' => $initialTeacherId,
