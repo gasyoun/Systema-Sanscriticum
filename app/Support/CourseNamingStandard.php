@@ -46,8 +46,10 @@ final class CourseNamingStandard
             ];
         }
 
-        // «ч.2» / «ч. 3» БЕЗ открывающей скобки — должно быть «(ч. N)».
-        if (preg_match('/(?<!\()\bч\.\s*\d/u', $name) === 1) {
+        // «ч.2» / «ч. 3» БЕЗ скобок — должно быть «(ч. N)». Проверяем только текст
+        // ВНЕ скобок: «Кочергина 11 (проверка, ч.1)» — ч. уже в скобках, это не
+        // нарушение (инцидент ложных срабатываний 20-11-2026, 5 строк цензуса).
+        if (preg_match('/\bч\.\s*\d/u', self::outsideParens($name)) === 1) {
             $violations[] = [
                 'rule' => 'ch_bare',
                 'message' => '«ч.N» без скобок — заключите квалификатор в скобки: «(ч. N)», напр. «Кашмирский шиваизм (ч. 3) 2026».',
@@ -55,7 +57,8 @@ final class CourseNamingStandard
         }
 
         // «3-й поток» / «3 поток» БЕЗ скобок — должно быть «(N поток, YYYY)».
-        if (preg_match('/(?<!\()\d+\s*-?й?\s+поток/ui', $name) === 1) {
+        // Аналогично: только вне скобок — «(проверка, 2 поток)» легитимно.
+        if (preg_match('/\b\d+\s*-?й?\s+поток/ui', self::outsideParens($name)) === 1) {
             $violations[] = [
                 'rule' => 'potok_bare',
                 'message' => '«N поток» без скобок — заключите квалификатор в скобки: «(N поток, YYYY)», напр. «Традиции толкования упанишад (2 поток, 2026)».',
@@ -80,6 +83,40 @@ final class CourseNamingStandard
     public static function stripLessonTag(string $title): string
     {
         return trim((string) preg_replace(self::LESSON_TAG_PATTERN, '', $title));
+    }
+
+    /**
+     * Текст ВНЕ любых скобок — сегменты с глубиной 0. Правила «ч.N»/«N поток»
+     * судят только по этим сегментам: внутри скобок квалификатор уже
+     * «в скобках» по смыслу («(проверка, ч.1)» — не нарушение).
+     */
+    public static function outsideParens(string $name): string
+    {
+        $outside = '';
+        $depth = 0;
+        $buffer = '';
+
+        foreach (mb_str_split($name) as $char) {
+            if ($char === '(') {
+                if ($depth === 0) {
+                    $outside .= $buffer;
+                    $buffer = '';
+                }
+                $depth++;
+
+                continue;
+            }
+            if ($char === ')') {
+                $depth = max(0, $depth - 1);
+
+                continue;
+            }
+            if ($depth === 0) {
+                $buffer .= $char;
+            }
+        }
+
+        return $outside.$buffer;
     }
 
     /**
