@@ -9,6 +9,7 @@ use App\Http\Controllers\GrammarLabController;
 use App\Http\Controllers\GuestRegisterController;
 use App\Http\Controllers\InstituteController;
 use App\Http\Controllers\InstituteDonateController;
+use App\Http\Controllers\KocherginaMaterialsController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PublicCabinetGuideController;
 use App\Http\Controllers\ReadingPackController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\TransliterateController;
 use App\Http\Controllers\VisualDcsController;
 use App\Models\MarketingSetting;
+use App\Support\KocherginaMaterialBundles;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -213,3 +215,17 @@ Route::get('/c/{slug}/u/{lessonId}/video/{player}', [RecordingGateController::cl
 
 Route::get('/otzyvy', [ShopController::class, 'testimonialsLibrary'])
     ->name('shop.testimonials.library');
+
+// ═══════════════════════════════════════════════════════════════
+// МАТЕРИАЛЫ КУРСА КОЧЕРГИНОЙ — открытые наборы по этапам (H8210)
+// Публичные постоянные страницы: выдача по теме/готовности, без auth.
+// Источник правды наборов — App\Support\KocherginaMaterialBundles.
+// Реестр URL: docs/MATERIALS_KOCHERGINA_BUNDLES_REGISTRY.md.
+// ВАЖНО: строго до catch-all /{slug}.
+// ═══════════════════════════════════════════════════════════════
+Route::get('/materialy/kochergina', [KocherginaMaterialsController::class, 'hub'])
+    ->name('materials.kochergina.hub');
+
+Route::get('/materialy/kochergina/{slug}', [KocherginaMaterialsController::class, 'show'])
+    ->whereIn('slug', KocherginaMaterialBundles::slugs())
+    ->name('materials.kochergina.bundle');
