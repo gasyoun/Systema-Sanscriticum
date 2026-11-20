@@ -17,14 +17,14 @@
     "@capacitor/android": "^8.6.0",
     "@capacitor/app": "^8.1.2",
     "@capacitor/browser": "^8.0.5",
-    "@capacitor/cli": "^8.5.3",
+    "@capacitor/cli": "^8.6.0",
     "@capacitor/core": "^8.5.3",
     "@capacitor/ios": "^8.6.0",
     "@capacitor/splash-screen": "^8.0.2",
     "@capacitor/status-bar": "^8.0.4"
   },
   "devDependencies": {
-    "dotenv": "^18.0.9",
+    "dotenv": "^18.0.10",
     "typescript": "^7.0.2"
   },
   "overrides": {
