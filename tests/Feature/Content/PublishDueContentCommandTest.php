@@ -347,6 +347,33 @@ class PublishDueContentCommandTest extends TestCase
         $this->assertNull($vk->warning);
     }
 
+    public function test_photo_with_text_over_caption_limit_goes_to_telegram_as_message_with_large_preview(): void
+    {
+        Storage::fake(ContentCalendarSlot::MEDIA_DISK);
+        Storage::disk(ContentCalendarSlot::MEDIA_DISK)->put('content-calendar/figure.jpg', 'JPEGDATA');
+        $this->fakeApis();
+
+        $slot = $this->slot([
+            'media_path' => 'content-calendar/figure.jpg',
+            'destinations' => ['tg_a'],
+            'body' => '<p>'.str_repeat('а', 1500).'</p>',
+        ]);
+        $this->artisan('content:publish-due')->assertSuccessful();
+
+        $this->assertSame(0, self::sentTo('sendPhoto'));
+        Http::assertSent(function (Request $r) use ($slot): bool {
+            if (! str_contains($r->url(), 'sendMessage')) {
+                return false;
+            }
+            $preview = json_decode((string) $r['link_preview_options'], true);
+
+            return $r['chat_id'] === '@chan_a'
+                && mb_strlen(strip_tags($r['text'])) === 1500
+                && $preview === ['url' => $slot->mediaUrl(), 'prefer_large_media' => true, 'show_above_text' => true];
+        });
+        $this->assertSame(ContentCalendarSlot::STATUS_PUBLISHED, $slot->fresh()->status);
+    }
+
     public function test_ready_vk_media_is_attached_without_upload(): void
     {
         Storage::fake(ContentCalendarSlot::MEDIA_DISK);
