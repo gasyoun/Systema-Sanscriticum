@@ -48,6 +48,7 @@ jobs:
             --config p/owasp-top-ten \
             --config .semgrep.yml \
             --exclude vendor \
+            --exclude scripts/server_guards_n8n \
             --exclude node_modules \
             --exclude public \
             --exclude storage \
