@@ -456,7 +456,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MAIL_EHLO_DOMAIN` | required | `—` | config/mail.php:46 |
 | `MAIL_ENCRYPTION` | optional | `'tls'` | config/mail.php:42 |
 | `MAIL_FROM_ADDRESS` | optional | `'robot@tvoy-sayt.ru'` | config/backup.php:154<br>config/mail.php:111 |
-| `MAIL_FROM_NAME` | optional | `'Example'` | config/mail.php:112 |
+| `MAIL_FROM_NAME` | optional | `'Общество ревнителей санскрита'` | config/mail.php:112 |
 | `MAIL_HOST` | optional | `'smtp.mailgun.org'` | config/mail.php:40 |
 | `MAIL_LOG_CHANNEL` | required | `—` | config/mail.php:75 |
 | `MAIL_MAILER` | optional | `'smtp'` | config/mail.php:16 |
