@@ -40,6 +40,14 @@
         "vite-plugin-full-reload": {
             "picomatch": "2.3.2"
         },
-        "postcss-selector-parser": "7.1.6"
+        "postcss-selector-parser": "7.1.6",
+        "mermaid": {
+            "katex": "0.18.2"
+        },
+        "lodash-es": "4.18.1",
+        "@excalidraw/mermaid-to-excalidraw": {
+            "nanoid": "5.1.16"
+        },
+        "nanoid": "3.3.20"
     }
 }
