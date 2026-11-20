@@ -81,6 +81,27 @@ class CourseNamingStandardTest extends TestCase
     }
 
     /**
+     * «ч.N»/«N поток» ВНУТРИ скобок — легитимны: правила судят только по тексту
+     * вне скобок (инцидент ложных срабатываний 20-11-2026: «(проверка, ч.1)»).
+     */
+    public function test_qualifier_inside_parens_is_not_a_violation(): void
+    {
+        $insideParens = [
+            'Кочергина 11 (проверка, ч.1) (#16, 02.05.26)',
+            'Басня про отшельника и мышь (проверка, ч.2) (#25, 04.07.26)',
+            '(проверка, 2 поток)',
+        ];
+
+        foreach ($insideParens as $name) {
+            $this->assertSame([], CourseNamingStandard::violations($name), "Не должно быть нарушений: «{$name}»");
+        }
+
+        // Голые формы остаются нарушениями — вне скобок.
+        $this->assertContains('potok_bare', array_column(CourseNamingStandard::violations('Вводное занятие, 51 поток'), 'rule'));
+        $this->assertContains('ch_bare', array_column(CourseNamingStandard::violations('Онлайн беседа с Игорем Пантюшевым ч.4'), 'rule'));
+    }
+
+    /**
      * Аудит catalog:check-naming: exit 1 и строка по каждому нарушению.
      */
     public function test_audit_command_flags_violations(): void
