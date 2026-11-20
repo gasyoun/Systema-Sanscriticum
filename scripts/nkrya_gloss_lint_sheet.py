@@ -19,12 +19,19 @@ by the Sanskrit part of speech (lookup); `soft_rare` is a note (Q4); `rare` rows
 proposal of either kind are counted, not carded. Only the cards reach a human.
 
   python scripts/nkrya_gloss_lint_sheet.py --out review/<sheet_id>_review.html
+
+Sanskrit keys render in prose (titles, questions, policy lists, visible id chips)
+as IAST: every token the csl-pyutil 0.25.0 SLP1-in-prose preflight would flag is
+transcoded at emit time with the org-standard sanskrit_util.from_slp1 (registry
+unblock 20-11-2026). Encoding only — wording, card semantics and id derivation
+are untouched.
 """
 
 import argparse
 import csv
 import html
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -54,6 +61,26 @@ FLAG_RU = {"inflected": "не в словарной форме", "inflected_ambi
 
 def flags_ru(flags):
     return ", ".join(FLAG_RU.get(f, f) for f in flags.split(",") if f)
+
+
+def iast(text):
+    """SLP1 -> IAST for human-facing strings, token-wise and conservative.
+
+    Only the tokens find_slp1 (the csl-pyutil 0.25.0 SLP1-in-prose preflight's
+    own detector) reports are transcoded, with the org-standard
+    sanskrit_util.from_slp1. IAST, Cyrillic and English pass through untouched —
+    from_slp1 is the identity on IAST-diacritic forms — so this changes the
+    *encoding* of a Sanskrit token in prose, never the wording around it.
+    Applied to card keys, agent `why` texts, policy-list lemmas and card ids
+    (the id chip is visible text); `lemma_slp1` values already in IAST are
+    byte-identical before and after.
+    """
+    from csl_pyutil.evidence import find_slp1
+    from sanskrit_util import from_slp1
+    text = text or ""
+    for tok in find_slp1(text):
+        text = re.sub(r"\b%s\b" % re.escape(tok), from_slp1(tok), text)
+    return text
 
 
 def read(name):
@@ -125,9 +152,10 @@ def screen(all_rows, proposals):
 
 def card_id(name, r):
     # stable across regenerations: roots by frequency rank, lemmas by lemma + text locus
+    # (lemma transcoded to IAST — the id chip is visible text, so SLP1 may not leak)
     if name == "roots":
         return "roots-%s" % r.get("rank")
-    return "lemmas-%s-%s-%s" % (r.get("pack"), r.get("lemma_slp1"), r.get("locus"))
+    return "lemmas-%s-%s-%s" % (r.get("pack"), iast(r.get("lemma_slp1")), r.get("locus"))
 
 
 def fmt_band(rec):
@@ -141,7 +169,7 @@ def row_card(kind, name, r, prop):
     from csl_pyutil import mark_cyrillic
     e = html.escape
     label, key_col, src = SOURCES[name]
-    key = r.get(key_col, "")
+    key = iast(r.get(key_col, ""))
     cur = rarest(r["nkrya_tokens"])
     flags = r["flags"].split(",")
     c19 = "только в XIX веке (0 вхождений после 1950 г.)" if "c19_only" in flags else ""
@@ -157,7 +185,7 @@ def row_card(kind, name, r, prop):
         new, band = prop["proposal"], m["band"]
         new_txt = ("самое редкое слово — " + fmt_band(m["rarest"])) if m["rarest"] else "нет данных"
         origin = ("В нашем глоссарии синонима нет, поэтому формулировку предлагает агент: %s."
-                  % e(prop["why"]))
+                  % e(iast(prop["why"])))
         stance = "заменить — формулировка агента, её нужно одобрить"
     cur_txt = fmt_band(cur) if cur else "в НКРЯ не найдено ни одного вхождения"
     q = ("<p><b>Что это?</b> Карточка <b>%s</b> в колоде «%s». На обороте сейчас: %s.</p>"
@@ -203,7 +231,7 @@ def policy_card(negation):
     for name, r in negation[:8]:
         cur = rarest(r["nkrya_tokens"])
         lines.append("<li>%s — %s (%s)</li>" % (
-            e(r.get(SOURCES[name][1], "")), mark_cyrillic("«%s»" % e(r["gloss_ru"])),
+            e(iast(r.get(SOURCES[name][1], ""))), mark_cyrillic("«%s»" % e(r["gloss_ru"])),
             e(fmt_band(cur) if cur else "нет в корпусе")))
     q = ("<p><b>Что это?</b> Правило для следующего прохода линта, не одна карточка. "
          "Санскритские слова с отрицанием a-/an- («не-», «без-») у нас переведены одним "
