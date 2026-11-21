@@ -6,6 +6,7 @@ namespace Tests\Feature\Attendance;
 
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -15,6 +16,8 @@ use Tests\TestCase;
  */
 class AttendanceAutoCaptureScheduleTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_auto_capture_entry_is_registered_daily(): void
     {
         $event = $this->eventFor('attendance:backfill-streams');
