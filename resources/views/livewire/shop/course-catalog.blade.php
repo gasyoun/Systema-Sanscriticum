@@ -102,7 +102,7 @@
                         'bg-brand text-white border-brand' => false,
                         'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-brand/50 hover:text-white' => true,
                     ])>
-                <i class="fas fa-hand-raised text-[11px]"></i>
+                <i class="fas fa-hand text-[11px]"></i>
                 Список ожидания
             </a>
             @endcan
