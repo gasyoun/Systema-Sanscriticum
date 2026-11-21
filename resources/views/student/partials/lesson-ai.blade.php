@@ -49,6 +49,15 @@
                 <span x-text="title"></span>
             </button>
         </template>
+
+        {{-- Счётчик дневного лимита: тратит только запрос к модели --}}
+        <span x-show="quotaLimit !== null" x-cloak data-testid="lesson-ai-quota"
+              class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-extrabold tabular-nums"
+              :class="quotaLeft === 0 ? 'bg-red-50 border-red-100 text-red-600' : (quotaLeft <= 3 ? 'bg-yellow-50 border-yellow-200 text-yellow-700' : 'bg-white border-gray-200 text-gray-500')"
+              :title="'Запросов к ИИ на сегодня: осталось ' + quotaLeft + ' из ' + quotaLimit + '. Обновляется в полночь; готовые пересказы и неудачные запросы не считаются.'">
+            <i class="fas fa-bolt text-[10px]"></i>
+            <span x-text="quotaLeft + ' / ' + quotaLimit"></span>
+        </span>
     </div>
 
     {{-- Тело --}}
@@ -113,6 +122,11 @@
                     </div>
                 </form>
             </template>
+
+            <p x-show="quotaLimit !== null" class="mt-2 px-1 text-xs text-gray-500">
+                Запросов на сегодня: осталось <b class="text-gray-800" x-text="quotaLeft"></b> из <span x-text="quotaLimit"></span>.
+                Готовые пересказы не считаются.
+            </p>
 
             <div class="mt-3 flex items-start gap-3 rounded-2xl bg-gray-50 p-3">
                 <i class="fas fa-lock text-gray-300 text-xs mt-1 shrink-0"></i>

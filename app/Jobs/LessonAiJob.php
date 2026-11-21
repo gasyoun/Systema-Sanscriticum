@@ -64,6 +64,8 @@ final class LessonAiJob implements ShouldQueue
         try {
             $result = $service->run($this->task, $lesson, $this->input);
         } catch (RuntimeException $e) {
+            // Студент ничего не получил — и лимит не тратит.
+            $this->refund($service);
             $this->finish(['status' => 'error', 'error' => $e->getMessage()]);
 
             return;
@@ -75,7 +77,19 @@ final class LessonAiJob implements ShouldQueue
     public function failed(Throwable $e): void
     {
         Log::warning('LessonAiJob failed', ['task' => $this->task, 'lesson_id' => $this->lessonId, 'error' => $e->getMessage()]);
+        $this->refund(app(LessonAiService::class));
         $this->finish(['status' => 'error', 'error' => 'provider']);
+    }
+
+    /** Один возврат на токен — повторный failed() после handle() не вернёт дважды. */
+    private function refund(LessonAiService $service): void
+    {
+        $state = Cache::get(self::key($this->token));
+        if (! is_array($state) || ! empty($state['refunded'])) {
+            return;
+        }
+        $service->refundQuota((int) $state['user_id']);
+        Cache::put(self::key($this->token), $state + ['refunded' => true], self::TTL);
     }
 
     /**

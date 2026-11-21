@@ -59,6 +59,56 @@ final class LessonAiService
             || ($user instanceof User && $user->isSuperAdmin());
     }
 
+    // ---------------------------------------------------------------------
+    // Дневной лимит (счётчик на панели). Тратит только запрос к модели;
+    // готовый пересказ из кэша и неудачный запрос — бесплатны.
+    // ---------------------------------------------------------------------
+
+    public function dailyLimit(): int
+    {
+        return max(1, (int) config('knowledge.lesson_ai.daily_limit', 20));
+    }
+
+    public function quotaUsed(User|int $user): int
+    {
+        return (int) Cache::get($this->quotaKey($user), 0);
+    }
+
+    public function quotaLeft(User|int $user): int
+    {
+        return max(0, $this->dailyLimit() - $this->quotaUsed($user));
+    }
+
+    /** Списать один запрос; false — лимит на сегодня исчерпан. */
+    public function takeQuota(User $user): bool
+    {
+        $key = $this->quotaKey($user);
+        // Счётчик живёт до конца суток (по часовому поясу приложения, МСК).
+        Cache::add($key, 0, now()->endOfDay());
+        if ((int) Cache::get($key, 0) >= $this->dailyLimit()) {
+            return false;
+        }
+        Cache::increment($key);
+
+        return true;
+    }
+
+    /** Вернуть запрос, если модель ничего не дала (узел лёг, кривой ответ). */
+    public function refundQuota(int $userId): void
+    {
+        $key = $this->quotaKey($userId);
+        if ((int) Cache::get($key, 0) > 0) {
+            Cache::decrement($key);
+        }
+    }
+
+    private function quotaKey(User|int $user): string
+    {
+        $id = $user instanceof User ? $user->id : $user;
+
+        return 'lesson_ai.quota.'.$id.'.'.now()->toDateString();
+    }
+
     public function hasTranscript(Lesson $lesson): bool
     {
         return $this->transcriptLines($lesson) !== [];

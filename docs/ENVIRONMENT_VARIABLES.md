@@ -410,7 +410,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `LECTURE_BUILDER_TIMEOUT` | optional | `180` | config/services.php:638 |
 | `LECTURE_BUILDER_TOKEN` | secret | `—` | config/services.php:637 |
 | `LECTURE_BUILDER_URL` | optional | `'http://127.0.0.1:5001'` | config/services.php:636 |
-| `LESSON_AI_DAILY_LIMIT` | optional | `30` | config/knowledge.php:118 |
+| `LESSON_AI_DAILY_LIMIT` | optional | `20` | config/knowledge.php:118 |
 | `LESSON_AI_ENABLED` | feature-flag | `false` | config/features.php:293 |
 | `LESSON_AI_PART_CHARS` | optional | `12000` | config/knowledge.php:123 |
 | `LESSON_BANNERS` | optional | `false` | config/features.php:1938 |

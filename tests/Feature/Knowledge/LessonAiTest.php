@@ -41,7 +41,6 @@ class LessonAiTest extends TestCase
             'features.lesson_ai' => true,
             'knowledge.generation_base_url' => self::NODE,
             'knowledge.tunnel_hours' => '09:30-20:30',
-            'knowledge.lesson_ai.daily_limit' => 30,
             'services.openrouter.api_key' => 'must-not-be-used',
         ]);
     }
@@ -249,7 +248,8 @@ class LessonAiTest extends TestCase
             ->postJson(route('student.lesson.ai', [$course->slug, $lesson->id]), ['task' => 'explain', 'text' => 'сандхи'])
             ->assertOk()
             ->assertJsonPath('status', 'error')
-            ->assertJsonPath('error', 'offline');
+            ->assertJsonPath('error', 'offline')
+            ->assertJsonPath('left', 20); // модель ничего не дала — запрос не списан
     }
 
     public function test_outside_node_hours_answers_asleep_without_calling_model(): void
@@ -267,17 +267,54 @@ class LessonAiTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_daily_limit(): void
+    public function test_daily_limit_is_20_with_counter_on_page_and_in_answers(): void
     {
-        config(['knowledge.lesson_ai.daily_limit' => 1]);
+        $this->assertSame(20, app(LessonAiService::class)->dailyLimit(), 'по умолчанию 20 запросов в сутки');
+
         $this->fakeNode('Ответ.');
         [$course, $lesson, $student] = $this->openLesson();
         $url = route('student.lesson.ai', [$course->slug, $lesson->id]);
 
-        $this->actingAs($student)->postJson($url, ['task' => 'explain', 'text' => 'сандхи'])->assertOk();
+        $this->actingAs($student)->get(route('student.lesson', [$course->slug, $lesson->id]))
+            ->assertOk()
+            ->assertSee('quotaLeft: 20', false)
+            ->assertSee('data-testid="lesson-ai-quota"', false);
+
+        $this->actingAs($student)->postJson($url, ['task' => 'explain', 'text' => 'сандхи'])
+            ->assertOk()
+            ->assertJsonPath('left', 19)
+            ->assertJsonPath('limit', 20);
+
+        config(['knowledge.lesson_ai.daily_limit' => 2]);
+        $this->actingAs($student)->postJson($url, ['task' => 'explain', 'text' => 'сандхи'])
+            ->assertOk()
+            ->assertJsonPath('left', 0);
         $this->actingAs($student)->postJson($url, ['task' => 'explain', 'text' => 'сандхи'])
             ->assertStatus(429)
-            ->assertJsonPath('error', 'limit');
+            ->assertJsonPath('error', 'limit')
+            ->assertJsonPath('left', 0);
+
+        // Новые сутки — лимит снова полный.
+        Carbon::setTestNow(Carbon::parse('2026-11-22 12:00:00', 'Europe/Moscow'));
+        $this->actingAs($student)->postJson($url, ['task' => 'explain', 'text' => 'сандхи'])
+            ->assertOk()
+            ->assertJsonPath('left', 1);
+    }
+
+    public function test_cached_summary_and_prechecks_do_not_spend_quota(): void
+    {
+        $this->fakeNode('## Кратко
+О сандхи.');
+        [$course, $lesson, $student] = $this->openLesson();
+        $url = route('student.lesson.ai', [$course->slug, $lesson->id]);
+
+        $this->actingAs($student)->postJson($url, ['task' => 'summary'])->assertJsonPath('left', 19);
+        $this->actingAs($student)->postJson($url, ['task' => 'summary'])
+            ->assertJsonPath('cached', true)
+            ->assertJsonPath('left', 19);
+        $this->actingAs($student)->postJson($url, ['task' => 'outline', 'notes' => 'мало'])->assertStatus(422);
+
+        $this->assertSame(19, app(LessonAiService::class)->quotaLeft($student));
     }
 
     public function test_poll_token_is_bound_to_its_owner(): void
