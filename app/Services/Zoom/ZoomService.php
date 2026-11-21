@@ -9,6 +9,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
+use Throwable;
 
 /**
  * Клиент Zoom API на Server-to-Server OAuth (issue #78, Phase 1).
@@ -119,6 +120,58 @@ class ZoomService implements WebinarProvider
     public function pastMeetingInstances(string $meetingId): array
     {
         return $this->pastMeetingInstancesAcrossAccounts($meetingId)['meetings'];
+    }
+
+    /**
+     * H8495 — жива ли встреча: read-only GET /meetings/{id} с перебором
+     * аккаунтов школы. Отличимость статусов — то, чего нет у
+     * pastMeetingInstances(): пустой список там значит и «встречи нет», и
+     * «запусков не было» (класс H3085 «пусто vs сломано»). Здесь:
+     *
+     *  ok        — встреча есть в этом аккаунте (recurring-серия жива);
+     *  not_found — 404 на ВСЕХ аккаунтах (серия не создана или удалена —
+     *              класс фантомной продлёнки 04-09-2026);
+     *  error     — прочий HTTP или обрыв сети: проверить не удалось, что
+     *              НЕ равно «чисто», и вердикт сверки называет это вслух.
+     *
+     * @return array{status: 'ok'|'not_found'|'error', account: string, http: int|null, topic: string|null, type: int|null}
+     */
+    public function getMeeting(string $meetingId): array
+    {
+        $lastHttp = null;
+
+        foreach (self::configuredAccounts() as $name => $svc) {
+            try {
+                $response = $svc->apiRequest()->get(self::API_BASE."/meetings/{$meetingId}");
+            } catch (Throwable) {
+                return ['status' => 'error', 'account' => $name, 'http' => null, 'topic' => null, 'type' => null];
+            }
+
+            if ($response->successful()) {
+                $this->accountOf[$meetingId] = $name;
+
+                $topic = $response->json('topic');
+
+                return [
+                    'status' => 'ok',
+                    'account' => $name,
+                    'http' => $response->status(),
+                    'topic' => is_string($topic) ? $topic : null,
+                    'type' => is_numeric($response->json('type')) ? (int) $response->json('type') : null,
+                ];
+            }
+
+            $lastHttp = $response->status();
+
+            if ($lastHttp === 404) {
+                continue; // в этом аккаунте встречи нет — пробуем следующий
+            }
+
+            // 401/403/429/5xx — доступ или лимит: не приравниваем к «нет встречи».
+            return ['status' => 'error', 'account' => $name, 'http' => $lastHttp, 'topic' => null, 'type' => null];
+        }
+
+        return ['status' => 'not_found', 'account' => '', 'http' => $lastHttp, 'topic' => null, 'type' => null];
     }
 
     /**

@@ -90,6 +90,20 @@ trait SchedulesPresenceAndMarathon
             ->onOneServer()
             ->name('auto-capture-attendance');
 
+        // --- ЕЖЕНЕДЕЛЬНАЯ СВЕРКА «РАСПИСАНИЕ ↔ ZOOM» (H8495, read-only гард) ---
+        // Воскресенье 06:00 — ДО напоминаний наступающей недели (remind-upcoming
+        // шлёт за ~60 минут до каждого занятия). Живой GET /meetings/{id} по
+        // разрешённым id занятий ближайших 7 дней (одна recurring-встреча на
+        // курс, H1642 GC-B1 — GET один на уникальный id) и вердикт
+        // missing/dead/mismatch админам в TG до фантомных «Скоро занятие»
+        // (класс 04-09-2026, продлёнка). ТОЛЬКО чтение: недостающая встреча
+        // создаётся человеком в админке — авто-создания нет.
+        $schedule->command('zoom:verify-schedule --notify')
+            ->weeklyOn(0, '06:00')
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('verify-schedule-zoom');
+
         // --- ЛИД-МАГНИТ ЗА N МИНУТ ДО ВЕБИНАРА ---
         // Окно проверяется внутри команды (isMagnetWindowOpen у лендинга).
         $schedule->command('magnets:deliver-due')
