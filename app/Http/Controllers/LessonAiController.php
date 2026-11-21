@@ -14,7 +14,6 @@ use App\Support\ServerGuards\OllamaTunnelProbe;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
 /**
@@ -58,19 +57,17 @@ final class LessonAiController extends Controller
 
         // Готовый пересказ занятия — сразу, без модели и без расхода лимита.
         if ($task === 'summary' && ($md = $this->service->cachedSummary($lesson)) !== null) {
-            return response()->json(LessonAiJob::donePayload($this->service, $task, ['md' => $md]) + ['cached' => true]);
+            return response()->json(LessonAiJob::donePayload($this->service, $task, ['md' => $md])
+                + ['cached' => true] + $this->quota($user));
         }
 
         if (! OllamaTunnelProbe::withinServiceWindow()) {
-            return $this->error('asleep', 503, ['hours' => (string) config('knowledge.tunnel_hours', '')]);
+            return $this->error('asleep', 503, ['hours' => (string) config('knowledge.tunnel_hours', '')] + $this->quota($user));
         }
 
-        $limitKey = 'lesson-ai:'.$user->id.':'.now()->toDateString();
-        $limit = max(1, (int) config('knowledge.lesson_ai.daily_limit', 30));
-        if (RateLimiter::tooManyAttempts($limitKey, $limit)) {
-            return $this->error('limit', 429);
+        if (! $this->service->takeQuota($user)) {
+            return $this->error('limit', 429, $this->quota($user));
         }
-        RateLimiter::hit($limitKey, 86400);
 
         $token = Str::random(32);
         Cache::put(LessonAiJob::key($token), [
@@ -85,14 +82,20 @@ final class LessonAiController extends Controller
         // sync-очередь (локально, тесты) уже всё посчитала — отдаём сразу.
         $state = $this->publicState(Cache::get(LessonAiJob::key($token)));
         if ($state !== null && $state['status'] !== 'pending') {
-            return response()->json($state);
+            return response()->json($state + $this->quota($user));
         }
 
-        return response()->json([
-            'status' => 'pending',
-            'token' => $token,
-            'left' => max(0, $limit - RateLimiter::attempts($limitKey)),
-        ], 202);
+        return response()->json(['status' => 'pending', 'token' => $token] + $this->quota($user), 202);
+    }
+
+    /**
+     * Счётчик для панели: сколько запросов осталось на сегодня.
+     *
+     * @return array{left: int, limit: int}
+     */
+    private function quota(User $user): array
+    {
+        return ['left' => $this->service->quotaLeft($user), 'limit' => $this->service->dailyLimit()];
     }
 
     public function poll(Request $request, string $slug, int $lessonId, string $token): JsonResponse
@@ -109,7 +112,7 @@ final class LessonAiController extends Controller
             404,
         );
 
-        return response()->json($this->publicState($raw));
+        return response()->json($this->publicState($raw) + $this->quota($user));
     }
 
     /** @param  array{text?: string, notes?: string, question?: string}  $input */
@@ -146,7 +149,7 @@ final class LessonAiController extends Controller
         if (! is_array($raw)) {
             return null;
         }
-        unset($raw['user_id'], $raw['lesson_id']);
+        unset($raw['user_id'], $raw['lesson_id'], $raw['refunded']);
 
         return $raw;
     }

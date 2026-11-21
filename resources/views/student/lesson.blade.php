@@ -843,8 +843,13 @@
         {{-- БЛОК ИИ: помощник занятия (features.lesson_ai) — display:contents,
              чтобы панель участвовала во flex боковой колонки как соседние табы. --}}
         @if($lessonAiEnabled)
+        @php
+            $lessonAiService = app(\App\Services\Knowledge\LessonAiService::class);
+            $lessonAiQuotaLeft = $lessonAiService->quotaLeft(auth()->user());
+            $lessonAiQuotaLimit = $lessonAiService->dailyLimit();
+        @endphp
         <div class="contents"
-             x-data="lessonAi({ url: @js(route('student.lesson.ai', [$course->slug, $lesson->id])), notesId: 'lesson-notes-textarea', hasTranscript: @js($hasTranscript) })">
+             x-data="lessonAi({ url: @js(route('student.lesson.ai', [$course->slug, $lesson->id])), notesId: 'lesson-notes-textarea', hasTranscript: @js($hasTranscript), quotaLeft: {{ (int) $lessonAiQuotaLeft }}, quotaLimit: {{ (int) $lessonAiQuotaLimit }} })">
             @include('student.partials.lesson-ai')
         </div>
         @endif

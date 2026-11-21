@@ -17,7 +17,7 @@ window.lessonAi = function (config) {
         'no-selection': 'Выделите фрагмент текста занятия, стенограммы или заметок.',
         'short-question': 'Сформулируйте вопрос чуть подробнее.',
         'not-found': 'В стенограмме занятия не нашлось ничего похожего на этот вопрос. Попробуйте другие слова.',
-        'limit': 'Дневной лимит ИИ-запросов исчерпан. Завтра снова можно.',
+        'limit': 'На сегодня запросы к ИИ закончились — завтра лимит обновится. Готовые пересказы занятий открываются без лимита.',
         'offline': 'ИИ-сервер школы сейчас не отвечает. Попробуйте через несколько минут.',
         'bad-answer': 'ИИ ответил в неожиданном формате — попробуйте ещё раз.',
         'empty': 'Нечего отправлять — текст пустой.',
@@ -44,6 +44,8 @@ window.lessonAi = function (config) {
 
     return {
         hasTranscript: !!config.hasTranscript,
+        quotaLeft: typeof config.quotaLeft === 'number' ? config.quotaLeft : null,
+        quotaLimit: typeof config.quotaLimit === 'number' ? config.quotaLimit : null,
         state: 'idle', // idle | loading | done | error
         task: null,
         title: '',
@@ -205,6 +207,9 @@ window.lessonAi = function (config) {
         },
 
         handle(task, data) {
+            // Счётчик дневного лимита приходит в каждом ответе сервера.
+            if (data && typeof data.left === 'number') this.quotaLeft = data.left;
+            if (data && typeof data.limit === 'number') this.quotaLimit = data.limit;
             if (!data || data.status === 'error') {
                 var code = data ? data.error : 'provider';
                 if (code === 'asleep') {
