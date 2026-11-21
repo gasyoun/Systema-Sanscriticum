@@ -15,6 +15,7 @@ use App\Http\Controllers\GrammarLabController;
 use App\Http\Controllers\GrammarLabPilotController;
 use App\Http\Controllers\HomeworkController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\LessonAiController;
 use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PranaShopController;
@@ -362,10 +363,10 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
 
     // ИИ-помощник занятия (features.lesson_ai, OFF → 404): генерация в очереди,
     // страница опрашивает статус по токену. Гейт — LessonGate::canWatch.
-    Route::post('/c/{slug}/u/{lessonId}/ai', [\App\Http\Controllers\LessonAiController::class, 'start'])
+    Route::post('/c/{slug}/u/{lessonId}/ai', [LessonAiController::class, 'start'])
         ->whereNumber('lessonId')->middleware('throttle:12,1')
         ->name('student.lesson.ai');
-    Route::get('/c/{slug}/u/{lessonId}/ai/{token}', [\App\Http\Controllers\LessonAiController::class, 'poll'])
+    Route::get('/c/{slug}/u/{lessonId}/ai/{token}', [LessonAiController::class, 'poll'])
         ->whereNumber('lessonId')->where('token', '[A-Za-z0-9]{32}')->middleware('throttle:90,1')
         ->name('student.lesson.ai.poll');
 

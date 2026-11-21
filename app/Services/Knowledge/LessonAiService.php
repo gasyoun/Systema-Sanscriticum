@@ -6,6 +6,7 @@ namespace App\Services\Knowledge;
 
 use App\Models\Lesson;
 use App\Services\Bot\CuratorAi;
+use App\Services\Bot\LessonQaService;
 use App\Support\TranscriptParser;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -21,7 +22,7 @@ use RuntimeException;
  *   explain  объяснить выделенный фрагмент простыми словами
  *   ask      вопрос по занятию — ответ только по фрагментам его стенограммы
  *
- * Границы те же, что у {@see \App\Services\Bot\LessonQaService}:
+ * Границы те же, что у {@see LessonQaService}:
  *  - доступ к уроку проверяет вызывающий (LessonGate::canWatch);
  *  - генерация ТОЛЬКО локальная ({@see CuratorAi::localChatWithUsage()}),
  *    внешнего фолбэка нет (рулинг #1633) — ни стенограмма, ни заметки
