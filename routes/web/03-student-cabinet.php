@@ -360,6 +360,15 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::post('/c/{slug}/u/{lessonId}/note', [StudentController::class, 'saveNote'])
         ->name('student.lesson.note');
 
+    // ИИ-помощник занятия (features.lesson_ai, OFF → 404): генерация в очереди,
+    // страница опрашивает статус по токену. Гейт — LessonGate::canWatch.
+    Route::post('/c/{slug}/u/{lessonId}/ai', [\App\Http\Controllers\LessonAiController::class, 'start'])
+        ->whereNumber('lessonId')->middleware('throttle:12,1')
+        ->name('student.lesson.ai');
+    Route::get('/c/{slug}/u/{lessonId}/ai/{token}', [\App\Http\Controllers\LessonAiController::class, 'poll'])
+        ->whereNumber('lessonId')->where('token', '[A-Za-z0-9]{32}')->middleware('throttle:90,1')
+        ->name('student.lesson.ai.poll');
+
     // Домашние задания: сдача студентом + контролируемое скачивание файлов
     Route::post('/c/{slug}/u/{lessonId}/homework', [HomeworkController::class, 'store'])
         ->name('student.homework.store');

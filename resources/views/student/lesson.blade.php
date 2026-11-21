@@ -26,6 +26,10 @@
           guard-ом. Тот же эндпоинт student.lesson.note; без JS форма
           деградирует к прежнему ручному POST-сабмиту. --}}
     <script src="{{ asset('js/lesson-note-autosave.js') }}?v={{ filemtime(public_path('js/lesson-note-autosave.js')) }}" defer></script>
+    @if(config('features.lesson_ai'))
+        {{-- ИИ-помощник занятия (features.lesson_ai): вкладка «✦ ИИ». --}}
+        <script src="{{ asset('js/lesson-ai.js') }}?v={{ filemtime(public_path('js/lesson-ai.js')) }}" defer></script>
+    @endif
     <script defer>
         document.addEventListener('DOMContentLoaded', function () {
             try {
@@ -169,13 +173,16 @@
 
 @php
     $hasAttachments = !empty($lesson->attachments) && is_array($lesson->attachments);
-    $showTabs = $hasTranscript || $hasAttachments; // Показываем табы, если есть хотя бы транскрипт ИЛИ файлы
+    $lessonAiEnabled = (bool) config('features.lesson_ai');
+    // Показываем табы, если есть хотя бы транскрипт, файлы или ИИ-помощник
+    $showTabs = $hasTranscript || $hasAttachments || $lessonAiEnabled;
 @endphp
 
 {{-- ========================================== --}}
 {{-- ГЛАВНЫЙ КОНТЕЙНЕР (Умный Flexbox с 3 Табами) --}}
 {{-- ========================================== --}}
 <div class="lesson-layout relative"
+     data-lesson-ai-scope
      x-data="{
          player: '{{ $kinescopePilotActive ? 'kinescope' : ($hasRutube ? 'rutube' : ($hasYoutube ? 'youtube' : ($hasVk ? 'vk' : 'none'))) }}',
          currentTime: 0,
@@ -715,6 +722,14 @@
         :class="activeTab === 'notes' ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'">
     <i class="far fa-edit text-base"></i> Заметки
 </button>
+
+            @if($lessonAiEnabled)
+            <button @click="activeTab = 'ai'" data-testid="lesson-ai-tab"
+                    class="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[13px] font-extrabold transition-all duration-300"
+                    :class="activeTab === 'ai' ? 'bg-white text-violet-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'">
+                <span class="text-base leading-none">✦</span> ИИ
+            </button>
+            @endif
             @endif
         </div>
         
@@ -821,6 +836,15 @@
         </div>
     @endunless
 </div>
+
+        {{-- БЛОК ИИ: помощник занятия (features.lesson_ai) — display:contents,
+             чтобы панель участвовала во flex боковой колонки как соседние табы. --}}
+        @if($lessonAiEnabled)
+        <div class="contents"
+             x-data="lessonAi({ url: @js(route('student.lesson.ai', [$course->slug, $lesson->id])), notesId: 'lesson-notes-textarea', hasTranscript: @js($hasTranscript) })">
+            @include('student.partials.lesson-ai')
+        </div>
+        @endif
 
         {{-- БЛОК 3: ФАЙЛЫ И МАТЕРИАЛЫ --}}
         @if($hasAttachments)
