@@ -123,6 +123,10 @@ return [
         // доставке на Google Диск (GET/POST /api/lesson-banners/*). Секрет — в
         // X-Webhook-Secret. Пусто → эндпоинты отвечают 403 (выключены).
         'lesson_banners_secret' => env('N8N_LESSON_BANNERS_SECRET'),
+        // Рилсы-автопостинг: n8n забирает действующий VK ID user-токен перед
+        // загрузкой видео (GET /api/n8n/vk-token). Обновляет токен только прод.
+        // Секрет — в X-Webhook-Secret. Пусто → 403 (выключено).
+        'vk_token_secret' => env('N8N_VK_TOKEN_SECRET'),
         // Content engine Wave 2 (H1548): один социальный пост — ВК-стена
         // (с прикреплённым клипом) + зеркало в ТГ-канал — тот же
         // webhook-forward паттерн, что monthly_schedule/clip_extract.

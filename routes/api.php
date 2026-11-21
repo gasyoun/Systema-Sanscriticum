@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\PublicScheduleController;
 use App\Http\Controllers\Api\PublicTrialBookController;
 use App\Http\Controllers\Api\PublicWaitlistController;
 use App\Http\Controllers\Api\VkBotController;
+use App\Http\Controllers\Api\VkTokenController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\Webhooks\ExamScoresWebhookController;
@@ -169,6 +170,12 @@ Route::middleware(['verify.n8n.lessonbanners', 'throttle:60,1'])->group(function
         ->whereNumber('banner')
         ->name('api.lesson-banners.delivered');
 });
+
+// Рилсы-автопостинг — n8n берёт действующий VK-токен у прода прямо перед
+// загрузкой видео (токен живёт час, refresh — только здесь, VkTokenManager).
+Route::middleware(['verify.n8n.vktoken', 'throttle:30,1'])
+    ->get('/n8n/vk-token', [VkTokenController::class, 'show'])
+    ->name('api.n8n.vk-token');
 
 // === TELEGRAM TRACK C: @zapisi_ORSbot (H164, D8) ===
 // Отдельный от /telegram/webhook (user-уведомления) и /webhooks/telegram-magnet
