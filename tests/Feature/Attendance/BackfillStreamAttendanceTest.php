@@ -7,9 +7,11 @@ namespace Tests\Feature\Attendance;
 use App\Models\Course;
 use App\Models\Schedule;
 use App\Models\WebinarAttendance;
+use App\Services\Access\TelegramAdminNotifier;
 use App\Support\InsertOnlyGuard;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Mockery\MockInterface;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -315,5 +317,116 @@ class BackfillStreamAttendanceTest extends TestCase
         });
 
         $this->assertSame(1, WebinarAttendance::where('schedule_id', $schedule->id)->count());
+    }
+
+    /**
+     * H8494 — режим планировщика: окно «вчера..сегодня» берётся само,
+     * вердикт-строка печатается всегда.
+     *
+     * @test
+     */
+    public function scheduled_mode_captures_the_just_ended_lesson_day(): void
+    {
+        $date = now()->subDay()->toDateString();
+        [, $schedule] = $this->courseWithLesson($date);
+
+        $this->fakeZoom(
+            [['uuid' => 'occ-1==', 'start_time' => $date.'T10:21:00Z']],
+            [
+                ['participant_uuid' => 'p1', 'name' => 'A', 'join_time' => $date.'T10:22:00Z', 'duration' => 3600],
+                ['participant_uuid' => 'p2', 'name' => 'B', 'join_time' => $date.'T10:23:00Z', 'duration' => 1800],
+            ],
+        );
+
+        $this->artisan('attendance:backfill-streams --scheduled --apply')
+            ->expectsOutputToContain('Вердикт автосбора (H8494): found=2, skipped=0')
+            ->assertSuccessful();
+
+        $this->assertSame(2, WebinarAttendance::where('schedule_id', $schedule->id)->count());
+    }
+
+    /**
+     * H8494 — идемпотентность автосбора: повторный прогон того же окна
+     * добавляет ноль строк и честно пишет found=0 в вердикт.
+     *
+     * @test
+     */
+    public function scheduled_rerun_adds_zero_rows(): void
+    {
+        $date = now()->subDay()->toDateString();
+        [, $schedule] = $this->courseWithLesson($date);
+
+        $this->fakeZoom(
+            [['uuid' => 'occ-1==', 'start_time' => $date.'T10:21:00Z']],
+            [
+                ['participant_uuid' => 'p1', 'name' => 'A', 'join_time' => $date.'T10:22:00Z', 'duration' => 3600],
+                ['participant_uuid' => 'p2', 'name' => 'B', 'join_time' => $date.'T10:23:00Z', 'duration' => 1800],
+            ],
+        );
+
+        $this->artisan('attendance:backfill-streams --scheduled --apply')->assertSuccessful();
+        $this->artisan('attendance:backfill-streams --scheduled --apply')
+            ->expectsOutputToContain('Вердикт автосбора (H8494): found=0, skipped=')
+            ->assertSuccessful();
+
+        $this->assertSame(2, WebinarAttendance::where('schedule_id', $schedule->id)->count());
+    }
+
+    /**
+     * H8494 — пропуск вслух: занятие курса без всякого Zoom-источника
+     * называется в вердикте (found=0, skipped=1), а не исчезает молча.
+     *
+     * @test
+     */
+    public function lessons_without_resolvable_meeting_id_are_skipped_loudly(): void
+    {
+        $date = now()->toDateString();
+        $orphanCourse = Course::factory()->create(['zoom_meeting_id' => null, 'zoom_link' => null]);
+        Schedule::create([
+            'title' => 'Занятие', 'course_id' => $orphanCourse->id,
+            'start' => $date.' 14:00:00', 'end' => $date.' 16:00:00',
+        ]);
+
+        $this->fakeZoom([]);
+
+        $this->artisan('attendance:backfill-streams --scheduled --apply')
+            ->expectsOutputToContain('Занятия без разрешимого zoom_meeting_id')
+            ->expectsOutputToContain('Вердикт автосбора (H8494): found=0, skipped=1')
+            ->assertSuccessful();
+
+        $this->assertSame(0, WebinarAttendance::count());
+    }
+
+    /**
+     * H8494 — вердикт уходит админам в Telegram (fail-open мокается на
+     * доставленного получателя, в строке счётчики, имён студентов нет).
+     *
+     * @test
+     */
+    public function scheduled_mode_sends_the_telegram_verdict(): void
+    {
+        $date = now()->toDateString();
+        [, $schedule] = $this->courseWithLesson($date);
+
+        $this->fakeZoom(
+            [['uuid' => 'occ-1==', 'start_time' => $date.'T10:21:00Z']],
+            [
+                ['participant_uuid' => 'p1', 'name' => 'A', 'join_time' => $date.'T10:22:00Z', 'duration' => 3600],
+                ['participant_uuid' => 'p2', 'name' => 'B', 'join_time' => $date.'T10:23:00Z', 'duration' => 1800],
+            ],
+        );
+
+        $this->mock(TelegramAdminNotifier::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('notifyAdmins')->once()->andReturnUsing(function (string $text): array {
+                $this->assertStringContainsString('Вердикт автосбора (H8494)', $text);
+                $this->assertStringContainsString('found=2', $text);
+
+                return ['chat-1'];
+            });
+        });
+
+        $this->artisan('attendance:backfill-streams --scheduled --apply')->assertSuccessful();
+
+        $this->assertSame(2, WebinarAttendance::where('schedule_id', $schedule->id)->count());
     }
 }

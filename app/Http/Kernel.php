@@ -33,6 +33,7 @@ use App\Http\Middleware\VerifyTelegramMagnetWebhook;
 use App\Http\Middleware\VerifyTelegramZapisiWebhook;
 use App\Http\Middleware\VerifyVkBotWebhook;
 use App\Http\Middleware\VerifyVkMagnetCallback;
+use App\Http\Middleware\VerifyVkTokenApi;
 use Illuminate\Auth\Middleware\AuthenticateWithBasicAuth;
 use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
@@ -142,6 +143,7 @@ class Kernel extends HttpKernel
         'verify.n8n.leadstep' => VerifyLeadStepWebhook::class,
         'verify.n8n.clipcallback' => VerifyLectureClipCallbackWebhook::class,
         'verify.n8n.lessonbanners' => VerifyLessonBannersApi::class,
+        'verify.n8n.vktoken' => VerifyVkTokenApi::class,
         'verify.n8n.examscores' => VerifyExamScoresWebhook::class,
         // --- ЛЕГАСИ БОТ-ВЕБХУКИ (enforce-if-configured) ---
         'verify.tg.bot' => VerifyTelegramBotWebhook::class,
