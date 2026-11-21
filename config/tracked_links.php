@@ -44,6 +44,7 @@ require __DIR__.'/../resources/tracked_links/volunteer.php';
 require __DIR__.'/../resources/tracked_links/kal26.php';
 require __DIR__.'/../resources/tracked_links/bf11.php';
 require __DIR__.'/../resources/tracked_links/ling_stories.php';
+require __DIR__.'/../resources/tracked_links/rl.php';
 
 return [
     'session_key' => 'tracked_link_attribution',
