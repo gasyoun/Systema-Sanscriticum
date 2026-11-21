@@ -178,6 +178,24 @@ class LessonAiTest extends TestCase
         $this->assertStringContainsString('data-ts="62"', $html);
     }
 
+    public function test_single_word_is_explained_as_a_term_with_lesson_context(): void
+    {
+        $this->fakeNode('Сандхи — слияние звуков.');
+        [$course, $lesson, $student] = $this->openLesson();
+
+        $this->actingAs($student)
+            ->postJson(route('student.lesson.ai', [$course->slug, $lesson->id]), ['task' => 'explain', 'text' => 'сандхи'])
+            ->assertOk();
+
+        // Одно слово — термин в кавычках + место из стенограммы, а не голый «Фрагмент: сандхи»
+        // (модель отвечала «выделите текст на санскрите»).
+        Http::assertSent(function (HttpRequest $r): bool {
+            $user = (string) ($r->data()['messages'][1]['content'] ?? '');
+
+            return str_contains($user, 'выражение «сандхи»') && str_contains($user, '[00:41]');
+        });
+    }
+
     public function test_outline_needs_notes(): void
     {
         Http::fake();
