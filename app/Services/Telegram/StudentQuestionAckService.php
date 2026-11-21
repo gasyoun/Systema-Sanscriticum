@@ -6,8 +6,8 @@ namespace App\Services\Telegram;
 
 use App\Jobs\ComposeStudentQuestionDraft;
 use App\Models\Group;
-use App\Models\MarketingSetting;
 use App\Models\LessonTelegramHook;
+use App\Models\MarketingSetting;
 use App\Models\TelegramChatPost;
 use App\Models\TelegramScheduleReschedule;
 use App\Models\TelegramStudentQuestion;
@@ -109,7 +109,7 @@ final class StudentQuestionAckService
             return;
         }
 
-        if (TelegramStudentQuestion::POST_KIND_UNKNOWN !== $postKind && $this->isRescheduleProposal($text)) {
+        if ($postKind !== TelegramStudentQuestion::POST_KIND_UNKNOWN && $this->isRescheduleProposal($text)) {
             // Предложение переноса в ответ на пост бота: тоже только стопочка.
             $this->queue($group, $messageId, $from, $text, TelegramStudentQuestion::KIND_PROPOSAL, $postKind, $replyId, $repliedText, $sentAt);
             $this->sendAck($chatId, $messageId, self::PROPOSAL_HINT);
@@ -117,7 +117,7 @@ final class StudentQuestionAckService
             return;
         }
 
-        if (TelegramStudentQuestion::POST_KIND_UNKNOWN !== $postKind) {
+        if ($postKind !== TelegramStudentQuestion::POST_KIND_UNKNOWN) {
             // Тип поста опознан → canned-подсказка одной строкой; стопочка не нужна.
             $this->sendAck($chatId, $messageId, self::HINTS[$postKind]);
 
