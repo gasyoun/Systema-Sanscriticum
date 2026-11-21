@@ -228,7 +228,7 @@ def policy_card(negation):
     from csl_pyutil import mark_cyrillic
     e = html.escape
     lines = []
-    for name, r in negation[:8]:
+    for name, r in negation:  # list every row: the card's counts use len(negation), a cap makes the list understate the data (GTD YMH)
         cur = rarest(r["nkrya_tokens"])
         lines.append("<li>%s — %s (%s)</li>" % (
             e(iast(r.get(SOURCES[name][1], ""))), mark_cyrillic("«%s»" % e(r["gloss_ru"])),
