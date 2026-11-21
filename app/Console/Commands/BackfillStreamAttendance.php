@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Models\Course;
 use App\Models\Schedule;
 use App\Models\WebinarAttendance;
+use App\Services\Access\TelegramAdminNotifier;
 use App\Services\Zoom\AttendanceRecorder;
 use App\Services\Zoom\ZoomService;
 use App\Support\InsertOnlyGuard;
@@ -14,6 +15,8 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * H3761, волна 3 — досбор посещаемости потоков курса из Zoom Reports API.
@@ -46,12 +49,14 @@ class BackfillStreamAttendance extends Command
 {
     protected $signature = 'attendance:backfill-streams
         {--course=* : ID курса; можно повторять. Без опции — все курсы с разрешимым meeting_id}
-        {--since= : Не рассматривать запуски раньше этой даты (YYYY-MM-DD). Обязателен}
+        {--since= : Не рассматривать запуски раньше этой даты (YYYY-MM-DD). Обязателен вне --scheduled}
         {--until= : Не рассматривать запуски позже этой даты (YYYY-MM-DD), по умолчанию сегодня}
         {--min-participants=2 : Запуск с меньшим числом участников считается служебным, а не занятием}
         {--meeting-id= : Zoom meeting_id вручную — для курса, у которого его нет ни в карточке, ни в занятиях. Только с одним --course}
         {--slot= : Окно занятия «Dow,HH:MM-HH:MM» по времени приложения, напр. "Wed,12:30-15:30". Обязателен вместе с --create-lessons}
         {--create-lessons : Завести занятие под запуск Zoom, которому в системе занятия нет. Только со --slot; решение об атрибуции принимает человек}
+        {--scheduled : Режим планировщика (H8494): окно по умолчанию «вчера..сегодня», вердикт-строка с found/skipped в лог и Telegram}
+        {--notify : Отправить вердикт-строку админам в Telegram (H8494), не меняя окно}
         {--apply : Выполнить вставки (без опции — сухой прогон)}';
 
     protected $description = 'Досбор webinar_attendances потоков из Zoom Reports API — только вставки, без правки существующих строк';
@@ -64,7 +69,13 @@ class BackfillStreamAttendance extends Command
             return self::FAILURE;
         }
 
-        $since = $this->option('since');
+        $scheduled = (bool) $this->option('scheduled');
+        $notify = (bool) $this->option('notify') || $scheduled;
+
+        // H8494: режим планировщика получает окно «вчера..сегодня» — занятие,
+        // закончившееся после вечернего прогона, добирается следующим (машина
+        // только вставляет, поэтому повторное покрытие окна не даёт дублей).
+        $since = $this->option('since') ?? ($scheduled ? now()->subDay()->toDateString() : null);
         if (! $since) {
             $this->error('--since обязателен: общая комната Zoom хранит и чужие активности, дата отсекает их.');
 
@@ -103,8 +114,27 @@ class BackfillStreamAttendance extends Command
         }
 
         $courses = $this->targetCourses();
+
+        // H8494 — пропуск вслух: занятия завершившегося дня, чей курс не имеет
+        // разрешимого zoom_meeting_id нигде. Такие занятия не попадают ни в
+        // план вставок, ни в слепые таблицы ниже — без отдельного учёта они
+        // пропадали бы молча. Считаются только на полном прогоне (без --course):
+        // явный --course — выбор оператора, и сужать вердикт за него нельзя.
+        $skippedUnresolved = $this->option('course') === []
+            ? $this->skippedUnresolvedLessons($sinceDate, $untilDate)
+            : [];
+
         if ($courses->isEmpty()) {
             $this->warn('Не найдено ни одного курса с разрешимым zoom_meeting_id — досбирать нечего.');
+            $this->reportSkippedUnresolved($skippedUnresolved);
+            $this->emitVerdict(
+                found: 0,
+                blindLessons: 0,
+                blindZoomRuns: 0,
+                unresolvedLessons: count($skippedUnresolved),
+                insertedRows: null,
+                notify: $notify,
+            );
 
             return self::SUCCESS;
         }
@@ -191,9 +221,18 @@ class BackfillStreamAttendance extends Command
         }
 
         $this->renderReport($planRows, $blindLessons, $blindZoomRuns, $totalInsertable);
+        $this->reportSkippedUnresolved($skippedUnresolved);
 
         if (! $this->option('apply')) {
             $this->comment('Сухой прогон — ничего не записано. Повторите с --apply.');
+            $this->emitVerdict(
+                found: $totalInsertable,
+                blindLessons: count($blindLessons),
+                blindZoomRuns: count($blindZoomRuns),
+                unresolvedLessons: count($skippedUnresolved),
+                insertedRows: null,
+                notify: $notify,
+            );
 
             return self::SUCCESS;
         }
@@ -202,8 +241,136 @@ class BackfillStreamAttendance extends Command
 
         $this->info("Заведено занятий: {$result['created']}. Вставлено строк посещаемости: {$result['inserted']}.");
         $this->comment('Ни одна существующая строка не изменена и не удалена (InsertOnlyGuard).');
+        $this->emitVerdict(
+            found: $result['inserted'],
+            blindLessons: count($blindLessons),
+            blindZoomRuns: count($blindZoomRuns),
+            unresolvedLessons: count($skippedUnresolved),
+            insertedRows: $result['inserted'],
+            notify: $notify,
+        );
 
         return self::SUCCESS;
+    }
+
+    /**
+     * H8494 — занятия окна без разрешимого zoom_meeting_id, пропущенные вслух.
+     *
+     * Ровно та часть слепого периода, которую таблицы ниже не видят: слепое
+     * занятие (источник Zoom не сохранил) и слепой запуск (в системе нет
+     * занятия) считаются по курсам с разрешимым id, а курс БЕЗ id вообще
+     * раньше не упоминался нигде. Атрибуция его комнаты и точечный прогон
+     * zoom:backfill-attendance (H3085) — решение человека, машина только
+     * называет такие занятия.
+     *
+     * @return list<array{0: int, 1: string, 2: int}> [courseId, date, scheduleId]
+     */
+    private function skippedUnresolvedLessons(Carbon $sinceDate, Carbon $untilDate): array
+    {
+        if ($this->option('meeting-id')) {
+            // Ручной id валиден только для одного курса; в полном прогоне его
+            // нет, поэтому с ним подсчёт пропусков не имеет смысла.
+            return [];
+        }
+
+        $rows = Schedule::query()
+            ->whereNotNull('start')
+            ->whereNotNull('course_id')
+            ->whereBetween('start', [$sinceDate, $untilDate])
+            ->orderBy('id')
+            ->get();
+
+        $resolvedCourses = [];
+
+        return $rows
+            ->map(function (Schedule $schedule) use (&$resolvedCourses): ?array {
+                $courseId = (int) $schedule->course_id;
+                if (! array_key_exists($courseId, $resolvedCourses)) {
+                    /** @var Course|null $course */
+                    $course = Course::find($courseId);
+                    $resolvedCourses[$courseId] = $course === null ? null : $this->resolveMeetingId($course)[0];
+                }
+
+                if ($resolvedCourses[$courseId] !== null) {
+                    return null;
+                }
+
+                return [$courseId, $schedule->start->toDateString(), $schedule->id];
+            })
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    /** Громкая таблица пропущенных занятий — пустой список не печатается. */
+    private function reportSkippedUnresolved(array $skippedUnresolved): void
+    {
+        if ($skippedUnresolved === []) {
+            return;
+        }
+
+        $this->newLine();
+        $this->warn('Занятия без разрешимого zoom_meeting_id — пропуск вслух (H8494), посещаемость не собирается:');
+        $this->table(
+            ['Курс', 'Дата', 'Schedule'],
+            array_map(fn (array $r) => [$r[0], $r[1], $r[2]], $skippedUnresolved)
+        );
+    }
+
+    /**
+     * Вердикт-строка H8494: одна строка с found/skipped в консоль и в лог
+     * всегда, в Telegram — по --notify/--scheduled (fail-open: сбой TG не
+     * роняет прогон). В строке нет имён студентов — только счётчики и окно.
+     */
+    private function emitVerdict(
+        int $found,
+        int $blindLessons,
+        int $blindZoomRuns,
+        int $unresolvedLessons,
+        ?int $insertedRows,
+        bool $notify,
+    ): void {
+        $skipped = $blindLessons + $blindZoomRuns + $unresolvedLessons;
+        $verdict = sprintf(
+            'Вердикт автосбора (H8494): found=%d, skipped=%d (слепые занятия %d, запуски Zoom без занятия %d, занятия без meeting_id %d).',
+            $found,
+            $skipped,
+            $blindLessons,
+            $blindZoomRuns,
+            $unresolvedLessons,
+        );
+
+        $this->line($verdict);
+
+        Log::info('attendance.auto_capture_verdict', [
+            'found' => $found,
+            'skipped' => $skipped,
+            'blind_lessons' => $blindLessons,
+            'blind_zoom_runs' => $blindZoomRuns,
+            'unresolved_lessons' => $unresolvedLessons,
+            'inserted_rows' => $insertedRows,
+        ]);
+
+        if (! $notify) {
+            return;
+        }
+
+        try {
+            $delivered = app(TelegramAdminNotifier::class)->notifyAdmins($verdict);
+
+            if ($delivered === []) {
+                Log::warning('attendance.auto_capture_verdict_undelivered', ['reason' => 'tg not configured or send failed']);
+                $this->comment('TG-вердикт не доставлен (нет настроенных получателей или сбой отправки).');
+            } else {
+                Log::info('attendance.auto_capture_verdict_delivered', ['recipients' => count($delivered)]);
+                $this->comment('TG-вердикт доставлен получателям: '.count($delivered).'.');
+            }
+        } catch (Throwable $e) {
+            // Soft-alert по контракту: сбой доставки не имеет права ронять сбор.
+            Log::warning('attendance.auto_capture_verdict_send_failed', [
+                'error' => mb_substr($e->getMessage(), 0, 200),
+            ]);
+        }
     }
 
     /** @return Collection<int, Course> */
