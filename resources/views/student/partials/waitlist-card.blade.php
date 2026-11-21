@@ -4,7 +4,7 @@
     <div class="mb-8" x-data="waitlistVote()">
         <div class="flex items-center justify-between mb-3">
             <h2 class="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
-                <i class="fas fa-hand-raised mr-2 text-brand"></i>Список ожидания
+                <i class="fas fa-hand mr-2 text-brand"></i>Список ожидания
             </h2>
             <p class="text-xs text-gray-400">Голосов наберется минимум — откроется оплата; оплаты к сроку — группа стартует</p>
         </div>
