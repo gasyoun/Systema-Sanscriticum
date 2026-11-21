@@ -17,6 +17,12 @@ class Group extends Model
     use HasFactory;
 
     /** Статус набора (H162): forming = набирается, active = идёт обучение, archived = завершена. */
+    public const STATUS_FORMING = 'forming';
+
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_ARCHIVED = 'archived';
+
     public const STATUSES = [
         'forming' => 'Набирается',
         'active' => 'Идёт обучение',

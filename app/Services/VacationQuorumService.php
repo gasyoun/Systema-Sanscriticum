@@ -56,6 +56,8 @@ class VacationQuorumService
             ->where('is_on_vacation', true)
             ->whereNull('vacation_resume_date')
             ->whereNotNull('telegram_chat_id')
+            // H8526: archived-группы («стоп»/кик) кворумом не беспокоим.
+            ->where('status', '!=', Group::STATUS_ARCHIVED)
             ->whereDoesntHave('vacationQuorumPolls')
             ->get()
             ->filter(fn (Group $group): bool => $this->inAskWindow($today))

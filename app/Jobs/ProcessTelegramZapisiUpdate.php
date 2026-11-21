@@ -16,6 +16,8 @@ use App\Services\Telegram\CancelClassCommandService;
 use App\Services\Telegram\CancelUsageHint;
 use App\Services\Telegram\ChatJoinRequestApprover;
 use App\Services\Telegram\DateAwareCancelService;
+use App\Services\Telegram\StopGroupCallbackService;
+use App\Services\Telegram\StopGroupIntentService;
 use App\Services\Telegram\VacationCommandService;
 use App\Services\Telegram\ZapisiPollService;
 use App\Services\TelegramHarvest\HarvestStoreWriter;
@@ -105,6 +107,20 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
             return;
         }
 
+        // H8526: бот покинул чат / его выгнали (my_chat_member kicked/left) —
+        // автоархив группы той же машиной, что кнопка «Серия окончена»: без
+        // прощального поста (бота в чате больше нет), с алертом MG. Добавление
+        // бота сюда не попадает — оно уходит форвардом на welcome (H4314).
+        if (isset($this->update['my_chat_member']) && is_array($this->update['my_chat_member'])) {
+            try {
+                StopGroupIntentService::archiveByKick($this->update['my_chat_member']);
+            } catch (Throwable $e) {
+                Log::warning('StopGroupIntent: kick auto-archive failed', ['error' => $e->getMessage()]);
+            }
+
+            return;
+        }
+
         $homeworkTag = app(HomeworkTelegramTagService::class);
         if (isset($this->update['callback_query']) && is_array($this->update['callback_query'])) {
             // Календарь контента: выбор площадок для поста из канала — ccr:.
@@ -114,6 +130,11 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
 
             // Разовый перенос: кнопка отмены переноса — свой префикс arsu:.
             if (app(AnnounceRescheduleCallbackService::class)->handle($this->update['callback_query'])) {
+                return;
+            }
+
+            // H8526: кнопки останова группы — свои префиксы srx:/srv:/srxn.
+            if (app(StopGroupCallbackService::class)->handle($this->update['callback_query'])) {
                 return;
             }
 
@@ -179,6 +200,16 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
             app(VacationCommandService::class)->handle($message);
         } catch (Throwable $e) {
             Log::warning('VacationCommand: handler failed', ['error' => $e->getMessage()]);
+        }
+
+        // H8526: «мёртвая группа» — точные фразы останова («стоп», «серия
+        // окончена», «отмена всех занятий», «группа закрыта», …) от учителя/
+        // менеджера → кнопки [Серия окончена] [Каникулы] [Не останавливать].
+        // Применение — только явный тап (StopGroupCallbackService).
+        try {
+            app(StopGroupIntentService::class)->handle($message);
+        } catch (Throwable $e) {
+            Log::warning('StopGroupIntent: handler failed', ['error' => $e->getMessage()]);
         }
 
         // Разовый перенос обычными словами: явные и безопасные случаи применяются,

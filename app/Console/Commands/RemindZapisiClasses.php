@@ -119,6 +119,12 @@ class RemindZapisiClasses extends Command
                 continue;
             }
 
+            // H8526: мёртвая группа — статус archived («стоп»/кик/панель).
+            // Пропуск БЕЗ пометки: воскрешение группы вернёт напоминания.
+            if ($group->status === Group::STATUS_ARCHIVED) {
+                continue;
+            }
+
             if (TeacherVacation::covers($group, $schedule->start)) {
                 continue;
             }

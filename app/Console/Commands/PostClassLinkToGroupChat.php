@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Jobs\SendZapisiBotMessageJob;
+use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Schedule;
 use Illuminate\Console\Command;
@@ -86,6 +87,11 @@ class PostClassLinkToGroupChat extends Command
             // Нет чата группы — постить некуда; НЕ помечаем как отправленное,
             // чтобы после заполнения telegram_chat_id ссылка все же ушла.
             if ($group === null || empty($group->telegram_chat_id)) {
+                continue;
+            }
+
+            // H8526: мёртвая группа — ссылки в архивированный чат не постим.
+            if ($group->status === Group::STATUS_ARCHIVED) {
                 continue;
             }
 
