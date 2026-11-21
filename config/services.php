@@ -477,6 +477,21 @@ return [
             'intval',
             explode(',', (string) env('TELEGRAM_ZAPISI_ANNOUNCE_RESCHEDULE_GROUP_IDS', '')),
         ))),
+        // H8527: студент не молчит — canned-подсказка на reply-вопрос к посту
+        // бота + стопочка предложений. Default TRUE по рулингу MG 21-11
+        // («молчание бота в учебном чате НЕ допускается никогда»); OFF —
+        // только аварийный стоп, не этап раскатки.
+        'student_question_ack_detect' => (bool) env('TELEGRAM_ZAPISI_STUDENT_QUESTION_ACK_DETECT', true),
+        // H8527: пустой список = ВСЕ zapisi-группы (сознательно НЕ fail-closed,
+        // в отличие от соседей: подсказка ничего не мутирует, а её отсутствие
+        // и есть инцидент); непустой — allowlist для точечного раскатывания.
+        'student_question_group_ids' => array_values(array_filter(array_map(
+            'intval',
+            explode(',', (string) env('TELEGRAM_ZAPISI_STUDENT_QUESTION_GROUP_IDS', '')),
+        ))),
+        // H8527: CuratorAi-черновик куратору на каждый вопрос стопочки.
+        // LLM живёт только в черновике (P1), в учебный чат не ходит.
+        'student_question_ai_draft' => (bool) env('TELEGRAM_ZAPISI_STUDENT_QUESTION_AI_DRAFT', true),
         // Рубильник АВАРИЙНОГО поллинга. Штатно апдейты приходят вебхуком через
         // входной узел; поллинг нужен, только когда узел недоступен. Дефолт
         // false осознанно: команда снимает вебхук, и случайный запуск иначе
