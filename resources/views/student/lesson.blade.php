@@ -763,9 +763,11 @@
                 </div>
             </div>
 
-            <div x-ref="scrollContainer" class="flex-1 overflow-y-auto p-3 pb-10 space-y-1 custom-scrollbar bg-white" @wheel="autoScroll = false" @touchstart="autoScroll = false">
+            <div x-ref="scrollContainer" class="flex-1 overflow-y-auto p-3 pb-10 space-y-1 custom-scrollbar bg-white {{ $lessonAiEnabled ? 'lesson-ai-selectable' : '' }}" @wheel="autoScroll = false" @touchstart="autoScroll = false">
                 @foreach($transcriptSentences as $sentence)
-                    <button @click.prevent="seekTo({{ $sentence['start'] }})"
+                    {{-- ИИ-помощник: фразу можно выделить мышью для «✦ Объяснить» —
+                         клик после выделения не перематывает видео. --}}
+                    <button @click.prevent="{{ $lessonAiEnabled ? 'window.getSelection().isCollapsed && ' : '' }}seekTo({{ $sentence['start'] }})"
                             x-show="matches({{ json_encode($sentence['safe_text']) }})"
                             :class="(currentTime >= {{ $sentence['start'] }} && currentTime <= {{ $sentence['end'] }}) 
                                 ? 'is-active-sentence bg-[#F4F1EA] border-l-4 border-brand text-[#1A1A1A] font-bold z-10 relative' 

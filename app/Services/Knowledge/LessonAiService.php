@@ -37,6 +37,9 @@ final class LessonAiService
 {
     public const TASKS = ['summary', 'quiz', 'outline', 'explain', 'ask'];
 
+    /** Правка промптов пересказа/тезисов ⇒ +1: кэш занятий пересчитается. */
+    private const PROMPT_VERSION = 2;
+
     /** Пересказ стенограммы одинаков для всех студентов урока — держим долго. */
     private const SUMMARY_TTL = 60 * 60 * 24 * 30;
 
@@ -123,7 +126,8 @@ final class LessonAiService
 
         $digest = $this->digest($lesson);
         $what = $digest['parts'] > 1
-            ? 'Перед тобой тезисы занятия по частям, у каждого тезиса таймкод [мм:сс].'
+            ? 'Перед тобой тезисы длинного занятия по частям, у каждого тезиса таймкод [мм:сс]. '
+                .'Не переписывай тезисы подряд — обобщи их до крупных тем.'
             : 'Перед тобой расшифровка занятия, каждая строка начинается с таймкода [мм:сс]. '
                 .'Это автоматическое распознавание устной речи: возможны ошибки в словах и терминах.';
 
@@ -131,7 +135,7 @@ final class LessonAiService
             $what."\n"
                 ."Сделай в Markdown три раздела:\n"
                 ."## Кратко — 3–5 предложений, о чём занятие.\n"
-                ."## Оглавление — 5–15 пунктов вида «- [мм:сс] Тема», таймкод — начало темы.\n"
+                ."## Оглавление — от 5 до 15 пунктов (не больше 15!) вида «- [мм:сс] Тема»: крупные темы занятия, мелкие объединяй; таймкод — начало темы.\n"
                 ."## Главные мысли — 5–10 пунктов с ключевыми идеями, определениями, правилами; в конце пункта таймкод [мм:сс], где это сказано.\n"
                 .'Таймкоды бери только из материала, в том же формате в квадратных скобках. Не добавляй фактов, которых в материале нет. '
                 .self::NO_INTRO,
@@ -470,7 +474,7 @@ final class LessonAiService
 
     private function fingerprint(Lesson $lesson): string
     {
-        return substr(md5((string) $lesson->transcript_file.'|'.$lesson->updated_at?->timestamp.'|'.config('knowledge.generation_model')), 0, 12);
+        return substr(md5(self::PROMPT_VERSION.'|'.$lesson->transcript_file.'|'.$lesson->updated_at?->timestamp.'|'.config('knowledge.generation_model')), 0, 12);
     }
 
     private function summaryKey(Lesson $lesson): string

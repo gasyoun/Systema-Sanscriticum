@@ -3,6 +3,8 @@
      (seekTo, activeTab). Ответы приходят уже отрендеренным безопасным HTML
      (LessonAiService::render), таймкоды — кнопки .lesson-ai-ts. --}}
 <style>
+    /* Фразы стенограммы — кнопки; без этого их текст не выделить для «✦ Объяснить». */
+    .lesson-ai-selectable button { user-select: text; -webkit-user-select: text; }
     .lesson-ai-result { font-size: 14px; line-height: 1.6; color: #1f2937; }
     .lesson-ai-result h1, .lesson-ai-result h2, .lesson-ai-result h3 { font-weight: 800; color: #111827; margin: 1rem 0 .4rem; font-size: 15px; }
     .lesson-ai-result h2:first-child, .lesson-ai-result h3:first-child { margin-top: 0; }
