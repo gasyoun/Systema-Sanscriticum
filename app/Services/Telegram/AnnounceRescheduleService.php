@@ -22,22 +22,41 @@ use InvalidArgumentException;
  * Only a fully resolved source and target may mutate. Everything ambiguous gets
  * a clarification reply and no schedule write. Source dates are interpreted at
  * the Telegram message timestamp so a later replay keeps «сегодня» honest.
+ *
+ * H8527: мульти-перенос и сдвиг дня недели. Явные даты парятся по порядку
+ * («перенести 24.12 и 31.12 на 26.12 и 28.12» → две пары), дни недели
+ * («перенести четверг на пятницу») двигают все будущие занятия этого дня
+ * недели группы; каждое движение — своя TelegramScheduleReschedule-строка
+ * и свой чек с кнопкой отмены. Несовпадение числа дат, прошедший источник
+ * или занятый целевой слот → уточнение и НОЛЬ мутаций (одна транзакция).
  */
 final class AnnounceRescheduleService
 {
-    private const DATE_PATTERN = '/(\d{1,2})[.\/](\d{1,2})(?:[.\/](\d{2,4}))?/u';
+    private const ANCHORED_DATE_PATTERN = '/(на\s+)?(\d{1,2})[.\/](\d{1,2})(?:[.\/](\d{2,4}))?/u';
 
     private const TIME_PATTERN = '/\b([01]?\d|2[0-3])[.:]([0-5]\d)\b/u';
 
     private const CLARIFY_CLAIM_TTL_SECONDS = 86400;
 
+    private const WEEKDAY_WORDS = [
+        1 => ['понедельник', 'понедельника'],
+        2 => ['вторник', 'вторника'],
+        3 => ['среду', 'среды', 'среда'],
+        4 => ['четверг', 'четверга'],
+        5 => ['пятницу', 'пятницы', 'пятница'],
+        6 => ['субботу', 'субботы', 'суббота'],
+        0 => ['воскресенье', 'воскресенья'],
+    ];
+
     public static function matches(array $message): bool
     {
         $text = self::normalize($message);
 
+        // H8527: кроме «занятие/занят» распознаём списки дат и дни недели —
+        // «перенести 24.12 и 31.12 на 26.12 и 28.12», «перенести четверг на пятницу».
         return $text !== ''
             && preg_match('/перенос|перенес/u', $text) === 1
-            && preg_match('/занят|урок/u', $text) === 1;
+            && preg_match('/занят|урок|\d{1,2}[.\/]\d{1,2}|понедельн|вторник|сред|четверг|пятниц|суббот|воскресень/u', $text) === 1;
     }
 
     public function handle(array $message): void
@@ -70,6 +89,8 @@ final class AnnounceRescheduleService
 
         // Повтор уже применённого сообщения не должен превращаться в запрос
         // уточнения после того, как исходная дата исчезла из расписания.
+        // Мульти-перенос применяется одной транзакцией, поэтому наличие
+        // любой строки источника означает «всё уже применено».
         $alreadyHandled = TelegramScheduleReschedule::query()
             ->where('telegram_chat_id', $chatId)
             ->where('telegram_message_id', $messageId)
@@ -79,77 +100,60 @@ final class AnnounceRescheduleService
         }
 
         $reference = Carbon::createFromTimestamp((int) $sentAt, (string) config('app.timezone', 'Europe/Moscow'));
-        $parsed = $this->parse(self::normalize($message), $reference);
-        if ($parsed === null) {
+        $plan = $this->plan(self::normalize($message), $reference);
+        if ($plan === null) {
             $this->requestConfirmation($chatId, $messageId);
 
             return;
         }
 
-        $candidates = Schedule::query()
-            ->where('group_id', $group->id)
-            ->whereBetween('start', [
-                $parsed['source']->copy()->startOfDay(),
-                $parsed['source']->copy()->endOfDay(),
-            ])
-            ->orderBy('start')
-            ->limit(2)
-            ->get();
-
-        if ($candidates->count() !== 1 || $candidates->first()?->start === null) {
-            $this->requestConfirmation($chatId, $messageId);
-
-            return;
-        }
-
-        /** @var Schedule $schedule */
-        $schedule = $candidates->first();
-        $newStart = $parsed['target']->copy();
-        if ($parsed['time'] !== null) {
-            $newStart->setTime($parsed['time'][0], $parsed['time'][1], 0);
-        } else {
-            $newStart->setTime((int) $schedule->start->format('H'), (int) $schedule->start->format('i'), 0);
-        }
-
-        if ($newStart->lte(now()) || $newStart->eq($schedule->start)) {
-            $this->requestConfirmation($chatId, $messageId, 'Новое время должно быть в будущем и отличаться от прежнего.');
+        $reason = null;
+        $moves = $this->resolvePlan($group, $plan, $reference, $reason);
+        if ($moves === null || $moves === []) {
+            $this->requestConfirmation($chatId, $messageId, $reason);
 
             return;
         }
 
         try {
-            $action = DB::transaction(function () use ($chatId, $messageId, $fromId, $group, $schedule, $newStart): ?TelegramScheduleReschedule {
-                $exists = TelegramScheduleReschedule::query()
-                    ->where('telegram_chat_id', $chatId)
-                    ->where('telegram_message_id', $messageId)
-                    ->exists();
-                if ($exists) {
-                    return null;
+            $actions = DB::transaction(function () use ($chatId, $messageId, $fromId, $group, $moves): array {
+                $rows = [];
+                foreach ($moves as $move) {
+                    $exists = TelegramScheduleReschedule::query()
+                        ->where('telegram_chat_id', $chatId)
+                        ->where('telegram_message_id', $messageId)
+                        ->where('schedule_id', $move['schedule']->id)
+                        ->exists();
+                    if ($exists) {
+                        continue;
+                    }
+
+                    $schedule = $move['schedule'];
+                    $oldStart = $schedule->start->copy();
+                    $oldEnd = $schedule->end?->copy();
+                    $moved = app(ScheduleMover::class)->reschedule($schedule, $move['newStart']);
+
+                    $rows[] = TelegramScheduleReschedule::create([
+                        'telegram_chat_id' => $chatId,
+                        'telegram_message_id' => $messageId,
+                        'schedule_id' => $schedule->id,
+                        'group_id' => $group->id,
+                        'actor_telegram_id' => $fromId,
+                        'old_start' => $oldStart,
+                        'old_end' => $oldEnd,
+                        'new_start' => $moved->start,
+                        'new_end' => $moved->end,
+                        'status' => TelegramScheduleReschedule::STATUS_APPLIED,
+                        'undo_expires_at' => now()->addHour(),
+                    ]);
                 }
 
-                $oldStart = $schedule->start->copy();
-                $oldEnd = $schedule->end?->copy();
-                $moved = app(ScheduleMover::class)->reschedule($schedule, $newStart);
-
-                return TelegramScheduleReschedule::create([
-                    'telegram_chat_id' => $chatId,
-                    'telegram_message_id' => $messageId,
-                    'schedule_id' => $schedule->id,
-                    'group_id' => $group->id,
-                    'actor_telegram_id' => $fromId,
-                    'old_start' => $oldStart,
-                    'old_end' => $oldEnd,
-                    'new_start' => $moved->start,
-                    'new_end' => $moved->end,
-                    'status' => TelegramScheduleReschedule::STATUS_APPLIED,
-                    'undo_expires_at' => now()->addHour(),
-                ]);
+                return $rows;
             });
         } catch (InvalidArgumentException $exception) {
             Log::warning('AnnounceReschedule: move refused', [
                 'chat_id' => $chatId,
                 'message_id' => $messageId,
-                'schedule_id' => $schedule->id,
                 'error' => $exception->getMessage(),
             ]);
             $this->requestConfirmation($chatId, $messageId, 'Целевой слот уже занят или недоступен.');
@@ -157,11 +161,13 @@ final class AnnounceRescheduleService
             return;
         }
 
-        if ($action === null) {
+        if ($actions === []) {
             return;
         }
 
-        $this->sendReceipt($action);
+        foreach ($actions as $action) {
+            $this->sendReceipt($action);
+        }
     }
 
     public static function enabledForMessage(array $message): bool
@@ -210,98 +216,174 @@ final class AnnounceRescheduleService
     }
 
     /**
-     * @return array{source: Carbon, target: Carbon, time: array{0: int, 1: int}|null}|null
+     * Разобрать текст в план пар (источник → цель). null = неоднозначно,
+     * безопаснее уточнить и ничего не трогать.
+     *
+     * @return array{mode: string, pairs: list<array{source: ?Carbon, sourceDow: ?int, target: ?Carbon, targetDow: ?int}>, time: array{0: int, 1: int}|null}|null
      */
-    private function parse(string $text, Carbon $reference): ?array
+    private function plan(string $text, Carbon $reference): ?array
     {
-        $target = $this->target($text, $reference);
-        if ($target === null) {
+        $tokens = $this->intentTokens($text, $reference);
+        $targets = array_values(array_filter($tokens, fn (array $token): bool => $token['kind'] === 'target'));
+        $sources = array_values(array_filter($tokens, fn (array $token): bool => $token['kind'] === 'source'));
+        $targets = $this->dedupeTokens($targets);
+        $sources = $this->dedupeTokens($sources);
+
+        if ($targets === []) {
             return null;
         }
 
-        $source = null;
-        $sourceDates = array_values(array_filter(
-            $this->explicitDates($text, $reference),
-            fn (array $item): bool => ! isset($target['offset']) || $item['offset'] !== $target['offset'],
-        ));
-        if (count($sourceDates) > 1) {
-            return null;
-        }
-        if (count($sourceDates) === 1) {
-            $source = $sourceDates[0]['date'];
-        }
-
-        if (preg_match('/\bсегодня\b/u', $text) === 1) {
-            $today = $reference->copy()->startOfDay();
-            if ($source !== null && ! $source->isSameDay($today)) {
-                return null;
-            }
-            $source = $today;
-        }
-
-        if ($source === null || ! $source->isSameDay($reference)) {
+        $time = $this->targetTime($text, max(array_map(fn (array $token): int => $token['end'], $targets)));
+        if ($time === false) {
             return null;
         }
 
-        $time = $this->targetTime($text, $target['end']);
-
-        return $time === false ? null : ['source' => $source, 'target' => $target['date'], 'time' => $time];
-    }
-
-    /** @return array{date: Carbon, offset: int|null, end: int}|null */
-    private function target(string $text, Carbon $reference): ?array
-    {
-        $candidates = [];
-
-        if (preg_match('/\bна\s+завтра\b/u', $text, $match, PREG_OFFSET_CAPTURE) === 1) {
-            $candidates[] = [
-                'date' => $reference->copy()->addDay()->startOfDay(),
-                'offset' => $match[0][1],
-                'end' => $match[0][1] + strlen($match[0][0]),
+        // Режим дня недели: ровно один source-день и одна цель.
+        if (count($sources) === 1 && count($targets) === 1 && isset($sources[0]['dow'])) {
+            return [
+                'mode' => 'weekday',
+                'pairs' => [[
+                    'source' => null,
+                    'sourceDow' => $sources[0]['dow'],
+                    'target' => $targets[0]['date'] ?? null,
+                    'targetDow' => $targets[0]['dow'] ?? null,
+                ]],
+                'time' => $time,
             ];
         }
 
-        if (preg_match('/\bна\s+'.self::datePatternBody().'/u', $text, $match, PREG_OFFSET_CAPTURE) === 1) {
-            $date = $this->dateFromParts($match[1][0], $match[2][0], $match[3][0] ?? '', $reference);
-            if ($date !== null) {
-                $candidates[] = [
-                    'date' => $date,
-                    'offset' => $match[1][1],
-                    'end' => $match[0][1] + strlen($match[0][0]),
+        // Дат-режим: равные списки парятся по порядку упоминания.
+        if (count($sources) === count($targets) && count($sources) >= 1 && ! isset($sources[0]['dow'])) {
+            $today = $reference->copy()->startOfDay();
+            $pairs = [];
+            foreach ($sources as $index => $source) {
+                if ($source['date']->lt($today)) {
+                    // Прошедший источник не двигаем никогда (старый pin).
+                    return null;
+                }
+                $pairs[] = [
+                    'source' => $source['date'],
+                    'sourceDow' => null,
+                    'target' => $targets[$index]['date'] ?? null,
+                    'targetDow' => $targets[$index]['dow'] ?? null,
                 ];
             }
+
+            return ['mode' => 'date', 'pairs' => $pairs, 'time' => $time];
         }
 
-        $weekdays = [
-            1 => ['понедельник', 'понедельника'],
-            2 => ['вторник', 'вторника'],
-            3 => ['среду', 'среды', 'среда'],
-            4 => ['четверг', 'четверга'],
-            5 => ['пятницу', 'пятницы', 'пятница'],
-            6 => ['субботу', 'субботы', 'суббота'],
-            0 => ['воскресенье', 'воскресенья'],
-        ];
-        foreach ($weekdays as $dayOfWeek => $words) {
+        // Единственная цель без явных источников: только явное «сегодня».
+        if (count($sources) === 0 && count($targets) === 1) {
+            if (preg_match('/\bсегодня\b/u', $text) !== 1) {
+                return null;
+            }
+            $target = $targets[0];
+            $targetDate = $target['date'] ?? $this->nextWeekdayDate($reference, (int) $target['dow']);
+
+            return [
+                'mode' => 'date',
+                'pairs' => [['source' => $reference->copy()->startOfDay(), 'sourceDow' => null, 'target' => $targetDate, 'targetDow' => null]],
+                'time' => $time,
+            ];
+        }
+
+        // Число дат не совпало (или смешение дат и дней недели) — уточнение.
+        return null;
+    }
+
+    /**
+     * Токены намерения в порядке упоминания: явные даты, «на завтра» и дни
+     * недели. Цель = после «на» (или «следующий …»); цепочка через «и»/запятую
+     * наследует тип предыдущего токена («24.12 и 31.12 на 26.12 и 28.12»).
+     *
+     * @return list<array{offset: int, end: int, kind: string, date?: Carbon, dow?: int}>
+     */
+    private function intentTokens(string $text, Carbon $reference): array
+    {
+        $tokens = [];
+
+        if (preg_match('/\bна\s+завтра\b/u', $text, $match, PREG_OFFSET_CAPTURE) === 1) {
+            $tokens[] = [
+                'offset' => $match[0][1],
+                'end' => $match[0][1] + strlen($match[0][0]),
+                'kind' => 'target',
+                'anchored' => true,
+                'date' => $reference->copy()->addDay()->startOfDay(),
+            ];
+        }
+
+        preg_match_all(self::ANCHORED_DATE_PATTERN, $text, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+        foreach ($matches as $match) {
+            $date = $this->dateFromParts($match[2][0], $match[3][0], $match[4][0] ?? '', $reference);
+            if ($date === null) {
+                continue;
+            }
+            $anchored = ($match[1][0] ?? '') !== '';
+            $tokens[] = [
+                'offset' => $match[0][1],
+                'end' => $match[0][1] + strlen($match[0][0]),
+                'kind' => $anchored ? 'target' : 'source',
+                'anchored' => $anchored,
+                'date' => $date,
+            ];
+        }
+
+        foreach (self::WEEKDAY_WORDS as $dayOfWeek => $words) {
             foreach ($words as $word) {
-                if (preg_match('/\bна\s+(следующ\w*\s+)?'.$word.'\b/u', $text, $match, PREG_OFFSET_CAPTURE) !== 1) {
+                if (preg_match('/\b(на\s+)?(следующ\w*\s+)?'.$word.'\b/u', $text, $match, PREG_OFFSET_CAPTURE) !== 1) {
                     continue;
                 }
-                $date = $reference->copy()->startOfDay();
-                while ($date->dayOfWeek !== $dayOfWeek) {
-                    $date->addDay();
-                }
-                if (($match[1][0] ?? '') !== '') {
-                    $date->addWeek();
-                }
-                $candidates[] = [
-                    'date' => $date,
-                    'offset' => null,
+                $anchored = ($match[1][0] ?? '') !== '' || ($match[2][0] ?? '') !== '';
+                $tokens[] = [
+                    'offset' => $match[0][1],
                     'end' => $match[0][1] + strlen($match[0][0]),
+                    'kind' => $anchored ? 'target' : 'source',
+                    'anchored' => $anchored,
+                    'dow' => $dayOfWeek,
                 ];
             }
         }
 
-        return count($candidates) === 1 ? $candidates[0] : null;
+        usort($tokens, fn (array $left, array $right): int => $left['offset'] <=> $right['offset']);
+
+        // Цепочка «… и …» / «…, …» наследует тип предыдущего токена — но
+        // никогда не перебивает явный анкор («на …»), иначе один пробел
+        // между «31.12» и «на 26.12» превращал цель в источник.
+        for ($index = 1, $count = count($tokens); $index < $count; $index++) {
+            if ($tokens[$index]['anchored']) {
+                continue;
+            }
+            $gap = substr($text, $tokens[$index - 1]['end'], $tokens[$index]['offset'] - $tokens[$index - 1]['end']);
+            if (preg_match('/^\s*(?:,|и)?\s*$/u', $gap) === 1) {
+                $tokens[$index]['kind'] = $tokens[$index - 1]['kind'];
+                $tokens[$index]['anchored'] = $tokens[$index - 1]['anchored'];
+            }
+        }
+
+        return $tokens;
+    }
+
+    /**
+     * Дедуп токенов: одна и та же дата/день недели, упомянутая дважды
+     * («перенос на пятницу … перенос на пятницу»), — одна цель.
+     *
+     * @param  list<array{offset: int, end: int, kind: string, date?: Carbon, dow?: int}>  $tokens
+     * @return list<array{offset: int, end: int, kind: string, date?: Carbon, dow?: int}>
+     */
+    private function dedupeTokens(array $tokens): array
+    {
+        $seen = [];
+        $unique = [];
+        foreach ($tokens as $token) {
+            $key = isset($token['dow']) ? 'w'.$token['dow'] : 'd'.$token['date']->toDateString();
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $unique[] = $token;
+        }
+
+        return $unique;
     }
 
     /** @return array{0: int, 1: int}|null|false */
@@ -323,19 +405,138 @@ final class AnnounceRescheduleService
         return $times[0] ?? null;
     }
 
-    /** @return list<array{date: Carbon, offset: int}> */
-    private function explicitDates(string $text, Carbon $reference): array
+    /**
+     * План → конкретные движения (расписание + новое время). null или пустой
+     * список = уточнение, ни одной мутации до возврата.
+     *
+     * @param  array{mode: string, pairs: list<array{source: ?Carbon, sourceDow: ?int, target: ?Carbon, targetDow: ?int}>, time: array{0: int, 1: int}|null}  $plan
+     * @return list<array{schedule: Schedule, newStart: Carbon}>|null
+     */
+    private function resolvePlan(Group $group, array $plan, Carbon $reference, ?string &$reason): ?array
     {
-        preg_match_all(self::DATE_PATTERN, $text, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
-        $dates = [];
-        foreach ($matches as $match) {
-            $date = $this->dateFromParts($match[1][0], $match[2][0], $match[3][0] ?? '', $reference);
-            if ($date !== null) {
-                $dates[] = ['date' => $date, 'offset' => $match[0][1]];
-            }
+        $moves = [];
+        if ($plan['mode'] === 'weekday') {
+            return $this->resolveWeekdayPlan($group, $plan['pairs'][0], $plan['time'], $reference, $reason);
         }
 
-        return $dates;
+        foreach ($plan['pairs'] as $pair) {
+            $resolved = $pair['source'] !== null ? $this->resolveDatePair($group, $pair, $plan['time'], $reason) : null;
+            if ($resolved === null) {
+                return null;
+            }
+            $moves[] = $resolved;
+        }
+
+        return $moves;
+    }
+
+    /**
+     * @param  array{source: ?Carbon, sourceDow: ?int, target: ?Carbon, targetDow: ?int}  $pair
+     * @return array{schedule: Schedule, newStart: Carbon}|null
+     */
+    private function resolveDatePair(Group $group, array $pair, ?array $time, ?string &$reason): ?array
+    {
+        $candidates = Schedule::query()
+            ->where('group_id', $group->id)
+            ->whereBetween('start', [
+                $pair['source']->copy()->startOfDay(),
+                $pair['source']->copy()->endOfDay(),
+            ])
+            ->orderBy('start')
+            ->limit(2)
+            ->get();
+
+        if ($candidates->count() !== 1 || $candidates->first()?->start === null) {
+            return null;
+        }
+
+        /** @var Schedule $schedule */
+        $schedule = $candidates->first();
+        $newStart = $pair['target']->copy();
+        if ($time !== null) {
+            $newStart->setTime($time[0], $time[1], 0);
+        } else {
+            $newStart->setTime((int) $schedule->start->format('H'), (int) $schedule->start->format('i'), 0);
+        }
+
+        if ($newStart->lte(now()) || $newStart->eq($schedule->start)) {
+            $reason = 'Новое время должно быть в будущем и отличаться от прежнего.';
+
+            return null;
+        }
+
+        return ['schedule' => $schedule, 'newStart' => $newStart];
+    }
+
+    /**
+     * «перенести четверг на пятницу»: двигаем ВСЕ будущие занятия источника-дня
+     * недели на ближайший целевой день недели (вперёд, без возврата на неделю
+     * назад). «перенести четверг на 28.11»: только одно будущее вхождение.
+     *
+     * @param  array{source: ?Carbon, sourceDow: ?int, target: ?Carbon, targetDow: ?int}  $pair
+     * @return list<array{schedule: Schedule, newStart: Carbon}>|null
+     */
+    private function resolveWeekdayPlan(Group $group, array $pair, ?array $time, Carbon $reference, ?string &$reason): ?array
+    {
+        if ($pair['sourceDow'] === null) {
+            return null;
+        }
+
+        $entries = Schedule::query()
+            ->where('group_id', $group->id)
+            ->where('start', '>=', $reference->copy()->startOfDay())
+            ->orderBy('start')
+            ->limit(120)
+            ->get()
+            ->filter(fn (Schedule $entry): bool => $entry->start !== null && (int) $entry->start->dayOfWeek === $pair['sourceDow'])
+            ->values();
+
+        if ($entries->isEmpty()) {
+            return null;
+        }
+
+        $moves = [];
+        foreach ($entries as $entry) {
+            if ($pair['targetDow'] !== null) {
+                $delta = (($pair['targetDow'] - (int) $entry->start->dayOfWeek) + 7) % 7;
+                if ($delta === 0) {
+                    $delta = 7;
+                }
+                $newStart = $entry->start->copy()->addDays($delta)->startOfDay();
+            } else {
+                if ($entries->count() !== 1 || $pair['target'] === null) {
+                    // Несколько будущих вхождений и одна конкретная дата — неоднозначно.
+                    return null;
+                }
+                $newStart = $pair['target']->copy();
+            }
+
+            if ($time !== null) {
+                $newStart->setTime($time[0], $time[1], 0);
+            } else {
+                $newStart->setTime((int) $entry->start->format('H'), (int) $entry->start->format('i'), 0);
+            }
+
+            if ($newStart->lte(now()) || $newStart->eq($entry->start)) {
+                $reason = 'Новое время должно быть в будущем и отличаться от прежнего.';
+
+                return null;
+            }
+
+            $moves[] = ['schedule' => $entry, 'newStart' => $newStart];
+        }
+
+        return $moves;
+    }
+
+    private function nextWeekdayDate(Carbon $reference, int $dayOfWeek): Carbon
+    {
+        $date = $reference->copy()->startOfDay();
+        while ((int) $date->dayOfWeek !== $dayOfWeek) {
+            $date->addDay();
+        }
+
+        return $date;
     }
 
     private function dateFromParts(string $dayRaw, string $monthRaw, string $yearRaw, Carbon $reference): ?Carbon
@@ -361,18 +562,13 @@ final class AnnounceRescheduleService
         return $date->startOfDay();
     }
 
-    private static function datePatternBody(): string
-    {
-        return '(\d{1,2})[.\/](\d{1,2})(?:[.\/](\d{2,4}))?';
-    }
-
     private function requestConfirmation(string $chatId, int $messageId, ?string $reason = null): void
     {
         if (! TelegramSendGuard::claimKey('tg:announce-reschedule-clarify:'.$chatId.':'.$messageId, self::CLARIFY_CLAIM_TTL_SECONDS)) {
             return;
         }
 
-        $text = 'Похоже на перенос занятия, но я не могу безопасно определить все детали. Подтвердите в формате «Занятие 27.10 переносим на 30.10 в 08:00».';
+        $text = 'Похоже на перенос занятия, но я не могу безопасно определить все детали. Подтвердите в формате «Занятие 27.10 переносим на 30.10 в 08:00» или списком: «перенести 24.12 и 31.12 на 26.12 и 28.12».';
         if ($reason !== null) {
             $text = $reason."\n".$text;
         }
