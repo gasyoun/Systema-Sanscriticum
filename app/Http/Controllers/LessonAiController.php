@@ -33,7 +33,7 @@ final class LessonAiController extends Controller
 
     public function start(Request $request, string $slug, int $lessonId): JsonResponse
     {
-        abort_unless($this->service->enabled(), 404);
+        abort_unless($this->service->enabledFor($request->user()), 404);
         /** @var User $user */
         $user = $request->user();
         $lesson = $this->resolveAccessible($user, $slug, $lessonId);
@@ -97,7 +97,7 @@ final class LessonAiController extends Controller
 
     public function poll(Request $request, string $slug, int $lessonId, string $token): JsonResponse
     {
-        abort_unless($this->service->enabled(), 404);
+        abort_unless($this->service->enabledFor($request->user()), 404);
         /** @var User $user */
         $user = $request->user();
         $lesson = $this->resolveAccessible($user, $slug, $lessonId);

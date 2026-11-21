@@ -26,8 +26,8 @@
           guard-ом. Тот же эндпоинт student.lesson.note; без JS форма
           деградирует к прежнему ручному POST-сабмиту. --}}
     <script src="{{ asset('js/lesson-note-autosave.js') }}?v={{ filemtime(public_path('js/lesson-note-autosave.js')) }}" defer></script>
-    @if(config('features.lesson_ai'))
-        {{-- ИИ-помощник занятия (features.lesson_ai): вкладка «✦ ИИ». --}}
+    @if(app(\App\Services\Knowledge\LessonAiService::class)->enabledFor(auth()->user()))
+        {{-- ИИ-помощник занятия: флаг features.lesson_ai ВКЛ — всем, ВЫКЛ — только суперадмину. --}}
         <script src="{{ asset('js/lesson-ai.js') }}?v={{ filemtime(public_path('js/lesson-ai.js')) }}" defer></script>
     @endif
     <script defer>
@@ -173,7 +173,8 @@
 
 @php
     $hasAttachments = !empty($lesson->attachments) && is_array($lesson->attachments);
-    $lessonAiEnabled = (bool) config('features.lesson_ai');
+    // ИИ-помощник: флаг ВКЛ — всем, ВЫКЛ — только суперадмину (обкатка на проде).
+    $lessonAiEnabled = app(\App\Services\Knowledge\LessonAiService::class)->enabledFor(auth()->user());
     // Показываем табы, если есть хотя бы транскрипт, файлы или ИИ-помощник
     $showTabs = $hasTranscript || $hasAttachments || $lessonAiEnabled;
 @endphp

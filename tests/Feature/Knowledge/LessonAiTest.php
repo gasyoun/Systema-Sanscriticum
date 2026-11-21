@@ -9,6 +9,7 @@ use App\Models\Group;
 use App\Models\Lesson;
 use App\Models\User;
 use App\Services\Knowledge\LessonAiService;
+use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Support\Carbon;
@@ -63,6 +64,34 @@ class LessonAiTest extends TestCase
 
         $this->actingAs($student)
             ->postJson(route('student.lesson.ai', [$course->slug, $lesson->id]), ['task' => 'summary'])
+            ->assertNotFound();
+    }
+
+    public function test_flag_off_still_opens_assistant_for_super_admin_only(): void
+    {
+        config(['features.lesson_ai' => false]);
+        $this->fakeNode('Ответ для суперадмина [00:41].');
+        [$course, $lesson, $student] = $this->openLesson();
+        $admin = $this->studentInGroupOf($course);
+        $admin->forceFill(['role' => Roles::SUPER_ADMIN])->save();
+
+        $this->actingAs($admin)
+            ->get(route('student.lesson', [$course->slug, $lesson->id]))
+            ->assertOk()
+            ->assertSee('data-testid="lesson-ai-tab"', false);
+
+        $this->actingAs($admin)
+            ->postJson(route('student.lesson.ai', [$course->slug, $lesson->id]), ['task' => 'explain', 'text' => 'сандхи'])
+            ->assertOk()
+            ->assertJsonPath('status', 'done');
+
+        // Обычный студент того же урока при выключенном флаге — ни вкладки, ни ручки.
+        $this->actingAs($student)
+            ->get(route('student.lesson', [$course->slug, $lesson->id]))
+            ->assertOk()
+            ->assertDontSee('data-testid="lesson-ai-tab"', false);
+        $this->actingAs($student)
+            ->postJson(route('student.lesson.ai', [$course->slug, $lesson->id]), ['task' => 'explain', 'text' => 'сандхи'])
             ->assertNotFound();
     }
 

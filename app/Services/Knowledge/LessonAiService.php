@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Knowledge;
 
 use App\Models\Lesson;
+use App\Models\User;
 use App\Services\Bot\CuratorAi;
 use App\Services\Bot\LessonQaService;
 use App\Support\TranscriptParser;
@@ -48,9 +49,14 @@ final class LessonAiService
 
     public function __construct(private readonly CuratorAi $ai) {}
 
-    public function enabled(): bool
+    /**
+     * Флаг ВКЛ — всем студентам. Флаг ВЫКЛ — только суперадмину: обкатка на
+     * проде на живых стенограммах до включения для всех (MG 21-11-2026).
+     */
+    public function enabledFor(?User $user): bool
     {
-        return (bool) config('features.lesson_ai', false);
+        return (bool) config('features.lesson_ai', false)
+            || ($user instanceof User && $user->isSuperAdmin());
     }
 
     public function hasTranscript(Lesson $lesson): bool
