@@ -7,8 +7,6 @@ namespace Tests\Feature\Attendance;
 use App\Models\Course;
 use App\Models\Schedule;
 use App\Services\Access\TelegramAdminNotifier;
-use Illuminate\Console\Scheduling\Event;
-use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -44,7 +42,9 @@ class VerifyScheduleZoomTest extends TestCase
     {
         Http::fake([
             'zoom.us/oauth/token' => Http::response(['access_token' => 'tok', 'expires_in' => 3600]),
-            'api.zoom.us/v2/meetings/*' => function (Request $request) use ($deadIds): \Illuminate\Http\Client\Response {
+            // Без объявления возвращаемого типа: стаб вызывается в промис-контексте
+            // (GuzzleHttp\Promise\FulfilledPromise), и явный return type роняет его TypeError'ом.
+            'api.zoom.us/v2/meetings/*' => function (Request $request) use ($deadIds) {
                 foreach ($deadIds as $dead) {
                     if (str_contains($request->url(), '/meetings/'.$dead)) {
                         return Http::response(['message' => 'Not found'], 404);
@@ -175,11 +175,10 @@ class VerifyScheduleZoomTest extends TestCase
     /** @test */
     public function the_weekly_entry_is_registered_before_the_reminder_week(): void
     {
-        $schedule = $this->app->make(Schedule::class);
+        $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
 
         $event = null;
         foreach ($schedule->events() as $e) {
-            /** @var Event $e */
             if (str_contains((string) $e->command, 'zoom:verify-schedule')) {
                 $event = $e;
             }
