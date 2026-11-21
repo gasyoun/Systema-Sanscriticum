@@ -237,6 +237,13 @@ class HomeworkTelegramTagService
                 continue;
             }
 
+            // H8526: мёртвая группа — якорь ДЗ в архивированный чат не постим.
+            if ($group->status === Group::STATUS_ARCHIVED) {
+                Log::info('HomeworkTelegramTag: archived group, open invite skipped', ['group_id' => $group->id]);
+
+                continue;
+            }
+
             $messageId = $this->sendHtml($chatId, $text);
             if ($messageId === null) {
                 continue;

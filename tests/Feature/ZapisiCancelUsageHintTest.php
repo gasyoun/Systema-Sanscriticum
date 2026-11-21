@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Jobs\SendZapisiBotMessageJob;
+use App\Models\Course;
+use App\Models\Group;
 use App\Models\MarketingSetting;
+use App\Models\Teacher;
 use App\Models\User;
 use App\Services\Telegram\CancelUsageHint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -108,15 +111,53 @@ class ZapisiCancelUsageHintTest extends TestCase
         Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
     }
 
-    public function test_hint_only_once_per_day_per_chat(): void
+    /**
+     * H8526: клейм по ТЕКСТУ — один и тот же неузнанный текст не чаще раза в
+     * сутки; инцидент гр.57 20-11-2026: «отмена всех занятий» минутой позже
+     * «отмени занятия» съедалась дневным клеймом и выглядела игнором бота.
+     */
+    public function test_hint_once_per_day_for_same_text(): void
     {
         Redis::shouldReceive('set')->twice()->andReturn(true, false);
         MarketingSetting::create(['zapisi_cancel_admin_ids' => '111']);
         Cache::forget('marketing_setting.singleton');
 
         CancelUsageHint::maybeSendFor($this->message(['text' => 'Отменяю завтра']));
-        CancelUsageHint::maybeSendFor($this->message(['text' => 'Отмена занятий не будет']));
+        CancelUsageHint::maybeSendFor($this->message(['text' => 'Отменяю завтра', 'message_id' => 912]));
 
         Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
+    }
+
+    public function test_hint_again_for_different_text(): void
+    {
+        Redis::shouldReceive('set')->twice()->andReturn(true, true);
+        MarketingSetting::create(['zapisi_cancel_admin_ids' => '111']);
+        Cache::forget('marketing_setting.singleton');
+
+        CancelUsageHint::maybeSendFor($this->message(['text' => 'Отменяю завтра']));
+        CancelUsageHint::maybeSendFor($this->message(['text' => 'Отмена занятий не будет', 'message_id' => 913]));
+
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 2);
+    }
+
+    public function test_hint_silent_when_stop_offer_will_fire(): void
+    {
+        Redis::shouldReceive('set')->never();
+        $teacher = Teacher::create(['name' => 'Препод Свой']);
+        $course = Course::create(['title' => 'Курс', 'slug' => 'crs-'.substr(md5(uniqid('', true)), 0, 10), 'teacher_id' => $teacher->id]);
+        $group = Group::create(['name' => 'Гр', 'telegram_chat_id' => self::CHAT_ID]);
+        $course->groups()->attach($group->id);
+        User::create([
+            'name' => 'Препод',
+            'email' => 'own-stop-'.uniqid().'@example.test',
+            'password' => bcrypt('secret123'),
+            'role' => 'teacher',
+            'teacher_id' => $teacher->id,
+            'telegram_id' => 111,
+        ]);
+
+        CancelUsageHint::maybeSendFor($this->message(['text' => 'Отмена всех занятий']));
+
+        Queue::assertNothingPushed();
     }
 }

@@ -19,7 +19,8 @@ final class CancelUsageHint
 {
     public const TEXT = 'Чтобы отменить занятие: ответьте «Отмена занятия» на пост-напоминание бота — '
         .'это сдвинет цепочку на неделю (по умолчанию). Либо напишите «Отмена 08.09» — '
-        .'уберёт только эту дату, без сдвига. Можно добавить причину: «Отмена 08.09 — гос. каникулы».';
+        .'уберёт только эту дату, без сдвига. Можно добавить причину: «Отмена 08.09 — гос. каникулы». '
+        .'Серия занятий закончилась совсем? Напишите «стоп» — бот предложит остановиться в этой группе.';
 
     private const CLAIM_TTL_SECONDS = 86400;
 
@@ -58,7 +59,14 @@ final class CancelUsageHint
             return;
         }
 
-        self::maybeSend((string) $chatId);
+        // H8526: если на этот текст бот предложит кнопку останова группы
+        // («отмена всех занятий» = «стоп») — подсказка формата одиночной
+        // отмены сбивает с толку.
+        if (app(StopGroupIntentService::class)->planOffer($message)) {
+            return;
+        }
+
+        self::maybeSend((string) $chatId, md5($text));
     }
 
     /** Whitelist H4199 (telegram user_id через запятую) или панельный пользователь (H4253 ACL). */
@@ -83,11 +91,20 @@ final class CancelUsageHint
         return app(TelegramCommandAcl::class)->resolve($fromId) !== null;
     }
 
-    public static function maybeSend(string $chatId): void
+    /**
+     * Клейм ПО ТЕКСТУ (H8526): один и тот же неузнанный «отмен…»-текст — не
+     * чаще раза в сутки, но ОТЛИЧАЮЩИЙСЯ текст подсказывает снова. Инцидент
+     * гр.57 20-11-2026: «отмени занятия» получило подсказку, а «отмена всех
+     * занятий» минутой позже съелось дневным клеймом и выглядело игнором.
+     * null-хеш (внешние вызовы) — старое поведение, клейм на чат.
+     */
+    public static function maybeSend(string $chatId, ?string $textHash = null): void
     {
-        if (! TelegramSendGuard::claimKey('tg:cancel-hint:'.$chatId, self::CLAIM_TTL_SECONDS)) {
+        $key = 'tg:cancel-hint:'.$chatId.($textHash !== null ? ':'.$textHash : '');
+        if (! TelegramSendGuard::claimKey($key, self::CLAIM_TTL_SECONDS)) {
             Log::info('CancelUsageHint: already shown for this chat within TTL, suppressed', [
                 'chat_id' => $chatId,
+                'text_hash' => $textHash,
             ]);
 
             return;
@@ -95,6 +112,6 @@ final class CancelUsageHint
 
         SendZapisiBotMessageJob::dispatch($chatId, self::TEXT);
 
-        Log::info('CancelUsageHint: usage hint sent', ['chat_id' => $chatId]);
+        Log::info('CancelUsageHint: usage hint sent', ['chat_id' => $chatId, 'text_hash' => $textHash]);
     }
 }
