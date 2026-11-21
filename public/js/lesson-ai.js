@@ -96,7 +96,8 @@ window.lessonAi = function (config) {
                     var range = sel.getRangeAt(0);
                     var node = range.commonAncestorContainer;
                     var host = node.nodeType === 1 ? node : node.parentElement;
-                    if (host && host.closest('[data-lesson-ai-scope]') && !host.closest('[data-lesson-ai-panel]')) {
+                    // Включая ответы самого ИИ: в пересказе тоже можно выделить и спросить.
+                    if (host && host.closest('[data-lesson-ai-scope]')) {
                         text = sel.toString();
                         rect = range.getBoundingClientRect();
                     }
