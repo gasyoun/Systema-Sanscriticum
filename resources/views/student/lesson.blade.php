@@ -26,6 +26,10 @@
           guard-ом. Тот же эндпоинт student.lesson.note; без JS форма
           деградирует к прежнему ручному POST-сабмиту. --}}
     <script src="{{ asset('js/lesson-note-autosave.js') }}?v={{ filemtime(public_path('js/lesson-note-autosave.js')) }}" defer></script>
+    @if(app(\App\Services\Knowledge\LessonAiService::class)->enabledFor(auth()->user()))
+        {{-- ИИ-помощник занятия: флаг features.lesson_ai ВКЛ — всем, ВЫКЛ — только суперадмину. --}}
+        <script src="{{ asset('js/lesson-ai.js') }}?v={{ filemtime(public_path('js/lesson-ai.js')) }}" defer></script>
+    @endif
     <script defer>
         document.addEventListener('DOMContentLoaded', function () {
             try {
@@ -169,13 +173,17 @@
 
 @php
     $hasAttachments = !empty($lesson->attachments) && is_array($lesson->attachments);
-    $showTabs = $hasTranscript || $hasAttachments; // Показываем табы, если есть хотя бы транскрипт ИЛИ файлы
+    // ИИ-помощник: флаг ВКЛ — всем, ВЫКЛ — только суперадмину (обкатка на проде).
+    $lessonAiEnabled = app(\App\Services\Knowledge\LessonAiService::class)->enabledFor(auth()->user());
+    // Показываем табы, если есть хотя бы транскрипт, файлы или ИИ-помощник
+    $showTabs = $hasTranscript || $hasAttachments || $lessonAiEnabled;
 @endphp
 
 {{-- ========================================== --}}
 {{-- ГЛАВНЫЙ КОНТЕЙНЕР (Умный Flexbox с 3 Табами) --}}
 {{-- ========================================== --}}
 <div class="lesson-layout relative"
+     data-lesson-ai-scope
      x-data="{
          player: '{{ $kinescopePilotActive ? 'kinescope' : ($hasRutube ? 'rutube' : ($hasYoutube ? 'youtube' : ($hasVk ? 'vk' : 'none'))) }}',
          currentTime: 0,
@@ -715,6 +723,14 @@
         :class="activeTab === 'notes' ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'">
     <i class="far fa-edit text-base"></i> Заметки
 </button>
+
+            @if($lessonAiEnabled)
+            <button @click="activeTab = 'ai'" data-testid="lesson-ai-tab"
+                    class="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[13px] font-extrabold transition-all duration-300"
+                    :class="activeTab === 'ai' ? 'bg-white text-brand shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'">
+                <i class="fas fa-wand-magic-sparkles text-base"></i> ИИ
+            </button>
+            @endif
             @endif
         </div>
         
@@ -748,9 +764,11 @@
                 </div>
             </div>
 
-            <div x-ref="scrollContainer" class="flex-1 overflow-y-auto p-3 pb-10 space-y-1 custom-scrollbar bg-white" @wheel="autoScroll = false" @touchstart="autoScroll = false">
+            <div x-ref="scrollContainer" class="flex-1 overflow-y-auto p-3 pb-10 space-y-1 custom-scrollbar bg-white {{ $lessonAiEnabled ? 'lesson-ai-selectable' : '' }}" @wheel="autoScroll = false" @touchstart="autoScroll = false">
                 @foreach($transcriptSentences as $sentence)
-                    <button @click.prevent="seekTo({{ $sentence['start'] }})"
+                    {{-- ИИ-помощник: фразу можно выделить мышью для «✦ Объяснить» —
+                         клик после выделения не перематывает видео. --}}
+                    <button @click.prevent="{{ $lessonAiEnabled ? 'window.getSelection().isCollapsed && ' : '' }}seekTo({{ $sentence['start'] }})"
                             x-show="matches({{ json_encode($sentence['safe_text']) }})"
                             :class="(currentTime >= {{ $sentence['start'] }} && currentTime <= {{ $sentence['end'] }}) 
                                 ? 'is-active-sentence bg-[#F4F1EA] border-l-4 border-brand text-[#1A1A1A] font-bold z-10 relative' 
@@ -821,6 +839,15 @@
         </div>
     @endunless
 </div>
+
+        {{-- БЛОК ИИ: помощник занятия (features.lesson_ai) — display:contents,
+             чтобы панель участвовала во flex боковой колонки как соседние табы. --}}
+        @if($lessonAiEnabled)
+        <div class="contents"
+             x-data="lessonAi({ url: @js(route('student.lesson.ai', [$course->slug, $lesson->id])), notesId: 'lesson-notes-textarea', hasTranscript: @js($hasTranscript) })">
+            @include('student.partials.lesson-ai')
+        </div>
+        @endif
 
         {{-- БЛОК 3: ФАЙЛЫ И МАТЕРИАЛЫ --}}
         @if($hasAttachments)
