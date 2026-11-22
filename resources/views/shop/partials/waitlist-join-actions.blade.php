@@ -53,7 +53,7 @@
         @endif
         <button type="submit" data-testid="waitlist-vote"
                 class="flex justify-center items-center w-full {{ $size }} {{ $hero ? 'bg-brand hover:bg-brand-hover hover:-translate-y-1 shadow-[0_0_20px_rgba(232,92,36,0.3)]' : 'bg-brand hover:opacity-90' }} text-white font-bold rounded-xl transition-all">
-            <i class="fas fa-hand-raised mr-2"></i>
+            <i class="fas fa-hand mr-2"></i>
             {{ $application ? 'Подать заявку' : 'Намерен участвовать' }}
         </button>
         @if($application)
