@@ -13,6 +13,8 @@ _Created: 22-11-2026 · Last updated: 22-11-2026_
 Единственное различие «сегодня / после включения» — флаг `MONEY_REFUND_ACCESS_RULES`
 ([`config/features.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/features.php), строка `money_refund_access_rules`, default `false`). Ещё один флаг, `MONEY_DAILY_RECONCILIATION` (там же, default `false`), будит ночной прогон сверки в 04:35.
 
+Третий флаг стоит держать в поле зрения: усечение выручки исходной оплаты по месяцу возврата (строка 1 таблицы) даёт [`revenue.reverse_unrecognized_on_refund`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/revenue.php) (`config/revenue.php`, default `false`; на проде включён с 12-07-2026 — [docs/revenue-recognition.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/revenue-recognition.md)). Выключение меняет признание выручки при возврате независимо от двух флагов выше.
+
 | Поведение | Сегодня (флаги OFF, прод на 22-11-2026) | После включения `MONEY_REFUND_ACCESS_RULES=true` |
 |---|---|---|
 | Возврат записывается отдельной строкой «Расход» с «Возврат за платёж» (`refund_of_payment_id`) в Filament → Payments | работает; выручка исходной оплаты усекается по месяц возврата | то же |
@@ -20,7 +22,7 @@ _Created: 22-11-2026 · Last updated: 22-11-2026_
 | Полный возврат отзывает оставшийся доступ | нет — доступ после возврата снимается только ручной чисткой | да: снимаются access-only siblings + группы, если не осталось дающих доступ оплат |
 | Частичный возврат снимает доступ названных блоков | нет | да (`block_N`-строки диапазона удаляются) |
 | «Оплата ещё даёт доступ» исключает возвращённые | нет — возвр. оплата продолжает считаться дающей доступ | да (`excludeRefundedAccess`) |
-| Дневная сверка `money:reconcile-daily` 04:35 | команда есть, вручную и read-only; планового прогона нет | при `MONEY_DAILY_RECONCILIATION=true` — плановый прогон с persist и алертом |
+| Дневная сверка `money:reconcile-daily` 04:35 | команда есть, вручную и read-only; слот 04:35 зарегистрирован ([SchedulesOvernightAndCrm.php:115](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Concerns/SchedulesOvernightAndCrm.php)), но при флаге OFF это ежедневный no-op (ничего не пишет, в логах — SUCCESS с предупреждением) | при `MONEY_DAILY_RECONCILIATION=true` — плановый прогон с persist и алертом |
 | Откат платежа в `failed`/`canceled` (банк отклонил) | работает всегда, без флага: прана/реферал возвращаются, access-only siblings снимаются, группы пересчитываются | без изменений |
 
 Включение любого из двух флагов — осознанное решение по денежному контуру: виза MG, рецепт — [`RUNBOOK_FEATURE_FLAG_FLIP.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_FEATURE_FLAG_FLIP.md) (`.env` → `config:cache` → reload php-fpm → `horizon:terminate`).
@@ -34,7 +36,7 @@ _Created: 22-11-2026 · Last updated: 22-11-2026_
 | 3. Сверка доказательств | заявление ↔ Filament → Payments (сумма, статус paid, тариф/blocks, дубликаты) | куратор → Иван | [`PaymentResource.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/PaymentResource.php) |
 | 4. Виза | расчёт суммы по формуле П1 §3.2.1; любую выплату согласует MG (виза — правило контура денег, см. [ранбук поддержки, триггер «Деньги»](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_SUPPORT_ESCALATION.md)) | MG | — |
 | 5. Исполнение | деньги возвращает платёжный канал (Точка-кабинет / PayPal вручную; расходы/комиссии — на школе, П1 §4.4) | Иван | — |
-| 6. Запись в системе | Filament → Payments → новый платёж: тип «Расход», сумма возврата, «Возврат за платёж» = исходная оплата, для частичного — «с блока»/«по блок» | Иван (админ) | [`PaymentResource.php:321-363`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/PaymentResource.php) |
+| 6. Запись в системе | Filament → Payments → новый платёж: тариф «Расход», затем сумма возврата, «Возврат за платёж» = исходная оплата, для частичного — «с блока»/«по блок»; статус сразу `paid` (D10-гард реагирует только на paid-строки возврата, [RefundAccessPolicy.php:174-178](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Reconciliation/RefundAccessPolicy.php)). Порядок ввода: смена тарифа стирает поля блоков ([PaymentResource.php:151-161](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/PaymentResource.php)) — блоки заполняют после выбора «Расход» | Иван (админ) | [`PaymentResource.php:321-363`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/PaymentResource.php) |
 | 7. Автоматика доступа | (только с флагом) полный возврат снимает остаток доступа, частичный — названные блоки; группы пересчитываются | — | [`RefundAccessPolicy.php:89-113`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Reconciliation/RefundAccessPolicy.php), [`Payment.php:1772-1807`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Payment.php) |
 | 8. Сверка и закрытие | факт возврата со стороны банка/провайдера сверяется с записью: `money:reconcile-daily`, исключения в `money:recon-exceptions`; кейс закрывают письмом ученику | Иван | [`MoneyReconcileDaily.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/MoneyReconcileDaily.php), [`MoneyReconExceptions.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/MoneyReconExceptions.php) |
 
@@ -90,7 +92,7 @@ php artisan money:recon-exceptions --show=17
 | Задеплоенное vs флаги OFF | §1, таблица флага |
 | 5 синтетических разборов с кодовыми путями, доказательствами, полномочиями, откатом/эскалацией и закрытием | приложение [`RUNBOOK_REFUND_PAYMENT_DISPUTES_2026-11-22_CASES.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_REFUND_PAYMENT_DISPUTES_2026-11-22_CASES.md): К1 дубль, К2 частичный, К3 отказ, К4 расхождение доступа, К5 спор провайдера |
 | Реюз политики/обратной логики/сверки, без нового платёжного кода | источники — §Источники; ни одна строка кода не изменена |
-| Синтетика не режет ПД | §4: все имена/суммы вымышлены; §6 запрет выгрузки |
+| Синтетика не режет ПД | приложение [_CASES](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_REFUND_PAYMENT_DISPUTES_2026-11-22_CASES.md): все имена/суммы вымышлены; §5 запрет выгрузки |
 
 **Не проверено из кода (честная метка):** фактическое поведение включённого флага на проде — включение не проводилось (FENCE: мутация деньгам запрещена); все утверждения «после включения» опираются на тесты и [evidence H5445](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/EVIDENCE_MONEY_RECONCILIATION_P3_H5445_24-09-2026.md) от 24-09-2026, дата сохранена.
 
