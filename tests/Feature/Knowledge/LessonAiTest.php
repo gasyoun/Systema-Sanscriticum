@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Knowledge;
 
+use App\Filament\Resources\UserResource\Pages\ListUsers;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Lesson;
 use App\Models\User;
 use App\Services\Knowledge\LessonAiService;
 use App\Support\Roles;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -92,6 +95,50 @@ class LessonAiTest extends TestCase
         $this->actingAs($student)
             ->postJson(route('student.lesson.ai', [$course->slug, $lesson->id]), ['task' => 'explain', 'text' => 'сандхи'])
             ->assertNotFound();
+    }
+
+    public function test_flag_off_opens_assistant_for_assigned_ai_tester(): void
+    {
+        config(['features.lesson_ai' => false]);
+        $this->fakeNode('Ответ тестировщику [00:41].');
+        [$course, $lesson, $student] = $this->openLesson();
+        $tester = $this->studentInGroupOf($course);
+        $tester->forceFill(['lesson_ai_tester' => true])->save();
+
+        $this->actingAs($tester)
+            ->get(route('student.lesson', [$course->slug, $lesson->id]))
+            ->assertOk()
+            ->assertSee('data-testid="lesson-ai-tab"', false);
+        $this->actingAs($tester)
+            ->postJson(route('student.lesson.ai', [$course->slug, $lesson->id]), ['task' => 'explain', 'text' => 'сандхи'])
+            ->assertOk()
+            ->assertJsonPath('status', 'done')
+            ->assertJsonPath('left', 19);
+
+        $this->actingAs($student)
+            ->postJson(route('student.lesson.ai', [$course->slug, $lesson->id]), ['task' => 'explain', 'text' => 'сандхи'])
+            ->assertNotFound();
+    }
+
+    public function test_super_admin_assigns_and_removes_ai_testers_in_bulk(): void
+    {
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $students = User::factory()->count(2)->create();
+        $super = User::factory()->create(['role' => Roles::SUPER_ADMIN, 'is_admin' => true]);
+
+        Livewire::actingAs($super)->test(ListUsers::class)
+            ->callTableBulkAction('lessonAiTesterOn', $students->modelKeys())
+            ->assertNotified('Тестировщики ИИ назначены');
+        $this->assertSame(2, User::query()->where('lesson_ai_tester', true)->count());
+
+        Livewire::actingAs($super)->test(ListUsers::class)
+            ->callTableBulkAction('lessonAiTesterOff', [$students->first()->getKey()]);
+        $this->assertSame([$students->last()->id], User::query()->where('lesson_ai_tester', true)->pluck('id')->all());
+
+        // Обычный админ этих действий не видит.
+        $admin = User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]);
+        Livewire::actingAs($admin)->test(ListUsers::class)
+            ->assertTableBulkActionHidden('lessonAiTesterOn');
     }
 
     public function test_flag_on_shows_tab_on_lesson_page(): void

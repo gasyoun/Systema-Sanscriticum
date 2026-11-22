@@ -298,6 +298,15 @@ class UserResource extends Resource
                             ->onColor('success')
                             ->offColor('gray')
                             ->visible(fn () => RoleGate::isSuperAdmin()),
+
+                        // Пока LESSON_AI_ENABLED выключен, вкладку «ИИ» на странице
+                        // занятия видят суперадмин и эти студенты (LessonAiService::enabledFor).
+                        Toggle::make('lesson_ai_tester')
+                            ->label('Тестировщик ИИ')
+                            ->helperText('Видит вкладку «ИИ» на странице занятия до включения для всех. Дневной лимит запросов — как у всех.')
+                            ->onColor('success')
+                            ->offColor('gray')
+                            ->visible(fn () => RoleGate::isSuperAdmin()),
                     ])->columns(1),
 
                 Forms\Components\Section::make('🪷 Прана')
@@ -940,6 +949,13 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->visible(fn () => RoleGate::isSuperAdmin()),
 
+                Tables\Columns\IconColumn::make('lesson_ai_tester')
+                    ->label('Тест ИИ')
+                    ->boolean()
+                    ->alignment('center')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visible(fn () => RoleGate::isSuperAdmin()),
+
                 Tables\Columns\IconColumn::make('wants_email_announcements')
                     ->label('Анонсы на email')
                     ->boolean()
@@ -1004,6 +1020,13 @@ class UserResource extends Resource
                     ->placeholder('Все студенты')
                     ->trueLabel('Согласились на анонсы')
                     ->falseLabel('Отказались от анонсов'),
+
+                Tables\Filters\TernaryFilter::make('lesson_ai_tester')
+                    ->label('Тестировщики ИИ')
+                    ->placeholder('Все')
+                    ->trueLabel('Только тестировщики ИИ')
+                    ->falseLabel('Не тестировщики')
+                    ->visible(fn () => RoleGate::isSuperAdmin()),
 
                 // --- Согласие на анонсы в мессенджеры (152-ФЗ гейт TG/VK-рассылки) ---
                 Tables\Filters\TernaryFilter::make('wants_messenger_announcements')
@@ -1485,6 +1508,27 @@ class UserResource extends Resource
                                 ->send();
                         }),
 
+                    // --- ТЕСТИРОВЩИКИ ИИ-ПОМОЩНИКА ЗАНЯТИЯ (features.lesson_ai выключен) ---
+                    Tables\Actions\BulkAction::make('lessonAiTesterOn')
+                        ->label('Сделать тестировщиками ИИ')
+                        ->icon('heroicon-o-sparkles')
+                        ->color('gray')
+                        ->visible(fn () => RoleGate::isSuperAdmin())
+                        ->requiresConfirmation()
+                        ->modalHeading('Открыть ИИ-помощник выделенным')
+                        ->modalDescription('Они увидят вкладку «ИИ» на странице занятия, с обычным дневным лимитом запросов.')
+                        ->deselectRecordsAfterCompletion()
+                        ->action(fn (Collection $records) => self::setLessonAiTester($records, true)),
+
+                    Tables\Actions\BulkAction::make('lessonAiTesterOff')
+                        ->label('Убрать из тестировщиков ИИ')
+                        ->icon('heroicon-o-no-symbol')
+                        ->color('gray')
+                        ->visible(fn () => RoleGate::isSuperAdmin())
+                        ->requiresConfirmation()
+                        ->deselectRecordsAfterCompletion()
+                        ->action(fn (Collection $records) => self::setLessonAiTester($records, false)),
+
                     // --- ПЕРЕНОС В ГРУППУ КУРСА (сплит курса на 2 группы) ---
                     // Отвязывает выбранных от остальных групп ЭТОГО курса и привязывает
                     // к целевой. Оплаты не трогаются (дублей Payment не возникает).
@@ -1834,6 +1878,27 @@ class UserResource extends Resource
             UserResource\RelationManagers\CourseAccessWindowsRelationManager::class,
             UserResource\RelationManagers\IndividualDiscountsRelationManager::class,
         ];
+    }
+
+    /** Массовое назначение/снятие тестировщиков ИИ-помощника занятия. */
+    public static function setLessonAiTester(Collection $records, bool $on): void
+    {
+        abort_unless(RoleGate::isSuperAdmin(), 403);
+
+        $count = 0;
+        foreach ($records as $user) {
+            if ((bool) $user->lesson_ai_tester !== $on) {
+                $user->lesson_ai_tester = $on;
+                $user->save();
+                $count++;
+            }
+        }
+
+        Notification::make()
+            ->title($on ? 'Тестировщики ИИ назначены' : 'Тестировщики ИИ сняты')
+            ->body($on ? "Вкладка «ИИ» открыта: {$count}." : "Вкладка «ИИ» закрыта: {$count}.")
+            ->success()
+            ->send();
     }
 
     public static function getPages(): array
