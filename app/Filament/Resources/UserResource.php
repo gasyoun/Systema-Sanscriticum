@@ -925,6 +925,21 @@ class UserResource extends Resource
                         return "📚 {$lessons} · ⏱ {$time} · 🔑 {$visits}";
                     }),
 
+                // --- ЧАСЫ ЗАНЯТИЙ: рейтинг по времени на страницах уроков ---
+                // Сумма lesson_views.total_time_on_page — heartbeat урока (только
+                // активная вкладка, ≤90 с за отправку, только уроки с доступом).
+                // Не путать с ⏱ под «Последним визитом» — то всё время на сайте.
+                Tables\Columns\TextColumn::make('lesson_views_sum_total_time_on_page')
+                    ->label('Часы занятий')
+                    ->sum('lessonViews', 'total_time_on_page')
+                    ->sortable()
+                    ->alignment('center')
+                    ->formatStateUsing(fn ($state): string => self::formatWatchTime((int) $state))
+                    ->placeholder('—')
+                    ->color(fn ($state): string => (int) $state >= 3600 ? 'success' : 'gray')
+                    ->tooltip('Время на страницах занятий (вкладка урока открыта и активна). Нажмите на заголовок — рейтинг по убыванию.')
+                    ->toggleable(),
+
                 // --- КОЛОНКА 5: РОЛЬ (видна админам и супер-админу) ---
                 Tables\Columns\TextColumn::make('role')
                     ->label('Роль')
@@ -1878,6 +1893,18 @@ class UserResource extends Resource
             UserResource\RelationManagers\CourseAccessWindowsRelationManager::class,
             UserResource\RelationManagers\IndividualDiscountsRelationManager::class,
         ];
+    }
+
+    /** «34ч 7м» / «12м»; 0 — прочерк. */
+    public static function formatWatchTime(int $seconds): string
+    {
+        if ($seconds <= 0) {
+            return '—';
+        }
+        $hours = intdiv($seconds, 3600);
+        $mins = intdiv($seconds % 3600, 60);
+
+        return $hours > 0 ? "{$hours}ч {$mins}м" : "{$mins}м";
     }
 
     /** Массовое назначение/снятие тестировщиков ИИ-помощника занятия. */
