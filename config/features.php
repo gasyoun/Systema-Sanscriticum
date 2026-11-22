@@ -2143,6 +2143,23 @@ return [
     'hermes_payment_reconciler' => (bool) env('HERMES_PAYMENT_RECONCILER', false),
 
     /*
+     | Hermes W2 роли департамента C «Учебные операции» (H6103, E026):
+     | детерминированные suggester-черновики БЕЗ LLM-вызовов (квота Q7 не
+     | расходуется, PII Q5 не покидает контур), только чтение канонических
+     | таблиц, без скидочной автономии Q6, тон школы Q9. Роль 27
+     | `deadline-butler` — мягкие напоминания о домашних заданиях студенту
+     | (без выдуманных дедлайнов: в lessons нет даты сдачи, есть только
+     | закрытие приёма). Роль 28 `progress-tracker` — недельный дайджест
+     | прохождения по группе для куратора; завершаемость — только по
+     | lesson_user.is_completed (H3764). Отправка — только human-send H6183
+     | (Q3 suggester). ВЫКЛ по умолчанию (гейт волны W2 не снят): включение
+     | HERMES_DEADLINE_BUTLER / HERMES_PROGRESS_TRACKER=true + config:cache
+     | — deploy-шаг человека. Реестр департамента — config/school_learning_ops.php.
+     */
+    'hermes_deadline_butler' => (bool) env('HERMES_DEADLINE_BUTLER', false),
+    'hermes_progress_tracker' => (bool) env('HERMES_PROGRESS_TRACKER', false),
+
+    /*
      | Быстрая запись на бесплатный мини-курс «Подготовительная группа» для
      | рекламного трафика из VK-бота: /k/{mini_courses.slug}/start — имя + email
      | + согласие ПДн → кабинет, платёж 0 ₽ по штатному пути Payment (доступ,
