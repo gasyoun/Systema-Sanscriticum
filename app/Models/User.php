@@ -60,6 +60,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'role',
         'teacher_id',
         'is_lecture_editor',
+        'lesson_ai_tester',      // тестировщик ИИ-помощника занятия (ставит суперадмин)
         'telegram_id',           // <-- Добавили для Telegram
         'telegram_username',     // @username TG (без @); ловим при привязке/сообщении
         'telegram_auth_token',   // <-- Добавили для Telegram
@@ -142,6 +143,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'wants_messenger_announcements' => 'boolean',
         'newsletter_subscribed_at' => 'datetime',
         'is_lecture_editor' => 'boolean',
+        'lesson_ai_tester' => 'boolean',
         'last_login_at' => 'datetime',
         'cabinet_invite_sent_at' => 'datetime',
         'welcome_email_sent_at' => 'datetime',

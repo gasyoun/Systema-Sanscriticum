@@ -56,7 +56,7 @@ final class LessonAiService
     public function enabledFor(?User $user): bool
     {
         return (bool) config('features.lesson_ai', false)
-            || ($user instanceof User && $user->isSuperAdmin());
+            || ($user instanceof User && ($user->isSuperAdmin() || (bool) $user->lesson_ai_tester));
     }
 
     // ---------------------------------------------------------------------
