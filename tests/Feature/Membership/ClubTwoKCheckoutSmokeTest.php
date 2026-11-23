@@ -9,6 +9,7 @@ use App\Models\ClubMembership;
 use App\Models\Payment;
 use App\Models\Tariff;
 use App\Models\User;
+use App\Support\Roles;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -86,8 +87,11 @@ final class ClubTwoKCheckoutSmokeTest extends MembershipTestCase
         $clubMonthly = $this->clubMonthlyTariff();
         $this->assertSame(2000, (int) $clubMonthly->price);
 
-        // RU-копи на лендинге: тир Клуб с ценой ₽2 000 видим, CTA живёт.
-        $landing = $this->get('/klub')
+        // Лендинг — превью для супер-админа (голосовой запуск MG 23-11-2026),
+        // поэтому смотрим из-под супер-админа. RU-копи: тир Клуб с ценой
+        // ₽2 000 виден, CTA ведёт в чекаут этого тарифа.
+        $landing = $this->actingAs(User::factory()->create(['role' => Roles::SUPER_ADMIN]))
+            ->get('/klub')
             ->assertOk()
             ->assertSee('Клуб')
             ->assertSee('Базовый')

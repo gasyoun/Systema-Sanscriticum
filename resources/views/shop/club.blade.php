@@ -1,40 +1,43 @@
 {{--
-    Лендинг + прайсинг клубного членства (H2645). Публичный, но живет только
-    при features.club_membership = true: страница не может появиться раньше,
-    чем контур H2644 реально выдает доступ за оплату, — иначе CTA продает то,
-    чего система не выдаст.
+    Лендинг подписки на личный кабинет — ПРЕВЬЮ ДЛЯ СУПЕР-АДМИНА.
 
-    Три жестких ограничения формулировок (спецификация H2645):
-    1. НЕ говорить «доступ будет отозван» — 1 703 из 1 705 уроков это
-       unlisted-ссылки YouTube, открытая ссылка продолжает работать. Текст
-       «Что происходит, когда клуб заканчивается» согласован ДОСЛОВНО с
-       карточкой кабинета (student/partials/club-membership.blade.php, H2644) —
-       править только синхронно с ней.
-    2. НЕ обещать куратора и проверку домашних заданий — клуб существует,
-       чтобы кураторов финансировать, а не расходовать.
-    3. НИКАКОГО третьего тарифа за 5 000 ₽ и никакого упоминания корпуса —
-       на этой странице их нет вовсе.
+    Источник контракта — голосовой запуск MG 23-11-2026: помимо разовых
+    курсов кабинет должен приносить ежемесячный доход, поэтому страница
+    продаёт МЕСЯЧНУЮ лестницу Свободный / Базовый / Клуб / Top с ИИ-функциями
+    в тарифах. Публичный запуск — после 1 января 2027 (цены факультативов с
+    января могут пересматриваться, до этого значения не фиксируем публично).
+    Гейт доступа — MembershipController::landing (isSuperAdmin, иначе 404);
+    копи согласуется с голосовым MG, а не со старой лестницей H2645.
 
-    Цены и названия тарифов приходят из БД (курс `club` + его тарифы,
-    заведенные в Filament) — на странице нет ни одной захардкоженной цены,
-    чтобы прайсинг и чекаут никогда не разошлись.
+    Правила, которые пережили редизайн:
+    1. Цены — из строк БД (месячные тарифы курса `club`); fallback на
+       membership.tiers.*.monthly_price — только если строки нет вовсе.
+       Чекаут-ссылка — только у активного тарифа.
+    2. Top не продаётся (без чекаута, плашка «Позже») — отдельный go/no-go.
+    3. «Проверка домашних заданий» не входит ни в один тариф — подписка
+       существует, чтобы кураторов финансировать, а не расходовать.
+    4. Никаких «доступ будет отозван»: продление ручное, автосписаний нет.
+    5. «2 пробных ИИ-запроса» — решение MG из голосового; при переводе
+       страницы в публичный запуск завести в config/membership.php.
+    Годовые тарифы «в записи» (5 500/20 000/35 000) и клубные 3/12 мес
+    (5 700/20 400) с витрины сняты — на странице их нет, включая цифры.
 --}}
 @extends('layouts.shop')
 
-@section('title', 'Клуб — вся библиотека записей')
+@section('title', 'Подписка на личный кабинет')
 
 @php
-    $metaDescription = 'Клуб Общества ревнителей санскрита: вся библиотека записей курсов, полка в кабинете и тренажеры — за '.number_format((float) $monthly->price, 0, '.', ' ').' ₽ в месяц. Без живых потоков, без проверки домашних заданий, без сертификата — поэтому и цена такая.';
+    $metaDescription = 'Подписка на личный кабинет Общества ревнителей санскрита: тренажёры и игры, напоминания о платежах и грамотные ответы ИИ на основе оцифрованных грамматик школы.';
 @endphp
 @section('meta_description', $metaDescription)
 
 @push('head')
-    {{-- H3650: Club + Basic share stills. Primary og:image is Club (page title). Basic 1200×630 is a second OG image for clients that pick an alternate. Home preview stays og-main-preview.jpg. --}}
-    <meta property="og:title" content="Клуб — вся библиотека записей">
+    {{-- OG-стиллы H3650 сохранены: клуб и базовый уровень. --}}
+    <meta property="og:title" content="Подписка на личный кабинет">
     <meta property="og:image" content="{{ asset('images/og-membership-club.webp') }}?v=h3650">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="Клуб — вся библиотека записей">
+    <meta property="og:image:alt" content="Подписка на личный кабинет — архив записей и ИИ-ответы по грамматикам">
     <meta property="og:image" content="{{ asset('images/og-membership-basic.webp') }}?v=h3650">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -51,86 +54,63 @@
 
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
 
-        {{-- ═══════════ Заголовок ═══════════ --}}
-        <div class="text-center mb-14">
-            <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-6">
-                {{ $course->title }}
-            </h1>
-            <p class="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed mb-4">
-                Вся библиотека записей наших курсов, полка в кабинете и тренажеры —
-                за {{ number_format((float) $monthly->price, 0, '.', ' ') }} ₽ в месяц.
-            </p>
-            <p class="text-base text-slate-500 max-w-3xl mx-auto leading-relaxed mb-8">
-                Без живых потоков, без проверки домашних заданий и без времени куратора —
-                поэтому и цена такая. Живые курсы с преподавателем идут отдельно.
-            </p>
-            <div class="flex flex-wrap justify-center gap-3">
-                <a href="#tarify"
-                   class="inline-flex items-center gap-2 px-6 py-3 bg-brand hover:bg-brand/90 text-white text-sm font-bold rounded-xl transition-all">
-                    <i class="fas fa-box-archive"></i>
-                    Выбрать срок
-                </a>
-                <a href="#svobodny"
-                   class="inline-flex items-center gap-2 px-6 py-3 bg-[#141A28] border border-[#1F2636] hover:border-[#38BDF8]/60 hover:bg-[#38BDF8]/5 text-[#38BDF8] text-sm font-bold rounded-xl transition-all">
-                    <i class="fas fa-gift"></i>
-                    Есть бесплатный уровень
-                </a>
-            </div>
+        {{-- ═══════════ Превью-плашка ═══════════ --}}
+        <div class="flex justify-center mb-12">
+            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-amber-400/40 bg-amber-400/10 text-amber-300 text-xs font-bold uppercase tracking-widest">
+                <i class="fas fa-eye"></i>
+                Превью для супер-админа · публичный запуск — после 1 января 2027
+            </span>
         </div>
 
-        {{-- ═══════════ Free / Basic / Club ═══════════ --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-20">
+        {{-- ═══════════ Заголовок ═══════════ --}}
+        <div class="text-center mb-16">
+            <span class="block text-[#38BDF8] text-xs font-bold uppercase tracking-[0.18em] mb-4">Членство школы</span>
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-6">
+                Подписка на личный кабинет
+            </h1>
+            <p class="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed mb-4">
+                Помимо разовых курсов — ежемесячная подписка на кабинет: тренажёры и игры,
+                напоминания о платежах и грамотные ответы ИИ на основе оцифрованных грамматик школы.
+            </p>
+            <p class="text-base text-slate-500 max-w-3xl mx-auto leading-relaxed">
+                Ответы строятся на материалах школы, а не «что нейросеть порождает».
+                Живые курсы с преподавателем идут отдельно — подписка их не заменяет.
+            </p>
+        </div>
+
+        {{-- ═══════════ Месячная лестница ═══════════ --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-20">
 
             {{-- Свободный --}}
-            <div class="bg-[#101521] border border-[#1F2636] rounded-2xl p-8 flex flex-col">
-                <div class="flex items-baseline justify-between mb-1">
-                    <h2 class="text-2xl font-extrabold text-white">Свободный</h2>
-                    <span class="text-2xl font-extrabold text-white">0 ₽</span>
+            <div class="bg-[#101521] border border-[#1F2636] rounded-2xl p-7 flex flex-col">
+                <p class="text-[11px] font-black uppercase tracking-widest text-[#38BDF8] mb-2">Free</p>
+                <h2 class="text-xl font-extrabold text-white mb-1">Свободный</h2>
+                <div class="flex items-baseline gap-1.5 mb-1">
+                    <span class="text-3xl font-extrabold text-white tabular-nums">0</span>
+                    <span class="text-slate-400 font-bold text-sm">₽/мес</span>
                 </div>
-                <p class="text-sm text-slate-500 mb-6">Навсегда. Достаточно кабинета.</p>
-
-                <ul class="space-y-3 mb-6">
-                    <li class="flex items-start gap-3 text-slate-300 text-sm leading-relaxed">
+                <p class="text-sm text-slate-500 mb-5">Навсегда. Очень урезанный.</p>
+                <ul class="space-y-2.5 mb-5">
+                    <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
                         <i class="fas fa-check text-emerald-400 mt-1"></i>
-                        <span>
-                            @if($freeLessonsCount > 0)
-                                {{ $freeLessonsCount }} бесплатных уроков — открыты всем
-                                на <a href="{{ url('/') }}" class="text-[#38BDF8] hover:underline">главной странице</a>, без ограничений
-                            @else
-                                Бесплатные уроки на <a href="{{ url('/') }}" class="text-[#38BDF8] hover:underline">главной странице</a> — без ограничений
-                            @endif
-                        </span>
+                        <span>Игры и открытые уроки — без ограничений</span>
                     </li>
-                    <li class="flex items-start gap-3 text-slate-300 text-sm leading-relaxed">
+                    <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
                         <i class="fas fa-check text-emerald-400 mt-1"></i>
-                        <span>
-                            @if($freeTierOn)
-                                Один урок в месяц из курса, который вы уже оплачивали, —
-                                открывается в кабинете на {{ $grantDays }} дней. Ваш курс, по уроку в месяц, бесплатно.
-                            @else
-                                Скоро: один урок в месяц из курса, который вы уже оплачивали, —
-                                будет открываться в кабинете на {{ $grantDays }} дней
-                            @endif
-                        </span>
+                        <span>2 пробных ИИ-запроса</span>
                     </li>
                 </ul>
-
-                <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-3">Не входит</p>
-                <ul class="space-y-2.5 mb-8">
-                    <li class="flex items-start gap-3 text-slate-400 text-sm leading-relaxed">
-                        <i class="fas fa-xmark text-rose-400/80 mt-1"></i>
-                        <span>Платные курсы, которые вы не покупали</span>
+                <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2.5">Не входит</p>
+                <ul class="space-y-2.5 mb-7">
+                    <li class="flex items-start gap-2.5 text-slate-500 text-sm leading-relaxed">
+                        <i class="fas fa-xmark text-rose-400/70 mt-1"></i>
+                        <span>Напоминания, когда платить</span>
                     </li>
-                    <li class="flex items-start gap-3 text-slate-400 text-sm leading-relaxed">
-                        <i class="fas fa-xmark text-rose-400/80 mt-1"></i>
-                        <span>Проверка домашних заданий</span>
-                    </li>
-                    <li class="flex items-start gap-3 text-slate-400 text-sm leading-relaxed">
-                        <i class="fas fa-xmark text-rose-400/80 mt-1"></i>
-                        <span>Сертификат</span>
+                    <li class="flex items-start gap-2.5 text-slate-500 text-sm leading-relaxed">
+                        <i class="fas fa-xmark text-rose-400/70 mt-1"></i>
+                        <span>Библиотека и ответы по грамматикам</span>
                     </li>
                 </ul>
-
                 <div class="mt-auto">
                     @auth
                         <a href="{{ route('student.dashboard') }}"
@@ -138,7 +118,7 @@
                             Открыть кабинет
                         </a>
                     @else
-                        <a href="#svobodny"
+                        <a href="{{ route('login') }}"
                            class="flex items-center justify-center w-full px-4 py-3 bg-[#141A28] border border-[#1F2636] hover:border-[#38BDF8]/60 text-white text-sm font-bold rounded-xl transition-all">
                             Завести бесплатный кабинет
                         </a>
@@ -147,208 +127,225 @@
             </div>
 
             {{-- Базовый --}}
-            <div class="bg-[#101521] border border-[#38BDF8]/40 rounded-2xl p-8 flex flex-col">
-                <div class="flex items-baseline justify-between mb-1">
-                    <h2 class="text-2xl font-extrabold text-white">Базовый</h2>
-                    <span class="text-2xl font-extrabold text-white">{{ number_format((float) ($basicMonthly?->price ?? 1000), 0, '.', ' ') }} ₽<span class="text-sm text-slate-400 font-bold">/мес</span></span>
+            <div class="bg-[#101521] border border-[#1F2636] rounded-2xl p-7 flex flex-col">
+                <p class="text-[11px] font-black uppercase tracking-widest text-[#38BDF8] mb-2">Basic</p>
+                <h2 class="text-xl font-extrabold text-white mb-1">Базовый</h2>
+                <div class="flex items-baseline gap-1.5 mb-1">
+                    <span class="text-3xl font-extrabold text-white tabular-nums">{{ number_format((float) $basicPrice, 0, '.', ' ') }}</span>
+                    <span class="text-slate-400 font-bold text-sm">₽/мес</span>
                 </div>
-                <p class="text-sm text-slate-500 mb-6">Улучшенный кабинет без архива видео.</p>
-                <ul class="space-y-3 mb-6 text-slate-300 text-sm">
-                    <li><i class="fas fa-check text-emerald-400 mr-2"></i>Библиотека и стандартные упражнения</li>
-                    <li><i class="fas fa-check text-emerald-400 mr-2"></i>Улучшения кабинета и льготы</li>
-                    <li><i class="fas fa-xmark text-rose-400/80 mr-2"></i>Записи купленных курсов не входят</li>
-                    <li><i class="fas fa-xmark text-rose-400/80 mr-2"></i>Персональные упражнения и максимум инструментов не входят</li>
+                <p class="text-sm text-slate-500 mb-5">Кабинет под контролем.</p>
+                <ul class="space-y-2.5 mb-7">
+                    <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
+                        <i class="fas fa-check text-emerald-400 mt-1"></i>
+                        <span>Напоминания: когда и сколько платить</span>
+                    </li>
+                    <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
+                        <i class="fas fa-check text-emerald-400 mt-1"></i>
+                        <span>Улучшенный кабинет и льготы</span>
+                    </li>
+                    <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
+                        <i class="fas fa-check text-emerald-400 mt-1"></i>
+                        <span>Библиотека и стандартные упражнения</span>
+                    </li>
+                    <li class="flex items-start gap-2.5 text-slate-500 text-sm leading-relaxed">
+                        <i class="fas fa-xmark text-rose-400/70 mt-1"></i>
+                        <span>ИИ-ответы по грамматикам — не входят</span>
+                    </li>
                 </ul>
-                <a href="#tarify" class="mt-auto flex items-center justify-center w-full px-4 py-3 bg-[#141A28] border border-[#38BDF8]/40 text-white text-sm font-bold rounded-xl">Выбрать срок</a>
+                <div class="mt-auto">
+                    @if($basicTariff && $basicTariff->is_active)
+                        <a href="{{ route('checkout.show', $basicTariff) }}"
+                           class="flex items-center justify-center w-full px-4 py-3 bg-[#141A28] border border-[#1F2636] hover:border-[#38BDF8]/60 text-white text-sm font-bold rounded-xl transition-all">
+                            Оплатить месяц
+                        </a>
+                    @else
+                        <span class="flex items-center justify-center w-full px-4 py-3 bg-[#0D1119] border border-[#1F2636] text-slate-500 text-sm font-bold rounded-xl">
+                            Появится к запуску
+                        </span>
+                    @endif
+                </div>
             </div>
 
-            {{-- Клуб --}}
-            <div class="bg-[#101521] border-2 border-brand/50 rounded-2xl p-8 flex flex-col relative">
-                <div class="flex items-baseline justify-between mb-1">
-                    <h2 class="text-2xl font-extrabold text-white">Клуб</h2>
-                    <span class="text-2xl font-extrabold text-white">{{ number_format((float) $monthly->price, 0, '.', ' ') }} ₽<span class="text-sm text-slate-400 font-bold">/мес</span></span>
+            {{-- Клуб — продвинутый доступ --}}
+            <div class="bg-[#101521] border border-[#38BDF8]/50 rounded-2xl p-7 flex flex-col relative shadow-[0_0_40px_rgba(56,189,248,0.08)]">
+                <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#38BDF8] text-[#06283C] text-[10px] font-black uppercase tracking-widest rounded-full px-3 py-1 whitespace-nowrap">Продвинутый доступ</span>
+                <p class="text-[11px] font-black uppercase tracking-widest text-[#38BDF8] mb-2 mt-1">Club</p>
+                <h2 class="text-xl font-extrabold text-white mb-1">Клуб</h2>
+                <div class="flex items-baseline gap-1.5 mb-1">
+                    <span class="text-3xl font-extrabold text-white tabular-nums">{{ number_format((float) $clubPrice, 0, '.', ' ') }}</span>
+                    <span class="text-slate-400 font-bold text-sm">₽/мес</span>
                 </div>
-                <p class="text-sm text-slate-500 mb-6">Квартал и год — дешевле, см. ниже.</p>
-
-                <ul class="space-y-3 mb-6">
-                    <li class="flex items-start gap-3 text-slate-300 text-sm leading-relaxed">
+                <p class="text-sm text-slate-500 mb-5">Для тех, кто учится всерьёз.</p>
+                <ul class="space-y-2.5 mb-7">
+                    <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
                         <i class="fas fa-check text-emerald-400 mt-1"></i>
-                        @php
-                            // Русское склонение без словарей переводов: 1 курс / 2 курса / 5 курсов.
-                            $n = $shelfCount % 100;
-                            $n1 = $n % 10;
-                            $coursesWord = ($n >= 11 && $n <= 14) ? 'курсов'
-                                : ($n1 === 1 ? 'курс' : (($n1 >= 2 && $n1 <= 4) ? 'курса' : 'курсов'));
-                        @endphp
-                        <span>
-                            Вся библиотека записей курсов@if($shelfCount > 0) — {{ $shelfCount }} {{ $coursesWord }} на полке@endif
-                        </span>
+                        <span>Всё из «Базового»</span>
                     </li>
-                    <li class="flex items-start gap-3 text-slate-300 text-sm leading-relaxed">
+                    <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
                         <i class="fas fa-check text-emerald-400 mt-1"></i>
-                        <span>Полка «Записи клуба» в кабинете — записи открываются там же, где ваши купленные курсы</span>
+                        <span>Оцифрованные грамматики школы</span>
                     </li>
-                    <li class="flex items-start gap-3 text-slate-300 text-sm leading-relaxed">
-                        <i class="fas fa-check text-emerald-400 mt-1"></i>
-                        <span>Тренажеры к курсам полки</span>
+                    <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
+                        <i class="fas fa-wand-magic-sparkles text-[#38BDF8] mt-1"></i>
+                        <span>Грамотные ответы ИИ по всем пройденным курсам</span>
                     </li>
                 </ul>
-
-                <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-3">Не входит</p>
-                <ul class="space-y-2.5 mb-8">
-                    <li class="flex items-start gap-3 text-slate-400 text-sm leading-relaxed">
-                        <i class="fas fa-xmark text-rose-400/80 mt-1"></i>
-                        <span>Живые потоки с преподавателем — они идут отдельно, <a href="{{ route('shop.index') }}" class="text-[#38BDF8] hover:underline">в курсах</a></span>
-                    </li>
-                    <li class="flex items-start gap-3 text-slate-400 text-sm leading-relaxed">
-                        <i class="fas fa-xmark text-rose-400/80 mt-1"></i>
-                        <span>Проверка домашних заданий и время куратора</span>
-                    </li>
-                    <li class="flex items-start gap-3 text-slate-400 text-sm leading-relaxed">
-                        <i class="fas fa-xmark text-rose-400/80 mt-1"></i>
-                        <span>Сертификат</span>
-                    </li>
-                </ul>
-
                 <div class="mt-auto">
-                    <a href="#tarify"
-                       class="flex items-center justify-center w-full px-4 py-3 bg-brand hover:bg-brand/90 text-white text-sm font-bold rounded-xl transition-all">
-                        Выбрать срок
-                    </a>
+                    @if($clubTariff && $clubTariff->is_active)
+                        <a href="{{ route('checkout.show', $clubTariff) }}"
+                           class="flex items-center justify-center w-full px-4 py-3 bg-brand hover:bg-brand/90 text-white text-sm font-bold rounded-xl transition-all">
+                            Оплатить месяц
+                        </a>
+                    @else
+                        <span class="flex items-center justify-center w-full px-4 py-3 bg-[#0D1119] border border-[#1F2636] text-slate-500 text-sm font-bold rounded-xl">
+                            Появится к запуску
+                        </span>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Top — сознательно не продаётся --}}
+            <div class="bg-[#101521] border border-dashed border-[#1F2636] rounded-2xl p-7 flex flex-col relative opacity-80">
+                <span class="absolute right-5 top-5 bg-amber-400/10 border border-amber-400/40 text-amber-300 text-[10px] font-black uppercase tracking-widest rounded-full px-3 py-1">Позже</span>
+                <p class="text-[11px] font-black uppercase tracking-widest text-[#38BDF8] mb-2">Top</p>
+                <h2 class="text-xl font-extrabold text-white mb-1">Максимальный</h2>
+                <div class="flex items-baseline gap-1.5 mb-1">
+                    <span class="text-3xl font-extrabold text-white tabular-nums">{{ number_format((float) $topPrice, 0, '.', ' ') }}</span>
+                    <span class="text-slate-400 font-bold text-sm">₽/мес</span>
+                </div>
+                <p class="text-sm text-slate-500 mb-5">Вне зависимости от пройденных курсов.</p>
+                <ul class="space-y-2.5 mb-7">
+                    <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
+                        <i class="fas fa-check text-emerald-400 mt-1"></i>
+                        <span>Всё из «Клуба»</span>
+                    </li>
+                    <li class="flex items-start gap-2.5 text-slate-300 text-sm leading-relaxed">
+                        <i class="fas fa-video text-[#38BDF8] mt-1"></i>
+                        <span>Запросы по стенограммам, презентациям и видео любого курса</span>
+                    </li>
+                </ul>
+                <div class="mt-auto">
+                    <span class="flex items-center justify-center w-full px-4 py-3 bg-[#0D1119] border border-[#1F2636] text-slate-500 text-sm font-bold rounded-xl">
+                        Сознательно не продаётся
+                    </span>
                 </div>
             </div>
         </div>
 
-        {{-- ═══════════ Тарифы клуба ═══════════ --}}
-        <div id="tarify" class="mb-20 scroll-mt-24">
-            <h2 class="text-3xl font-extrabold text-white text-center mb-3">Сроки и цены</h2>
+        {{-- ═══════════ Что входит ═══════════ --}}
+        <div class="mb-16">
+            <h2 class="text-3xl font-extrabold text-white text-center mb-3">Что входит</h2>
             <p class="text-slate-500 text-center max-w-2xl mx-auto mb-10">
-                Одно и то же наполнение на любой срок. Разница только в цене месяца.
+                Пробные ИИ-запросы — у всех; дальше объём доступа зависит от тарифа.
             </p>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach($tariffs as $tariff)
-                    @php
-                        $months = max(1, (int) $tariff->membership_months);
-                        $perMonth = (int) round(((float) $tariff->price) / $months);
-                        $tierLabel = match($tariff->membership_tier?->value) {
-                            'basic' => 'Базовый',
-                            'club', null => 'Клуб',
-                            'top' => 'Top',
-                            default => $tariff->membership_tier?->value,
-                        };
-                    @endphp
-                    <div class="bg-[#101521] border {{ $months === 12 ? 'border-brand/50' : 'border-[#1F2636]' }} rounded-2xl p-6 flex flex-col">
-                        <p class="text-[11px] font-black uppercase tracking-widest text-brand mb-2">{{ $tierLabel }}</p>
-                        <h3 class="text-lg font-bold text-white mb-2">{{ $tariff->title }}</h3>
-                        <div class="mb-1">
-                            <span class="text-3xl font-extrabold text-white tabular-nums">{{ number_format((float) $tariff->price, 0, '.', ' ') }}</span>
-                            <span class="text-slate-400 font-bold ml-1">₽</span>
-                        </div>
-                        @if($months > 1)
-                            <p class="text-sm text-slate-500 mb-3">≈ {{ number_format($perMonth, 0, '.', ' ') }} ₽ в месяц</p>
-                        @else
-                            <p class="text-sm text-slate-500 mb-3">за месяц</p>
-                        @endif
-                        @if($tariff->description)
-                            <p class="text-sm text-slate-400 leading-relaxed mb-6">{{ $tariff->description }}</p>
-                        @endif
-                        <a href="{{ route('checkout.show', $tariff) }}"
-                           class="mt-auto flex items-center justify-center w-full px-4 py-3 {{ $months === 12 ? 'bg-brand hover:bg-brand/90 text-white' : 'bg-[#141A28] border border-[#1F2636] hover:border-brand/60 text-white' }} text-sm font-bold rounded-xl transition-all">
-                            Оплатить
-                        </a>
-                    </div>
-                @endforeach
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm min-w-[560px]">
+                    <thead>
+                        <tr class="border-b border-[#1F2636]">
+                            <th class="text-left py-3 pr-4 text-[11px] font-black uppercase tracking-widest text-slate-500"><span class="sr-only">Возможность</span></th>
+                            <th class="text-center py-3 px-2 text-[11px] font-black uppercase tracking-widest text-slate-500">Свободный</th>
+                            <th class="text-center py-3 px-2 text-[11px] font-black uppercase tracking-widest text-slate-500">Базовый</th>
+                            <th class="text-center py-3 px-2 text-[11px] font-black uppercase tracking-widest text-[#38BDF8]">Клуб</th>
+                            <th class="text-center py-3 px-2 text-[11px] font-black uppercase tracking-widest text-slate-500">Top</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-slate-300">
+                        <tr class="border-b border-white/5">
+                            <td class="py-3 pr-4">Игры и открытые уроки</td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-check text-emerald-400"></i></td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-check text-emerald-400"></i></td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-check text-emerald-400"></i></td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-check text-emerald-400"></i></td>
+                        </tr>
+                        <tr class="border-b border-white/5">
+                            <td class="py-3 pr-4">Пробные ИИ-запросы</td>
+                            <td class="text-center py-3 px-2 text-white font-bold tabular-nums">2</td>
+                            <td class="text-center py-3 px-2 text-white font-bold tabular-nums">2</td>
+                            <td class="text-center py-3 px-2 text-white font-bold tabular-nums">2</td>
+                            <td class="text-center py-3 px-2 text-white font-bold tabular-nums">2</td>
+                        </tr>
+                        <tr class="border-b border-white/5">
+                            <td class="py-3 pr-4">Напоминания, когда платить</td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-xmark text-rose-400/60"></i></td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-check text-emerald-400"></i></td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-check text-emerald-400"></i></td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-check text-emerald-400"></i></td>
+                        </tr>
+                        <tr class="border-b border-white/5">
+                            <td class="py-3 pr-4">Библиотека и стандартные упражнения</td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-xmark text-rose-400/60"></i></td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-check text-emerald-400"></i></td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-check text-emerald-400"></i></td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-check text-emerald-400"></i></td>
+                        </tr>
+                        <tr class="border-b border-white/5">
+                            <td class="py-3 pr-4">ИИ-ответы на основе оцифрованных грамматик</td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-xmark text-rose-400/60"></i></td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-xmark text-rose-400/60"></i></td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-check text-emerald-400"></i></td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-check text-emerald-400"></i></td>
+                        </tr>
+                        <tr class="border-b border-white/5">
+                            <td class="py-3 pr-4">…по каким курсам</td>
+                            <td class="text-center py-3 px-2 text-slate-600">—</td>
+                            <td class="text-center py-3 px-2 text-slate-600">—</td>
+                            <td class="text-center py-3 px-2 text-white font-bold">пройденным</td>
+                            <td class="text-center py-3 px-2 text-white font-bold">любым</td>
+                        </tr>
+                        <tr class="border-b border-white/5">
+                            <td class="py-3 pr-4">Запросы по стенограммам, презентациям и видео</td>
+                            <td class="text-center py-3 px-2 text-slate-600">—</td>
+                            <td class="text-center py-3 px-2 text-slate-600">—</td>
+                            <td class="text-center py-3 px-2 text-slate-600">—</td>
+                            <td class="text-center py-3 px-2"><i class="fas fa-check text-emerald-400"></i></td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 pr-4">Проверка домашних заданий</td>
+                            <td class="text-center py-3 px-2 text-slate-600">—</td>
+                            <td class="text-center py-3 px-2 text-slate-600">—</td>
+                            <td class="text-center py-3 px-2 text-slate-600">—</td>
+                            <td class="text-center py-3 px-2 text-slate-600">—</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        {{-- ═══════════ Как устроен клуб ═══════════ --}}
-        <div class="mb-20">
-            <h2 class="text-3xl font-extrabold text-white text-center mb-10">Как устроен клуб</h2>
-
-            <div class="space-y-6 max-w-3xl mx-auto">
-                <div class="bg-[#101521] border border-[#1F2636] rounded-2xl p-6">
-                    <p class="text-white font-bold mb-2">Оплата вперед, продление ручное</p>
-                    <p class="text-slate-400 text-sm leading-relaxed">
-                        Клуб не привязывает карту и не списывает деньги сам. Оплатили месяц,
-                        квартал или год — срок идет; продлеваете вы, а не банк. Если оплатить
-                        продление заранее, новый срок прибавится к текущему, а не начнется заново.
-                    </p>
-                </div>
-
-                <div class="bg-[#101521] border border-[#1F2636] rounded-2xl p-6">
-                    <p class="text-white font-bold mb-2">Отменять ничего не нужно</p>
-                    <p class="text-slate-400 text-sm leading-relaxed">
-                        Не продлили — клуб просто закончился в оплаченный день, никаких
-                        автосписаний после.@if($cancellationOn) В кабинете есть кнопка
-                        «Не продлевать»: она отключает напоминания, а оплаченный срок работает
-                        до конца.@endif
-                    </p>
-                </div>
-
-                {{-- Дословно согласовано с карточкой кабинета (H2644):
-                     student/partials/club-membership.blade.php. Править только синхронно. --}}
-                <div class="bg-[#101521] border border-[#1F2636] rounded-2xl p-6">
-                    <p class="text-white font-bold mb-2">Что происходит, когда клуб заканчивается</p>
-                    <p class="text-slate-400 text-sm leading-relaxed">
-                        Заканчивается <strong class="text-slate-300">право доступа</strong>: клубные страницы записей перестают
-                        открываться в кабинете, новые записи в полку не добавляются. Уроки, которые вы уже
-                        открыли, мы у вас не отбираем — ссылки на видео продолжают работать. Купленные
-                        курсы, домашние задания и сертификаты клуб не затрагивает: они остаются вашими
-                        независимо от подписки.
-                    </p>
-                </div>
+        {{-- ═══════════ Честные подписи ═══════════ --}}
+        <div class="space-y-6 max-w-3xl mx-auto mb-16">
+            <div class="bg-[#101521] border border-[#1F2636] rounded-2xl p-6">
+                <p class="text-white font-bold mb-2">Оплата вперед, продление ручное</p>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    Подписка не привязывает карту и не списывает деньги сама. Оплачен месяц —
+                    месяц работает; продлеваете вы, а не банк. Если оплатить заранее, новый срок
+                    прибавится к текущему, а не начнется заново. Не продлили — подписка просто
+                    закончилась в оплаченный день.
+                </p>
             </div>
-        </div>
 
-        {{-- ═══════════ Кому клуб не подойдет ═══════════ --}}
-        <div class="mb-20 max-w-3xl mx-auto">
-            <div class="bg-[#141A28] border border-[#1F2636] rounded-2xl p-8 text-center">
-                <h2 class="text-xl font-extrabold text-white mb-3">Клуб — это записи, а не курс</h2>
-                <p class="text-slate-400 text-sm leading-relaxed mb-6">
-                    Если вам нужны живые занятия с преподавателем, проверка домашних заданий,
-                    куратор и сертификат — это курсы, и они идут отдельно от клуба.
+            <div class="bg-[#101521] border border-[#1F2636] rounded-2xl p-6">
+                <p class="text-white font-bold mb-2">Проверка домашних заданий — не входит ни в один тариф</p>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    Принципиально: подписка существует, чтобы кураторов финансировать,
+                    а не расходовать. Живые курсы с преподавателем, проверкой домашних
+                    заданий и сертификатом идут отдельно.
                 </p>
                 <a href="{{ route('shop.index') }}"
-                   class="inline-flex items-center gap-2 px-6 py-3 bg-[#0A0D14] border border-[#1F2636] hover:border-[#38BDF8]/60 text-[#38BDF8] text-sm font-bold rounded-xl transition-all">
+                   class="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-[#0A0D14] border border-[#1F2636] hover:border-[#38BDF8]/60 text-[#38BDF8] text-sm font-bold rounded-xl transition-all">
                     <i class="fas fa-graduation-cap"></i>
                     Выбрать курс
                 </a>
             </div>
-        </div>
 
-        {{-- ═══════════ Свободный уровень: как получить ═══════════ --}}
-        <div id="svobodny" class="scroll-mt-24">
-            <h2 class="text-3xl font-extrabold text-white text-center mb-3">Уровень «Свободный»</h2>
-            <p class="text-slate-400 text-center max-w-2xl mx-auto leading-relaxed mb-4">
-                Если вы когда-то проходили у нас курс — он не пропал.
-                @if($freeTierOn)
-                    Раз в месяц мы бесплатно открываем в кабинете один урок из курса,
-                    который вы уже оплачивали. Ваш курс, по уроку в месяц, бесплатно.
-                @else
-                    Скоро мы начнем раз в месяц бесплатно открывать в кабинете один урок
-                    из курса, который вы уже оплачивали. Ваш курс, по уроку в месяц, бесплатно.
-                @endif
-            </p>
-            <p class="text-slate-500 text-sm text-center max-w-2xl mx-auto leading-relaxed mb-10">
-                Ничего платить и привязывать не нужно — достаточно кабинета.
-            </p>
-
-            <div class="flex flex-col items-center gap-4">
-                @auth
-                    <a href="{{ route('student.dashboard') }}"
-                       class="inline-flex items-center gap-2 px-8 py-3.5 bg-brand hover:bg-brand/90 text-white text-sm font-bold rounded-xl transition-all">
-                        Открыть кабинет
-                    </a>
-                @else
-                    <x-newsletter-subscribe
-                        title="Завести бесплатный кабинет"
-                        blurb="Оставьте email — пришлем ссылку для входа. Кабинет бесплатный, карта не нужна." />
-                    <p class="text-sm text-slate-500">
-                        Уже есть кабинет?
-                        <a href="{{ route('login') }}" class="text-[#38BDF8] hover:underline font-bold">Войти</a>
-                    </p>
-                @endauth
+            <div class="bg-[#101521] border border-[#1F2636] rounded-2xl p-6">
+                <p class="text-white font-bold mb-2">Годовая линейка снята с витрины</p>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    Годовые тарифы подписки «в записи» и клубные квартал/год с витрины
+                    убраны до отдельного решения. Если вы уже оплатили один из них —
+                    он работает до конца оплаченного срока, ничего делать не нужно.
+                </p>
             </div>
         </div>
 

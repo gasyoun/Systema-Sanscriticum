@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Membership;
 
+use App\Models\User;
+use App\Support\Roles;
+
 /**
  * H3650: membership/calendar heads name dedicated OG stills; home keeps the generic preview.
  */
@@ -13,7 +16,9 @@ final class MembershipOgImageTest extends MembershipTestCase
     {
         $this->clubTariff(1);
 
-        $html = $this->get('/klub')->assertOk()->getContent();
+        // Лендинг — превью для супер-админа (голосовой запуск MG 23-11-2026).
+        $html = $this->actingAs(User::factory()->create(['role' => Roles::SUPER_ADMIN]))
+            ->get('/klub')->assertOk()->getContent();
 
         $this->assertStringContainsString('images/og-membership-club.webp', $html);
         $this->assertStringContainsString('images/og-membership-basic.webp', $html);
