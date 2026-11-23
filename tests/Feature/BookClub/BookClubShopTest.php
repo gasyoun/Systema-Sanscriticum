@@ -279,7 +279,43 @@ class BookClubShopTest extends TestCase
         Http::assertNothingSent();
     }
 
-    // --- Остаток ---
+    public function test_abroad_five_books_skip_paypal_prepayment_and_details(): void
+    {
+        $this->enableFlag();
+        config(['services.admin.email' => 'admin@example.test']);
+        Http::fake();
+
+        // 5+ книг за рубежом: сумму ещё не согласовали, поэтому PayPal-поля
+        // (сумма/валюта/номер транзакции) НЕ требуются — заказ создаётся, письмо
+        // администратору, предоплату не просим.
+        $this->post(route('book-club.shop.submit'), $this->payload([
+            'books_count' => 5,
+            'country_code' => 'DE',
+            'city' => 'Берлин',
+            'postal_code' => '10115',
+        ]))
+            ->assertRedirect(route('book-club.shop'))
+            ->assertSessionHas('success')
+            ->assertSessionHasNoErrors();
+
+        // 5 000 ₽ книги + 3 посылки × 6 200 ₽ (Германия).
+        $this->assertDatabaseHas('book_club_orders', [
+            'books_count' => 5,
+            'country_code' => 'DE',
+            'amount' => 23600,
+            'delivery_amount' => 18600,
+        ]);
+
+        $this->assertDatabaseHas('payments', [
+            'tariff' => 'book_club_shop',
+            'provider' => null,
+            'foreign_amount' => null,
+        ]);
+
+        Mail::assertQueued(BookClubAdminOrderMail::class);
+        Mail::assertNotQueued(PaypalClaimReceivedMail::class);
+        Http::assertNothingSent();
+    }
 
     public function test_stock_is_reserved_on_order_and_restored_on_tochka_failure(): void
     {
@@ -301,6 +337,20 @@ class BookClubShopTest extends TestCase
         // второй резерв (−3) снят неудачной оплатой (+3) — снова 8.
         $this->assertSame(8, $this->book->fresh()->stock);
         $this->assertDatabaseHas('payments', ['tariff' => 'book_club_shop', 'status' => 'failed']);
+    }
+
+    public function test_http_error_from_tochka_also_returns_stock(): void
+    {
+        $this->enableFlag();
+        Http::fake(['*' => Http::response(['error' => 'gate'], 500)]);
+
+        $this->post(route('book-club.shop.submit'), $this->payload(['books_count' => 3]))
+            ->assertSessionHas('error');
+
+        // Резерв снят и при HTTP-ошибке провайдера, не только при обрыве связи.
+        $this->assertSame(10, $this->book->fresh()->stock);
+        $this->assertDatabaseHas('payments', ['tariff' => 'book_club_shop', 'status' => 'failed']);
+        $this->assertDatabaseHas('book_club_orders', ['books_count' => 3, 'status' => BookClubOrder::STATUS_PENDING]);
     }
 
     public function test_backorder_goes_negative_so_queue_is_visible(): void
