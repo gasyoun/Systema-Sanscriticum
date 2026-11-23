@@ -1,0 +1,15 @@
+# socks-liveness.service — проверка SOCKS-канала socks-nl на .91 (H8564, #4429 п.2).
+# MANAGED FILE — ставится scripts/server_guards_apply.sh --profile n8n из
+# scripts/server_guards_n8n/systemd/socks-liveness.service. До H8564 жил только
+# на машине: таймер вернулся бы после пересборки LXC пустым местом.
+[Unit]
+Description=SOCKS channel liveness for socks-nl (Systema #4429)
+Documentation=https://github.com/gasyoun/Systema-Sanscriticum/issues/4429
+After=network-online.target socks-nl.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/socks-liveness-check.sh
+TimeoutStartSec=150
+Nice=10
+---8<---
