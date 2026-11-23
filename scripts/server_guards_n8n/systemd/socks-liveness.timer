@@ -1,0 +1,17 @@
+# socks-liveness.timer — такт SOCKS-пробы .91 (H8564, #4429 п.2).
+# MANAGED FILE — см. scripts/server_guards_n8n/systemd/socks-liveness.service.
+# Свой таймер (не cron) и свой сервис: смерть этого такта видит внешний
+# свидетель на .92 (systema-socks91-watch.sh) по тишине метки socks91_hub.last.
+[Unit]
+Description=Probe the SOCKS forwarding channel every 5 minutes
+Documentation=https://github.com/gasyoun/Systema-Sanscriticum/issues/4429
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+Persistent=true
+RandomizedDelaySec=20
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target
