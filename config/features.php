@@ -658,6 +658,16 @@ return [
     'book_club_delivery' => (bool) env('BOOK_CLUB_DELIVERY', false),
 
     /*
+     | «Книжный клуб» — МАГАЗИН (H8412): витрина /knizhny-klub/kupit продаёт
+     | книгу «Школьные лекции» 1000 ₽ × N + доставку (или самовывоз), остаток
+     | ведётся в Filament-админке (books.stock). Отдельный рубильник от доставки
+     | участникам кампании: ВЫКЛЮЧЕН по умолчанию — пока флаг OFF, маршруты
+     | /knizhny-klub/kupit отдают 404 и прод-поведение не меняется.
+     | Включить: BOOK_CLUB_SHOP=true в .env + config:cache.
+     */
+    'book_club_shop' => (bool) env('BOOK_CLUB_SHOP', false),
+
+    /*
      | Консолидированный дашборд посещаемости (GetCourse-паритет GC-B2, H553):
      | rate по студенту/группе/курсу, тренд по неделям, список хронических
      | неявок, экспорт CSV — поверх уже существующих ClassAttendanceService /
