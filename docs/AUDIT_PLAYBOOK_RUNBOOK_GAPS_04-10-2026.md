@@ -1,6 +1,9 @@
 # Аудит плейбуков и ранбуков: пробелы и устаревшее
 
-_Created: 04-10-2026 · Last updated: 04-10-2026_ · [метадок](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/AUDIT_PLAYBOOK_RUNBOOK_GAPS_04-10-2026.meta.md)
+_Created: 04-10-2026 · Last updated: 23-11-2026_ · [метадок](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/AUDIT_PLAYBOOK_RUNBOOK_GAPS_04-10-2026.meta.md)
+
+_Дополнение 23-11-2026 (H8083):_ пробел «передача дел при уходе сотрудника и аварийной недоступности» (в таблице 04-10 не перечислялся — выявлен позднее) закрыт плейбуком [PLAYBOOK_STAFF_OFFBOARDING_EMERGENCY_HANDOVER_RU](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAYBOOK_STAFF_OFFBOARDING_EMERGENCY_HANDOVER_RU.md).
+
 
 Инвентаризация операторского фонда на 04-10-2026: 4 плейбука + 11 ранбуков ([docs/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs), [ops/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/ops)). Вердикты — по датам `git log` и сверке содержимого со смежными доками; «не найден» = grep по `docs/` (`playbook`, `runbook`, `ssh -R`, `MadelineProto`, тема) не дал отдельного документа. Follow-up заминчен в реестре Uprava.
 
