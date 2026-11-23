@@ -45,6 +45,15 @@ final class BookClubShopPricing
         return $books >= (int) config('book_club.manual_quote_threshold', 5);
     }
 
+    /** Сумма в рублях для витрины: без потери копеек, но и без «,00». */
+    public static function rub(float $value): string
+    {
+        $formatted = number_format($value, 2, ',', ' ');
+        $formatted = rtrim(rtrim($formatted, '0'), ',');
+
+        return $formatted === '' ? '0' : $formatted;
+    }
+
     /**
      * Полный расчёт заказа — единственный источник суммы для витрины, контроллера
      * и тестов.
