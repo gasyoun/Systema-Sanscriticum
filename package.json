@@ -30,7 +30,7 @@
         "axios": "^1.21.0",
         "laravel-echo": "^2.6.3",
         "laravel-vite-plugin": "^3.2.1",
-        "playwright": "^1.64.1",
+        "playwright": "^1.65.1",
         "postcss": "^8.5.32",
         "pusher-js": "^8.6.0",
         "tailwindcss": "^4.3.5",
