@@ -50,6 +50,7 @@ final class BookClubShopController extends Controller
 
         return view('book-club.shop', [
             'book' => $book,
+            'defaultQuote' => BookClubShopPricing::quote($book, 1, 'RU'),
             'countries' => (array) config('book_club.countries'),
             'abroadPrices' => (array) config('book_club.abroad_prices'),
             'rfPrice' => (float) config('book_club.rf_price'),
