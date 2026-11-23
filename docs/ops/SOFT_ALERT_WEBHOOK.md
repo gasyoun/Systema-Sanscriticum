@@ -1,6 +1,6 @@
 # Soft-alert webhook → issue → agent (skeleton)
 
-_Created: 02-08-2026 · Last updated: 02-08-2026_
+_Created: 02-08-2026 · Last updated: 23-11-2026_
 
 **Status:** **ENABLED** on prod 02-08-2026 (H2148 enablement).  
 n8n workflow `softAlertH2148` active on `.91`; prod `SOFT_ALERT_WEBHOOK_URL` set.  
@@ -66,25 +66,53 @@ Header when secret set: `X-Soft-Alert-Secret: <secret>`.
 
 ---
 
-## 4. n8n workflow skeleton
+## 4. n8n workflow (H8562: lookup-before-create + reconcile)
 
 Import template:  
 [`docs/n8n/soft-alert-to-github-issue.workflow.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/soft-alert-to-github-issue.workflow.json)
 
-Nodes (minimal):
+Приемник сходится в один issue на активный отпечаток, не теряя различения
+новых классов:
 
-1. **Webhook** path `/systema-soft-alert` (or Caddy path) — check secret header.  
-2. **IF** fingerprint already open issue (optional cache).  
-3. **GitHub** create issue:
-   - title: `[soft-alert] {scope} {fingerprint[:8]}`
-   - body: failures + playbook link + suggested commands
-   - labels: `ops-soft-alert`
-   - assignees: `pe4kinsmart-tech`
-4. **Respond** 202.
+1. **Webhook** path `/systema-soft-alert` (or Caddy path) — check secret header.
+2. **GitHub search open issue** — открытые issues ищутся по точной фразе
+   заголовка `[soft-alert] {scope} {fingerprint[:8]}` (`in:title`).
+3. **IF existing open issue**:
+   - **да** → **GitHub comment on existing** (новое срабатывание дописывается
+     комментарием в уже открытый issue) → `200 {deduped: true}`;
+   - **нет** → **GitHub create issue** (title/labels/assignees прежние,
+     заголовок байт-в-байт равен фразе поиска).
+4. **GitHub reconcile search** (после create): конкурентная доставка могла
+   создать второй issue с тем же заголовком внутри окна гонки. Правило
+   минимального номера: если найден открытый issue с тем же заголовком и
+   номером МЕНЬШЕ нашего — наш свежий issue комментируется и закрывается
+   (`PATCH`, ровно СВОЙ issue). Оба порядка гонки сходятся в более ранний
+   issue; итерации не нужны.
+5. **Respond** `202` (создан) / `202 converged` (закрыт как дубль).
 
 Do **not** put bot tokens in exportable node JSON (use n8n credentials / env).
 
-**Live wiring (enablement):** workflow id `softAlertH2148` uses env Bearer `SOFT_ALERT_GITHUB_TOKEN` + secret check against `$env.SOFT_ALERT_WEBHOOK_SECRET` (both on `N8N_ENV_ALLOWLIST`). Prefer rotating the GitHub token to a dedicated fine-grained PAT (Issues: write).
+**Live wiring (enablement):** workflow id `softAlertH2148` on `.91` must be
+**re-imported** from this template (owner ops step, same lane as the 02-08
+enablement; the sender-side grace ships via `deploy.sh`). Env Bearer
+`SOFT_ALERT_GITHUB_TOKEN` + secret check against `$env.SOFT_ALERT_WEBHOOK_SECRET`
+(both on `N8N_ENV_ALLOWLIST`) stay unchanged. Prefer rotating the GitHub token
+to a dedicated fine-grained PAT (Issues: write).
+
+**H8562 incident context (21–23.11.2026):** 35+ open issues shared one title
+`[soft-alert] guards 6fd69840` (`guards/failed-units: telegram-daily.service`).
+Root cause chain, verified read-only on `.92`: the guard samples
+`systemctl --failed`; the failing unit flaps with the */10 timer beat against
+the */15 probe — at :00/:30 ticks the unit is mid-run (`activating`, invisible
+to `systemctl --failed`) → false green → `ProbeCabinetHealth` forgot
+`LAST_SOFT_FP/AT` → the next failing tick (:15/:45) re-fired the same
+fingerprint as a «new» class → the pre-H8562 receiver created an issue
+unconditionally. Sender-side flap grace (N consecutive green probes close an
+incident, `CABINET_PROBE_SOFT_GREEN_GRACE_TICKS`, default 2) + single-flight
+lock land in the app; this receiver-side dedup makes the webhook idempotent
+per fingerprint. The unit itself fails on `reserve_exhausted` (empty content
+queue) — that trigger is an owner action (refill the queue / normalize the
+service), tracked separately from the code fix.
 
 ---
 
