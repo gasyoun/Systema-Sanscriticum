@@ -254,7 +254,9 @@
         }
 
         function fmt(n) {
-            return new Intl.NumberFormat('ru-RU').format(Math.round(n)) + ' ₽';
+            // Без округления до рубля: если MG поставит дробную цену, витрина
+            // должна показать ровно ту сумму, которую спишет Точка.
+            return new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(n) + ' ₽';
         }
 
         function sync() {

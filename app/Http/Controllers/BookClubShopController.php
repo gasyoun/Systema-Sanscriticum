@@ -15,7 +15,6 @@ use App\Services\BookClub\BookClubShopPricing;
 use App\Services\BookClub\BookStock;
 use App\Services\CuratorNotifier;
 use App\Services\Payments\TochkaPaymentService;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -107,7 +106,11 @@ final class BookClubShopController extends Controller
 
         $isAbroad = ! $pickup && BookClubPricing::isAbroad($request->input('country_code'));
 
-        if ($isAbroad) {
+        // 5+ книг: сумму согласуем письмом, поэтому PayPal-предоплату и её
+        // доказательства НЕ требуем — иначе покупатель платит до согласования.
+        $manualQuote = BookClubShopPricing::requiresManualQuote((int) $request->input('books_count', 0));
+
+        if ($isAbroad && ! $manualQuote) {
             // PayPal-заявка: сумма/валюта + хотя бы одно доказательство оплаты.
             $rules += [
                 'foreign_amount' => ['required', 'numeric', 'min:1', 'max:1000000'],
@@ -145,8 +148,9 @@ final class BookClubShopController extends Controller
         }
 
         // Чек оплаты из-за рубежа — приватный диск (в скрине платёжные данные).
+        // Только для не-ручных заказов: 5+ книг платятся после согласования суммы.
         $proofPath = null;
-        if ($isAbroad && $request->hasFile('proof')) {
+        if ($isAbroad && ! $manualQuote && $request->hasFile('proof')) {
             $proofPath = $request->file('proof')->store('paypal-proofs', 'local');
         }
 
@@ -178,9 +182,9 @@ final class BookClubShopController extends Controller
                     'amount' => $quote['total'],
                     'tariff' => 'book_club_shop',
                     'status' => 'pending',
-                    'provider' => $isAbroad ? Payment::PROVIDER_PAYPAL : null,
-                    'foreign_amount' => $isAbroad ? (float) $validated['foreign_amount'] : null,
-                    'foreign_currency' => $isAbroad ? $validated['foreign_currency'] : null,
+                    'provider' => ($isAbroad && ! $quote['manual']) ? Payment::PROVIDER_PAYPAL : null,
+                    'foreign_amount' => ($isAbroad && ! $quote['manual']) ? (float) $validated['foreign_amount'] : null,
+                    'foreign_currency' => ($isAbroad && ! $quote['manual']) ? $validated['foreign_currency'] : null,
                     'proof_path' => $proofPath,
                     'payer_note' => implode(' | ', $noteParts),
                 ],
@@ -249,14 +253,10 @@ final class BookClubShopController extends Controller
                 purpose: $purpose,
                 itemName: 'Книжный клуб — книга «'.config('book_club.book_title').'» и доставка',
             );
-        } catch (ConnectionException $e) {
-            $payment->update(['status' => 'failed']);
-            $stock->release($book, $count);
-
-            Log::error('Tochka недоступна (book_club_shop)', [
-                'payment_id' => $payment->id,
-                'error' => $e->getMessage(),
-            ]);
+        } catch (\Throwable $e) {
+            // Любой сбой провайдера (не только ConnectionException) обязан вернуть
+            // резерв: иначе остаток «съеден» заказом, который никто не оплатит.
+            $this->failPayment($payment, $stock, $book, $count, 'exception', $e->getMessage());
 
             return back()->withInput()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
         }
@@ -267,15 +267,33 @@ final class BookClubShopController extends Controller
             return redirect()->away($response['Data']['paymentLink']);
         }
 
-        $payment->update(['status' => 'failed']);
-        $stock->release($book, $count);
-
-        Log::error('Ошибка Точка Эквайринг (book_club_shop)', [
-            'payment_id' => $payment->id,
-            'status' => $response->status(),
-        ]);
+        $this->failPayment($payment, $stock, $book, $count, 'http', (string) $response->status());
 
         return back()->withInput()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
+    }
+
+    /**
+     * Провал платёжной попытки: статус failed и возврат резерва ОДНОЙ
+     * транзакцией — иначе обрыв между двумя записями теряет экземпляры навсегда.
+     */
+    private function failPayment(
+        Payment $payment,
+        BookStock $stock,
+        Book $book,
+        int $count,
+        string $kind,
+        string $detail,
+    ): void {
+        DB::transaction(function () use ($payment, $stock, $book, $count): void {
+            $payment->update(['status' => 'failed']);
+            $stock->release($book, $count);
+        });
+
+        Log::error('Оплата книги не создана (book_club_shop)', [
+            'payment_id' => $payment->id,
+            'kind' => $kind,
+            'detail' => $detail,
+        ]);
     }
 
     /** Книга витрины: первая активная запись каталога. */
