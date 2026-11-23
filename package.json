@@ -34,7 +34,7 @@
         "postcss": "^8.5.32",
         "pusher-js": "^8.6.0",
         "tailwindcss": "^4.3.5",
-        "vite": "^8.3.6"
+        "vite": "^8.3.8"
     },
     "overrides": {
         "vite-plugin-full-reload": {
