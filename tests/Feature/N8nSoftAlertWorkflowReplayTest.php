@@ -9,11 +9,11 @@ use Tests\Support\N8n\SoftAlertWorkflowReplay;
 use Tests\TestCase;
 
 /**
- * H8562 v2 — mocked runner replay, ровно сценарий «Verification outstanding»
- * из PR #4481 и independent review (23-11): две конкурентные доставки одного
- * отпечатка под ЗАДЕРЖАННОЙ видимостью поиска обязаны сойтись в один issue,
- * отдельный новый отпечаток — открыть свой. Реплей исполняет реальный экспорт
- * поверх MockGithub: REST-лист строго консистентен, поисковый индекс лагает.
+ * H8562 v2 — mocked runner replay поверх MockGithub (лист строго консистентен,
+ * индекс поиска лагает): конкурентные доставки одного отпечатка сходятся в
+ * один issue, новый отпечаток открывает свой, sweep гасит бэклог. Находки
+ * вечернего review — в N8nSoftAlertWorkflowReviewReplayTest; rationale:
+ * docs/ops/SOFT_ALERT_WEBHOOK.md §4.
  */
 class N8nSoftAlertWorkflowReplayTest extends TestCase
 {
@@ -234,10 +234,9 @@ class N8nSoftAlertWorkflowReplayTest extends TestCase
     }
 
     /**
-     * Durable sweep против живого бэклога шторма (форма из independent
-     * review: 35 + 7 + 7 по трем отпечаткам): выживает минимальный номер
-     * каждого заголовка, каждый дубль закрыт ровно один раз со ссылкой,
-     * посторонний issue и PR с тем же заголовком не тронуты.
+     * Durable sweep против бэклога шторма (35 + 7 + 7): легаси-issues несут
+     * полный отпечаток в строке **Fingerprint:** — sweep доказывает дубль и
+     * выживает минимальный номер; посторонний issue и PR не тронуты.
      */
     public function test_sweep_closes_storm_backlog_keeping_min_numbers(): void
     {
@@ -247,9 +246,9 @@ class N8nSoftAlertWorkflowReplayTest extends TestCase
         $title3 = '[soft-alert] backups 33cc44dd';
 
         $min = [];
-        foreach ([$title1 => 35, $title2 => 7, $title3 => 7] as $title => $count) {
+        foreach ([[$title1, self::FP_X, 35], [$title2, self::FP_Y, 7], [$title3, self::FP_Y, 7]] as [$title, $fp, $count]) {
             for ($i = 0; $i < $count; $i++) {
-                $issue = $mock->seedIssue($title);
+                $issue = $mock->seedLegacyIssue($title, $fp);
                 if ($i === 0) {
                     $min[$title] = (int) $issue['number'];
                 }

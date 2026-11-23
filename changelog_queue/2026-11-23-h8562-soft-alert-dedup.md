@@ -70,3 +70,57 @@ issue под задержанной видимостью поиска (мок: �
 игнорируется. Расхождение search-дизайна воспроизведено моком и оставлено
 как документация дефекта. Отправитель (`ProbeCabinetHealth`,
 `SoftFailureFingerprint`) не тронут — `CabinetProbeTest` 28/96 зеленые.
+
+## v3 (23-11-2026, follow-up independent review: три transport/logic-находки)
+
+Второй independent review (вечер 23-11, `$TEMP/opencode/h8562-probe/
+codex-independent-review.txt`) проверил экспорт исполнением точного JS и дал
+три находки поверх v2:
+
+1. **alwaysOutputData отсутствовал на initial HTTP list** — n8n не дает
+   выхода у HTTP-узла на пустом массиве, поэтому на genuinely пустом борде
+   «Match exact title» не исполнялся и ПЕРВЫЙ issue нового отпечатка никогда
+   не создавался (тихая потеря доставки). Флаг Always Output Data (n8n node
+   setting) поставлен на все три list-узла: пустой массив отдает один пустой
+   item, ветка create живет, первый issue создается.
+2. **Пагинация отсутствовала** — все три чтения были ограничены первой
+   сотней (`per_page=100`), канонический issue за пределами 100 был невидим
+   lookup'у и sweep'у. Поставлена ПОДДЕРЖАННАЯ n8n-пагинация (cookbook
+   «Get the next page by number using $pageCount»; схема сверена с исходником
+   HttpRequestV3): Update a Parameter in Each Request, Query `page` =
+   `{{ $pageCount + 1 }}`, Pagination Complete When: Response Is Empty
+   (GitHub отдает bare top-level array), Limit 20 запросов, Interval 300 мс —
+   те же страницы, на которые указывает Link rel=next.
+3. **Коллизия 8-hex префикса** — два различных sha256 могут делить первые
+   восемь hex, и дедуп по заголовку склеивал чужие классы отказов. Заголовок
+   остался 8-hex (отображение + легаси-совместимость), но совпадение теперь
+   требует ПОЛНЫЙ отпечаток из тела: структурный маркер
+   `<!-- soft-alert-fingerprint:… -->`, который create пишет в каждый новый
+   issue, с легаси-строкой `**Fingerprint:**` как фолбэком для pre-v3 issues.
+   Sweep группирует по паре (заголовок + доказанный полный отпечаток);
+   неоднозначные легаси (тело без доказуемого отпечатка) не матчатся и
+   НИКОГДА не закрываются — легаси-безопасность миграции.
+
+Сходимость отложенной видимости сохранена (все 6 порядков
+create/reconcile конкурентных доставок сходятся в один issue, ноль обращений
+к поисковому индексу); failed-unit детекция, контракт метки, PR-фильтр,
+секреты на env — не тронуты. Clear rollout contract добавлен в
+docs/ops/SOFT_ALERT_WEBHOOK.md §4 (owner steps: проверка легаси-тел до
+импорта, re-import на .91, визуальная проверка Pagination + Always Output
+Data после импорта, ожидания первого sweep, smoke, инварианты аудита).
+
+Тесты: реплей дополнен честным транспортным моделированием (ноль items на
+вход = узел не исполняется; пустой лист + alwaysOutputData = один пустой
+item; пагинация по страницам до пустой) — `N8nSoftAlertWorkflowReplayTest`
+6 (сходимость конкурентных доставок, шторм-бэклог на легаси-телах с
+**Fingerprint:** строкой) + новый класс `N8nSoftAlertWorkflowReviewReplayTest`
+4 (пустой борд → первый issue создается; канонический за пределами сотни
+виден lookup'у и sweep'у; коллизионный 8-hex не склеивается и не
+закрывается; неоднозначные легаси не матчатся и не закрываются), контракт
+`N8nSoftAlertWorkflowContractTest` 9 (3 новых: alwaysOutputData, схема
+пагинации, полный отпечаток), новый `N8nSoftAlertWorkflowJsTest` исполняет
+НАСТОЯЩИЙ JavaScript Code-узлов через node (tests/Support/N8n/
+soft_alert_js_probe.cjs, 11 проверок; пропуск без node). Итог: 20 passed /
+434 assertions + `CabinetProbeTest` 28/96, Pint чист; экспорт ужат до
+19 941 Б под token-size gate без его обхода. Не деплоено, прод-вызовов
+не было.

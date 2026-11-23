@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Support\N8n;
 
 /**
- * Grammar pins + PHP mirrors for the H8562 workflow export (H8562 v2).
+ * Grammar pins + PHP mirrors for the H8562 workflow export (H8562 v3).
  *
  * Code-node JavaScript and jsonBody templates from the export are mirrored
  * here behind strict pins: if the exported text stops containing a pinned
@@ -14,6 +14,26 @@ namespace Tests\Support\N8n;
  */
 final class SoftAlertWorkflowPins
 {
+    /**
+     * Full fingerprint extraction, mirroring the exported fpOf one-for-one:
+     * a single alternation regex over the body — the structured marker or
+     * the legacy **Fingerprint:** line, whichever appears first in the text
+     * — lowercased; null when the body proves nothing (ambiguous legacy:
+     * never matched, never closed).
+     *
+     * @param  array<string, mixed>  $issue
+     */
+    private function extractFingerprint(array $issue): ?string
+    {
+        $body = (string) ($issue['body'] ?? '');
+
+        if (preg_match('/<!--\s*soft-alert-fingerprint:([0-9a-fA-F]{8,128})\s*-->|\*\*Fingerprint:\*\*\s*`([0-9a-fA-F]{8,128})`/', $body, $m) === 1) {
+            return strtolower($m[1] !== '' ? $m[1] : $m[2]);
+        }
+
+        return null;
+    }
+
     public function __construct(private readonly SoftAlertWorkflowExpressions $expressions) {}
 
     /**
@@ -39,11 +59,13 @@ final class SoftAlertWorkflowPins
 
         // Failed-unit detection must survive every export edit: the issue
         // body keeps the failures list, playbook link and the suggested
-        // diagnose command (H8562 scope guard).
+        // diagnose command (H8562 scope guard), and the structured
+        // full-fingerprint marker (the v3 dedup key — do not drop it).
         $this->pin($m[1], [
             '## Soft cabinet alert',
             '### Failures',
             SoftAlertWorkflowExpressions::FAILURES_JOIN_RAW,
+            '<!-- soft-alert-fingerprint:${$(\'Webhook soft-alert\').first().json.body.fingerprint} -->',
             'https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md',
             'ssh root@193.232.229.92',
             "suggested?.diagnose || 'php artisan ops:soft-remediate --dry-run --json'",
@@ -79,7 +101,7 @@ final class SoftAlertWorkflowPins
                 'Closed as duplicate of #${$json.rival.number} — concurrent soft-alert deliveries converge on one issue (H8562).',
             ],
             'Sweep comment duplicate' => [
-                'Closed as duplicate — periodic soft-alert dedup sweep (H8562). Survivor: the lowest-numbered OPEN issue with the same title.',
+                'Closed as duplicate — periodic soft-alert dedup sweep (H8562). Survivor: the lowest-numbered OPEN issue with the same title and full fingerprint.',
             ],
             default => throw new WorkflowGlueException("no body pins for comment node '{$name}'"),
         };
@@ -123,7 +145,10 @@ final class SoftAlertWorkflowPins
     {
         $this->pin($jsCode, [
             "const expected = '[soft-alert] ' + (body.scope || 'unknown') + ' ' + (body.fingerprint || '').slice(0, 8);",
-            "filter(i => (i.title || '') === expected && i.state === 'open' && !i.pull_request)",
+            "const fp = String(body.fingerprint || '').trim().toLowerCase();",
+            'soft-alert-fingerprint:([0-9a-fA-F]{8,128})',
+            '\*\*Fingerprint:\*\*\s*`([0-9a-fA-F]{8,128})`',
+            "filter(i => i && (i.title || '') === expected && i.state === 'open' && !i.pull_request && fp !== '' && fpOf(i.body) === fp)",
             'sort((a, b) => a.number - b.number)',
             'return [{ json: { expected_title: expected, matches } }];',
         ]);
@@ -132,10 +157,14 @@ final class SoftAlertWorkflowPins
         $scope = (string) ($body['scope'] ?? '');
         $fingerprint = (string) ($body['fingerprint'] ?? '');
         $expected = '[soft-alert] '.($scope !== '' ? $scope : 'unknown').' '.substr($fingerprint, 0, 8);
+        $fp = strtolower(trim($fingerprint));
 
         $matches = [];
         foreach ($items as $issue) {
-            if ($this->isExactOpenIssue($issue, $expected)) {
+            if ($fp === '' || ! $this->isExactOpenIssue($issue, $expected)) {
+                continue;
+            }
+            if ($this->extractFingerprint($issue) === $fp) {
                 $matches[] = ['number' => (int) $issue['number'], 'html_url' => (string) ($issue['html_url'] ?? '')];
             }
         }
@@ -153,17 +182,24 @@ final class SoftAlertWorkflowPins
         $this->pin($jsCode, [
             "const expected = $('Match exact title').first().json.expected_title;",
             "const mine = $('GitHub create issue').first().json.number;",
-            "filter(i => (i.title || '') === expected && i.state === 'open' && !i.pull_request && i.number < mine)",
+            "const fp = String($('Webhook soft-alert').first().json.body.fingerprint || '').trim().toLowerCase();",
+            'soft-alert-fingerprint:([0-9a-fA-F]{8,128})',
+            '\*\*Fingerprint:\*\*\s*`([0-9a-fA-F]{8,128})`',
+            "filter(i => i && (i.title || '') === expected && i.state === 'open' && !i.pull_request && i.number < mine && fp !== '' && fpOf(i.body) === fp)",
             'sort((a, b) => a.number - b.number)',
             'return [{ json: { mine, expected_title: expected, rival: rivals[0] || null, rivals_count: rivals.length } }];',
         ]);
 
         $expected = (string) $state->nodeOutputs['Match exact title'][0]['json']['expected_title'];
         $mine = (int) $state->nodeOutputs['GitHub create issue'][0]['json']['number'];
+        $fp = strtolower(trim((string) ($state->nodeOutputs['Webhook soft-alert'][0]['json']['body']['fingerprint'] ?? '')));
 
         $rivals = [];
         foreach ($items as $issue) {
-            if ($this->isExactOpenIssue($issue, $expected) && (int) $issue['number'] < $mine) {
+            if ($fp === '' || ! $this->isExactOpenIssue($issue, $expected) || (int) $issue['number'] >= $mine) {
+                continue;
+            }
+            if ($this->extractFingerprint($issue) === $fp) {
                 $rivals[] = $issue;
             }
         }
@@ -188,9 +224,12 @@ final class SoftAlertWorkflowPins
         $this->pin($jsCode, [
             "if (!issue || issue.state !== 'open' || issue.pull_request) continue;",
             "if (!title.startsWith('[soft-alert] ')) continue;",
-            'const group = groups[title].sort((a, b) => a.number - b.number);',
+            'const fp = fpOf(issue.body);',
+            'if (!fp) continue;',
+            "const key = title + ' :: ' + fp;",
+            'const group = groups[key].issues.sort((a, b) => a.number - b.number);',
             'for (const dup of group.slice(1)) {',
-            'out.push({ json: { title, survivor_number: group[0].number, duplicate_number: dup.number } });',
+            'out.push({ json: { title: groups[key].title, survivor_number: group[0].number, duplicate_number: dup.number } });',
         ]);
 
         $groups = [];
@@ -202,17 +241,24 @@ final class SoftAlertWorkflowPins
             if (! str_starts_with($title, '[soft-alert] ')) {
                 continue;
             }
-            $groups[$title][] = $issue;
+            $fp = $this->extractFingerprint($issue);
+            if ($fp === null) {
+                continue; // ambiguous legacy: never grouped, never closed
+            }
+            $key = $title.' :: '.$fp;
+            $groups[$key]['title'] = $title;
+            $groups[$key]['issues'][] = $issue;
         }
 
         $out = [];
-        foreach ($groups as $title => $group) {
-            usort($group, static fn (array $a, array $b): int => ((int) $a['number']) <=> ((int) $b['number']));
-            $survivor = (int) $group[0]['number'];
-            foreach (array_slice($group, 1) as $dup) {
+        foreach ($groups as $group) {
+            $issues = $group['issues'];
+            usort($issues, static fn (array $a, array $b): int => ((int) $a['number']) <=> ((int) $b['number']));
+            $survivor = (int) $issues[0]['number'];
+            foreach (array_slice($issues, 1) as $dup) {
                 $out[] = [
                     'json' => [
-                        'title' => $title,
+                        'title' => $group['title'],
                         'survivor_number' => $survivor,
                         'duplicate_number' => (int) $dup['number'],
                     ],

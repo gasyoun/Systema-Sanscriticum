@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Support\N8n;
 
 /**
- * Mocked n8n runner for docs/n8n/soft-alert-to-github-issue.workflow.json (H8562 v2).
+ * Mocked n8n runner for docs/n8n/soft-alert-to-github-issue.workflow.json (H8562 v3).
  *
  * The runner executes the REAL exported node graph: edges, URLs, query
  * parameters, expressions and Code-node sources are read from the export.
@@ -15,6 +15,10 @@ namespace Tests\Support\N8n;
  * uses; both fail closed on any drift. The GitHub side is MockGithub:
  * strongly consistent list, delayed search index — the consistency model
  * under which the reviewed search-based receiver was measured to diverge.
+ * v3 transport semantics are replayed faithfully: alwaysOutputData (empty
+ * result → one empty item; zero items in → the branch dies), and the
+ * supported n8n pagination on every list node (walk all open pages, not
+ * just the first 100).
  */
 final class SoftAlertWorkflowReplay
 {
@@ -170,6 +174,21 @@ final class SoftAlertWorkflowReplay
                 throw new WorkflowGlueException("no input wired into '{$name}'");
             }
 
+            if ($input === []) {
+                // n8n transport semantics: a node that receives ZERO items
+                // never executes — the branch dies silently here. This is the
+                // exact behavior that made the pre-v3 export lose the FIRST
+                // issue on a genuinely empty board (independent review 23-11):
+                // the list node returned no items, "Match exact title" never
+                // ran, create never fired. The export now carries
+                // alwaysOutputData on every list node so this branch only
+                // dies when the export really lost the flag.
+                $state->finished = true;
+                $state->pointer = null;
+
+                return;
+            }
+
             $this->executeNode($state, $name, $this->nodes[$name], $input);
         }
     }
@@ -253,7 +272,12 @@ final class SoftAlertWorkflowReplay
 
     /**
      * HTTP Request node. n8n runs one request per input item; an array
-     * response becomes one output item per element.
+     * response becomes one output item per element. The GET-list branch
+     * mirrors the export's SUPPORTED pagination (Update a Parameter in Each
+     * Request: qs.page = $pageCount + 1, Pagination Complete When: Response
+     * Is Empty) and the alwaysOutputData node setting: with the flag an
+     * empty result still emits ONE empty item, without it zero items flow
+     * onward and the branch dies (the pre-v3 first-issue bug).
      *
      * @param  list<array<string, mixed>>  $input
      * @return list<array<string, mixed>>
@@ -274,23 +298,80 @@ final class SoftAlertWorkflowReplay
                 foreach ((array) ($params['queryParameters']['parameters'] ?? []) as $p) {
                     $query[(string) ($p['name'] ?? '')] = (string) $this->expressions->evalExpr((string) ($p['value'] ?? ''), $context);
                 }
-                $response = str_contains($url, '/search/issues')
-                    ? $this->github->searchIssues((string) ($query['q'] ?? ''))
-                    : $this->github->listIssues($query);
-            } else {
-                $response = $this->executeWriteNode($name, $url, (string) ($params['jsonBody'] ?? ''), $context, $state);
-            }
 
-            if (is_array($response) && array_is_list($response)) {
-                foreach ($response as $element) {
-                    $out[] = ['json' => $element];
+                if (str_contains($url, '/search/issues')) {
+                    $response = $this->github->searchIssues((string) ($query['q'] ?? ''));
+                    $out[] = ['json' => $response];
+                } else {
+                    foreach ($this->listWithPagination($node, $query) as $element) {
+                        $out[] = ['json' => $element];
+                    }
                 }
             } else {
-                $out[] = ['json' => $response];
+                $response = $this->executeWriteNode($name, $url, (string) ($params['jsonBody'] ?? ''), $context, $state);
+                if (is_array($response) && array_is_list($response)) {
+                    foreach ($response as $element) {
+                        $out[] = ['json' => $element];
+                    }
+                } else {
+                    $out[] = ['json' => $response];
+                }
             }
         }
 
+        // n8n node setting (Settings tab): Always Output Data — an empty
+        // result still emits one empty item instead of none.
+        if ($out === [] && (bool) ($node['alwaysOutputData'] ?? false)) {
+            $out = [['json' => []]];
+        }
+
         return $out;
+    }
+
+    /**
+     * The export's supported n8n pagination, replayed: "Update a Parameter
+     * in Each Request" (Query page = $pageCount + 1) with "Pagination
+     * Complete When: Response Is Empty". n8n continues while the last
+     * response body is a non-empty array, so the replay keeps requesting
+     * page N+1 until a page comes back empty — bounded by Max Pages when
+     * Limit Pages Fetched is set. Anything else runs the single-request
+     * legacy path.
+     *
+     * @param  array<string, mixed>  $node
+     * @param  array<string, string>  $query
+     * @return list<array<string, mixed>>
+     */
+    private function listWithPagination(array $node, array $query): array
+    {
+        $pagination = $node['parameters']['options']['pagination']['pagination'] ?? null;
+        $mode = is_array($pagination) ? (string) ($pagination['paginationMode'] ?? 'off') : 'off';
+
+        if ($mode !== 'updateAParameterInEachRequest') {
+            return $this->github->listIssues($query);
+        }
+
+        $maxRequests = PHP_INT_MAX;
+        if ((bool) ($pagination['limitPagesFetched'] ?? false)) {
+            $maxRequests = max(1, (int) ($pagination['maxRequests'] ?? 1));
+        }
+
+        $items = [];
+        $page = 1;
+        while (true) {
+            // The first request carries the node's own query (GitHub page 1);
+            // every following request updates qs.page ($pageCount + 1).
+            $pageQuery = $page === 1 ? $query : $query + ['page' => (string) $page];
+            $response = $this->github->listIssues($pageQuery);
+            foreach ($response as $element) {
+                $items[] = $element;
+            }
+
+            if ($response === [] || $page >= $maxRequests) {
+                return $items;
+            }
+
+            $page++;
+        }
     }
 
     /**

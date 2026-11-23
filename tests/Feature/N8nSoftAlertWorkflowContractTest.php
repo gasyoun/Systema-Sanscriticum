@@ -8,13 +8,17 @@ use PHPUnit\Framework\Assert;
 use Tests\TestCase;
 
 /**
- * H8562 v2 контракт n8n-приемника. Независимый review FAIL: две конкурентные
- * доставки создают по issue, а НЕМЕДЛЕННЫЙ search-reconcile из-за лага
- * индекса видит только свой issue — никто не закрывается, дубли остаются.
- * Поэтому весь dedup читает строго консистентный REST-лист
- * (GET /repos/…/issues), а не лагающий /search/issues; заголовок строится
- * в ОДНОМ узле (Match exact title), create и reconcile читают его оттуда;
- * durable-сходимость добивает плановый sweep. Секреты в экспорт не вшиваются.
+ * H8562 v3 контракт n8n-приемника. Independent review (23-11, вечер) дал
+ * три transport/logic-находки поверх v2: (1) пустой REST-массив убивал
+ * ветку create — первый issue нового отпечатка не создавался без
+ * alwaysOutputData; (2) лист без пагинации не видел канонический issue за
+ * пределами первой сотни; (3) два различных sha256 могут делить первые
+ * восемь hex — дедуп по заголовку склеивал чужие классы. Заголовок
+ * остается 8-hex (отображение + легаси), дедуп требует ПОЛНЫЙ отпечаток из
+ * тела (структурный маркер нового issue + легаси-строка фолбэком),
+ * неоднозначные легаси не матчатся и не закрываются. Дедуп по-прежнему
+ * читает строго консистентный REST-лист, никогда /search/issues; секреты
+ * в экспорт не вшиваются.
  */
 class N8nSoftAlertWorkflowContractTest extends TestCase
 {
@@ -63,7 +67,7 @@ class N8nSoftAlertWorkflowContractTest extends TestCase
      * Ядро фикса: в экспорте НЕТ обращений к /search/issues — дедуп не
      * может зависеть от лагающего поискового индекса (review FAIL).
      * Оба чтения идут строго консистентным REST-листом с контрактом
-     * метки ops-soft-alert и честным окном в 100 свежих открытых issues.
+     * метки ops-soft-alert и размером страницы 100.
      */
     public function test_dedup_reads_the_consistent_issue_list_not_the_lagged_search_index(): void
     {
@@ -87,8 +91,102 @@ class N8nSoftAlertWorkflowContractTest extends TestCase
             }
             $this->assertSame('open', $query['state'] ?? null, "{$name}: state=open");
             $this->assertSame('ops-soft-alert', $query['labels'] ?? null, "{$name}: label contract");
-            $this->assertSame('100', $query['per_page'] ?? null, "{$name}: documented scan window");
+            $this->assertSame('100', $query['per_page'] ?? null, "{$name}: documented page size");
         }
+    }
+
+    /**
+     * Transport-находка review №1: n8n не дает выход у HTTP-узла на пустом
+     * массиве — без alwaysOutputData первая доставка нового отпечатка
+     * НЕ создавала issue (ветка умирала до create). Флаг обязан стоять на
+     * всех трех list-узлах.
+     */
+    public function test_list_nodes_emit_on_empty_response(): void
+    {
+        foreach (['GitHub list open issues', 'GitHub reconcile list', 'Sweep list open issues'] as $name) {
+            $node = $this->nodesByName()[$name] ?? null;
+            $this->assertNotNull($node, "export must keep the '{$name}' node");
+
+            $this->assertTrue(
+                (bool) ($node['alwaysOutputData'] ?? false),
+                "{$name}: Always Output Data (n8n node setting) must be set — an empty REST array must still emit one empty item so the create branch survives a genuinely empty board"
+            );
+        }
+    }
+
+    /**
+     * Transport-находка review №2: лист был ограничен первой сотней без
+     * пагинации — канонический issue за пределами 100 был невидим для
+     * lookup и sweep. Теперь на всех трех list-узлах стоит ПОДДЕРЖАННАЯ
+     * n8n-пагинация из cookbook («Get the next page by number using
+     * $pageCount»): Query page = {{ $pageCount + 1 }}, завершение по
+     * пустой странице (GitHub отдает bare top-level array), с потолком
+     * запросов — те же страницы, на которые указывает Link rel=next.
+     */
+    public function test_list_nodes_use_supported_n8n_pagination_beyond_the_first_hundred(): void
+    {
+        foreach (['GitHub list open issues', 'GitHub reconcile list', 'Sweep list open issues'] as $name) {
+            $node = $this->nodesByName()[$name] ?? null;
+            $this->assertNotNull($node, "export must keep the '{$name}' node");
+
+            $pagination = $node['parameters']['options']['pagination']['pagination'] ?? null;
+            $this->assertIsArray($pagination, "{$name}: pagination block missing");
+
+            $this->assertSame('updateAParameterInEachRequest', $pagination['paginationMode'] ?? null, "{$name}: documented pagination mode");
+            $this->assertSame('responseIsEmpty', $pagination['paginationCompleteWhen'] ?? null, "{$name}: GitHub returns a bare array — complete on an empty page");
+
+            $pageParameters = $pagination['parameters']['parameters'] ?? null;
+            $this->assertIsArray($pageParameters, "{$name}: next-page parameters");
+            $this->assertCount(1, $pageParameters, "{$name}: exactly one updated parameter");
+            $this->assertSame('qs', $pageParameters[0]['type'] ?? null, "{$name}: update the query string");
+            $this->assertSame('page', $pageParameters[0]['name'] ?? null, "{$name}: GitHub page parameter");
+            $this->assertSame('={{ $pageCount + 1 }}', $pageParameters[0]['value'] ?? null, "{$name}: documented \$pageCount expression");
+
+            $this->assertTrue((bool) ($pagination['limitPagesFetched'] ?? false), "{$name}: pagination must be bounded");
+            $this->assertGreaterThan(1, (int) ($pagination['maxRequests'] ?? 0), "{$name}: max pages bound");
+            $this->assertGreaterThanOrEqual(0, (int) ($pagination['requestInterval'] ?? 0), "{$name}: request interval");
+        }
+    }
+
+    /**
+     * Находка review №3: два РАЗЛИЧНЫХ sha256 могут делить первые восемь
+     * hex — совпадение по заголовку (8-hex префикс) склеивало чужие классы
+     * отказов. Заголовок остается 8-hex для отображения и легаси-совместимости,
+     * но дедуп требует ПОЛНЫЙ отпечаток: структурный маркер в теле нового
+     * issue (создается вместе с issue), с легаси-строкой
+     * **Fingerprint:** как фолбэком для pre-v3 issues. Неоднозначные тела
+     * (без доказуемого отпечатка) не матчатся и не закрываются.
+     */
+    public function test_matching_requires_the_full_fingerprint_not_just_the_eight_hex_title(): void
+    {
+        $byName = $this->nodesByName();
+
+        $create = (string) ($byName['GitHub create issue']['parameters']['jsonBody'] ?? '');
+        $this->assertStringContainsString('<!-- soft-alert-fingerprint:', $create, 'created issue body carries the structured full-fingerprint marker');
+        $this->assertStringContainsString(
+            '<!-- soft-alert-fingerprint:${$(\'Webhook soft-alert\').first().json.body.fingerprint} -->',
+            $create,
+            'the marker interpolates the delivered FULL fingerprint'
+        );
+        $this->assertStringNotContainsString('slice(0, 8)', $create, 'create must not rebuild the title');
+
+        foreach (['Match exact title', 'Reconcile find rival'] as $name) {
+            $code = (string) ($byName[$name]['parameters']['jsCode'] ?? '');
+            $this->assertStringContainsString('soft-alert-fingerprint:([0-9a-fA-F]{8,128})', $code, "{$name}: structured marker regex");
+            $this->assertStringContainsString('\*\*Fingerprint:\*\*\s*`([0-9a-fA-F]{8,128})`', $code, "{$name}: legacy **Fingerprint:** line fallback");
+            $this->assertStringContainsString("fp !== '' && fpOf(i.body) === fp", $code, "{$name}: equality on the FULL fingerprint, never prefix-only");
+        }
+
+        $reconcile = (string) ($byName['Reconcile find rival']['parameters']['jsCode'] ?? '');
+        $this->assertStringContainsString('&& i.number < mine', $reconcile, 'duplicate needs a LOWER number');
+
+        $sweep = (string) ($byName['Sweep group duplicates']['parameters']['jsCode'] ?? '');
+        $this->assertStringContainsString('soft-alert-fingerprint:([0-9a-fA-F]{8,128})', $sweep);
+        $this->assertStringContainsString("const key = title + ' :: ' + fp;", $sweep, 'sweep groups by title AND full fingerprint');
+        $this->assertStringContainsString('if (!fp) continue;', $sweep, 'ambiguous legacy issues are never closed by the sweep');
+
+        $sweepComment = (string) ($byName['Sweep comment duplicate']['parameters']['jsonBody'] ?? '');
+        $this->assertStringContainsString('same title and full fingerprint', $sweepComment);
     }
 
     /**

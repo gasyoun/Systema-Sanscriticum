@@ -47,9 +47,10 @@ final class MockGithub
     }
 
     /**
-     * GET /repos/{owner}/{repo}/issues — strongly consistent list.
+     * GET /repos/{owner}/{repo}/issues — strongly consistent list, paged the
+     * way GitHub pages it (page 1 default; per_page slice per page).
      *
-     * @param  array<string, string>  $query  state / labels / sort / direction / per_page
+     * @param  array<string, string>  $query  state / labels / sort / direction / per_page / page
      * @return list<array<string, mixed>>
      */
     public function listIssues(array $query): array
@@ -70,8 +71,9 @@ final class MockGithub
         usort($items, static fn (array $a, array $b): int => ($b['number'] ?? 0) <=> ($a['number'] ?? 0));
 
         $perPage = max(1, (int) ($query['per_page'] ?? 100));
+        $page = max(1, (int) ($query['page'] ?? 1));
 
-        return array_slice($items, 0, $perPage);
+        return array_slice($items, ($page - 1) * $perPage, $perPage);
     }
 
     /**
@@ -169,6 +171,23 @@ final class MockGithub
         $this->issues[$number] = $issue;
 
         return $issue;
+    }
+
+    /**
+     * Seed a LEGACY soft-alert issue the way pre-v3 receivers wrote it: the
+     * full fingerprint sits in the body as the **Fingerprint:** markdown
+     * line (no structured marker). The v3 receiver must still prove the
+     * fingerprint through that line — this seed models the 21–23.11 storm
+     * backlog and the August issues.
+     *
+     * @param  array<string, mixed>  $overrides  labels / state
+     * @return array<string, mixed>
+     */
+    public function seedLegacyIssue(string $title, string $fingerprint, array $overrides = []): array
+    {
+        $body = "## Soft cabinet alert\n\n**Fingerprint:** `{$fingerprint}`\n";
+
+        return $this->seedIssue($title, $overrides + ['body' => $body]);
     }
 
     /**
