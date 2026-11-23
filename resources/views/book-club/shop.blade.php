@@ -204,8 +204,10 @@
             </div>
 
             <div class="total">
-                <span class="note" id="breakdown">Книга × 1</span>
-                <strong id="total-amount">{{ \App\Services\BookClub\BookClubShopPricing::rub((float) $book->price) }} ₽</strong>
+                <span class="note" id="breakdown">Книга × 1 — {{ \App\Services\BookClub\BookClubShopPricing::rub((float) $defaultQuote['books_total']) }} ₽
+                    + доставка {{ \App\Services\BookClub\BookClubShopPricing::rub((float) $defaultQuote['delivery']) }} ₽
+                    ({{ $defaultQuote['parcels'] }} посыл.)</span>
+                <strong id="total-amount">{{ \App\Services\BookClub\BookClubShopPricing::rub((float) $defaultQuote['total']) }} ₽</strong>
             </div>
 
             <p class="note" id="manual-note" style="display:none">Книг больше четырёх — заказ примем, сумму и доставку согласуем письмом.</p>

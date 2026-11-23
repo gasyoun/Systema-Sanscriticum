@@ -111,6 +111,9 @@ class BookClubShopTest extends TestCase
             ->assertOk()
             ->assertSee('Школьные лекции')
             ->assertSee('1 000')
+            // Первый рендер (без JS) показывает полную сумму дефолта:
+            // 1 книга 1 000 ₽ + доставка по РФ 300 ₽.
+            ->assertSee('1 300')
             ->assertDontSee('planeta_email')
             ->assertDontSee('Номер заказа planeta');
     }
