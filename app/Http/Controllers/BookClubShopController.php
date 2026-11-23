@@ -253,23 +253,24 @@ final class BookClubShopController extends Controller
                 purpose: $purpose,
                 itemName: 'Книжный клуб — книга «'.config('book_club.book_title').'» и доставка',
             );
+
+            $paymentLink = $response->successful() ? $response->json('Data.paymentLink') : null;
+
+            if (is_string($paymentLink) && $paymentLink !== '') {
+                $payment->update(['transaction_id' => $response->json('Data.paymentLinkId')]);
+
+                return redirect()->away($paymentLink);
+            }
+
+            throw new \RuntimeException('Точка не вернула ссылку на оплату, HTTP '.$response->status());
         } catch (\Throwable $e) {
-            // Любой сбой провайдера (не только ConnectionException) обязан вернуть
-            // резерв: иначе остаток «съеден» заказом, который никто не оплатит.
-            $this->failPayment($payment, $stock, $book, $count, 'exception', $e->getMessage());
+            // Весь обмен с провайдером — в одном catch: любой сбой (обрыв связи,
+            // HTTP-ошибка, неожиданный ответ) обязан вернуть резерв и закрыть
+            // платёж, иначе остаток «съеден» заказом, который никто не оплатит.
+            $this->failPayment($payment, $stock, $book, $count, 'provider', $e->getMessage());
 
             return back()->withInput()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
         }
-
-        if ($response->successful() && isset($response['Data']['paymentLink'])) {
-            $payment->update(['transaction_id' => $response['Data']['paymentLinkId']]);
-
-            return redirect()->away($response['Data']['paymentLink']);
-        }
-
-        $this->failPayment($payment, $stock, $book, $count, 'http', (string) $response->status());
-
-        return back()->withInput()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
     }
 
     /**

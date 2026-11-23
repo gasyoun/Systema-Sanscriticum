@@ -62,15 +62,15 @@
 
     <div class="card">
         <h2>Книга</h2>
-        <p><strong>{{ $book->title }}</strong> — {{ number_format((float) $book->price, 0, '.', ' ') }} ₽ за экземпляр.</p>
+        <p><strong>{{ $book->title }}</strong> — {{ \App\Services\BookClub\BookClubShopPricing::rub((float) $book->price) }} ₽ за экземпляр.</p>
         @if ($book->inStock())
             <span class="badge in">В наличии: {{ $book->stock }}</span>
         @else
             <span class="badge back">Под заказ 2–3 недели</span>
         @endif
         <p class="note">Посылка — до {{ $maxBooks }} книг. Доставка считается за каждую посылку:
-            РФ {{ number_format($rfPrice, 0, '.', ' ') }} ₽; заграница — от
-            {{ number_format(min($abroadPrices ?: [$otherPrice]), 0, '.', ' ') }} ₽ за посылку; самовывоз — 0 ₽.
+            РФ {{ \App\Services\BookClub\BookClubShopPricing::rub((float) $rfPrice) }} ₽; заграница — от
+            {{ \App\Services\BookClub\BookClubShopPricing::rub((float) min($abroadPrices ?: [$otherPrice])) }} ₽ за посылку; самовывоз — 0 ₽.
             Книг больше четырёх — сумму согласуем письмом.</p>
     </div>
 
@@ -205,7 +205,7 @@
 
             <div class="total">
                 <span class="note" id="breakdown">Книга × 1</span>
-                <strong id="total-amount">{{ number_format((float) $book->price, 0, '.', ' ') }} ₽</strong>
+                <strong id="total-amount">{{ \App\Services\BookClub\BookClubShopPricing::rub((float) $book->price) }} ₽</strong>
             </div>
 
             <p class="note" id="manual-note" style="display:none">Книг больше четырёх — заказ примем, сумму и доставку согласуем письмом.</p>

@@ -353,6 +353,18 @@ class BookClubShopTest extends TestCase
         $this->assertDatabaseHas('book_club_orders', ['books_count' => 3, 'status' => BookClubOrder::STATUS_PENDING]);
     }
 
+    public function test_200_without_payment_link_is_treated_as_failure(): void
+    {
+        $this->enableFlag();
+        Http::fake(['*' => Http::response(['Data' => ['paymentLinkId' => 'pl_no_link']], 200)]);
+
+        $this->post(route('book-club.shop.submit'), $this->payload(['books_count' => 2]))
+            ->assertSessionHas('error');
+
+        $this->assertSame(10, $this->book->fresh()->stock);
+        $this->assertDatabaseHas('payments', ['tariff' => 'book_club_shop', 'status' => 'failed', 'transaction_id' => null]);
+    }
+
     public function test_backorder_goes_negative_so_queue_is_visible(): void
     {
         $this->enableFlag();
