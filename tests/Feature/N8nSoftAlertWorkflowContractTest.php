@@ -8,10 +8,13 @@ use PHPUnit\Framework\Assert;
 use Tests\TestCase;
 
 /**
- * H8562 контракт n8n-приемника: повторная и конкурентная доставка сходятся
- * в один issue (lookup-before-create + comment на существующий), гонка
- * создания лечится post-create reconcile (минимальный номер побеждает,
- * закрывается ровно СВОЙ свежий issue). Секреты в экспорт не вшиваются.
+ * H8562 v2 контракт n8n-приемника. Независимый review FAIL: две конкурентные
+ * доставки создают по issue, а НЕМЕДЛЕННЫЙ search-reconcile из-за лага
+ * индекса видит только свой issue — никто не закрывается, дубли остаются.
+ * Поэтому весь dedup читает строго консистентный REST-лист
+ * (GET /repos/…/issues), а не лагающий /search/issues; заголовок строится
+ * в ОДНОМ узле (Match exact title), create и reconcile читают его оттуда;
+ * durable-сходимость добивает плановый sweep. Секреты в экспорт не вшиваются.
  */
 class N8nSoftAlertWorkflowContractTest extends TestCase
 {
@@ -44,79 +47,140 @@ class N8nSoftAlertWorkflowContractTest extends TestCase
     }
 
     /**
-     * Lookup-before-create: секрет-ок ведет в поиск, найденный открытый issue
-     * дописывается комментарием, create достижим только из ветки «не найден».
+     * @return array<string, array<string, mixed>> node name => node definition
+     */
+    private function nodesByName(): array
+    {
+        $byName = [];
+        foreach ($this->nodes() as $node) {
+            $byName[(string) $node['name']] = $node;
+        }
+
+        return $byName;
+    }
+
+    /**
+     * Ядро фикса: в экспорте НЕТ обращений к /search/issues — дедуп не
+     * может зависеть от лагающего поискового индекса (review FAIL).
+     * Оба чтения идут строго консистентным REST-листом с контрактом
+     * метки ops-soft-alert и честным окном в 100 свежих открытых issues.
+     */
+    public function test_dedup_reads_the_consistent_issue_list_not_the_lagged_search_index(): void
+    {
+        $raw = (string) file_get_contents(base_path(self::EXPORT));
+        $this->assertStringNotContainsString('/search/issues', $raw);
+        $this->assertStringNotContainsString('total_count', $raw);
+
+        foreach (['GitHub list open issues', 'GitHub reconcile list', 'Sweep list open issues'] as $name) {
+            $node = $this->nodesByName()[$name] ?? null;
+            $this->assertNotNull($node, "export must keep the '{$name}' node");
+
+            $this->assertSame('GET', $node['parameters']['method'] ?? null);
+            $this->assertStringContainsString(
+                'https://api.github.com/repos/gasyoun/Systema-Sanscriticum/issues',
+                (string) ($node['parameters']['url'] ?? ''),
+            );
+
+            $query = [];
+            foreach (($node['parameters']['queryParameters']['parameters'] ?? []) as $p) {
+                $query[(string) $p['name']] = (string) $p['value'];
+            }
+            $this->assertSame('open', $query['state'] ?? null, "{$name}: state=open");
+            $this->assertSame('ops-soft-alert', $query['labels'] ?? null, "{$name}: label contract");
+            $this->assertSame('100', $query['per_page'] ?? null, "{$name}: documented scan window");
+        }
+    }
+
+    /**
+     * Lookup-before-create: секрет-ок ведет в список, найденный открытый
+     * issue дописывается комментарием, create достижим только из ветки
+     * «не найден».
      */
     public function test_lookup_before_create_and_comment_on_existing(): void
     {
         $conns = $this->connections();
-        $this->assertSame('GitHub search open issue', $conns['IF secret matches']['main'][0][0]['node']);
+        $this->assertSame('GitHub list open issues', $conns['IF secret matches']['main'][0][0]['node']);
         $this->assertSame('Respond 401', $conns['IF secret matches']['main'][1][0]['node']);
-        $this->assertSame('IF existing open issue', $conns['GitHub search open issue']['main'][0][0]['node']);
+        $this->assertSame('Match exact title', $conns['GitHub list open issues']['main'][0][0]['node']);
+        $this->assertSame('IF existing open issue', $conns['Match exact title']['main'][0][0]['node']);
         $this->assertSame('GitHub comment on existing', $conns['IF existing open issue']['main'][0][0]['node']);
         $this->assertSame('Respond 200 deduped', $conns['GitHub comment on existing']['main'][0][0]['node']);
         $this->assertSame('GitHub create issue', $conns['IF existing open issue']['main'][1][0]['node']);
     }
 
     /**
-     * Post-create reconcile: create обязан пройти повторный поиск; дубль
-     * (есть открытый issue с меньшим номером) комментируется и закрывает
-     * ровно свой issue; канал-владелец не пострадал.
+     * Post-create reconcile: create обязан перечитать консистентный список;
+     * дубль (есть открытый issue с меньшим номером) комментируется и
+     * закрывает ровно свой issue; канал-владелец не пострадал.
      */
-    public function test_create_is_reconciled_and_duplicate_closes_itself(): void
+    public function test_create_is_reconciled_and_duplicate_closes_only_itself(): void
     {
         $conns = $this->connections();
-        $this->assertSame('GitHub reconcile search', $conns['GitHub create issue']['main'][0][0]['node']);
-        $this->assertSame('IF we are the duplicate', $conns['GitHub reconcile search']['main'][0][0]['node']);
+        $this->assertSame('GitHub reconcile list', $conns['GitHub create issue']['main'][0][0]['node']);
+        $this->assertSame('Reconcile find rival', $conns['GitHub reconcile list']['main'][0][0]['node']);
+        $this->assertSame('IF we are the duplicate', $conns['Reconcile find rival']['main'][0][0]['node']);
         $this->assertSame('GitHub comment duplicate note', $conns['IF we are the duplicate']['main'][0][0]['node']);
+        $this->assertSame('Respond 202', $conns['IF we are the duplicate']['main'][1][0]['node']);
         $this->assertSame('GitHub close duplicate', $conns['GitHub comment duplicate note']['main'][0][0]['node']);
         $this->assertSame('Respond 202 converged', $conns['GitHub close duplicate']['main'][0][0]['node']);
-        $this->assertSame('Respond 202', $conns['IF we are the duplicate']['main'][1][0]['node']);
+
+        $byName = $this->nodesByName();
+        $close = (string) ($byName['GitHub close duplicate']['parameters']['url'] ?? '');
+        $this->assertStringContainsString("$('GitHub create issue').first().json.number", $close);
     }
 
     /**
-     * Фраза поиска и заголовок создания читают тело ОДНОГО webhook-узла и
-     * строятся из одних полей — дедуп не может разъехаться с заголовком.
+     * Заголовок строится в ОДНОМ узле: create и reconcile читают
+     * expected_title из «Match exact title» — дедуп не может разъехаться
+     * с заголовком (у старого дизайна были два независимых выражения).
      */
-    public function test_search_phrase_matches_created_title(): void
+    public function test_title_has_a_single_source_shared_by_create_and_reconcile(): void
     {
-        $params = [];
-        foreach ($this->nodes() as $n) {
-            $params[$n['name']] = $n['parameters'] ?? [];
-        }
+        $byName = $this->nodesByName();
 
-        $q = (string) ($params['GitHub search open issue']['queryParameters']['parameters'][0]['value'] ?? '');
-        $create = (string) ($params['GitHub create issue']['jsonBody'] ?? '');
+        $matchCode = (string) ($byName['Match exact title']['parameters']['jsCode'] ?? '');
+        $this->assertStringContainsString("const expected = '[soft-alert] ' + (body.scope || 'unknown')", $matchCode);
+        $this->assertStringContainsString("(body.fingerprint || '').slice(0, 8)", $matchCode);
 
-        $this->assertStringContainsString('is:issue is:open in:title', $q);
-        $this->assertStringContainsString('.scope', $q);
-        $this->assertStringContainsString('.slice(0,8)', $q);
+        $create = (string) ($byName['GitHub create issue']['parameters']['jsonBody'] ?? '');
+        $this->assertStringContainsString("title: $('Match exact title').first().json.expected_title", $create);
+        $this->assertStringNotContainsString('slice(0, 8)', $create, 'create must not rebuild the title');
 
-        $this->assertStringContainsString('[soft-alert] ', $create);
-        $this->assertStringContainsString('.scope', $create);
-        $this->assertStringContainsString('.slice(0,8)', $create);
-
-        $this->assertStringContainsString("$('Webhook soft-alert')", $q);
-        $this->assertStringContainsString("$('Webhook soft-alert')", $create);
+        $reconcileCode = (string) ($byName['Reconcile find rival']['parameters']['jsCode'] ?? '');
+        $this->assertStringContainsString("const expected = $('Match exact title').first().json.expected_title;", $reconcileCode);
+        $this->assertStringContainsString('&& i.number < mine', $reconcileCode, 'duplicate needs a LOWER number');
     }
 
     /**
-     * Правило дубля требует меньший номер и закрывает только СВОЙ issue —
-     * два порядка гонки сходятся в более ранний, итерации не нужно.
+     * Durable sweep: плановый проход группирует открытые ops-soft-alert
+     * issues по точному заголовку, выживает минимальный номер, дубли
+     * закрываются по одному с комментарием-ссылкой.
      */
-    public function test_duplicate_rule_closes_only_own_issue_and_needs_lower_number(): void
+    public function test_sweep_is_scheduled_and_keeps_the_lowest_numbered_issue(): void
     {
-        $params = [];
-        foreach ($this->nodes() as $n) {
-            $params[$n['name']] = $n['parameters'] ?? [];
-        }
+        $conns = $this->connections();
+        $this->assertSame('Sweep list open issues', $conns['Sweep schedule']['main'][0][0]['node']);
+        $this->assertSame('Sweep group duplicates', $conns['Sweep list open issues']['main'][0][0]['node']);
+        $this->assertSame('Sweep close duplicate', $conns['Sweep group duplicates']['main'][0][0]['node']);
+        $this->assertSame('Sweep comment duplicate', $conns['Sweep close duplicate']['main'][0][0]['node']);
 
-        $ifDup = (string) ($params['IF we are the duplicate']['conditions']['boolean'][0]['value1'] ?? '');
-        $this->assertStringContainsString('total_count', $ifDup);
-        $this->assertStringContainsString('some(i => i.number <', $ifDup);
+        $byName = $this->nodesByName();
 
-        $closeUrl = (string) ($params['GitHub close duplicate']['url'] ?? '');
-        $this->assertStringContainsString("$('GitHub create issue').first().json.number", $closeUrl);
+        $trigger = $byName['Sweep schedule'] ?? null;
+        $this->assertNotNull($trigger);
+        $this->assertSame('n8n-nodes-base.scheduleTrigger', $trigger['type']);
+        $this->assertSame(6, $trigger['parameters']['rule']['interval'][0]['hoursInterval'] ?? null);
+
+        $groupCode = (string) ($byName['Sweep group duplicates']['parameters']['jsCode'] ?? '');
+        $this->assertStringContainsString("title.startsWith('[soft-alert] ')", $groupCode);
+        $this->assertStringContainsString('sort((a, b) => a.number - b.number)', $groupCode);
+        $this->assertStringContainsString('group.slice(1)', $groupCode, 'only non-minimal duplicates close');
+
+        $closeUrl = (string) ($byName['Sweep close duplicate']['parameters']['url'] ?? '');
+        $this->assertStringContainsString('{{$json.duplicate_number}}', $closeUrl);
+
+        $commentUrl = (string) ($byName['Sweep comment duplicate']['parameters']['url'] ?? '');
+        $this->assertStringContainsString('{{$json.number}}', $commentUrl);
     }
 
     /**

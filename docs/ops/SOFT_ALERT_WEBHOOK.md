@@ -66,38 +66,72 @@ Header when secret set: `X-Soft-Alert-Secret: <secret>`.
 
 ---
 
-## 4. n8n workflow (H8562: lookup-before-create + reconcile)
+## 4. n8n workflow (H8562 v2: consistent-list dedup + scheduled sweep)
 
 Import template:  
 [`docs/n8n/soft-alert-to-github-issue.workflow.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/soft-alert-to-github-issue.workflow.json)
 
 Приемник сходится в один issue на активный отпечаток, не теряя различения
-новых классов:
+новых классов. **Никаких обращений к `/search/issues`** — независимый review
+(23-11-2026) дал FAIL по search-дизайну: две конкурентные доставки обе
+«не находили» открытый issue, обе создавали, а немедленный search-reconcile
+из-за лага индекса видел только свой свежий issue — никто не закрывался,
+дубли оставались. Источник истины теперь строго консистентный REST-лист
+(`GET /repos/…/issues`), а не лагающий поисковый индекс:
 
 1. **Webhook** path `/systema-soft-alert` (or Caddy path) — check secret header.
-2. **GitHub search open issue** — открытые issues ищутся по точной фразе
-   заголовка `[soft-alert] {scope} {fingerprint[:8]}` (`in:title`).
-3. **IF existing open issue**:
+2. **GitHub list open issues** — `state=open&labels=ops-soft-alert&sort=created&direction=desc&per_page=100`.
+   Метка `ops-soft-alert` — часть контракта issue (create всегда ставит ее;
+   снимать метку с живых issues нельзя, иначе дедуп слепнет). Окно скана —
+   100 свежих ОТКРЫТЫХ ops-soft-alert issues (потолок GitHub); бэклог шторма
+   21–23.11 (49) влезает с запасом, при превышении добавить пагинацию до
+   поставки.
+3. **Match exact title** (Code) — строит `expected_title`
+   `[soft-alert] {scope} {fingerprint[:8]}` в ОДНОМ месте и фильтрует лист:
+   точное совпадение заголовка, `state=open`, не PR. Create и reconcile
+   читают `expected_title` отсюда — заголовок issue и фраза дедупа одна и
+   та же строка по построению (у search-дизайна были два независимых
+   выражения, которые могли разъехаться).
+4. **IF existing open issue**:
    - **да** → **GitHub comment on existing** (новое срабатывание дописывается
-     комментарием в уже открытый issue) → `200 {deduped: true}`;
+     комментарием в минимальный открытый issue) → `200 {deduped: true}`;
    - **нет** → **GitHub create issue** (title/labels/assignees прежние,
-     заголовок байт-в-байт равен фразе поиска).
-4. **GitHub reconcile search** (после create): конкурентная доставка могла
-   создать второй issue с тем же заголовком внутри окна гонки. Правило
-   минимального номера: если найден открытый issue с тем же заголовком и
-   номером МЕНЬШЕ нашего — наш свежий issue комментируется и закрывается
-   (`PATCH`, ровно СВОЙ issue). Оба порядка гонки сходятся в более ранний
-   issue; итерации не нужны.
-5. **Respond** `202` (создан) / `202 converged` (закрыт как дубль).
+     failed-units в теле сохранены).
+5. **GitHub reconcile list** (после create, свежий лист) → **Reconcile find
+   rival**: дубль = открытый issue с ТОЧНЫМ заголовком и МЕНЬШИМ номером.
+   Номера GitHub выдает последовательно в момент create, а лист консистентен,
+   поэтому гонка двух доставок всегда сходится: создавший старший номер при
+   своем reconcile видит младший и закрывает ровно СВОЙ issue. Итерации и
+   ретраи не нужны, поисковый индекс не участвует вовсе.
+6. **Respond** `202` (создан) / `202 converged` (закрыт как дубль).
+
+**Durable sweep (раз в 6 ч):** плановый проход группирует открытые
+ops-soft-alert issues по точному заголовку, выживает минимальный номер,
+каждый дубль закрывается с комментарием-ссылкой на выжившего. Сходится из
+любого бэклога независимо от консистентности индекса и от доставок, умерших
+посреди выполнения. **Первый проход после импорта закроет бэклог шторма
+21–23.11 (46 дублей по трем заголовкам)** — разовый всплеск close-уведомлений
+@pe4kinsmart-tech, это ожидаемо. PR с заголовком soft-alert и посторонние
+issues sweep не трогает (фильтр `pull_request` + метка).
+
+Приемка конкурентности из PR #4481 («Verification outstanding») выполнена
+мок-реплеем `N8nSoftAlertWorkflowReplayTest` (12 тестов, 298 утверждений):
+все 6 порядков create/reconcile двух доставок сходятся в один issue под
+задержанной видимостью поиска (ноль обращений к индексу), отдельный новый
+отпечаток открывает свой issue, failed-units попадают в тело issue и
+комментарии, неверный секрет → 401 без обращений к GitHub, sweep гасит
+бэклог формы 35/7/7. Расхождение search-дизайна воспроизведено и оставлено
+как документация (`test_delayed_search_index_reproduces_the_reviewed_fail…`).
 
 Do **not** put bot tokens in exportable node JSON (use n8n credentials / env).
 
 **Live wiring (enablement):** workflow id `softAlertH2148` on `.91` must be
 **re-imported** from this template (owner ops step, same lane as the 02-08
-enablement; the sender-side grace ships via `deploy.sh`). Env Bearer
-`SOFT_ALERT_GITHUB_TOKEN` + secret check against `$env.SOFT_ALERT_WEBHOOK_SECRET`
-(both on `N8N_ENV_ALLOWLIST`) stay unchanged. Prefer rotating the GitHub token
-to a dedicated fine-grained PAT (Issues: write).
+enablement; the sender-side grace ships via `deploy.sh`). Env token
+`SOFT_ALERT_GITHUB_TOKEN` (Authorization header from n8n env) + secret check
+against `$env.SOFT_ALERT_WEBHOOK_SECRET` (both on `N8N_ENV_ALLOWLIST`) stay
+unchanged. Prefer rotating the GitHub token to a dedicated fine-grained PAT
+(Issues: write).
 
 **H8562 incident context (21–23.11.2026):** 35+ open issues shared one title
 `[soft-alert] guards 6fd69840` (`guards/failed-units: telegram-daily.service`).
@@ -112,7 +146,9 @@ incident, `CABINET_PROBE_SOFT_GREEN_GRACE_TICKS`, default 2) + single-flight
 lock land in the app; this receiver-side dedup makes the webhook idempotent
 per fingerprint. The unit itself fails on `reserve_exhausted` (empty content
 queue) — that trigger is an owner action (refill the queue / normalize the
-service), tracked separately from the code fix.
+service), tracked separately from the code fix. `SoftFailureFingerprint`
+уже нормализует волатильный класс из issue #1144 (метки времени/SHA, H2335/H3227)
+— расширения охвата отпечатка не потребовалось.
 
 ---
 
