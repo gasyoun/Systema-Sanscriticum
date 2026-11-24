@@ -2109,8 +2109,12 @@ return [
     'pd_consent_enforce' => (bool) env('PD_CONSENT_ENFORCE', false),
 
     /*
-     | 152-ФЗ, money-контур: то же для гостевой оплаты (/payment/create).
-     | Дефолт OFF — отказ здесь стоит денег; включать отдельно и после проверки.
+     | 152-ФЗ, money-контур: ФЛАГ БОЛЬШЕ НЕ ГЕЙТИТ ОПЛАТУ.
+     | С 24-11-2026 (рулинг MG) согласие на ПДн на /payment/create обязательно
+     | ВСЕГДА — и для гостя, и для залогиненного студента, без флага
+     | (App\Support\Consent\ConsentRules::pd(checkout: true)). Ключ оставлен,
+     | потому что от него зависит браузерный required у галочки ПДн на
+     | claim-формах (bank/gasuns/invoice/paypal/teacher/deposit/trial).
      */
     'checkout_pd_consent_enforce' => (bool) env('CHECKOUT_PD_CONSENT_ENFORCE', false),
 

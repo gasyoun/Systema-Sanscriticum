@@ -7,9 +7,11 @@
       theme  — light | dark (цвет текста под фон формы)
       model  — имя Alpine-переменной, если галочка гейтит кнопку (x-model)
       offer  — добавить ссылку на оферту (регистрация, оплата)
-      required — обязательность в браузере (на оплате — по флагу money-контура)
+      form   — id формы, если галочка лежит ВНЕ <form> (карточка кнопки оплаты:
+               input связан с формой атрибутом form="…", иначе поле не уйдёт)
+      required — обязательность в браузере
 --}}
-@props(['theme' => 'light', 'model' => null, 'offer' => false, 'required' => true])
+@props(['theme' => 'light', 'model' => null, 'offer' => false, 'form' => null, 'required' => true])
 
 @php
     $text = $theme === 'dark' ? 'text-gray-400' : 'text-gray-500';
@@ -18,6 +20,7 @@
 
 <label {{ $attributes->merge(['class' => 'flex items-start gap-2.5 cursor-pointer text-xs leading-relaxed '.$text]) }}>
     <input type="checkbox" name="pd_consent" value="1" @required($required)
+           @if($form) form="{{ $form }}" @endif
            @if($model) x-model="{{ $model }}" @endif
            @checked(old('pd_consent'))
            class="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer">
