@@ -47,7 +47,7 @@ class InactiveTariffCheckoutTest extends TestCase
         $tariff = $this->tariff(false);
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertNotFound();
 
         $this->assertDatabaseCount('payments', 0);
@@ -60,7 +60,7 @@ class InactiveTariffCheckoutTest extends TestCase
 
         $tariff = $this->tariff(false);
 
-        $this->post(route('payment.create'), [
+        $this->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
             'tariff_id' => $tariff->id,
             'name' => 'Иван',
             'surname' => 'Иванов',
@@ -81,7 +81,7 @@ class InactiveTariffCheckoutTest extends TestCase
         $tariff = $this->tariff(true);
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertRedirect('https://pay.tochka.com/redirect/active');
 
         $this->assertDatabaseHas('payments', [

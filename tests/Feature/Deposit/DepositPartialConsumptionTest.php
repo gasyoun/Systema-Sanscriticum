@@ -86,7 +86,7 @@ class DepositPartialConsumptionTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $cheapHalf->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $cheapHalf->id])
             ->assertRedirect(route('student.dashboard'));
 
         $order = Payment::where('user_id', $user->id)->where('tariff', 'block_1_h1')->firstOrFail();
@@ -122,7 +122,7 @@ class DepositPartialConsumptionTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id]);
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id]);
 
         $order = Payment::where('user_id', $user->id)->where('tariff', 'block_1')->firstOrFail();
         $this->assertSame('pending', $order->status);
@@ -159,7 +159,7 @@ class DepositPartialConsumptionTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $half->id]);
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $half->id]);
 
         $halfOrder = Payment::where('user_id', $user->id)->where('tariff', 'block_1_h1')->firstOrFail();
         $this->assertEquals(3000.0, (float) $halfOrder->amount);
@@ -190,7 +190,7 @@ class DepositPartialConsumptionTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $half->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $half->id])
             ->assertRedirect(route('student.dashboard'));
 
         $whole = Tariff::factory()->block(1)->create([
@@ -241,7 +241,7 @@ class DepositPartialConsumptionTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertRedirect(route('student.dashboard'));
 
         $first->refresh();

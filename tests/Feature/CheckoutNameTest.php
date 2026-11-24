@@ -51,7 +51,7 @@ class CheckoutNameTest extends TestCase
     {
         $tariff = $this->tariff();
 
-        $this->post(route('payment.create'), [
+        $this->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
             'tariff_id' => $tariff->id,
             'name' => 'Иван',
             'surname' => 'Иванов',
@@ -75,7 +75,7 @@ class CheckoutNameTest extends TestCase
     {
         $tariff = $this->tariff();
 
-        $this->post(route('payment.create'), [
+        $this->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
             'tariff_id' => $tariff->id,
             'name' => 'Иван',
             'email' => 'ivan@example.test',
@@ -89,7 +89,7 @@ class CheckoutNameTest extends TestCase
     {
         $tariff = $this->tariff();
 
-        $this->post(route('payment.create'), [
+        $this->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
             'tariff_id' => $tariff->id,
             'name' => 'Пётр',
             'surname' => 'Петров',
@@ -117,7 +117,7 @@ class CheckoutNameTest extends TestCase
         // Гость, указавший СУЩЕСТВУЮЩИЙ email, отклоняется (анти-takeover): раньше
         // платёж молча создавался на чужой аккаунт, а первая оплата слала владельцу
         // письмо со сбросом пароля. Нужно войти в кабинет и оформить оттуда.
-        $this->post(route('payment.create'), [
+        $this->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
             'tariff_id' => $tariff->id,
             'name' => 'Новое',
             'surname' => 'Фамилия',

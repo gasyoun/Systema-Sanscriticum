@@ -452,13 +452,10 @@ document.addEventListener('alpine:init', () => {
                                         </label>
                                         @include('partials.signup-source-select')
                                     </div>
-                                    {{-- 152-ФЗ: город и год рождения для договора не нужны — на них
-                                         нужно согласие (галочка ПДн). Рассылка — только по явной
-                                         галочке, по умолчанию НЕ отмечена (38-ФЗ ст. 18). --}}
-                                    <div class="sm:col-span-2 space-y-2">
-                                        <x-consent.pd class="text-sm" :required="(bool) config('features.checkout_pd_consent_enforce')" />
-                                        <x-consent.promo name="wants_announcements" class="text-sm" />
-                                    </div>
+                                    {{-- Согласия (оферта / ПДн / рассылка) живут НЕ здесь, а в
+                                         карточке кнопки оплаты — одним блоком над CTA, как на
+                                         референсе. Здесь была только пара ПДн+рассылка, из-за
+                                         чего оферта оставалась мелким шрифтом под кнопкой. --}}
                                 </div>
                             </div>
                         @endguest
@@ -603,6 +600,31 @@ document.addEventListener('alpine:init', () => {
 
                     {{-- ─── Кнопка оплаты ─── --}}
                     <div class="bg-white p-6 sm:p-7 rounded-3xl shadow-sm shadow-gray-100/60 border border-gray-100">
+                        {{-- Согласия перед оплатой: три отдельные галочки вместо строки
+                             «Нажимая на кнопку, вы принимаете оферту…» мелким шрифтом
+                             ПОД кнопкой. Оферта (акцепт договора) и согласие на ПДн
+                             (152-ФЗ ст. 9) — обязательные, рассылка (38-ФЗ) — отдельная,
+                             по умолчанию снятая.
+                             Карточка кнопки лежит ВНЕ <form id="checkout-form"> (её место
+                             занял промокод со своей формой), поэтому галочки привязаны к
+                             форме атрибутом form="checkout-form" — иначе поля не уйдут,
+                             а required в браузере не сработает. --}}
+                        <div class="space-y-3 mb-5" data-testid="checkout-consents">
+                            <x-consent.oferta form="checkout-form" class="text-sm" />
+                            <x-consent.pd form="checkout-form" class="text-sm" />
+                            @if(auth()->check() && auth()->user()->wants_email_announcements)
+                                {{-- Уже подписан: галочка-переключатель подписки живёт в
+                                     кабинете и умеет снимать согласие; здесь дублировать
+                                     нечего, показываем где управлять. --}}
+                                <p class="text-xs text-gray-400 leading-relaxed pl-6">
+                                    Вы подписаны на анонсы — отписаться или сменить канал можно
+                                    в <a href="{{ route('student.messages') }}#privacy-settings" class="underline hover:text-gray-600">настройках кабинета</a>.
+                                </p>
+                            @else
+                                <x-consent.promo name="wants_announcements" form="checkout-form" class="text-sm" />
+                            @endif
+                        </div>
+
                         {{-- Мобильная верстка кнопки: flex-wrap + whitespace-nowrap.
                              Раньше строка была flex-nowrap, поэтому на узком экране
                              (360–375px) ужимался сам ТЕКСТ: «К безопасной оплате»
@@ -619,13 +641,6 @@ document.addEventListener('alpine:init', () => {
                                 <span class="tabular-nums" x-text="$store.checkout.format($store.checkout.total)">{{ number_format($finalPrice, 0, '.', ' ') }}</span><span class="ml-1.5">₽</span>
                             </span>
                         </button>
-
-                        <p class="text-center text-xs text-gray-400 mt-4 leading-relaxed">
-                            Нажимая на кнопку, вы принимаете
-                            <a href="{{ route('docs.show', 'oferta') }}" target="_blank" class="underline hover:text-gray-600">публичную оферту</a>
-                            и подтверждаете, что ознакомлены с
-                            <a href="{{ route('docs.show', 'privacy') }}" target="_blank" class="underline hover:text-gray-600">политикой конфиденциальности</a>.
-                        </p>
 
                         @if(\App\Support\CardCertHint::enabled())
                             {{-- 19-11-2026: НСПК перешла на сертификаты Минцифры — оплата

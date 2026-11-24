@@ -64,7 +64,7 @@ class GreetingNameDeliveryTest extends TestCase
         $course->groups()->attach($group->id);
         $tariff = Tariff::factory()->for($course)->create(['price' => 5000]);
 
-        $this->post(route('payment.create'), [
+        $this->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
             'tariff_id' => $tariff->id,
             'name' => 'Хадижа',
             'surname' => 'Мухасанова',
