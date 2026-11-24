@@ -149,6 +149,7 @@ class LessonAiTest extends TestCase
             ->get(route('student.lesson', [$course->slug, $lesson->id]))
             ->assertOk()
             ->assertSee('data-testid="lesson-ai-tab"', false)
+            ->assertSee('Спроси Сократа')
             ->assertSee('js/lesson-ai.js', false);
     }
 
