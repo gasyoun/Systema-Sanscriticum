@@ -701,7 +701,7 @@
         
         {{-- ПЕРЕКЛЮЧАТЕЛЬ ТАБОВ (Показываем только если есть выбор) --}}
         @if($showTabs)
-        <div class="flex items-center bg-gray-100/80 p-1.5 rounded-2xl mb-4 shrink-0 shadow-inner overflow-x-auto custom-scrollbar">
+        <div class="flex items-stretch bg-gray-100/80 p-1.5 rounded-2xl mb-4 shrink-0 shadow-inner overflow-x-auto custom-scrollbar">
             @if($hasTranscript)
             <button @click="activeTab = 'transcript'" 
                     class="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[13px] font-extrabold transition-all duration-300"
