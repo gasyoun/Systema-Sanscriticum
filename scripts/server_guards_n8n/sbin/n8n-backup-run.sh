@@ -23,6 +23,7 @@ set -euo pipefail
 
 N8N_DIR='@@N8N_DIR@@'
 DEST='@@N8N_BACKUP_DIR@@'
+# MG 15-11-2026: local dumps keep-3 (disk 100% incident #4228); copies live in estate tags n8n,w5 + GDrive fanout
 KEEP='@@N8N_BACKUP_KEEP@@'
 MIN_MB='@@N8N_BACKUP_MIN_MB@@'
 OFFSITE_REPO='@@N8N_BACKUP_OFFSITE_REPO@@'
