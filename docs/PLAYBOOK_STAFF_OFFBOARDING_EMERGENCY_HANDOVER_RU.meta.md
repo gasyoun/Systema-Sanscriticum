@@ -1,6 +1,6 @@
 # PLAYBOOK_STAFF_OFFBOARDING_EMERGENCY_HANDOVER_RU.meta.md — метадок о `PLAYBOOK_STAFF_OFFBOARDING_EMERGENCY_HANDOVER_RU`
 
-_Created: 23-11-2026 · Last updated: 23-11-2026_
+_Created: 23-11-2026 · Last updated: 24-11-2026_
 
 Метадок-компаньон к [`docs/PLAYBOOK_STAFF_OFFBOARDING_EMERGENCY_HANDOVER_RU.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAYBOOK_STAFF_OFFBOARDING_EMERGENCY_HANDOVER_RU.md) — держит контекст ВОКРУГ плейбука (назначение, провенанс, бэклог улучшений, ограничения), не пересказывая его содержимое.
 
@@ -60,5 +60,6 @@ _Created: 23-11-2026 · Last updated: 23-11-2026_
 |---|---|---|
 | 23-11-2026 | плейбук и метадок созданы (H8083) | GLM 5.3 `glm-5.3` (opencode) |
 | 23-11-2026 | правки по независимой верификации: §A5 переведён на реальные механизмы (снятие роли; без «деактивации»), §A6.2 — ротация вебхук-секретов перерегистрацией (без «двойного окна»), §A6.3 — деплой-ключ только при компрометации, инвентарь ролей сверен с Roles.php | GLM 5.3 `glm-5.3` (opencode) |
+| 24-11-2026 | правки по раунду-2 верификации (воссозданы — локальный коммит fd17424b утрачен): Tochka — вебхук-секрета нет (RS256, WebhookController), MAX-секрет в `max_webhook_secret` (MarketingSetting, не env), `logoutOtherDevices` не подключён ни одной поверхностью; кейс-1 шаг-7 переведён на MAX | MiMo v2.6 Flash `mimo-v2.6-flash` (opencode, OxAlpha) |
 
 _Dr. Mārcis Gasūns_
