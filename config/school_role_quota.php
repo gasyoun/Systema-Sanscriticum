@@ -90,6 +90,9 @@ return [
         'access-provisioner' => 4,  // role 85: access diagnostics
         'faq-rag' => 1,              // role 20: RAG-based FAQ answers
         'payment-reconciler' => 2,  // role 65: payment reconciliation
-        // Total phase-1 allowances: 12 units within Q2 quota of 25
+        // Sanskrit core department phase-1 roles (H6112):
+        'sanskrit-core-reader' => 2,   // role: Sanskrit text reading verification
+        'sanskrit-core-exporter' => 1, // role: Sanskrit content export & format conversion
+        // Total phase-1 allowances: 14 units within Q2 quota of 25
     ],
 ];
