@@ -1,4 +1,4 @@
-{{-- ИИ-помощник занятия (features.lesson_ai) — вкладка «ИИ» боковой колонки.
+{{-- ИИ-помощник занятия (features.lesson_ai) — вкладка «Спроси Сократа» боковой колонки.
      Логика — public/js/lesson-ai.js; компонент вложен в x-data .lesson-layout
      (seekTo, activeTab). Ответы приходят уже отрендеренным безопасным HTML
      (LessonAiService::render), таймкоды — кнопки .lesson-ai-ts.
@@ -38,7 +38,10 @@
     {{-- Шапка — как «Навигация по видео» у стенограммы --}}
     <div class="bg-gray-50 px-4 py-3.5 border-b border-gray-100 shrink-0 flex items-center justify-between gap-2 min-h-[56px]">
         <template x-if="state === 'idle'">
-            <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">ИИ-помощник занятия</p>
+            <div class="min-w-0">
+                <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Спроси Сократа</p>
+                <p class="text-[11px] text-gray-400 font-semibold">ИИ-помощник занятия</p>
+            </div>
         </template>
         <template x-if="state !== 'idle'">
             <button type="button" @click="cancel()"
