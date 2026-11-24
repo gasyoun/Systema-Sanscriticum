@@ -121,6 +121,48 @@ php artisan queue:work --queue=mailing
 In production this should run under Horizon (already used elsewhere in this
 repo) or a supervised worker process — not a one-off foreground command.
 
+## Changing the sender name
+
+The display name in «от кого» is one value — `MAIL_FROM_NAME` in `.env`, read by
+[`config/mail.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/mail.php).
+No Mailable in `app/Mail/` sets `from:` in its envelope, so this single line names
+every outgoing message — transactional and campaign alike. The address
+(`MAIL_FROM_ADDRESS`) is a separate key and is not touched by it.
+
+Change it with the command, not by editing `.env` by hand:
+
+```
+php artisan mail:from-name                                  # what .env says, what mail actually uses
+php artisan mail:from-name "Общество ревнителей санскрита"   # change it, and finish the job
+```
+
+The command exists because the change carries two steps that are invisible until
+they bite:
+
+1. **Config cache.** While `bootstrap/cache/config.php` exists (production runs
+   `php artisan optimize` in `deploy.sh`) Laravel does not read `.env` at all: an
+   edited `.env` keeps sending the old name while the file looks perfectly right.
+   `php artisan config:cache` is what makes the edit real.
+2. **Workers.** Mail on the `mailing` queue is sent by Horizon workers that hold
+   the configuration in memory; they keep the old name until `queue:restart`.
+
+`mail:from-name <name>` rewrites that one line (backup in
+`storage/app/mail-from-name/`; the file is written in place, so ownership and mode
+survive — `sed -i` replaces the inode and drops them), rebuilds the config cache,
+sends `queue:restart`, and then verifies the name the next process will actually
+use. With no argument it prints the `.env` value, the effective value and the
+cache state, and exits non-zero when they disagree — so a deploy or a cron can
+gate on it.
+
+Run it as the application user (`sudo -u www-data php artisan mail:from-name …`):
+a root run leaves a root-owned `bootstrap/cache/config.php` that the next deploy,
+running as `www-data`, cannot overwrite.
+
+`mail:preflight` prints the effective sender on every run and warns (does not
+fail: on production the next deploy rebuilds the cache anyway) when the cached
+config disagrees with `.env`.
+
+## Deploy sequence
 ## Deploy sequence
 
 See the `mail-esp` row in
