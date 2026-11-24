@@ -101,7 +101,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CABINET_PROBE_KANVA_COURSE_ID` | optional | `0` | config/cabinet_probe.php:221 |
 | `CABINET_PROBE_PAYMENT_URL` | optional | `'https://enter.tochka.com/uapi/acquiring/v1.0/payments_with_receipt',` | config/cabinet_probe.php:76 |
 | `CABINET_PROBE_PING_URL` | optional | `''` | config/cabinet_probe.php:20 |
-| `CABINET_PROBE_SCHEDULE_LINKS_HORIZON_DAYS` | optional | `14` | config/cabinet_probe.php:129 |
+| `CABINET_PROBE_SCHEDULE_LINKS_HORIZON_DAYS` | optional | `14` | config/cabinet_probe.php:139 |
+| `CABINET_PROBE_SOFT_GREEN_GRACE_TICKS` | optional | `2` | config/cabinet_probe.php:49 |
+| `CABINET_PROBE_SOFT_LOCK_WAIT_SECONDS` | optional | `10` | config/cabinet_probe.php:53 |
 | `CABINET_PROBE_TELEGRAM_CHAT_ID` | optional | `env('ADMIN_TELEGRAM_ID', '')` | config/cabinet_probe.php:23<br>config/logs_watch.php:51<br>config/openrouter.php:30<br>config/recording_gap.php:74 |
 | `CABINET_PROBE_TELEGRAM_COOLDOWN` | optional | `60` | config/cabinet_probe.php:29<br>config/cabinet_probe.php:38 |
 | `CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID` | optional | `''` | config/cabinet_probe.php:26<br>config/logs_watch.php:51 |
@@ -803,9 +805,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SOCIAL_TELEGRAM_URL` | required | `—` | config/social.php:12 |
 | `SOCIAL_VK_URL` | required | `—` | config/social.php:11 |
 | `SOCIAL_WEBSITE_URL` | required | `—` | config/social.php:14 |
-| `SOFT_ALERT_WEBHOOK_SECRET` | secret | `''` | config/cabinet_probe.php:239 |
-| `SOFT_ALERT_WEBHOOK_TIMEOUT` | optional | `8` | config/cabinet_probe.php:240 |
-| `SOFT_ALERT_WEBHOOK_URL` | optional | `''` | config/cabinet_probe.php:238 |
+| `SOFT_ALERT_WEBHOOK_SECRET` | secret | `''` | config/cabinet_probe.php:249 |
+| `SOFT_ALERT_WEBHOOK_TIMEOUT` | optional | `8` | config/cabinet_probe.php:250 |
+| `SOFT_ALERT_WEBHOOK_URL` | optional | `''` | config/cabinet_probe.php:248 |
 | `SQS_PREFIX` | optional | `'https://sqs.us-east-1.amazonaws.com/your-account-id'` | config/queue.php:58 |
 | `SQS_QUEUE` | optional | `'default'` | config/queue.php:59 |
 | `SQS_SUFFIX` | required | `—` | config/queue.php:60 |
