@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
@@ -87,7 +88,7 @@ class B2bGroupHomeworkGateTest extends TestCase
         ]))->fresh();
     }
 
-    private function submitHomework(): \Illuminate\Testing\TestResponse
+    private function submitHomework(): TestResponse
     {
         return $this->actingAs($this->student)->post(
             route('student.homework.store', [$this->course->slug, $this->lesson->id]),
