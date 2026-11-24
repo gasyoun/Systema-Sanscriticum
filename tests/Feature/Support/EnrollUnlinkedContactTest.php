@@ -125,6 +125,9 @@ class EnrollUnlinkedContactTest extends TestCase
             'gsig' => $query['gsig'],
             'tgc' => $this->contact->id,
             'csig' => $query['csig'],
+            // Согласия на оплате обязательны всегда (оферта + ПДн).
+            'oferta_accepted' => '1',
+            'pd_consent' => '1',
         ];
     }
 

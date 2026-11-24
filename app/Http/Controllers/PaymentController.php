@@ -69,7 +69,7 @@ class PaymentController extends Controller
         // ВСЕГДА и для всех — без флага money-контура. Галочки живут в карточке
         // кнопки оплаты и приходят сюда через атрибут form="checkout-form".
         $rules['oferta_accepted'] = ConsentRules::oferta();
-        $rules['pd_consent'] = ConsentRules::pd(checkout: true);
+        $rules['pd_consent'] = ConsentRules::pdForCheckout();
 
         if (! auth()->check()) {
             $rules['name'] = 'required|string|max:255';
