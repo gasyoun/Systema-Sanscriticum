@@ -82,8 +82,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `BOT_OLLAMA_SHADOW` | optional | `false` | config/features.php:226 |
 | `BROADCAST_DRIVER` | optional | `'null'` | config/broadcasting.php:18 |
 | `CABINET_HYBRID` | optional | `false` | config/features.php:1146 |
-| `CABINET_OFFER_ATTRIBUTION` | optional | `false` | config/features.php:2301 |
-| `CABINET_OFFER_ATTRIBUTION_WINDOW_DAYS` | optional | `7` | config/features.php:2307 |
+| `CABINET_OFFER_ATTRIBUTION` | optional | `false` | config/features.php:2305 |
+| `CABINET_OFFER_ATTRIBUTION_WINDOW_DAYS` | optional | `7` | config/features.php:2311 |
 | `CABINET_PROBE_CHECK_DEPLOY_DRIFT` | optional | `true` | config/cabinet_probe.php:156 |
 | `CABINET_PROBE_CHECK_GUARDS` | optional | `true` | config/cabinet_probe.php:64 |
 | `CABINET_PROBE_CHECK_HOMEWORK_UPLOAD` | optional | `true` | config/cabinet_probe.php:102 |
@@ -127,7 +127,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CHECKOUT_LEGACY_PENDING_DAYS` | optional | `30` | config/checkout.php:31 |
 | `CHECKOUT_NEAR_DUPLICATE_EMAIL_GUARD` | optional | `false` | config/features.php:1840 |
 | `CHECKOUT_PAYPAL_WEBHOOK_AMOUNT_TOLERANCE` | optional | `1.00` | config/checkout.php:52 |
-| `CHECKOUT_PD_CONSENT_ENFORCE` | optional | `false` | config/features.php:2115 |
+| `CHECKOUT_PD_CONSENT_ENFORCE` | optional | `false` | config/features.php:2119 |
 | `CHECKOUT_PROMO_RESERVATIONS` | optional | `true` | config/features.php:766 |
 | `CHECKOUT_PROMO_SURVIVES_SESSION` | optional | `true` | config/features.php:852 |
 | `CHECKOUT_REFERRAL_CREDIT_LOCK` | optional | `true` | config/features.php:809 |
@@ -136,7 +136,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CHECKOUT_STALE_ORDER_EXPIRY` | optional | `true` | config/features.php:835 |
 | `CHECKOUT_STALE_PENDING_MINUTES` | optional | `180` | config/checkout.php:19 |
 | `CHECKOUT_WEBHOOK_AMOUNT_TOLERANCE` | optional | `1.00` | config/checkout.php:41 |
-| `CLAIM_TRUST_POLICY_ENABLED` | feature-flag | `false` | config/features.php:2272 |
+| `CLAIM_TRUST_POLICY_ENABLED` | feature-flag | `false` | config/features.php:2276 |
 | `CLASS_LINK_AUTOPOST` | optional | `false` | config/features.php:140 |
 | `CLIP_MARKETING_ENABLED` | feature-flag | `false` | config/features.php:1082 |
 | `CLUB_COURSE_SLUG` | optional | `'club'` | config/membership.php:122 |
@@ -262,7 +262,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `ECON_USN_PCT` | optional | `6.0` | config/economics.php:16 |
 | `EGRESS_PING_PROXY` | optional | `''` | config/egress.php:52 |
 | `EMAIL_CAMPAIGNS` | optional | `false` | config/features.php:1048 |
-| `ENROLL_PILOT_TELEGRAM_IDS` | optional | `''` | config/features.php:2260 |
+| `ENROLL_PILOT_TELEGRAM_IDS` | optional | `''` | config/features.php:2264 |
 | `EXCHANGERATE_HOST_KEY` | required | `—` | config/services.php:93 |
 | `EXIT_SURVEY_AUTO_TRIGGER` | optional | `false` | config/features.php:1892 |
 | `FAQ_HYBRID_RETRIEVAL` | optional | `false` | config/features.php:213 |
@@ -296,7 +296,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `GRAMMAR_LAB_SEMANTIC` | optional | `false` | config/features.php:1694 |
 | `GRAMMAR_LAB_SUBSCRIPTION_COURSE_SLUG` | optional | `''` | config/grammar_lab.php:53 |
 | `GRANT_ACCESS_FAIL_CLOSED` | optional | `false` | config/features.php:943 |
-| `GRANT_CHOSEN_GROUP` | optional | `false` | config/features.php:2241 |
+| `GRANT_CHOSEN_GROUP` | optional | `false` | config/features.php:2245 |
 | `GUARD_PACK_LOAD1_PER_CORE_CRITICAL` | optional | `2.0` | config/guard_pack.php:26 |
 | `GUARD_PACK_MEM_AVAILABLE_RATIO_CRITICAL` | optional | `0.15` | config/guard_pack.php:28 |
 | `GUARD_PACK_QUEUE_OLDEST_MAX_MINUTES` | optional | `30` | config/guard_pack.php:33 |
@@ -306,11 +306,11 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `HEARTBEAT_CRON` | optional | `'*/5 * * * *'` | config/heartbeat.php:50 |
 | `HEARTBEAT_PING_URL` | optional | `''` | config/heartbeat.php:43 |
 | `HEARTBEAT_TIMEOUT` | optional | `10` | config/heartbeat.php:54 |
-| `HERMES_ACCESS_DIAGNOSTICS` | optional | `false` | config/features.php:2179 |
-| `HERMES_FAQ_RAG` | optional | `false` | config/features.php:2163 |
-| `HERMES_HUMAN_SEND` | optional | `false` | config/features.php:2150 |
-| `HERMES_PAYMENT_RECONCILER` | optional | `false` | config/features.php:2192 |
-| `HERMES_SCHEDULE_KEEPER` | optional | `false` | config/features.php:2136 |
+| `HERMES_ACCESS_DIAGNOSTICS` | optional | `false` | config/features.php:2183 |
+| `HERMES_FAQ_RAG` | optional | `false` | config/features.php:2167 |
+| `HERMES_HUMAN_SEND` | optional | `false` | config/features.php:2154 |
+| `HERMES_PAYMENT_RECONCILER` | optional | `false` | config/features.php:2196 |
+| `HERMES_SCHEDULE_KEEPER` | optional | `false` | config/features.php:2140 |
 | `HINDI_ATTACHMENT_DRILLS` | optional | `false` | config/features.php:1736 |
 | `HINDI_DICTIONARY_DRILLS` | optional | `false` | config/features.php:1762 |
 | `HINDI_MY_SRS_DECK` | optional | `false` | config/features.php:1745 |
@@ -540,7 +540,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MIC_SHADOW_CLASSIFY` | optional | `false` | config/features.php:1918 |
 | `MINI_COURSE_DRIP_DAYS` | optional | `3` | config/mini_courses.php:11 |
 | `MINI_COURSE_GRAMMAR_COURSE_ID` | optional | `450` | config/mini_courses.php:17 |
-| `MINI_COURSE_QUICK_ENROLL` | optional | `false` | config/features.php:2204 |
+| `MINI_COURSE_QUICK_ENROLL` | optional | `false` | config/features.php:2208 |
 | `MINI_COURSE_SLUG` | optional | `'podgotovitelnaya-gruppa-sanskrita'` | config/mini_courses.php:14 |
 | `MINI_COURSE_TRIAL_COURSE_ID` | optional | `451` | config/mini_courses.php:20 |
 | `MONEY_BANK_STATEMENT_CREDITS` | optional | `false` | config/features.php:2033 |
@@ -620,7 +620,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `OPENROUTER_TOPUP_ROUND_TO` | optional | `10` | config/openrouter.php:26 |
 | `OPEN_LESSON_CARDS_ENABLED` | feature-flag | `false` | config/features.php:1240 |
 | `OPEN_LESSON_CARDS_TEST_CHAT_IDS` | optional | `''` | config/open_lesson_cards.php:17 |
-| `PAID_CHAT_JOIN_REQUEST` | optional | `false` | config/features.php:2251 |
+| `PAID_CHAT_JOIN_REQUEST` | optional | `false` | config/features.php:2255 |
 | `PAPERTRAIL_PORT` | required | `—` | config/logging.php:102<br>config/logging.php:103 |
 | `PAPERTRAIL_URL` | required | `—` | config/logging.php:101<br>config/logging.php:103 |
 | `PARTNER_BOT_SECRET` | secret | `''` | config/partner.php:33 |
@@ -655,7 +655,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `PRANA_DECAY_PERCENT` | optional | `10` | config/prana.php:20 |
 | `PRANA_SRS_REVIEW_DAILY_CAP` | optional | `120` | config/prana.php:51 |
 | `PRIVACY_IP_RETENTION_DAYS` | optional | `180` | config/privacy.php:17 |
-| `PRIVACY_PRUNE` | optional | `false` | config/features.php:2124 |
+| `PRIVACY_PRUNE` | optional | `false` | config/features.php:2128 |
 | `PRIVATE_ARCHIVE_DRUZHININ_AYURVEDA` | optional | `false` | config/membership.php:106 |
 | `PRIVATE_ARCHIVE_DRUZHININ_ELIGIBILITY_SLUGS` | optional | `'povtornaia-aiurveda'` | config/membership.php:108 |
 | `PRIVATE_ARCHIVE_DRUZHININ_OFFER_SLUG` | optional | `'povtornaia-aiurveda-v-zapisi'` | config/membership.php:107 |
@@ -853,7 +853,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_DM_LLM_DRAFTS_LIVE` | optional | `false` | config/features.php:343 |
 | `SUPPORT_DM_LLM_DRAFTS_LOCAL` | optional | `false` | config/features.php:356 |
 | `SUPPORT_DRAFT_QUEUE` | optional | `false` | config/features.php:480 |
-| `SUPPORT_ENROLL_PAY_LINK` | optional | `false` | config/features.php:2214 |
+| `SUPPORT_ENROLL_PAY_LINK` | optional | `false` | config/features.php:2218 |
 | `SUPPORT_FACT_LIVE_TYPES` | optional | `'zoom,schedule,recording'` | config/support.php:100 |
 | `SUPPORT_FAQ_RAG_ANSWER_MAX_CHARS` | optional | `12000` | config/support.php:194 |
 | `SUPPORT_FAQ_RAG_ANSWER_TOP_K` | optional | `6` | config/support.php:186 |
@@ -886,8 +886,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_LEAD_CAPTURE` | optional | `false` | config/features.php:738 |
 | `SUPPORT_LLM_REPLIES_MIN_SCORE` | optional | `8.0` | config/support.php:288 |
 | `SUPPORT_OBSERVABILITY` | optional | `false` | config/features.php:695 |
-| `SUPPORT_PAY_CLARIFY` | optional | `false` | config/features.php:2223 |
-| `SUPPORT_PAY_DIALOG_LLM` | optional | `'off'` | config/features.php:2231<br>config/features.php:2232 |
+| `SUPPORT_PAY_CLARIFY` | optional | `false` | config/features.php:2227 |
+| `SUPPORT_PAY_DIALOG_LLM` | optional | `'off'` | config/features.php:2235<br>config/features.php:2236 |
 | `SUPPORT_PAY_LLM_HISTORY` | optional | `20` | config/support.php:325 |
 | `SUPPORT_PAY_LLM_MIN_CONFIDENCE` | optional | `0.7` | config/support.php:323 |
 | `SUPPORT_PAY_LLM_TIMEOUT` | optional | `60` | config/support.php:324 |
@@ -911,7 +911,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_TECH_ASSIGNEE_USER_ID` | required | `—` | config/services.php:311<br>config/services.php:312<br>config/support_tech.php:10<br>config/support_tech.php:11 |
 | `SUPPORT_TECH_KEYWORDS` | required | `—` | config/support_tech.php:36 |
 | `SUPPORT_TEMPLATE_DRAFTS` | optional | `true` | config/features.php:191 |
-| `SUPPORT_TOPIC_SYNCED_RULES` | optional | `false` | config/features.php:2288 |
+| `SUPPORT_TOPIC_SYNCED_RULES` | optional | `false` | config/features.php:2292 |
 | `SUPPORT_UNIFIED_REPLY` | optional | `false` | config/features.php:57 |
 | `SUPPORT_UNLINKED_DM_THREADS` | optional | `false` | config/features.php:488 |
 | `SUPPORT_VISITOR_GEO` | optional | `false` | config/features.php:551 |
