@@ -7,6 +7,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\LessonAiEventResource\Pages;
 use App\Models\LessonAiEvent;
 use App\Support\RoleGate;
+use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;

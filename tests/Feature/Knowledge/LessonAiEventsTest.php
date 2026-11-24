@@ -5,15 +5,18 @@ declare(strict_types=1);
 namespace Tests\Feature\Knowledge;
 
 use App\Filament\Resources\LessonAiEventResource;
+use App\Filament\Resources\LessonAiEventResource\Pages\ListLessonAiEvents;
 use App\Models\Consent;
 use App\Models\LessonAiEvent;
 use App\Models\User;
 use App\Services\Consent\ConsentRecorder;
 use App\Services\Knowledge\LessonAiEventLog;
 use App\Support\Roles;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -181,6 +184,35 @@ class LessonAiEventsTest extends TestCase
         $admin = User::factory()->create(['role' => Roles::ADMIN]);
         $this->actingAs($admin);
         $this->assertTrue(LessonAiEventResource::canViewAny());
+    }
+
+    /**
+     * Страница обязана РЕНДЕРИТЬСЯ, а не просто существовать: 24-11-2026 прод
+     * отдал 500 на /admin/lesson-ai-events, потому что в фильтре периода стоял
+     * `Forms\Components\DatePicker` без импорта `Filament\Forms` — статический
+     * вызов класса, которого нет. Тест поднимает настоящую таблицу с настоящей
+     * строкой, поэтому ловит и такие ошибки неймспейсов, и падения колонок.
+     */
+    public function test_page_renders_for_admin_with_a_row(): void
+    {
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+
+        $admin = User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]);
+        $tester = User::factory()->create(['name' => 'Анна Тестова', 'lesson_ai_tester' => true]);
+        $this->giveConsent($tester);
+
+        app(LessonAiEventLog::class)->record($tester->id, 17, 'explain', LessonAiEvent::STATUS_DONE, [
+            'question' => 'что такое висарга?',
+            'selection' => 'висарга',
+            'answer_md' => 'Придыхание в конце слога.',
+            'notes_chars' => 42,
+            'latency_ms' => 1200,
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(ListLessonAiEvents::class)
+            ->assertSuccessful()
+            ->assertCanSeeTableRecords(LessonAiEvent::query()->get());
     }
 
     private function giveConsent(User $user): void
