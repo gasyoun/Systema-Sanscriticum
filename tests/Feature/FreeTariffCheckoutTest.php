@@ -60,7 +60,7 @@ class FreeTariffCheckoutTest extends TestCase
         $tariff = $this->freeTariff();
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertRedirect(route('student.dashboard'))
             ->assertSessionHas('success');
 
@@ -79,7 +79,7 @@ class FreeTariffCheckoutTest extends TestCase
 
         // Гость проходит упрощённую регистрацию; провижинер может сразу
         // аутентифицировать его, поэтому финальный редирект — login ИЛИ кабинет.
-        $response = $this->post(route('payment.create'), [
+        $response = $this->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
             'tariff_id' => $tariff->id,
             'name' => 'Тест',
             'surname' => 'Гостевой',

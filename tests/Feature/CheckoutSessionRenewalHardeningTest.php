@@ -79,7 +79,7 @@ class CheckoutSessionRenewalHardeningTest extends TestCase
         $tariff = $this->tariff();
 
         // No actingAs(): the session has lapsed, so the submit arrives as a guest.
-        $this->post(route('payment.create'), [
+        $this->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
             'tariff_id' => $tariff->id,
             'checkout_authed' => '1',
         ])
@@ -102,7 +102,7 @@ class CheckoutSessionRenewalHardeningTest extends TestCase
         $tariff = $this->tariff();
 
         $response = $this->from(route('checkout.show', $tariff->id))
-            ->post(route('payment.create'), [
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
                 'tariff_id' => $tariff->id,
                 'checkout_authed' => '1',
             ]);
@@ -123,7 +123,7 @@ class CheckoutSessionRenewalHardeningTest extends TestCase
         config(['features.checkout_session_lapse_relogin' => true]);
         $tariff = $this->tariff();
 
-        $this->post(route('payment.create'), [
+        $this->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
             'tariff_id' => $tariff->id,
             'name' => 'Иван',
             'surname' => 'Иванов',

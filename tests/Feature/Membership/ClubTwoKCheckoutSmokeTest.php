@@ -113,7 +113,7 @@ final class ClubTwoKCheckoutSmokeTest extends MembershipTestCase
         // Шаг 1 — чекаут: заказ ровно на ₽2 000, реального списания нет
         // (ссылка Точки фейковая), платёж висит pending.
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $clubMonthly->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $clubMonthly->id])
             ->assertRedirect('https://pay.tochka.com/redirect/club2k');
 
         $payment = Payment::query()

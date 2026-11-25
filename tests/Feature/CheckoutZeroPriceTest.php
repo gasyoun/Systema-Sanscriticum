@@ -64,7 +64,7 @@ class CheckoutZeroPriceTest extends TestCase
     public function zero_price_submit_creates_paid_payment_and_grants_group(): void
     {
         $this->actingAs($this->user)
-            ->post(route('payment.create'), ['tariff_id' => $this->tariff->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $this->tariff->id])
             ->assertRedirect(route('student.dashboard'));
 
         $payment = Payment::where('user_id', $this->user->id)

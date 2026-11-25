@@ -7,6 +7,7 @@ use App\Http\Controllers\CourseInterestController;
 use App\Http\Controllers\Email\TrackingController as EmailTrackingController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\LessonAiConsentController;
 use App\Http\Controllers\NewsletterSubscribeController;
 use App\Http\Controllers\TelegramSupportLinkController;
 use App\Http\Controllers\TgLoginLinkController;
@@ -82,6 +83,21 @@ Route::get('/otpiska', [UnsubscribeController::class, 'show'])
 Route::post('/otpiska', [UnsubscribeController::class, 'store'])
     ->middleware(['signed', 'throttle:30,1'])
     ->name('unsubscribe.store');
+
+// --- СОГЛАСИЕ НА ТЕСТ ИИ-ПОМОЩНИКА ЗАНЯТИЯ («Спроси Сократа»).
+// Подписанные ссылки из письма-приглашения. GET — только текст согласия (его
+// открывают антивирус и предпросмотр ссылок, поэтому открытие ничего не меняет),
+// POST — единственное место, где включается users.lesson_ai_tester и пишется
+// строка в журнал consents; GET /done — результат, чтобы F5 не слал форму снова.
+Route::get('/lesson-ai/consent/{user}', [LessonAiConsentController::class, 'show'])
+    ->middleware(['signed', 'throttle:30,1'])
+    ->name('lesson-ai.consent');
+Route::post('/lesson-ai/consent/{user}', [LessonAiConsentController::class, 'store'])
+    ->middleware(['signed', 'throttle:30,1'])
+    ->name('lesson-ai.consent.store');
+Route::get('/lesson-ai/consent/{user}/done', [LessonAiConsentController::class, 'done'])
+    ->middleware(['signed', 'throttle:30,1'])
+    ->name('lesson-ai.consent.done');
 
 // --- ПРЕВЬЮ YOUTUBE СО СВОЕГО СЕРВЕРА (152-ФЗ: без IP посетителя в img.youtube.com).
 Route::get('/video-thumb/{id}.jpg', [VideoThumbController::class, 'show'])
