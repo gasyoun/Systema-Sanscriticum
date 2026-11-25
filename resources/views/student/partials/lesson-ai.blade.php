@@ -40,7 +40,7 @@
         <template x-if="state === 'idle'">
             <div class="min-w-0">
                 <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Спроси Сократа</p>
-                <p class="text-[11px] text-gray-400 font-semibold">ИИ-помощник занятия</p>
+                <p class="text-[11px] text-gray-400 font-semibold">помощник занятия</p>
             </div>
         </template>
         <template x-if="state !== 'idle'">
@@ -57,7 +57,7 @@
         <span x-show="quotaLimit !== null" x-cloak data-testid="lesson-ai-quota"
               class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-extrabold tabular-nums"
               :class="quotaLeft === 0 ? 'bg-red-50 border-red-100 text-red-600' : (quotaLeft <= 3 ? 'bg-yellow-50 border-yellow-200 text-yellow-700' : 'bg-white border-gray-200 text-gray-500')"
-              :title="'Запросов к ИИ на сегодня: осталось ' + quotaLeft + ' из ' + quotaLimit + '. Обновляется в полночь; готовые пересказы и неудачные запросы не считаются.'">
+              :title="'Запросов к Сократу на сегодня: осталось ' + quotaLeft + ' из ' + quotaLimit + '. Обновляется в полночь; готовые пересказы и неудачные запросы не считаются.'">
             <i class="fas fa-bolt text-[10px]"></i>
             <span x-text="quotaLeft + ' / ' + quotaLimit"></span>
         </span>
@@ -134,7 +134,7 @@
             <div class="mt-3 flex items-start gap-3 rounded-2xl bg-gray-50 p-3">
                 <i class="fas fa-lock text-gray-300 text-xs mt-1 shrink-0"></i>
                 <p class="text-[11px] text-gray-500 leading-relaxed">
-                    ИИ работает на сервере школы — текст занятия и ваши заметки никуда не передаются.
+                    Сократ работает на сервере школы — текст занятия и ваши заметки никуда не передаются.
                     Это подсказка, а не слово преподавателя: сверяйтесь с записью — нажмите на таймкод.
                 </p>
             </div>
@@ -231,3 +231,4 @@
         class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#19191C] hover:bg-brand text-white text-xs font-extrabold shadow-xl transition-colors">
     <i class="fas fa-wand-magic-sparkles text-[11px]"></i> Объяснить
 </button>
+
