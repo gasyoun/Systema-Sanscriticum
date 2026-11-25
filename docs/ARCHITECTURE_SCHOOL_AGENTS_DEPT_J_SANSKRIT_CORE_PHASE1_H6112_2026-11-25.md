@@ -1,6 +1,6 @@
 # Архитектура: школа-агенты, департамент J «Санскрит-ядро» (2 роли) — фаза-1 (H6112)
 
-_Created: 25-11-2026 · Last updated: 25-11-2026_
+_Created: 25-11-2026 · Last updated: 26-11-2026_
 
 Исполнение handoff [H6112-OxAlpha_…school-agents-dept-j-sanskrit-core](https://github.com/gasyoun/Uprava/blob/main/handoffs/H6112-OxAlpha_Systema-Sanscriticum_school-agents-dept-j-sanskrit-core_05.10.26.md), эпик [E026](https://github.com/gasyoun/Uprava/blob/main/handoffs/epics/E026-Uprava_school-agents-program_05.10.26.md).
 
@@ -28,7 +28,7 @@ _Created: 25-11-2026 · Last updated: 25-11-2026_
 | J1 | upanishad-quote-butler (91) | 🧠 | 3 | УЧ, не запущено | Корпуса Упанишад в [SamudraManthanam `web/corpus_builder/jsonl/`](https://github.com/gasyoun/SamudraManthanam/tree/main/web/corpus_builder/jsonl) (`jabala-up.jsonl`, `mun-up.jsonl` и др.), `web/app/popular_terms.py` и word-of-day-тесты; учебный контур — [CAMPAIGN_RECORD_UP26_UPANISHADY_WEBINAR_04-10-2026](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CAMPAIGN_RECORD_UP26_UPANISHADY_WEBINAR_04-10-2026.md). Локусы и цитаты уже обслуживаются людьми/детерминированными сборками; агент-обёртка не добавляется |
 | J2 | taught-vs-corpus-kantha (92) | ⚙️ | 2 | УЧ, не запущено | Набор [kosha `vocab-curriculum`](https://github.com/gasyoun/kosha/blob/main/data/manifest/datasets.json) (id `vocab-curriculum`, CC BY-SA 4.0, 6 667 строк, H947) с потребителем «Uprava stenogrammy-teaching-glossary crosswalk (H4813 Pair 13 taught-vs-corpus axis, 19-09-2026)»; техника — skill `crosswalk-build` (`form_key()`, tiered matching, license check, kosha manifest). Ось «что учим vs что в корпусе» (1 513 лемм Pair 13) уже построена; дубль-кроссволк не строится |
 
-Обе поверхности уже существуют и обслуживаются человеком; «агент-фаза» роли стартует только после визы W4+ и гейтов §3. Исключённых ролей в J нет (kill-candidates 8/39/42 — другие департаменты).
+Обе поверхности уже существуют и обслуживаются человеком; «агент-фаза» роли стартует только после визы W4+ и гейтов §3. Исключённых ролей в J нет (kill-candidates 8/39/42 — другие департаменты). Локальные поверхности того же prior art (не дубли): контракт `reading_pack_v1.sentences[].locus` (`SubhashitaReadingPackAdapter`, `ReadingPackController`, замороженные фиды `nala_subhashita`/`hitopadesa`) для J1; `SanskritGlossary`/`sa_ru_glossary.json` (DCS-attested) и teaching-glossary — для J2.
 
 ## 3. Гейто-упаковка (Q2–Q9) — как применяется к департаменту J
 
@@ -36,12 +36,12 @@ _Created: 25-11-2026 · Last updated: 25-11-2026_
 |---|---|---|
 | Q2 квота/волны | фаза-1 = 25 агентов, запуск 5–7/нед | J — W4+, вне квоты 25; включение только по визе MG по итогам W1–W3. Квотные allowances J — TBD до Measurements ⇒ log-only, без новых трат |
 | Q3 запись в прод | suggester: агент готовит — человек отправляет; первые 30 дней human-send | Любой локус/цитата (J1) или отчёт кроссволка (J2) — только черновик до визы, затем human-send-слой H6183. **0 прод-писем до гейта волны** (H6084); публикация в канал/на сайт агентом запрещена |
-| Q5 pii-guard | фаза 0: маскинг до любого LLM-вызова; без обёртки роль не запускается (152-ФЗ, fenс H2641) | J2 работает на оси stenogrammy-teaching-glossary: локальное чтение стенограмм разрешено, но публикация/экспорт тел и списков путей в публичную поверхность запрещены; до LLM-вызова — маскер `app/Services/Support/SupportStudentPiiMasker.php`, fail-closed (H6144/H6182). J1: даже публичные цитаты идут под обёрткой, если в запросе/черновике есть ПДн студента или куратора. «Чистых от PII» ролей в J нет |
+| Q5 pii-guard | фаза 0: маскинг до любого LLM-вызова; без обёртки роль не запускается (152-ФЗ, фенс H2641) | J2 работает на оси stenogrammy-teaching-glossary: локальное чтение стенограмм разрешено, но публикация/экспорт тел и списков путей в публичную поверхность запрещены; до LLM-вызова — маскер `app/Services/Support/SupportStudentPiiMasker.php`, fail-closed (H6144/H6182). J1: даже публичные цитаты идут под обёрткой, если в запросе/черновике есть ПДн студента или куратора. «Чистых от PII» ролей в J нет |
 | Q6 скидки | полный запрет автономии, решает MG | J-роли не касаются денег: ни скидки, ни рассрочки, ни баланса; только предложить, решить MG. Никакой скидочной автономии (запрет без оговорок) |
 | Q7 токены | killgate-слой H5867 + лимиты по ролям | Для J1 (🧠) — H5867 + per-role лимиты H6174; для J2 (⚙️) — детерминированный контур, LLM-вызовов нет. J-allowances неизмерены ⇒ log-only, «без новых трат», подписочная квота z.ai; новый платный fallback не вводится |
 | Q8 учебка | золотые наборы + выборка MG (gold-adjudicate-паттерн) | Golden-набор W1 H6181 обслуживает **только** первую волну поддержки и **не заменяет J/D-наборы учебки**. J нужен отдельный golden-cut: для J1 — локусы/цитаты сверены с источником, для J2 — ручная проверка построенного кроссволка на golden-строках оси 1 513 лемм; расхождение агента с эталоном = роль не запускается. Выборка MG обязательна |
 | Q9 голос | tone-гайд + редколлегия скиллов; обязательный litredaktor-пасс отменён | Исходящие локусы/отчёты J — черновик по tone-гайду → редколлегия скиллов (litredaktor — инструмент, не гейт) → human-send. Ни одной публикации агентом |
-| Q13 KPI | скорость первого ответа + доля закрытых без человека; NPS-стража | Измеряется при запуске W4+; «доля закрытых без человека» = human-send-статистика, не автономная отправка. До визы KPI-базлайны не снимаются (нет потока) |
+| Q13 KPI | скорость первого ответа + доля закрытых без человека; NPS-стража | Измеряется при запуске W4+; «доля закрытых без человека» = human-send-статистика, не автономная отправка, учёт через `DraftReviewMinutesLedger.php`. До визы KPI-базлайны не снимаются (нет потока) |
 | Q4 канал | TG + веб сразу | При запуске — TG-лейн и web-поверхность (кабинет/страница курса) параллельно; в фазе-1 ни того, ни другого агент не пишет |
 
 ## 4. Карта переиспользования — общая техника уже доставлена, дублей не строим (пакет Hermes 06-10)
@@ -70,7 +70,7 @@ _Created: 25-11-2026 · Last updated: 25-11-2026_
 - `config/school_role_quota.php`: **без изменений** в этом PR — новых allowances J не введено (§1), diff PR = ровно один doc-файл.
 - Исходящих сообщений и публикаций агентом: 0 (Q3/Q9 не активированы, human-send OFF дефолтом, 0 прод-писем до гейта волны — H6084).
 
-**Dual-run residual (25-11-2026):** в estate существует ветка `origin/h6112-sanskrit-core-roles` (commit `1b273bbf`, 24-11-2026) с правкой `config/school_role_quota.php` — allowances `sanskrit-core-reader`=2 и `sanskrit-core-exporter`=1, «Total 14». Нет ни PR, ни merge в origin/main, ни измерения этих чисел, ни визы W4+; имена ролей не совпадают с каноном ростера (91/92). Ветка **не является evidence** и в этот PR не входит; её закрытие/удаление — человеческий шаг, зафиксирован в GTD (`@DO`, 25-11-2026). Чужой live-claim не снимался.
+**Dual-run residual (update 26-11-2026):** ветка `origin/h6112-sanskrit-core-roles` (`1b273bbf`, 24-11) правит `config/school_role_quota.php` — allowances `sanskrit-core-reader`=2 / `sanskrit-core-exporter`=1, «Total 14»; нет PR, merge, измерения или визы W4+, имена не совпадают с каноном 91/92. Ветка **не evidence** и в PR не входит; удаление — человеческий шаг, GTD `@DO` заведена 26-11-2026. Два независимых прохода 25-11 (`h6112-drain` и `h6112-dept-j-sanskrit-core-architecture`, commit `a0c0c3d8`) дали один документ; финальный текст объединяет их prior-art (внешние Samudra/kosha-корпуса и локальные локус/DCS-поверхности), force-push не применялся, чужой live-claim не снимался.
 
 ## 6. Границы
 
