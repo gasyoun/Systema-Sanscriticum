@@ -79,14 +79,14 @@ class KnownWordsTest extends TestCase
         return SrsReviewState::updateOrCreate(
             ['user_id' => $user->id, 'card_id' => $card->id],
             [
-            'stability' => (float) $days,
-            'difficulty' => 5.0,
-            'due' => $now->modify(sprintf('+%d days', $days)),
-            'last_review' => $now,
-            'reps' => 1,
-            'lapses' => 0,
-            'state' => 2, // State::Review
-            'step' => null,
+                'stability' => (float) $days,
+                'difficulty' => 5.0,
+                'due' => $now->modify(sprintf('+%d days', $days)),
+                'last_review' => $now,
+                'reps' => 1,
+                'lapses' => 0,
+                'state' => 2, // State::Review
+                'step' => null,
             ],
         );
     }
