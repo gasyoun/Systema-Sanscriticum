@@ -808,6 +808,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SRS_ENABLED` | feature-flag | `true` | config/srs.php:20 |
 | `SRS_FUZZ` | optional | `true` | config/srs.php:29 |
 | `SRS_GUEST_TRIAL_CARDS` | optional | `10` | config/srs.php:33 |
+| `SRS_KNOWN_WORDS_ENABLED` | feature-flag | `false` | config/srs.php:39 |
+| `SRS_KNOWN_WORDS_MATURE_DAYS` | optional | `21` | config/srs.php:43 |
 | `SRS_NEW_PER_DAY` | optional | `20` | config/srs.php:23 |
 | `STAFF_IMPERSONATION` | optional | `false` | config/features.php:1488 |
 | `START_CHTENIYA_COHORT_ENABLED` | feature-flag | `false` | config/features.php:1515 |
