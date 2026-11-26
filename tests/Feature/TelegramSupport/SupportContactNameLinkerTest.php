@@ -95,6 +95,18 @@ class SupportContactNameLinkerTest extends TestCase
     }
 
     /** @test */
+    public function links_name_with_city_marker_inside_the_string(): void
+    {
+        $user = User::factory()->create(['name' => 'Мамонтов Сергей, СПБ']);
+        $contact = $this->contact('Сергей Мамонтов из СПБ', 555006);
+
+        $result = app(SupportContactNameLinker::class)->linkByName();
+
+        $this->assertSame(1, $result['linked']);
+        $this->assertSame($user->id, $contact->fresh()->linked_user_id);
+    }
+
+    /** @test */
     public function dry_run_counts_but_does_not_write(): void
     {
         $user = User::factory()->create(['name' => 'Ширяев Алексей Петрович']);
