@@ -35,6 +35,7 @@ use App\Services\StudentDebtsService;
 use App\Support\Badges;
 use App\Support\OnboardingChecklist;
 use App\Support\PranaLeaderboard;
+use App\Support\StudentAvailability;
 use App\Support\VisualDcsEntitlement;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -761,6 +762,16 @@ trait StudentDashboardConcerns
                 ->withCount('votes')
                 ->get()
             : collect();
+
+        // Окна доступности (26-11-2026): новые офферы со слотом вне окон
+        // студенту не показываем. Купленное и текущее обучение не трогаем —
+        // фильтр применяется только к строкам списка ожидания.
+        if (config('features.availability_windows') && $waitlistItems->isNotEmpty()) {
+            $gate = app(StudentAvailability::class);
+            $waitlistItems = $waitlistItems->filter(
+                fn ($item) => $gate->allowsSlot($user, $item->slot)
+            )->values();
+        }
 
         // H4206: моё пожелание времени по каждой строке («Голос учтён · утром»).
         $waitlistMyPrefs = $waitlistItems->isNotEmpty()

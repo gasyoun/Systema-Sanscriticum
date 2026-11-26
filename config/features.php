@@ -1232,6 +1232,13 @@ return [
     'waitlist_voting' => (bool) env('WAITLIST_VOTING', false),
 
     /*
+     | Окна доступности ученика (RRULE + TZID): вкладка /dvaram/availability,
+     | Filament-редактор куратора и OfferGate для новых офферов кабинета.
+     | OFF по умолчанию — меняет доступ/офферы, включается только деплоем.
+     */
+    'availability_windows' => (bool) env('AVAILABILITY_WINDOWS_ENABLED', false),
+
+    /*
      | Карточки открытых занятий в @samskrte_bot: фото + «✅ Я иду» + нижнее
      | меню, анонс / утро / ссылка Zoom (open-lessons:cards). В бот идут только
      | занятия с галочкой schedules.bot_card_enabled. OFF по умолчанию;
