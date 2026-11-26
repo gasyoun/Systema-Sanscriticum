@@ -107,6 +107,44 @@ class SupportContactNameLinkerTest extends TestCase
     }
 
     /** @test */
+    public function contact_with_city_links_to_user_whose_name_has_no_city(): void
+    {
+        $user = User::factory()->create(['name' => 'Надежда Смирнова Владимировна']);
+        $contact = $this->contact('Надежда Смирнова Ступино', 555007);
+
+        $result = app(SupportContactNameLinker::class)->linkByName();
+
+        $this->assertSame(1, $result['linked']);
+        $this->assertSame($user->id, $contact->fresh()->linked_user_id);
+    }
+
+    /** @test */
+    public function city_in_contact_disambiguates_namesakes(): void
+    {
+        User::factory()->create(['name' => 'Смирнова Надежда Владимировна, Москва']);
+        $right = User::factory()->create(['name' => 'Смирнова Надежда Владимировна, Ступино']);
+        $contact = $this->contact('Надежда Смирнова Ступино', 555008);
+
+        $result = app(SupportContactNameLinker::class)->linkByName();
+
+        $this->assertSame(1, $result['linked']);
+        $this->assertSame($right->id, $contact->fresh()->linked_user_id);
+    }
+
+    /** @test */
+    public function namesakes_without_city_are_ambiguous_and_skipped(): void
+    {
+        User::factory()->create(['name' => 'Смирнова Надежда Владимировна, Ступино']);
+        User::factory()->create(['name' => 'Смирнова Надежда Владимировна, Москва']);
+        $contact = $this->contact('Надежда Смирнова', 555009);
+
+        $result = app(SupportContactNameLinker::class)->linkByName();
+
+        $this->assertSame(0, $result['linked']);
+        $this->assertNull($contact->fresh()->linked_user_id);
+    }
+
+    /** @test */
     public function dry_run_counts_but_does_not_write(): void
     {
         $user = User::factory()->create(['name' => 'Ширяев Алексей Петрович']);
