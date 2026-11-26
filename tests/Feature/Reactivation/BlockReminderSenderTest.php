@@ -139,4 +139,49 @@ class BlockReminderSenderTest extends TestCase
         $this->assertSame('no_channels', $result['status']);
         $this->assertSame(0, DebtReminder::query()->count());
     }
+
+    /** @test */
+    public function source_fits_the_debt_reminders_column(): void
+    {
+        // 26-11-2026 прод ответил 500 «Data too long for column source»:
+        // колонка была varchar(16), а источник — 18 символов. Миграция
+        // 2026_11_26_160000_widen_debt_reminders_source_length расширила её до
+        // 32; этот тест не даёт снова перерасти лимит молча.
+        $this->assertLessThanOrEqual(32, mb_strlen(BlockReminderSender::SOURCE));
+    }
+
+    /** @test */
+    public function failed_account_delivery_releases_the_journal_claim(): void
+    {
+        Mail::fake();
+        Queue::fake();
+        config(['services.telegram_business.token' => 'bot-token']);
+
+        TelegramBusinessConnection::create([
+            'business_connection_id' => 'bc-test',
+            'owner_telegram_user_id' => 111,
+            'is_enabled' => true,
+            'can_reply' => true,
+        ]);
+
+        Http::fake([
+            'api.telegram.org/*' => Http::response(['ok' => false, 'error_code' => 400, 'description' => 'Bad Request: BUSINESS_PEER_USAGE_MISSING'], 400),
+        ]);
+
+        $user = User::factory()->create(['email' => 'refused@example.com']);
+        TelegramSupportChat::create([
+            'telegram_chat_id' => 777001,
+            'linked_user_id' => $user->id,
+            'type' => 'private',
+        ]);
+
+        // Только канал аккаунта: Telegram отказал → отправки нет, клейм снят,
+        // иначе следующий честный повтор был бы заблокирован дедупом.
+        $result = $this->sender()->send($user, 10, 1, 'Текст', 'Тема', true, false, false);
+
+        $this->assertSame('no_channels', $result['status']);
+        // Причина отказа доходит до экрана, а не теряется в «отправлено: 0».
+        $this->assertSame('BUSINESS_PEER_USAGE_MISSING', $result['account_error']);
+        $this->assertSame(0, DebtReminder::query()->count());
+    }
 }

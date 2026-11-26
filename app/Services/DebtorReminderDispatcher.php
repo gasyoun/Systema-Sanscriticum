@@ -66,6 +66,10 @@ class DebtorReminderDispatcher
         // конце списка, чтобы ни один positional-вызов (debts:remind,
         // WinBackSender) не съехал молча.
         bool $toAccount = false,
+        // Причина отказа канала аккаунта (Telegram: BUSINESS_PEER_USAGE_MISSING).
+        // By-ref, потому что вызывающему нужен bool «ушло ли хоть что-то», а
+        // менять его на массив значило бы править всех существующих вызовов.
+        ?string &$accountError = null,
     ): bool {
         $hasTg = $toTelegram && ! empty($user->telegram_id);
         $hasVk = $toVk && ! empty($user->vk_id);
@@ -95,6 +99,9 @@ class DebtorReminderDispatcher
             // канал, чью доставку мы можем подтвердить фактом, а не надеждой.
             $sent = $this->account->deliver($accountTarget, $rendered);
             $hasAccount = ($sent['status'] === 'ok');
+            if (! $hasAccount) {
+                $accountError = $sent['telegram_error'] ?? $sent['error'] ?? 'error';
+            }
         }
 
         if ($logSource !== null) {

@@ -72,6 +72,7 @@ final class BlockReminderSender
             return ['status' => 'no_channels', 'channels' => []];
         }
 
+        $accountError = null;
         $ok = $this->dispatcher->send(
             $user,
             $courseId,
@@ -85,11 +86,16 @@ final class BlockReminderSender
             null,
             self::SOURCE,
             $toAccount && $available['account'],
+            $accountError,
         );
 
-        return $ok
-            ? ['status' => 'sent', 'channels' => $wanted]
-            : ['status' => 'no_channels', 'channels' => []];
+        return [
+            'status' => $ok ? 'sent' : 'no_channels',
+            'channels' => $ok ? $wanted : [],
+            // Почему не ушло от аккаунта (BUSINESS_PEER_USAGE_MISSING и т.п.) —
+            // наружу, чтобы экран сказал правду, а не «отправлено: 0».
+            'account_error' => $accountError,
+        ];
     }
 
     private function recentlyContacted(int $userId, int $courseId, int $blockNumber): bool
