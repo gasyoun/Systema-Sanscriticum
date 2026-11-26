@@ -78,24 +78,42 @@ final class SupportContactNameLinker
 
     private function match(TelegramSupportContact $contact): ?User
     {
-        $words = self::nameWords((string) $contact->name);
-        if ($words === null) {
+        $parsed = self::parseName((string) $contact->name);
+        if ($parsed === null) {
             return null;
         }
 
-        $candidates = [];
+        $contactWords = array_merge($parsed['core'], $parsed['tail']);
+
+        $strict = [];
+        $loose = [];
+
         foreach ($this->userIndex() as $row) {
-            if (array_diff($words, $row['words']) === []) {
-                $candidates[] = $row['user'];
-                if (count($candidates) > 1) {
-                    return null; // двусмысленно — не сшиваем
-                }
+            // Минимум два слова контакта должны лечь в ядро ФИО: иначе
+            // «Москва» в записи контакта сошьёт его с любым москвичом.
+            if (count(array_intersect($parsed['core'], $row['core'])) < 2) {
+                continue;
+            }
+
+            $loose[] = $row['user'];
+
+            if (array_diff($contactWords, $row['words']) === []) {
+                $strict[] = $row['user'];
             }
         }
 
-        $user = $candidates[0] ?? null;
+        // Сначала точное совпадение вместе с городом: если оно однозначно —
+        // это лучший ответ. Если города в кабинете нет вовсе (ФИО без хвоста),
+        // строгих кандидатов ноль, и тогда решает совпадение по ядру — но
+        // снова только когда кандидат ровно один.
+        $user = match (true) {
+            count($strict) === 1 => $strict[0],
+            $strict === [] && count($loose) === 1 => $loose[0],
+            default => null,
+        };
+
         if ($user === null) {
-            return null;
+            return null; // нет кандидата или двусмысленно
         }
 
         $otherContact = TelegramSupportContact::query()
@@ -108,29 +126,40 @@ final class SupportContactNameLinker
     }
 
     /**
-     * Слова имени: нижний регистр, хвост с городом отброшен, цифры и
-     * пунктуация вырезаны, служебные слова выкинуты.
+     * Разбор имени на ядро (имя, фамилия, отчество) и хвост (город и прочее).
      *
-     * Хвост отбрасывается не только по запятой, но и по « из », « в », « на »:
-     * в Telegram человек часто записан как «Сергей Мамонтов из СПБ», и если
-     * оставить «из спб» в наборе, сравнение с ФИО «Мамонтов Сергей, СПБ»
-     * провалится на служебном слове, хотя это один и тот же человек.
+     * Хвост отделяется запятой, точкой с запятой, « из », « в », « на »,
+     * « городе ». В Telegram человек часто записан как «Сергей Мамонтов из
+     * СПБ» или «Надежда Смирнова Ступино» — город и без запятой. Поэтому слова
+     * контакта ищутся И в ядре, И в хвосте пользователя, но засчитывается
+     * совпадение, только если минимум два слова легли в ядро.
      *
-     * Меньше двух слов (ник, одно имя) — null: такие контакты не сшиваем.
+     * Меньше двух слов в ядре (ник, одно имя) — null: такие не сшиваем.
      *
-     * @return list<string>|null
+     * @return array{core: list<string>, tail: list<string>}|null
      */
-    public static function nameWords(string $value): ?array
+    public static function parseName(string $value): ?array
     {
         $value = mb_strtolower(trim($value));
         if ($value === '') {
             return null;
         }
 
-        // Хвост «, Москва» / « из СПБ» / « в Сочи» — это город, не имя.
-        $value = preg_split('/[,;]|\\bиз\\b|\\bв\\b|\\bна\\b|\\bгороде\\b/u', $value)[0] ?? $value;
-        $value = preg_replace('/[^\p{L}\s\-]+/u', ' ', $value) ?? '';
+        $parts = preg_split('/[,;]|\bиз\b|\bв\b|\bна\b|\bгороде\b/u', $value, 2);
+        $core = self::tokenize((string) ($parts[0] ?? ''));
+        $tail = self::tokenize((string) ($parts[1] ?? ''));
 
+        if (count($core) < 2) {
+            return null;
+        }
+
+        return ['core' => $core, 'tail' => $tail];
+    }
+
+    /** @return list<string> */
+    private static function tokenize(string $value): array
+    {
+        $value = preg_replace('/[^\p{L}\s\-]+/u', ' ', $value) ?? '';
         $stop = ['из', 'в', 'на', 'г', 'гор', 'город', 'обл', 'область', 'р', 'респ', 'пос', 'с', 'д', 'п', 'ст', 'мкр'];
 
         $words = preg_split('/[\s\-]+/u', trim($value)) ?: [];
@@ -139,16 +168,12 @@ final class SupportContactNameLinker
             static fn (string $w): bool => $w !== '' && ! in_array($w, $stop, true),
         )));
 
-        if (count($words) < 2) {
-            return null;
-        }
-
         sort($words);
 
         return $words;
     }
 
-    /** @return list<array{user: User, words: list<string>}> */
+    /** @return list<array{user: User, core: list<string>, words: list<string>}> */
     private function userIndex(): array
     {
         if ($this->userIndex !== null) {
@@ -160,12 +185,16 @@ final class SupportContactNameLinker
             ->whereNotNull('name')
             ->get(['id', 'name'])
             ->each(function (User $user): void {
-                $words = self::nameWords((string) $user->name);
-                if ($words === null) {
+                $parsed = self::parseName((string) $user->name);
+                if ($parsed === null) {
                     return;
                 }
 
-                $this->userIndex[] = ['user' => $user, 'words' => $words];
+                $this->userIndex[] = [
+                    'user' => $user,
+                    'core' => $parsed['core'],
+                    'words' => array_merge($parsed['core'], $parsed['tail']),
+                ];
             });
 
         return $this->userIndex;
