@@ -83,6 +83,21 @@ class DebtorReminderDispatcher
 
         $rendered = MessagePlaceholders::render($textTpl, $replacements);
 
+        // Клейм журнала — ДО отправки. 26-11-2026 на проде запись упала на
+        // varchar(16) уже после того, как сообщения ушли: куратор увидел 500,
+        // а следа о контакте не осталось, и повтор отправил бы второе письмо
+        // тому же студенту. Теперь несделанная запись останавливает отправку.
+        $log = null;
+        if ($logSource !== null) {
+            $log = DebtReminder::create([
+                'user_id' => $user->id,
+                'course_id' => $courseId,
+                'block_number' => $blockNumber,
+                'sent_at' => now(),
+                'source' => $logSource,
+            ]);
+        }
+
         if ($hasTg || $hasVk) {
             SendMessengerAlerts::dispatch($user, $rendered, $hasTg, $hasVk);
         }
@@ -97,14 +112,12 @@ class DebtorReminderDispatcher
             $hasAccount = ($sent['status'] === 'ok');
         }
 
-        if ($logSource !== null) {
-            DebtReminder::create([
-                'user_id' => $user->id,
-                'course_id' => $courseId,
-                'block_number' => $blockNumber,
-                'sent_at' => now(),
-                'source' => $logSource,
-            ]);
+        if (! $hasTg && ! $hasVk && ! $hasEmail && ! $hasAccount) {
+            // Ни один канал фактически не ушёл (аккаунт ответил отказом) —
+            // снимаем клейм, иначе дедуп заблокирует честный повтор.
+            $log?->delete();
+
+            return false;
         }
 
         return true;
