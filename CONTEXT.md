@@ -40,6 +40,17 @@ _Avoid_: course when referring only to a new start of the same program
 A recorded intention to participate in a specific intake. It does not establish payment, course access or a guaranteed place.
 _Avoid_: paid enrollment, confirmed reservation
 
-_Created: 09-11-2026 · Last updated: 10-11-2026_
+**availability window**:
+One recurring weekly interval in which a student may be offered a NEW course or elective. Stored as a constrained RRULE (`FREQ=WEEKLY;BYDAY=…`) plus start/end time and an IANA TZID. Absence of a window on a day means "not available" only when the student has at least one window at all.
+_Avoid_: schedule, slot preference, availability (too vague)
+
+**curator override**:
+A curator-owned availability window that outranks student-owned ones: `deny` refuses, `allow` permits. Students cannot create or edit curator rows.
+_Avoid_: admin note, preference
+
+**offer gate**:
+The decision point that hides a new-course offer whose known weekly slot falls outside the student's availability windows. It never touches already-purchased or ongoing study.
+
+_Created: 09-11-2026 · Last updated: 26-11-2026_
 
 _Dr. Mārcis Gasūns_
