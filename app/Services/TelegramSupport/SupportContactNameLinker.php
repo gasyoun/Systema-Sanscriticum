@@ -108,8 +108,15 @@ final class SupportContactNameLinker
     }
 
     /**
-     * Слова имени: нижний регистр, город после запятой отброшен, цифры и
-     * пунктуация вырезаны. Меньше двух слов (ник, одно имя) — null.
+     * Слова имени: нижний регистр, хвост с городом отброшен, цифры и
+     * пунктуация вырезаны, служебные слова выкинуты.
+     *
+     * Хвост отбрасывается не только по запятой, но и по « из », « в », « на »:
+     * в Telegram человек часто записан как «Сергей Мамонтов из СПБ», и если
+     * оставить «из спб» в наборе, сравнение с ФИО «Мамонтов Сергей, СПБ»
+     * провалится на служебном слове, хотя это один и тот же человек.
+     *
+     * Меньше двух слов (ник, одно имя) — null: такие контакты не сшиваем.
      *
      * @return list<string>|null
      */
@@ -120,14 +127,17 @@ final class SupportContactNameLinker
             return null;
         }
 
-        $comma = mb_strpos($value, ',');
-        if ($comma !== false) {
-            $value = mb_substr($value, 0, $comma);
-        }
-
+        // Хвост «, Москва» / « из СПБ» / « в Сочи» — это город, не имя.
+        $value = preg_split('/[,;]|\\bиз\\b|\\bв\\b|\\bна\\b|\\bгороде\\b/u', $value)[0] ?? $value;
         $value = preg_replace('/[^\p{L}\s\-]+/u', ' ', $value) ?? '';
+
+        $stop = ['из', 'в', 'на', 'г', 'гор', 'город', 'обл', 'область', 'р', 'респ', 'пос', 'с', 'д', 'п', 'ст', 'мкр'];
+
         $words = preg_split('/[\s\-]+/u', trim($value)) ?: [];
-        $words = array_values(array_unique(array_filter($words, static fn (string $w): bool => $w !== '')));
+        $words = array_values(array_unique(array_filter(
+            $words,
+            static fn (string $w): bool => $w !== '' && ! in_array($w, $stop, true),
+        )));
 
         if (count($words) < 2) {
             return null;
