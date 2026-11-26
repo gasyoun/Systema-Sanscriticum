@@ -9,6 +9,7 @@ use App\Mail\DebtorReminderMail;
 use App\Models\Course;
 use App\Models\DebtReminder;
 use App\Models\User;
+use App\Services\Reactivation\TelegramAccountChannel;
 use App\Support\MessagePlaceholders;
 use Illuminate\Support\Facades\Mail;
 
@@ -24,6 +25,8 @@ use Illuminate\Support\Facades\Mail;
  */
 class DebtorReminderDispatcher
 {
+    public function __construct(private readonly TelegramAccountChannel $account) {}
+
     /** Плейсхолдеры: {name}, {course}, {block}, {pay_link}, {paid_until}, {deadline}. */
     public const DEFAULT_TEXT = "Намасте, {name}!\n\nБлок №{block} курса «{course}» уже идет или скоро начнется, а оплата пока не поступила.{paid_until}{deadline}\n\nОплатить курс: {pay_link}\n\nЕсли оплата уже внесена — просто проигнорируйте это сообщение.";
 
@@ -58,12 +61,19 @@ class DebtorReminderDispatcher
         ?string $paidUntilLabel = null,
         ?string $deadlineLabel = null,
         ?string $logSource = null,
+        // Канал «от имени аккаунта школы» (Telegram Business): адресат — не
+        // users.telegram_id, а существующий диалог с аккаунтом. Параметр в
+        // конце списка, чтобы ни один positional-вызов (debts:remind,
+        // WinBackSender) не съехал молча.
+        bool $toAccount = false,
     ): bool {
         $hasTg = $toTelegram && ! empty($user->telegram_id);
         $hasVk = $toVk && ! empty($user->vk_id);
         $hasEmail = $toEmail && filter_var($user->email, FILTER_VALIDATE_EMAIL);
+        $accountTarget = $toAccount ? $this->account->resolve($user) : null;
+        $hasAccount = $accountTarget !== null;
 
-        if (! $hasTg && ! $hasVk && ! $hasEmail) {
+        if (! $hasTg && ! $hasVk && ! $hasEmail && ! $hasAccount) {
             return false;
         }
 
@@ -79,6 +89,12 @@ class DebtorReminderDispatcher
         if ($hasEmail) {
             $subject = strtr($subjectTpl, $replacements);
             Mail::to($user->email)->queue(new DebtorReminderMail($subject, $rendered, $user->name));
+        }
+        if ($hasAccount && $accountTarget !== null) {
+            // Синхронно: бизнес-канал отвечает сразу, и это единственный
+            // канал, чью доставку мы можем подтвердить фактом, а не надеждой.
+            $sent = $this->account->deliver($accountTarget, $rendered);
+            $hasAccount = ($sent['status'] === 'ok');
         }
 
         if ($logSource !== null) {
