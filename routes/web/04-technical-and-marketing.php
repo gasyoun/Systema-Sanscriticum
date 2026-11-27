@@ -2,6 +2,7 @@
 
 use App\Filament\Resources\UserResource;
 use App\Http\Controllers\AdminLoginLinkController;
+use App\Http\Controllers\CabinetEmailVerificationController;
 use App\Http\Controllers\CabinetInviteLinkController;
 use App\Http\Controllers\CourseInterestController;
 use App\Http\Controllers\Email\TrackingController as EmailTrackingController;
@@ -73,6 +74,12 @@ Route::get('/magic/{token}', [NewsletterSubscribeController::class, 'magic'])
     ->middleware('throttle:10,1')
     ->where('token', '[A-Za-z0-9]+')
     ->name('newsletter.magic');
+
+// Подтверждение почты кабинета, созданного через /кабинет (одна ссылка = галочка + вход).
+Route::get('/verify-email/{token}', [CabinetEmailVerificationController::class, 'verify'])
+    ->middleware('throttle:10,1')
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('cabinet.verify-email');
 
 // --- ОТПИСКА ОТ РЕКЛАМНОЙ РАССЫЛКИ (152-ФЗ, 38-ФЗ ст. 18). Подписанная ссылка
 // из письма (App\Support\Unsubscribe::url). GET — подтверждение, POST — отписка
