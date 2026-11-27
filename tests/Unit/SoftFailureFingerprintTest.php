@@ -115,4 +115,33 @@ final class SoftFailureFingerprintTest extends TestCase
         ];
         $this->assertSame(SoftFailureFingerprint::hash($setA), SoftFailureFingerprint::hash($setB));
     }
+
+    /**
+     * 25-11-2026: every failing systemd unit collapsed to `guards/failed-units`,
+     * so two different broken units shared fingerprint 6fd69840 and the second
+     * one was invisible behind the first one's open alert.
+     */
+    public function test_failed_units_are_one_fingerprint_per_unit(): void
+    {
+        $telegram = 'guards/failed-units: telegram-daily.service в состоянии failed — '
+            .'`systemctl status telegram-daily.service` и `journalctl -u telegram-daily.service -n 50`. '
+            .'Осознанно терпимый провал вносить в FAILED_UNITS_ALLOWLIST с причиной, а не удалять проверку';
+        $socks = 'guards/failed-units: systema-socks91-watch.service в состоянии failed — '
+            .'`systemctl status systema-socks91-watch.service` и `journalctl -u systema-socks91-watch.service -n 50`. '
+            .'Осознанно терпимый провал вносить в FAILED_UNITS_ALLOWLIST с причиной, а не удалять проверку';
+
+        $this->assertSame('guards/failed-units:telegram-daily', SoftFailureFingerprint::normalizeMessage($telegram));
+        $this->assertSame('guards/failed-units:systema-socks91-watch', SoftFailureFingerprint::normalizeMessage($socks));
+        $this->assertNotSame(
+            SoftFailureFingerprint::hash([['message' => $telegram, 'severity' => 'soft']]),
+            SoftFailureFingerprint::hash([['message' => $socks, 'severity' => 'soft']]),
+        );
+
+        // Same unit, different guidance text => same fingerprint (no re-fire).
+        $telegramAgain = 'guards/failed-units: telegram-daily.service в состоянии failed — перепроверить вручную';
+        $this->assertSame(
+            SoftFailureFingerprint::hash([['message' => $telegram]]),
+            SoftFailureFingerprint::hash([['message' => $telegramAgain]]),
+        );
+    }
 }
