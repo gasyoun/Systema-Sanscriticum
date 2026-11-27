@@ -106,8 +106,10 @@ hardware back-button navigates WebView history. A **Tochka** checkout link opens
 npm run add:ios      # scaffolds ios/ ; requires macOS + CocoaPods to build
 ```
 
-iOS build, App Store submission, and the **iOS email-only login toggle** (Apple
-Guideline 4.8) are Wave 5 — do not build them here.
+The **iOS email-only login toggle** (Apple Guideline 4.8) is wired: the iOS shell
+appends `SystemaIOS/1.0` to its WebView user agent, and the web login hides social
+providers only for that marker. iOS build, TestFlight, and App Store submission remain
+Wave 5.
 
 ## App icon & splash
 
