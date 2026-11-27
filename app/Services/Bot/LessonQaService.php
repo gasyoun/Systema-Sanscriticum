@@ -89,10 +89,15 @@ final class LessonQaService
             }
         }
 
+        // think=false (25-11-2026): ответ ученику по цитате — не задача на
+        // рассуждение. Замер на живом узле: с размышлением 324–345 токенов и
+        // 4,4–4,8 с, без него 102 токена и 3,0 с при том же ответе по смыслу.
+        // Размышление здесь платится трижды: токенами, секундами и риском
+        // упереться в max_tokens до первой буквы ответа.
         $answer = $this->ai->localChatWithUsage([
             ['role' => 'system', 'content' => $this->systemPrompt()],
             ['role' => 'user', 'content' => $this->userPrompt($question, $hits)],
-        ])['content'];
+        ], null, 0.3, false)['content'];
 
         if ($answer === null) {
             return ['status' => self::STATUS_QUEUED, 'text' => null, 'hits' => $hits];

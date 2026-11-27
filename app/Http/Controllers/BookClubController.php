@@ -7,22 +7,17 @@ namespace App\Http\Controllers;
 use App\Mail\PaypalClaimReceivedMail;
 use App\Models\BookClubOrder;
 use App\Models\Payment;
-use App\Models\User;
-use App\Services\AttributionService;
+use App\Services\BookClub\BookClubCheckout;
 use App\Services\BookClub\BookClubPricing;
 use App\Services\CuratorNotifier;
 use App\Services\Payments\TochkaPaymentService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
@@ -58,7 +53,7 @@ final class BookClubController extends Controller
         ]);
     }
 
-    public function submit(Request $request, TochkaPaymentService $tochka): RedirectResponse
+    public function submit(Request $request, TochkaPaymentService $tochka, BookClubCheckout $checkout): RedirectResponse
     {
         abort_unless((bool) config('features.book_club_delivery'), 404);
 
@@ -113,8 +108,8 @@ final class BookClubController extends Controller
         }
 
         // Резолв юзера — вне транзакции (гость с существующим email — отказ,
-        // анти-takeover; зеркало PaymentController::resolveUser).
-        $user = $this->resolveUser($request);
+        // анти-takeover; общий с витриной магазина H8412 сервис чекаута).
+        $user = $checkout->resolveUser($request);
 
         $amount = BookClubPricing::priceFor($validated['country_code']);
 
@@ -137,25 +132,10 @@ final class BookClubController extends Controller
             }
         }
 
-        // Только запись в БД — в транзакции; HTTP в Tochka/уведомления — после commit.
-        $payment = DB::transaction(function () use ($user, $validated, $isAbroad, $amount, $proofPath, $noteParts): Payment {
-
-            // Анти-дубль ещё раз, ПОД ЛОКОМ строк (паттерн H071 #2): параллельные
-            // сабмиты одного планета-заказа сериализуются здесь — предпроверка до
-            // транзакции отсекает обычный повтор, эта — гонку двух вкладок.
-            $lockedDuplicate = BookClubOrder::where('planeta_email', $validated['planeta_email'])
-                ->where('planeta_order_number', $validated['planeta_order_number'])
-                ->lockForUpdate()
-                ->get()
-                ->contains(fn (BookClubOrder $order) => $order->payment && $order->payment->status !== 'failed');
-
-            if ($lockedDuplicate) {
-                throw ValidationException::withMessages([
-                    'planeta_order_number' => 'Доставка для этого заказа planeta уже оформлена. Мы свяжемся с вами — повторно оплачивать не нужно.',
-                ]);
-            }
-
-            $payment = Payment::create([
+        // Только запись в БД — в транзакции (общий сервис чекаута H8412);
+        // HTTP в Tochka/уведомления — после commit.
+        $order = $checkout->createOrder(
+            paymentAttributes: [
                 'user_id' => $user->id,
                 'course_id' => null,
                 'amount' => $amount,
@@ -166,11 +146,10 @@ final class BookClubController extends Controller
                 'foreign_currency' => $isAbroad ? $validated['foreign_currency'] : null,
                 'proof_path' => $proofPath,
                 'payer_note' => implode(' | ', $noteParts),
-            ]);
-
-            BookClubOrder::create([
-                'payment_id' => $payment->id,
+            ],
+            orderAttributes: [
                 'user_id' => $user->id,
+                'mode' => BookClubOrder::MODE_DELIVERY_ONLY,
                 'planeta_email' => $validated['planeta_email'],
                 'planeta_order_number' => $validated['planeta_order_number'],
                 'recipient_name' => $validated['recipient_name'],
@@ -181,10 +160,20 @@ final class BookClubController extends Controller
                 'address_line' => $validated['address_line'],
                 'phone' => $validated['phone'] ?? null,
                 'amount' => $amount,
-            ]);
+                'delivery_amount' => $amount,
+                'status' => BookClubOrder::STATUS_PENDING,
+            ],
+            // Анти-дубль под row-lock: параллельные сабмиты одного планета-заказа
+            // сериализуются здесь (паттерн H071 #2).
+            duplicateCriteria: [
+                'planeta_email' => $validated['planeta_email'],
+                'planeta_order_number' => $validated['planeta_order_number'],
+            ],
+            duplicateField: 'planeta_order_number',
+            duplicateMessage: 'Доставка для этого заказа planeta уже оформлена. Мы свяжемся с вами — повторно оплачивать не нужно.',
+        );
 
-            return $payment;
-        });
+        $payment = $order->payment;
 
         // Заграница: PayPal-заявка (оплата уже сделана на paypal.me — сверка ручная).
         if ($isAbroad) {
@@ -236,43 +225,5 @@ final class BookClubController extends Controller
         ]);
 
         return back()->withInput()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
-    }
-
-    /**
-     * Резолв пользователя для чекаута (зеркало MarathonController::
-     * resolveUserForCheckout / PaymentController::resolveUser).
-     * Залогиненный — текущий. Гость с НОВЫМ email — создаём аккаунт и логиним.
-     * Гость с СУЩЕСТВУЮЩИМ email — отказ (анти-takeover).
-     */
-    private function resolveUser(Request $request): User
-    {
-        if (auth()->check()) {
-            return auth()->user();
-        }
-
-        $existing = User::where('email', User::normalizeEmail($request->input('email')))->first();
-        if ($existing) {
-            throw ValidationException::withMessages([
-                'email' => 'У вас уже есть аккаунт с этим email. Войдите в личный кабинет — и оформите доставку оттуда.',
-            ]);
-        }
-
-        $fullName = trim($request->input('surname').' '.$request->input('name'));
-        $city = trim((string) $request->input('city'));
-        if ($city !== '') {
-            $fullName .= ', '.$city;
-        }
-
-        $user = User::create([
-            'email' => $request->input('email'),
-            'name' => $fullName,
-            'password' => Hash::make(Str::random(12)),
-        ]);
-
-        app(AttributionService::class)->applyToNewUser($user);
-
-        auth()->login($user);
-
-        return $user;
     }
 }

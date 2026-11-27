@@ -20,7 +20,10 @@ use App\Services\DebtorReminderDispatcher;
  */
 class WinBackSender
 {
-    public function __construct(private DebtorReminderDispatcher $dispatcher) {}
+    public function __construct(
+        private DebtorReminderDispatcher $dispatcher,
+        private readonly TelegramAccountChannel $account,
+    ) {}
 
     /**
      * @return array{status: 'sent'|'skipped'|'no_channels'|'no_user', channels: list<string>}
@@ -61,6 +64,10 @@ class WinBackSender
             in_array('tg', $channels, true),
             in_array('vk', $channels, true),
             in_array('email', $channels, true),
+            null,
+            null,
+            null,
+            in_array('account', $channels, true),
         );
 
         if (! $ok) {
@@ -78,10 +85,13 @@ class WinBackSender
         return ['status' => 'sent', 'channels' => $channels];
     }
 
-    /** @return list<string> подмножество ['tg','vk','email'] */
+    /** @return list<string> подмножество ['account','tg','vk','email'] */
     private function availableChannels(User $user): array
     {
         $channels = [];
+        if ($this->account->isAvailable() && $this->account->resolve($user) !== null) {
+            $channels[] = 'account';
+        }
         if (! empty($user->telegram_id)) {
             $channels[] = 'tg';
         }

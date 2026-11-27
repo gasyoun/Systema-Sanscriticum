@@ -126,7 +126,11 @@ final class ClubEntitlement
 
     public function allows(?User $user, string $capability): bool
     {
+        // С 01-12 basic-возможности (библиотека, упражнения, улучшенный кабинет)
+        // включаются новой лестницей, даже если старый флаг advanced выключен.
+        $ladderOn = app(LadderV2::class)->active();
         if (! (bool) config('features.membership_advanced_features', false)
+            && ! $ladderOn
             && $capability !== 'recordings') {
             return false;
         }

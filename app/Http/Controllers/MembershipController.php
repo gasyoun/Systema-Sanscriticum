@@ -8,9 +8,13 @@ use App\Enums\MembershipTier;
 use App\Models\ClubMembership;
 use App\Models\Course;
 use App\Models\Lesson;
+use App\Models\Tariff;
+use App\Models\User;
 use App\Services\Membership\ClubMembershipService;
+use App\Services\Membership\LadderV2;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 /**
  * Самостоятельный отказ от продления клуба и возврат продления (H2644),
@@ -32,14 +36,24 @@ final class MembershipController extends Controller
     public function __construct(private readonly ClubMembershipService $service) {}
 
     /**
-     * Публичный лендинг клуба (H2645). Живёт только при включённом
-     * features.club_membership: страница не может появиться раньше, чем
-     * оплата реально создаёт членство, — иначе CTA продаёт то, чего система
-     * не выдаст. Цены берутся ТОЛЬКО из тарифов курса `club` (Filament) —
-     * прайсинг и чекаут читают одну и ту же строку БД.
+     * Лендинг подписки на личный кабинет — ПРЕВЬЮ ДЛЯ СУПЕР-АДМИНА.
+     *
+     * Голосовой запуск MG 23-11-2026: контракт страницы — месячная лестница
+     * кабинета (Свободный / Базовый / Клуб / Top «позже») с ИИ-функциями в
+     * тарифах; публичный запуск — после 1 января 2027 (цены факультативов
+     * с января могут пересматриваться). До отдельного флипа страницу видит
+     * только супер-админ, остальные получают 404 — как и до редизайна,
+     * когда снятый с продажи Базовый ронял гейт H2645 для всех.
+     *
+     * Правило цен H2645 сохранено: число на карточке — это строка БД
+     * (месячный тариф курса `club`); fallback на membership.tiers.*.monthly_price
+     * допустим только когда строки нет вовсе (превью не должно 404-ить).
+     * Чекаут-ссылка — только у активного тарифа; Top сознательно без ссылки:
+     * он не продаётся до отдельного go/no-go (config/features.php).
      */
-    public function landing(): View
+    public function landing(Request $request): View
     {
+        abort_unless($request->user() instanceof User && $request->user()->isSuperAdmin(), 404);
         abort_unless((bool) config('features.club_membership'), 404);
 
         $course = Course::query()
@@ -47,37 +61,25 @@ final class MembershipController extends Controller
             ->first();
         abort_if($course === null, 404);
 
-        $tariffs = $course->tariffs()
-            ->where('is_active', true)
-            ->whereNotNull('membership_months')
-            ->when(! (bool) config('features.membership_top'), fn ($query) => $query->where(fn ($tiers) => $tiers
-                ->whereNull('membership_tier')
-                ->orWhere('membership_tier', '!=', MembershipTier::Top->value)))
-            ->orderBy('membership_tier')
-            ->orderBy('membership_months')
-            ->get();
-        abort_if($tariffs->isEmpty(), 404);
+        $monthlyTariff = fn (MembershipTier $tier): ?Tariff => $course->tariffs()
+            ->where('membership_months', 1)
+            ->where('membership_tier', $tier->value)
+            ->first();
 
-        $byTier = $tariffs->groupBy(fn ($tariff): string => $tariff->membership_tier?->value ?? MembershipTier::Club->value);
-        if ((bool) config('features.membership_tiered')) {
-            abort_if(($byTier[MembershipTier::Basic->value] ?? collect())->isEmpty(), 404);
-            abort_if(($byTier[MembershipTier::Club->value] ?? collect())->isEmpty(), 404);
-        }
-
-        $clubTariffs = $byTier[MembershipTier::Club->value] ?? $tariffs;
-        $basicTariffs = $byTier[MembershipTier::Basic->value] ?? collect();
+        $basicTariff = $monthlyTariff(MembershipTier::Basic);
+        $clubTariff = $monthlyTariff(MembershipTier::Club);
 
         return view('shop.club', [
-            'course' => $course,
-            'tariffs' => $tariffs,
-            'monthly' => $clubTariffs->firstWhere('membership_months', 1) ?? $clubTariffs->first(),
-            'basicMonthly' => $basicTariffs->firstWhere('membership_months', 1),
-            'tariffsByTier' => $byTier,
-            'shelfCount' => Course::query()->where('club_included', true)->count(),
+            'basicTariff' => $basicTariff,
+            'clubTariff' => $clubTariff,
+            'basicPrice' => $basicTariff?->price ?? MembershipTier::Basic->monthlyPrice(),
+            'clubPrice' => $clubTariff?->price ?? MembershipTier::Club->monthlyPrice(),
+            'topPrice' => MembershipTier::Top->monthlyPrice(),
+            'ladderV2' => app(LadderV2::class)->active(),
+            'labels' => collect(MembershipTier::cases())->mapWithKeys(
+                fn (MembershipTier $tier) => [$tier->value => app(LadderV2::class)->labelFor($tier)]
+            )->all(),
             'freeLessonsCount' => Lesson::query()->shownOnMain()->count(),
-            'freeTierOn' => (bool) config('features.membership_free_tier'),
-            'cancellationOn' => (bool) config('features.membership_cancellation'),
-            'grantDays' => (int) config('membership.free_tier.grant_days', 30),
         ]);
     }
 

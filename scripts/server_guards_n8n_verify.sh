@@ -247,15 +247,18 @@ fi
 say "TLS-сертификаты"
 if [ -n "${G[CERT_EXPIRY_HOSTS]:-}" ] && [ -n "${G[CERT_EXPIRY_MIN_DAYS]:-}" ]; then
   for target in ${G[CERT_EXPIRY_HOSTS]//,/ }; do
-    thost=${target%%:*}; tport=${target##*:}; [ "$tport" = "$target" ] && tport=443
-    end=$(echo | timeout 15 openssl s_client -servername "$thost" -connect "$thost:$tport" 2>/dev/null \
+    # Форма цели: <sni_host>[:<sni_port>][@<connect_host>[:<connect_port>]].
+    # Форма с @ нужна машине, которая служит эндпоинт САМА: nftables не пускает
+    # .91 на собственный публичный IP, но сертификат того же vhost читается с
+    # 127.0.0.1 при верном SNI. Без @ поведение прежнее (connect = sni).
+    tgt=${target%%@*}; conn=${target#*@}; [ "$conn" = "$target" ] && conn="$tgt"
+    thost=${tgt%%:*}; tport=${tgt##*:}; [ "$tport" = "$tgt" ] && tport=443
+    chost=${conn%%:*}; cport=${conn##*:}; [ "$cport" = "$conn" ] && cport=443
+    end=$(echo | timeout 15 openssl s_client -servername "$thost" -connect "$chost:$cport" 2>/dev/null \
           | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)
-    end_epoch=$(date -d "$end" +%s 2>/dev/null || true)
-    if [ -n "$end_epoch" ]; then
-      days=$(( (end_epoch - $(date -u +%s)) / 86400 ))
-    else
-      days=""
-    fi
+    # Пустой/нечитаемый end -> пусто (warning «не прочитался»), НЕ «0 дней»;
+    # разбор вынесен в guard_cert_days ради deliberate-fail selftest (H7059).
+    days=$(guard_cert_days "$end" "$(date -u +%s)")
     while IFS='|' read -r sev subj detail; do
       case "$sev" in
         critical) crit "$subj" "$detail" ;;

@@ -59,7 +59,7 @@ class VipBundleAccessKeyTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertRedirect();
 
         $payment = Payment::where('user_id', $user->id)->latest('id')->first();
@@ -94,7 +94,7 @@ class VipBundleAccessKeyTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertRedirect();
 
         // Симулируем успешную оплату (как вебхук Точки).
