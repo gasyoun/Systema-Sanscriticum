@@ -547,6 +547,152 @@ class CabinetProbeTest extends TestCase
     }
 
     /**
+     * H8562: ложная зелень (флап guards/failed-units между тиками пробы) не
+     * снимает sticky — тот же отпечаток не перезажигается; закрывают только
+     * N зеленых подряд, после чего вернувшийся класс снова дает одну тревогу.
+     */
+    public function test_soft_flap_does_not_refire_and_sustained_green_closes(): void
+    {
+        $this->seedManager();
+        config()->set('cabinet_probe.surfaces', [
+            ['name' => 'student.dashboard', 'label' => 'manager /dvaram', 'severity' => 'critical'],
+        ]);
+        config()->set('features.cabinet_hybrid', true);
+        config()->set('cabinet_probe.ping_url', '');
+        config()->set('cabinet_probe.telegram_chat_id', '999001');
+        config()->set('cabinet_probe.telegram_soft_reminder_hours', 24);
+        config()->set('cabinet_probe.soft_green_grace_ticks', 2);
+        config()->set('services.telegram.bot_token', 'test-bot-token');
+
+        $broken = ['name' => 'student.route.that.does.not.exist', 'label' => 'hybrid /library', 'severity' => 'soft'];
+        $healthy = ['name' => 'student.library', 'label' => 'cabinet /library (hybrid)', 'severity' => 'soft'];
+        $state = fn () => app(CabinetProbeAlertState::class);
+
+        // Тик :15 — сбой: первая тревога уходит, sticky-state стоит.
+        config()->set('cabinet_probe.hybrid_surfaces', [$broken]);
+        Http::fake(['https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200)]);
+        Artisan::call('cabinet:probe');
+        Http::assertSent(fn ($r) => str_contains($r->url(), 'sendMessage')
+            && str_contains((string) ($r['text'] ?? ''), 'soft-сбой'));
+        $this->assertNotNull($state()->getString(CabinetProbeAlertState::LAST_SOFT_FP));
+
+        // Тик :30 — флап-зелень: guards-тик прозевал failing-юнит.
+        config()->set('cabinet_probe.hybrid_surfaces', [$healthy]);
+        Http::fake(['https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200)]);
+        Artisan::call('cabinet:probe');
+        Http::assertNothingSent();
+        // Одна зеленая проба НЕ снимает инцидент (H8562 grace).
+        $this->assertNotNull($state()->getString(CabinetProbeAlertState::LAST_SOFT_FP));
+
+        // Тик :45 — сбой вернулся: тот же класс молчит (старый код здесь
+        // перезажигался «новым классом» после забытого состояния).
+        config()->set('cabinet_probe.hybrid_surfaces', [$broken]);
+        Http::fake(['https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200)]);
+        Artisan::call('cabinet:probe');
+        Http::assertNothingSent();
+        $this->assertNotNull($state()->getString(CabinetProbeAlertState::LAST_SOFT_FP));
+
+        // Устойчивая зелень: 2 тика подряд закрывают инцидент.
+        config()->set('cabinet_probe.hybrid_surfaces', [$healthy]);
+        Artisan::call('cabinet:probe');
+        $this->assertNotNull($state()->getString(CabinetProbeAlertState::LAST_SOFT_FP));
+        Artisan::call('cabinet:probe');
+        $this->assertNull($state()->getString(CabinetProbeAlertState::LAST_SOFT_FP));
+
+        // Класс вернулся ПОСЛЕ закрытия — снова ровно одна тревога.
+        config()->set('cabinet_probe.hybrid_surfaces', [$broken]);
+        Http::fake(['https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200)]);
+        Artisan::call('cabinet:probe');
+        Http::assertSent(fn ($r) => str_contains($r->url(), 'sendMessage')
+            && str_contains((string) ($r['text'] ?? ''), 'soft-сбой'));
+    }
+
+    /**
+     * H8562: отправка soft-webhook идет ПОД in-flight локом — конкурентная
+     * проба в окне отправки не может читать состояние.
+     */
+    public function test_soft_webhook_send_holds_single_flight_lock(): void
+    {
+        $this->seedManager();
+        config()->set('cabinet_probe.surfaces', [
+            ['name' => 'student.dashboard', 'label' => 'manager /dvaram', 'severity' => 'critical'],
+        ]);
+        config()->set('features.cabinet_hybrid', true);
+        config()->set('cabinet_probe.hybrid_surfaces', [
+            ['name' => 'student.route.that.does.not.exist', 'label' => 'hybrid /library', 'severity' => 'soft'],
+        ]);
+        config()->set('cabinet_probe.ping_url', '');
+        config()->set('cabinet_probe.telegram_chat_id', '999001');
+        config()->set('services.telegram.bot_token', 'test-bot-token');
+        config()->set('cabinet_probe.soft_webhook_url', 'https://example.test/soft');
+        config()->set('cabinet_probe.soft_webhook_secret', 's3cret');
+
+        $lockPath = (string) config('cabinet_probe.tg_state_path').'.lock';
+        $heldDuringSend = null;
+        Http::fake([
+            'https://example.test/soft' => function () use (&$heldDuringSend, $lockPath) {
+                $fh = @fopen($lockPath, 'c');
+                $heldDuringSend = $fh === false ? null : ! @flock($fh, LOCK_EX | LOCK_NB);
+                if ($fh !== false) {
+                    @fclose($fh);
+                }
+
+                return Http::response(['ok' => true], 202);
+            },
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+
+        Artisan::call('cabinet:probe');
+
+        $this->assertNotNull($heldDuringSend, 'webhook fake must run inside the send window');
+        $this->assertTrue($heldDuringSend, 'soft webhook fires while the single-flight lock is held');
+
+        // Проба вернулась — лок свободен.
+        $fh = fopen($lockPath, 'c');
+        $this->assertTrue((bool) @flock($fh, LOCK_EX | LOCK_NB));
+        @flock($fh, LOCK_UN);
+        fclose($fh);
+    }
+
+    /**
+     * H8562: перекрывающаяся проба (лок занят конкурентом) молчит этот тик и
+     * не создает второй webhook/issue; после освобождения тревога идет.
+     */
+    public function test_soft_send_skips_when_single_flight_lock_is_busy(): void
+    {
+        $this->seedManager();
+        config()->set('cabinet_probe.surfaces', [
+            ['name' => 'student.dashboard', 'label' => 'manager /dvaram', 'severity' => 'critical'],
+        ]);
+        config()->set('features.cabinet_hybrid', true);
+        config()->set('cabinet_probe.hybrid_surfaces', [
+            ['name' => 'student.route.that.does.not.exist', 'label' => 'hybrid /library', 'severity' => 'soft'],
+        ]);
+        config()->set('cabinet_probe.ping_url', '');
+        config()->set('cabinet_probe.telegram_chat_id', '999001');
+        config()->set('cabinet_probe.soft_lock_wait_seconds', 0);
+        config()->set('services.telegram.bot_token', 'test-bot-token');
+
+        $lockPath = (string) config('cabinet_probe.tg_state_path').'.lock';
+        $fh = fopen($lockPath, 'c');
+        $this->assertTrue((bool) flock($fh, LOCK_EX | LOCK_NB));
+
+        Http::fake(['https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200)]);
+        Artisan::call('cabinet:probe');
+        Http::assertNothingSent();
+        $this->assertStringContainsString('single-flight', Artisan::output());
+
+        flock($fh, LOCK_UN);
+        fclose($fh);
+
+        // Конкурент ушел — следующий тик тревожит как обычно.
+        Http::fake(['https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200)]);
+        Artisan::call('cabinet:probe');
+        Http::assertSent(fn ($r) => str_contains($r->url(), 'sendMessage')
+            && str_contains((string) ($r['text'] ?? ''), 'soft-сбой'));
+    }
+
+    /**
      * H4845 acceptance: убитый туннель = ровно одна именованная soft-тревога,
      * живой туннель её снимает, повторная смерть — снова одна тревога.
      */
@@ -597,10 +743,13 @@ class CabinetProbeTest extends TestCase
         $tunnel = 'timeout';
         $this->assertSame(0, $probe());
 
-        // Туннель поднят — находки нет, sticky-state снят.
+        // Туннель поднят — находки нет; H8562: одна зеленая проба больше НЕ
+        // снимает sticky (flap grace), вторая подряд закрывает инцидент.
         $tunnel = 'up';
         $this->assertSame(0, $probe());
         $this->assertStringNotContainsString('ollama-tunnel', Artisan::output());
+        $this->assertNotNull(app(CabinetProbeAlertState::class)->getString(CabinetProbeAlertState::LAST_SOFT_FP));
+        $this->assertSame(0, $probe());
         $this->assertNull(app(CabinetProbeAlertState::class)->getString(CabinetProbeAlertState::LAST_SOFT_FP));
 
         // Умер снова — снова ровно одна тревога.

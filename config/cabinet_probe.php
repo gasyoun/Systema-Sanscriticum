@@ -42,6 +42,16 @@ return [
     // 0 = once until green (quietest). Default 24 ≈ max one TG/day per class.
     'telegram_soft_reminder_hours' => (int) env('CABINET_PROBE_TELEGRAM_SOFT_REMINDER_HOURS', 24),
 
+    // H8562: сколько подряд ЗЕЛЕНЫХ проб закрывают активный soft-инцидент.
+    // 1 = прежнее поведение (одна проба снимает). Флап guards/failed-units
+    // (*/10 таймер против */15 пробы) дает изолированные ложные зеленые
+    // тики — счетчик их переживает. Меньше 1 читается как 1.
+    'soft_green_grace_ticks' => (int) env('CABINET_PROBE_SOFT_GREEN_GRACE_TICKS', 2),
+
+    // H8562: сколько секунд перекрывающаяся проба ждет in-flight лок
+    // soft-пути, прежде чем промолчать этот тик (single-flight).
+    'soft_lock_wait_seconds' => (int) env('CABINET_PROBE_SOFT_LOCK_WAIT_SECONDS', 10),
+
     // Durable TG state path. Empty → storage/app/cabinet_probe_tg_state.json
     // (survives optimize:clear). Tests override this; no extra .env key.
     'tg_state_path' => '',

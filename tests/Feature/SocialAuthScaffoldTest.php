@@ -107,4 +107,29 @@ class SocialAuthScaffoldTest extends TestCase
         config(['services.google.client_id' => 'abc']);
         $this->get('/login')->assertOk()->assertSee('войдите через')->assertSee('Google');
     }
+
+    /** @test */
+    public function ios_wrapper_login_is_email_only(): void
+    {
+        config(['services.google.client_id' => 'abc']);
+
+        $this->withHeader('User-Agent', 'Mozilla/5.0 (iPhone) SystemaIOS/1.0')
+            ->get('/login')
+            ->assertOk()
+            ->assertSee('id="login-form"', false)
+            ->assertDontSee('войдите через')
+            ->assertDontSee('Google');
+    }
+
+    /** @test */
+    public function iphone_safari_keeps_social_login_buttons(): void
+    {
+        config(['services.google.client_id' => 'abc']);
+
+        $this->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1')
+            ->get('/login')
+            ->assertOk()
+            ->assertSee('войдите через')
+            ->assertSee('Google');
+    }
 }
