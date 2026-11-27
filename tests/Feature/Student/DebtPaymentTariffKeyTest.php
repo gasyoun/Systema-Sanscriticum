@@ -298,7 +298,7 @@ class DebtPaymentTariffKeyTest extends TestCase
         $this->assertSame('block_2', $bundle->accessKey());
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $bundle->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $bundle->id])
             ->assertRedirect();
 
         $payment = Payment::where('user_id', $user->id)->latest('id')->first();

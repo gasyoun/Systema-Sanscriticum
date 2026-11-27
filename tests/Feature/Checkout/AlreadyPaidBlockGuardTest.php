@@ -94,7 +94,7 @@ class AlreadyPaidBlockGuardTest extends TestCase
         ['user' => $user, 'tariffs' => $t] = $this->paidThrough12();
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $t[12]->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $t[12]->id])
             ->assertSessionHasErrors('tariff_id');
 
         $this->assertSame(2, Payment::where('user_id', $user->id)->count());
@@ -113,7 +113,7 @@ class AlreadyPaidBlockGuardTest extends TestCase
             ->assertDontSee('уже оплачен');
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $t[13]->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $t[13]->id])
             ->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('payments', [

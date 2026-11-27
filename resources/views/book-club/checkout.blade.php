@@ -38,6 +38,10 @@
     <h1>Книжный клуб — оплата доставки</h1>
     <p class="lead">Книги уже оплачены вами на planeta. Здесь — только доставка: заполните адрес
         и данные заказа, оплатите доставку, и мы отправим книги.</p>
+    @if (config('features.book_club_shop'))
+        <p class="note">Хотите купить книгу без участия в кампании?
+            <a href="{{ route('book-club.shop') }}">Магазин «Книжного клуба»</a>.</p>
+    @endif
 
     @if (session('success'))
         <div class="success">{{ session('success') }}</div>

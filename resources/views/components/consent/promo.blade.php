@@ -6,8 +6,9 @@
       name   — имя поля (is_promo_agreed для лид-форм, wants_announcements для оплаты/пробного)
       theme  — light | dark
       label  — текст после ссылки на согласие
+      form   — id формы, если галочка лежит ВНЕ <form> (карточка кнопки оплаты)
 --}}
-@props(['name' => 'is_promo_agreed', 'theme' => 'light', 'label' => 'на получение рассылки об анонсах, новостях и расписании'])
+@props(['name' => 'is_promo_agreed', 'theme' => 'light', 'label' => 'на получение рассылки об анонсах, новостях и расписании', 'form' => null])
 
 @php
     $text = $theme === 'dark' ? 'text-gray-400' : 'text-gray-500';
@@ -16,6 +17,7 @@
 
 <label {{ $attributes->merge(['class' => 'flex items-start gap-2.5 cursor-pointer text-xs leading-relaxed '.$text]) }}>
     <input type="checkbox" name="{{ $name }}" value="1"
+           @if($form) form="{{ $form }}" @endif
            @checked(old($name))
            class="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer">
     <span>

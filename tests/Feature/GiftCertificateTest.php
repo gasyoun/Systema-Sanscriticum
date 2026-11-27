@@ -86,7 +86,7 @@ class GiftCertificateTest extends TestCase
         config(['features.gift_certificates' => false]);
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id, 'gift' => '1'])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id, 'gift' => '1'])
             ->assertRedirect();
 
         $this->assertDatabaseHas('payments', ['tariff' => $tariff->accessKey()]);
@@ -102,7 +102,7 @@ class GiftCertificateTest extends TestCase
         config(['features.gift_certificates' => true]);
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id, 'gift' => '1'])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id, 'gift' => '1'])
             ->assertRedirect();
 
         $this->assertDatabaseHas('payments', [
@@ -334,7 +334,7 @@ class GiftCertificateTest extends TestCase
         config(['features.gift_certificates' => true]);
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id, 'gift' => '1'])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id, 'gift' => '1'])
             ->assertRedirect();
 
         // Контракт вебхука Точки: purpose начинается с «Заказ №{id}»

@@ -28,6 +28,7 @@ use App\Services\Leaderboard\LeaderboardService;
 use App\Services\Learning\ExternalLearningProgressService;
 use App\Services\Membership\ClubEntitlement;
 use App\Services\Membership\ClubMembershipService;
+use App\Services\Membership\LadderV2;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use App\Services\Schedule\TextbookScale;
@@ -35,6 +36,7 @@ use App\Services\StudentDebtsService;
 use App\Support\Badges;
 use App\Support\OnboardingChecklist;
 use App\Support\PranaLeaderboard;
+use App\Support\StudentAvailability;
 use App\Support\VisualDcsEntitlement;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -184,6 +186,10 @@ trait StudentDashboardConcerns
         abort_unless((bool) config('features.cabinet_hybrid'), 404);
 
         $user = auth()->user();
+        // С 01-12 библиотека — часть «Оптимального»; до даты поведение прежнее.
+        if (app(LadderV2::class)->active()) {
+            abort_unless(app(ClubEntitlement::class)->allows($user, 'library'), 403);
+        }
         $recovery = app(RecoveryStateResolver::class)->resolve($user);
         $catalog = app(RecordingsCatalog::class)->forUser($user);
         $suppressOffers = $recovery->suppressOffers();
@@ -761,6 +767,16 @@ trait StudentDashboardConcerns
                 ->withCount('votes')
                 ->get()
             : collect();
+
+        // Окна доступности (26-11-2026): новые офферы со слотом вне окон
+        // студенту не показываем. Купленное и текущее обучение не трогаем —
+        // фильтр применяется только к строкам списка ожидания.
+        if (config('features.availability_windows') && $waitlistItems->isNotEmpty()) {
+            $gate = app(StudentAvailability::class);
+            $waitlistItems = $waitlistItems->filter(
+                fn ($item) => $gate->allowsSlot($user, $item->slot)
+            )->values();
+        }
 
         // H4206: моё пожелание времени по каждой строке («Голос учтён · утром»).
         $waitlistMyPrefs = $waitlistItems->isNotEmpty()

@@ -701,7 +701,7 @@
         
         {{-- ПЕРЕКЛЮЧАТЕЛЬ ТАБОВ (Показываем только если есть выбор) --}}
         @if($showTabs)
-        <div class="flex items-center bg-gray-100/80 p-1.5 rounded-2xl mb-4 shrink-0 shadow-inner overflow-x-auto custom-scrollbar">
+        <div class="flex items-stretch bg-gray-100/80 p-1.5 rounded-2xl mb-4 shrink-0 shadow-inner overflow-x-auto custom-scrollbar">
             @if($hasTranscript)
             <button @click="activeTab = 'transcript'" 
                     class="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[13px] font-extrabold transition-all duration-300"
@@ -726,9 +726,11 @@
 
             @if($lessonAiEnabled)
             <button @click="activeTab = 'ai'" data-testid="lesson-ai-tab"
-                    class="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[13px] font-extrabold transition-all duration-300"
+                    title="Спроси Сократа — помощник занятия"
+                    class="flex-1 min-w-0 flex items-center justify-center gap-1.5 py-2 px-1.5 rounded-xl text-[13px] leading-tight text-center font-extrabold transition-all duration-300"
                     :class="activeTab === 'ai' ? 'bg-white text-brand shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'">
-                <i class="fas fa-wand-magic-sparkles text-base"></i> ИИ
+                <span class="whitespace-normal">Спроси Сократа</span>
+                <i class="fas fa-comment-dots text-base" aria-hidden="true"></i>
             </button>
             @endif
             @endif
@@ -966,3 +968,4 @@
 </div>
 
 @endsection
+

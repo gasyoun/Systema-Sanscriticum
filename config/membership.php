@@ -34,6 +34,28 @@ return [
         'top' => ['monthly_price' => 5000],
     ],
 
+    /*
+     * Лестница подписей с 01-12-2026 (рулинг 27-11): только подписи и гейты,
+     * внутренние ключи free/basic/club/top остаются прежними. override=null
+     * означает «решить по дате»; true/false — принудительный режим для отката.
+     */
+    'ladder_v2' => [
+        'start_date' => env('MEMBERSHIP_LADDER_V2_DATE', '2026-12-01'),
+        'override' => env('MEMBERSHIP_LADDER_V2_ENABLED', null),
+        'labels' => [
+            'free' => 'Базовый',
+            'basic' => 'Оптимальный',
+            'club' => 'Максимальный',
+            'top' => 'Премиум',
+        ],
+        'legacy_labels' => [
+            'free' => 'Свободный',
+            'basic' => 'Базовый',
+            'club' => 'Клуб',
+            'top' => 'Максимальный',
+        ],
+    ],
+
     'terms' => [
         1 => ['discount_percent' => 0],
         3 => ['discount_percent' => 5],
