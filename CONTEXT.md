@@ -62,6 +62,19 @@ _Avoid_: tier key
 **capability gate**:
 The check that makes a membership label meaningful by enforcing a capability (library, standard exercises, recordings) against the active tier. Copy alone is not a gate.
 
+**book club**:
+A one-off payment for shipping physical books already bought in the planeta.ru campaign (storefront name «Книжный клуб»); covers shipment only — no course access, no membership.
+_Avoid_: club (the subscription club), product sale
+**campaign pickup**:
+Free in-person handout of campaign books in Moscow by prior arrangement, the no-cost alternative to paid shipment.
+_Avoid_: delivery, courier
+**delivery tariff**:
+The price of shipping a book parcel, set by destination (RF, abroad) and weight band; independent of the book price already paid in the campaign.
+_Avoid_: book price, carrier cost
+**campaign order**:
+A row of the planeta.ru campaign export linking a backer to the books they bought; the key for matching a delivery payment to the books to send.
+_Avoid_: shop order, payment
+
 _Created: 09-11-2026 · Last updated: 27-11-2026_
 
 _Dr. Mārcis Gasūns_
