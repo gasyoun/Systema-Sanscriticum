@@ -18,6 +18,7 @@ use App\Services\Telegram\ChatJoinRequestApprover;
 use App\Services\Telegram\DateAwareCancelService;
 use App\Services\Telegram\StopGroupCallbackService;
 use App\Services\Telegram\StopGroupIntentService;
+use App\Services\Telegram\StudentQuestionAckService;
 use App\Services\Telegram\VacationCommandService;
 use App\Services\Telegram\ZapisiPollService;
 use App\Services\TelegramHarvest\HarvestStoreWriter;
@@ -210,6 +211,15 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
             app(StopGroupIntentService::class)->handle($message);
         } catch (Throwable $e) {
             Log::warning('StopGroupIntent: handler failed', ['error' => $e->getMessage()]);
+        }
+
+        // H8527: студент не молчит — canned-подсказка на reply-вопрос к посту бота,
+        // предложения переносов студентов → стопочка (никогда не применяются).
+        // Сам фильтрует (флаг / группа / автор не staff / reply на пост бота).
+        try {
+            app(StudentQuestionAckService::class)->handle($message);
+        } catch (Throwable $e) {
+            Log::warning('StudentQuestionAck: handler failed', ['error' => $e->getMessage()]);
         }
 
         // Разовый перенос обычными словами: явные и безопасные случаи применяются,

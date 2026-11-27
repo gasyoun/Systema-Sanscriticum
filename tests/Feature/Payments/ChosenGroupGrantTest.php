@@ -62,7 +62,7 @@ class ChosenGroupGrantTest extends TestCase
         config(['features.grant_chosen_group' => true]);
         $user = User::factory()->create();
 
-        $this->actingAs($user)->post(route('payment.create'), [
+        $this->actingAs($user)->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
             'tariff_id' => $this->tariff->id,
             'group_id' => $this->saturday->id,
             'gsig' => $this->sig($this->saturday),
@@ -76,7 +76,7 @@ class ChosenGroupGrantTest extends TestCase
         config(['features.grant_chosen_group' => true]);
         $user = User::factory()->create();
 
-        $this->actingAs($user)->post(route('payment.create'), [
+        $this->actingAs($user)->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
             'tariff_id' => $this->tariff->id,
             'group_id' => $this->tuesday->id,
             'gsig' => $this->sig($this->saturday),
@@ -91,7 +91,7 @@ class ChosenGroupGrantTest extends TestCase
         config(['features.grant_chosen_group' => false]);
         $user = User::factory()->create();
 
-        $this->actingAs($user)->post(route('payment.create'), [
+        $this->actingAs($user)->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
             'tariff_id' => $this->tariff->id,
             'group_id' => $this->saturday->id,
             'gsig' => $this->sig($this->saturday),

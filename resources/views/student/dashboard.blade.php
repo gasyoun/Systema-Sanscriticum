@@ -24,6 +24,12 @@
                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
                 <i class="fas fa-book-open"></i> Как пользоваться
             </a>
+            @if (config('features.availability_windows'))
+            <a href="{{ route('student.availability') }}"
+               class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
+                <i class="fas fa-clock"></i> Удобное время
+            </a>
+            @endif
             @if (config('features.student_testimonials'))
             <a href="{{ route('student.testimonial.create') }}"
                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
@@ -568,7 +574,7 @@
             @empty
                 <div class="col-span-full text-center py-16 bg-white rounded-[2rem] border border-dashed border-gray-200 shadow-sm">
                     <div class="w-20 h-20 mx-auto bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                        <i class="fas fa-books text-3xl text-gray-300"></i>
+                        <i class="fas fa-book-bookmark text-3xl text-gray-300"></i>
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-2">Нет доступных курсов</h3>
                     <p class="text-gray-500 max-w-md mx-auto">Вам пока не назначены курсы. Перейдите в каталог, чтобы выбрать программу обучения.</p>

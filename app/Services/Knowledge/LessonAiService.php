@@ -50,13 +50,14 @@ final class LessonAiService
     public function __construct(private readonly CuratorAi $ai) {}
 
     /**
-     * Флаг ВКЛ — всем студентам. Флаг ВЫКЛ — только суперадмину: обкатка на
-     * проде на живых стенограммах до включения для всех (MG 21-11-2026).
+     * Флаг ВКЛ — всем студентам. Флаг ВЫКЛ — суперадмину и студентам-
+     * тестировщикам (users.lesson_ai_tester, назначает суперадмин в UserResource):
+     * обкатка на проде на живых стенограммах до включения для всех (MG 21-11-2026).
      */
     public function enabledFor(?User $user): bool
     {
         return (bool) config('features.lesson_ai', false)
-            || ($user instanceof User && $user->isSuperAdmin());
+            || ($user instanceof User && ($user->isSuperAdmin() || (bool) $user->lesson_ai_tester));
     }
 
     // ---------------------------------------------------------------------

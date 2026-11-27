@@ -33,6 +33,17 @@ expect_empty "cgroup healthy is silent" \
 expect "cgroup warning near max" "warning|cgroup-budget|n8n-n8n-1" \
   "$(guard_cgroup_budget n8n-n8n-1 3000000000 3221225472 90)"
 
+# cert-days parser (H-YRH): a FAILED TLS probe must read as EMPTY (→ warning
+# «не прочитался»), never as «0 days» (the GNU `date -d ""` midnight trap).
+expect_empty "cert-days empty end is empty (not 0)" "$(guard_cert_days '' 1795478400)"
+expect_empty "cert-days garbage end is empty"      "$(guard_cert_days 'not-a-date' 1795478400)"
+if date -u -d '@0' +%s >/dev/null 2>&1; then   # GNU date only (BSD build boxes skip)
+  expect "cert-days now is 0" "0" "$(guard_cert_days "$(date -u '+%Y-%m-%d %H:%M:%S')" "$(date -u +%s)")"
+  expect "cert-days expired is negative" "-" "$(guard_cert_days "$(date -u -d '@1000000000' '+%Y-%m-%d %H:%M:%S')" 1795478400)"
+else
+  echo "skip cert-days valid cases (non-GNU date)"
+fi
+
 # backup-fresh: a stale destination artifact must be critical; healthy is silent;
 # unreadable age must refuse instead of reporting green.
 expect "backup destination stale refuses" "critical|backup-fresh|" \

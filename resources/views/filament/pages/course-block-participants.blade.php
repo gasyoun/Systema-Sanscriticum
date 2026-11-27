@@ -123,7 +123,122 @@
         @else
             <div class="text-gray-400 p-4">У курса не заданы блоки.</div>
         @endif
+
+        {{-- Мини-рассылка: напоминание об оплате выбранного блока --}}
+        @if (count($reminderBlockOptions))
+            <div class="rounded-xl bg-gray-50 p-4 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
+                <div class="flex flex-wrap items-baseline justify-between gap-2">
+                    <div>
+                        <div class="text-sm font-semibold text-gray-900 dark:text-white">Напоминание об оплате</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                            Должники выбранного блока. Повторно одному и тому же человеку — не раньше чем через 24 часа.
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                        Должников: <b class="text-gray-900 dark:text-white">{{ count($reminderDebtors) }}</b>
+                    </div>
+                </div>
+
+                <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Блок</label>
+                        <select
+                            wire:model.live="reminderBlock"
+                            class="fi-select-input block w-full rounded-lg border-gray-300 dark:border-white/10 dark:bg-white/5 text-sm"
+                        >
+                            @foreach ($reminderBlockOptions as $number => $label)
+                                <option value="{{ $number }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Текст</label>
+                        <textarea
+                            wire:model.blur="reminderText"
+                            rows="5"
+                            class="fi-input block w-full rounded-lg border-gray-300 dark:border-white/10 dark:bg-white/5 text-sm"
+                        ></textarea>
+                        <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Подстановки: {name}, {course}, {block}, {pay_link}, {paid_until}, {deadline}.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex flex-wrap items-center gap-5 text-sm">
+                    <label class="inline-flex items-center gap-2">
+                        <input type="checkbox" wire:model.live="reminderAccount" class="rounded border-gray-300 dark:border-white/10">
+                        <span class="text-gray-700 dark:text-gray-200">От имени аккаунта</span>
+                        <span class="text-xs text-gray-400">({{ $reminderReach['account'] }})</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2">
+                        <input type="checkbox" wire:model.live="reminderBot" class="rounded border-gray-300 dark:border-white/10">
+                        <span class="text-gray-700 dark:text-gray-200">От бота школы</span>
+                        <span class="text-xs text-gray-400">({{ $reminderReach['bot'] }})</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2">
+                        <input type="checkbox" wire:model.live="reminderEmail" class="rounded border-gray-300 dark:border-white/10">
+                        <span class="text-gray-700 dark:text-gray-200">На почту</span>
+                        <span class="text-xs text-gray-400">({{ $reminderReach['email'] }})</span>
+                    </label>
+                </div>
+
+                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    «От имени аккаунта» достаёт только тех, кто уже писал в аккаунт школы: Telegram разрешает
+                    бизнес-боту писать лишь в существующие диалоги. Числа в скобках — сколько должников этого блока
+                    реально достижимо выбранным каналом.
+                </p>
+
+                @if (count($reminderDebtors))
+                    <div class="mt-4 max-h-96 overflow-y-auto rounded-lg ring-1 ring-gray-950/5 dark:ring-white/10">
+                        <table class="w-full text-sm">
+                            <thead class="bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 sticky top-0">
+                                <tr>
+                                    <th class="px-3 py-2 w-10"></th>
+                                    <th class="px-3 py-2 text-left font-semibold">Студент</th>
+                                    <th class="px-3 py-2 text-center font-semibold">Аккаунт</th>
+                                    <th class="px-3 py-2 text-center font-semibold">Бот</th>
+                                    <th class="px-3 py-2 text-center font-semibold">Почта</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-white/10">
+                                @foreach ($reminderDebtors as $d)
+                                    <tr>
+                                        <td class="px-3 py-2">
+                                            <input
+                                                type="checkbox"
+                                                wire:model.live="reminderIds"
+                                                value="{{ $d['id'] }}"
+                                                class="rounded border-gray-300 dark:border-white/10"
+                                            >
+                                        </td>
+                                        <td class="px-3 py-2 text-gray-900 dark:text-white">{{ $d['name'] }}</td>
+                                        <td class="px-3 py-2 text-center">{{ $d['account'] ? '✓' : '—' }}</td>
+                                        <td class="px-3 py-2 text-center">{{ $d['bot'] ? '✓' : '—' }}</td>
+                                        <td class="px-3 py-2 text-center">{{ $d['email'] ? '✓' : '—' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4 flex flex-wrap items-center gap-3">
+                        <x-filament::button wire:click="sendReminders" wire:loading.attr="disabled">
+                            Отправить напоминание
+                        </x-filament::button>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">
+                            Отмечено: {{ count($reminderIds) }}
+                        </span>
+                    </div>
+                @else
+                    <div class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                        По этому блоку должников нет.
+                    </div>
+                @endif
+            </div>
+        @endif
     @else
         <div class="text-gray-400 p-4">Выберите курс.</div>
     @endif
 </x-filament-panels::page>
+

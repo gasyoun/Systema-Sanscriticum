@@ -20,6 +20,7 @@ declare(strict_types=1);
 $channels = [
     'ors' => ['source' => 'telegram_samskrte', 'medium' => 'owned_channel'],
     'mg' => ['source' => 'telegram_marcisgasuns', 'medium' => 'owned_channel'],
+    'inst' => ['source' => 'telegram_institutsanskrita', 'medium' => 'owned_channel'],
     'is' => ['source' => 'telegram_indiaswami', 'medium' => 'paid_post'],
     'it' => ['source' => 'telegram_indiatoday', 'medium' => 'partner_post'],
     'vk' => ['source' => 'vk_senler', 'medium' => 'broadcast'],
@@ -45,6 +46,7 @@ require __DIR__.'/../resources/tracked_links/kal26.php';
 require __DIR__.'/../resources/tracked_links/bf11.php';
 require __DIR__.'/../resources/tracked_links/ling_stories.php';
 require __DIR__.'/../resources/tracked_links/rl.php';
+require __DIR__.'/../resources/tracked_links/sl25.php';
 
 return [
     'session_key' => 'tracked_link_attribution',

@@ -11,6 +11,7 @@ use App\Http\Controllers\InstituteController;
 use App\Http\Controllers\InstituteDonateController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PublicCabinetGuideController;
+use App\Http\Controllers\PublicTeacherHelpController;
 use App\Http\Controllers\ReadingPackController;
 use App\Http\Controllers\RecordingGateController;
 use App\Http\Controllers\SearchController;
@@ -93,6 +94,12 @@ Route::view('/pochemu-my', 'pages.trust-moat')->name('trust-moat');
 // Тот же источник, что кабинетный /dvaram/help. Строго до catch-all /{slug}.
 Route::get('/help/kabinet', [PublicCabinetGuideController::class, 'show'])
     ->name('help.cabinet-guide');
+
+// Публичный гид преподавателя (рулинг MG 21-11-2026: инструкции учебного
+// процесса — на сайте, не на GitHub). Источник — docs/TEACHER_HELP_RU.md,
+// тот же deploys-цикл, что и код бота. Строго до catch-all /{slug}.
+Route::get('/help/uchitelyu', [PublicTeacherHelpController::class, 'show'])
+    ->name('help.teacher');
 
 // Публичная «сайт жив?» для учеников (VPN vs наш сервер + @rusamskrtam).
 // До catch-all /{slug}. Зеркало на GitHub Pages: /uptime/ в корне репо.

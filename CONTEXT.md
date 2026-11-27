@@ -40,6 +40,28 @@ _Avoid_: course when referring only to a new start of the same program
 A recorded intention to participate in a specific intake. It does not establish payment, course access or a guaranteed place.
 _Avoid_: paid enrollment, confirmed reservation
 
-_Created: 09-11-2026 · Last updated: 10-11-2026_
+**availability window**:
+One interval in which a student may be offered a NEW course or elective. Either a constrained weekly RRULE (`FREQ=WEEKLY;BYDAY=…`) or a cycle (`repeat_mode=cycle`: N days on / M days off from an anchor date), plus start/end time and an IANA TZID. Absence of a window on a day means "not available" only when the student has at least one window at all.
+_Avoid_: schedule, slot preference, availability (too vague)
+
+**curator override**:
+A curator-owned availability window that outranks student-owned ones: `deny` refuses, `allow` permits. Students cannot create or edit curator rows.
+_Avoid_: admin note, preference
+
+**offer gate**:
+The decision point that hides a new-course offer whose known weekly slot falls outside the student's availability windows. It never touches already-purchased or ongoing study.
+
+**membership tier**:
+An entitlement level with an internal key (`free`, `basic`, `club`, `top`). Internal keys are stable across renames; payments and entitlements refer to them, never to display names.
+_Avoid_: tariff, plan name
+
+**membership label**:
+The public display name of a membership tier. Since 01-12-2026: free = Базовый, basic = Оптимальный, club = Максимальный, top = Премиум (не продаётся). A label change never rewrites a tier key or a payment.
+_Avoid_: tier key
+
+**capability gate**:
+The check that makes a membership label meaningful by enforcing a capability (library, standard exercises, recordings) against the active tier. Copy alone is not a gate.
+
+_Created: 09-11-2026 · Last updated: 27-11-2026_
 
 _Dr. Mārcis Gasūns_

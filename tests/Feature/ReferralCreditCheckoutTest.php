@@ -63,7 +63,7 @@ class ReferralCreditCheckoutTest extends TestCase
         $this->actingAs($user);
         User::query()->whereKey($user->id)->update(['referral_credit' => 0]);
 
-        $this->post(route('payment.create'), ['tariff_id' => $tariff->id])
+        $this->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertRedirect('https://pay.tochka.com/redirect/abc');
 
         $payment = Payment::where('user_id', $user->id)->latest('id')->firstOrFail();
@@ -80,7 +80,7 @@ class ReferralCreditCheckoutTest extends TestCase
         $user = User::factory()->create(['referral_credit' => 2000]);
         $tariff = $this->tariff(5000);
 
-        $this->actingAs($user)->post(route('payment.create'), ['tariff_id' => $tariff->id])
+        $this->actingAs($user)->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertRedirect();
 
         $payment = Payment::where('user_id', $user->id)->latest('id')->first();
@@ -97,7 +97,7 @@ class ReferralCreditCheckoutTest extends TestCase
         $user = User::factory()->create(['referral_credit' => 6000]);
         $tariff = $this->tariff(5000);
 
-        $this->actingAs($user)->post(route('payment.create'), ['tariff_id' => $tariff->id])
+        $this->actingAs($user)->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertRedirect(route('student.dashboard'));
 
         $payment = Payment::where('user_id', $user->id)->latest('id')->first();
