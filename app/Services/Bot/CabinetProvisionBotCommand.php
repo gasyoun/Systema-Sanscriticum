@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Bot;
 
 use App\Models\User;
+use App\Services\Access\CabinetEmailVerification;
 use App\Services\Access\TelegramLoginService;
 use App\Services\AttributionService;
 use App\Services\Membership\FreeTierLessonGranter;
@@ -40,6 +41,7 @@ class CabinetProvisionBotCommand
         private TelegramLoginService $logins,
         private FreeTierLessonGranter $granter,
         private AttributionService $attribution,
+        private CabinetEmailVerification $verification,
     ) {}
 
     /** /кабинет (с аргументом-email или без). */
@@ -102,9 +104,12 @@ class CabinetProvisionBotCommand
 
         $user = $this->createUser($email, $chatId, $fromUsername);
 
+        $this->verification->send($user);
+
         return "Намасте, {$user->greetingName()}! 🙏 Ваш личный кабинет создан — вход без пароля:\n\n"
             .$this->loginLinkMessage($this->logins->issueLoginLink($user))
-            ."\n\n<i>Бесплатные плейлисты уже открыты внутри.</i>";
+            ."\n\n<i>Бесплатные плейлисты уже открыты внутри.</i>"
+            ."\n<i>На {$user->email} отправили письмо: одна ссылка подтвердит почту и сразу пустит в кабинет.</i>";
     }
 
     private function createUser(string $email, int $chatId, ?string $fromUsername): User
