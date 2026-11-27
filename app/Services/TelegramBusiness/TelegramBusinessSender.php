@@ -90,6 +90,15 @@ final class TelegramBusinessSender
         if ($response->failed()) {
             TelegramSendGuard::release((string) $chatId, $text);
 
+            // 26-11-2026: отказ Telegram раньше уходил молча, и куратор видел
+            // «отправлено: 0» без причины. BUSINESS_PEER_USAGE_MISSING значит
+            // «бот не может писать этому человеку первым» — это не сбой сети.
+            Log::warning('TelegramBusinessSender: send refused', [
+                'chat_id' => $chatId,
+                'http' => $response->status(),
+                'telegram_error' => $this->telegramErrorName($response),
+            ]);
+
             return [
                 'status' => 'error',
                 'message_id' => null,
