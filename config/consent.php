@@ -19,5 +19,8 @@ return [
         'promo' => ['doc' => 'soglasie-promo', 'version' => '2026-04-01'],
         'media' => ['doc' => 'soglasie-media', 'version' => '2026-07-07'],
         'cookies' => ['doc' => 'privacy', 'version' => '2026-09-20'],
+        // Отдельного PDF нет: текст согласия на тест ИИ — страница /lesson-ai/consent.
+        // Версия = дата редакции этого текста (меняется вместе с ним, тем же коммитом).
+        'ai_test' => ['doc' => 'lesson-ai-test', 'version' => '2026-11-24'],
     ],
 ];

@@ -933,6 +933,14 @@ return [
     'telegram_cabinet_provision' => (bool) env('TELEGRAM_CABINET_PROVISION', false),
 
     /*
+     * Мягкое подтверждение почты кабинета из /кабинет (27-11-2026): на email
+     * уходит одноразовая ссылка, которая ставит email_verified_at и логинит.
+     * Вход по ссылке из бота работает и без подтверждения — онбординг не рвём.
+     * Default OFF; включать после выката.
+     */
+    'cabinet_email_verification' => (bool) env('CABINET_EMAIL_VERIFICATION_ENABLED', false),
+
+    /*
      | H2304 spec 2: «у курса нет групп доступа» = throw в Payment::grantAccess()
      | (fail closed на всех платных маршрутах: zero-price checkout, Filament,
      | PayPal, PayPal-claim, conditional, импорт), а не log-and-return «оплачено
@@ -1232,6 +1240,13 @@ return [
     'waitlist_voting' => (bool) env('WAITLIST_VOTING', false),
 
     /*
+     | Окна доступности ученика (RRULE + TZID): вкладка /dvaram/availability,
+     | Filament-редактор куратора и OfferGate для новых офферов кабинета.
+     | OFF по умолчанию — меняет доступ/офферы, включается только деплоем.
+     */
+    'availability_windows' => (bool) env('AVAILABILITY_WINDOWS_ENABLED', false),
+
+    /*
      | Карточки открытых занятий в @samskrte_bot: фото + «✅ Я иду» + нижнее
      | меню, анонс / утро / ссылка Zoom (open-lessons:cards). В бот идут только
      | занятия с галочкой schedules.bot_card_enabled. OFF по умолчанию;
@@ -1383,6 +1398,20 @@ return [
      | PAYMENT_RECOVERY_CTA=true + config:cache после ревью.
      */
     'payment_recovery_cta' => (bool) env('PAYMENT_RECOVERY_CTA', false),
+
+    /*
+     | Hybrid cabinet «Оплата и доступ» (student.access) debt self-service:
+     | «Внести платёж» / «Погасить всё» рендерятся POST-формами (раньше голая
+     | ссылка на POST-роут давала 405 — тот же класс, что чинили на hybrid
+     | «Сегодня»), плюс блок «Перенести дату» (один раз, ≤14 дней), который до
+     | этого жил только в классической вкладке «Мои долги». Роуты и сервисы не
+     | меняются — раскрывается уже существующий DebtPaymentResolver.
+     |
+     | ВЫКЛ по умолчанию: пока OFF, student.access рендерится ровно как раньше
+     | (голые ссылки, без переноса даты). Включение — HYBRID_ACCESS_DEBT_ACTIONS=true
+     | + config:cache после ревью.
+     */
+    'hybrid_access_debt_actions' => (bool) env('HYBRID_ACCESS_DEBT_ACTIONS', false),
 
     /*
      | Поблочная оплата долга в гибридном кабинете (30-09-2026). Должник по
@@ -2109,8 +2138,12 @@ return [
     'pd_consent_enforce' => (bool) env('PD_CONSENT_ENFORCE', false),
 
     /*
-     | 152-ФЗ, money-контур: то же для гостевой оплаты (/payment/create).
-     | Дефолт OFF — отказ здесь стоит денег; включать отдельно и после проверки.
+     | 152-ФЗ, money-контур: обязательность согласия на ПДн на ДЕНЕЖНЫХ формах
+     | (заявка об оплате банком/PayPal/от юрлица, оплата от преподавателя,
+     | пополнение баланса, пробное) и браузерный required у их галочки.
+     | Саму страницу оплаты (/payment/create) этот ключ больше НЕ гейтит: с
+     | 24-11-2026 (рулинг MG) согласие там обязательно ВСЕГДА и для гостя, и для
+     | залогиненного студента — см. ConsentRules::pdForCheckout().
      */
     'checkout_pd_consent_enforce' => (bool) env('CHECKOUT_PD_CONSENT_ENFORCE', false),
 

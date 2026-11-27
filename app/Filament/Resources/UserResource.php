@@ -6,6 +6,7 @@ use App\Filament\Actions\SplitPaymentBlockBulkAction;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Support\NoAutofill;
 use App\Jobs\SendMessengerAlerts;
+use App\Mail\LessonAiInviteMail;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\HomeworkSubmission;
@@ -43,6 +44,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -1544,6 +1546,18 @@ class UserResource extends Resource
                         ->deselectRecordsAfterCompletion()
                         ->action(fn (Collection $records) => self::setLessonAiTester($records, false)),
 
+                    Tables\Actions\BulkAction::make('lessonAiInvite')
+                        ->label('Пригласить в тест ИИ (письмо)')
+                        ->icon('heroicon-o-envelope')
+                        ->color('gray')
+                        ->visible(fn () => RoleGate::isSuperAdmin())
+                        ->requiresConfirmation()
+                        ->modalHeading('Пригласить выделенных в тест «Спроси Сократа»')
+                        ->modalDescription('Каждому уйдет письмо с персональной подписанной ссылкой на страницу согласия: две недели теста, после релиза 2000 ₽ в месяц. Галочка «Тестировщик ИИ» этой рассылкой НЕ ставится — только после согласия ученика на той странице.')
+                        ->modalSubmitActionLabel('Отправить приглашения')
+                        ->deselectRecordsAfterCompletion()
+                        ->action(fn (Collection $records) => self::sendLessonAiInvites($records)),
+
                     // --- ПЕРЕНОС В ГРУППУ КУРСА (сплит курса на 2 группы) ---
                     // Отвязывает выбранных от остальных групп ЭТОГО курса и привязывает
                     // к целевой. Оплаты не трогаются (дублей Payment не возникает).
@@ -1924,6 +1938,48 @@ class UserResource extends Resource
         Notification::make()
             ->title($on ? 'Тестировщики ИИ назначены' : 'Тестировщики ИИ сняты')
             ->body($on ? "Вкладка «ИИ» открыта: {$count}." : "Вкладка «ИИ» закрыта: {$count}.")
+            ->success()
+            ->send();
+    }
+
+    /**
+     * Рассылка приглашения в тест «Спроси Сократа» (ИИ-помощник занятия).
+     *
+     * Флаг users.lesson_ai_tester здесь НЕ ставится: согласие дается на
+     * подписанной странице (LessonAiConsentController@store), иначе «вам открыли
+     * доступ» и «вы согласились» стали бы одним событием, а антивирус, открывший
+     * ссылку из письма, давал бы согласие за человека.
+     */
+    public static function sendLessonAiInvites(Collection $records): void
+    {
+        abort_unless(RoleGate::isSuperAdmin(), 403);
+
+        $ttl = now()->addDays(max(1, (int) config('lesson_ai.invite.consent_link_ttl_days', 30)));
+        $sent = 0;
+        $withoutEmail = 0;
+
+        foreach ($records as $user) {
+            $email = trim((string) $user->email);
+
+            if ($email === '') {
+                $withoutEmail++;
+
+                continue;
+            }
+
+            Mail::to($email)->queue(new LessonAiInviteMail(
+                $user,
+                URL::temporarySignedRoute('lesson-ai.consent', $ttl, ['user' => $user->id]),
+                URL::temporarySignedRoute('lesson-ai.consent', $ttl, ['user' => $user->id, 'intent' => 'no']),
+            ));
+            $sent++;
+        }
+
+        Notification::make()
+            ->title('Приглашения в тест отправлены')
+            ->body($withoutEmail > 0
+                ? "Писем в очереди: {$sent}. Без email пропущено: {$withoutEmail}."
+                : "Писем в очереди: {$sent}. Вкладка откроется только после согласия ученика.")
             ->success()
             ->send();
     }

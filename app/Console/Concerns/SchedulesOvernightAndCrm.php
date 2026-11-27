@@ -83,6 +83,15 @@ trait SchedulesOvernightAndCrm
             ->onOneServer()
             ->name('unreliable-recount');
 
+        // Журнал ИИ-помощника занятия: личные вопросы учеников не лежат в базе
+        // дольше срока хранения (config lesson_ai.events.retention_days, 30 дн.).
+        // Без этой строки журнал рос бы вечно — 152-ФЗ, минимизация хранения.
+        $schedule->command('lesson-ai:purge-events')
+            ->dailyAt('03:50')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('lesson-ai-purge-events');
+
         // Контроль дебиторки/рассрочки (H257): после promises:expire, чтобы
         // свежая просрочка уже учтена в пороге. Алерт финдиру при превышении —
         // замена ручного мониторинга владельца. Гейт «есть получатели» — внутри.

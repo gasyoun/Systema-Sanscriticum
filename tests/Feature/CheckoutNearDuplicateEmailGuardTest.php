@@ -58,6 +58,9 @@ class CheckoutNearDuplicateEmailGuardTest extends TestCase
             'tariff_id' => $tariff->id,
             'surname' => 'Долгополова', 'name' => 'Анастасия', 'city' => 'Barcelona',
             'email' => $email,
+            // Согласия на оплате обязательны всегда (оферта + ПДн).
+            'oferta_accepted' => '1',
+            'pd_consent' => '1',
         ];
     }
 

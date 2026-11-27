@@ -87,7 +87,7 @@ class CheckoutPromoRenewalTest extends TestCase
 
         // No withSession(): the promo lives only in the hidden field now.
         $this->actingAs($user)
-            ->post(route('payment.create'), [
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
                 'tariff_id' => $tariff->id,
                 'promo_code' => 'MINUS20',
             ])
@@ -120,7 +120,7 @@ class CheckoutPromoRenewalTest extends TestCase
         // First submit — carried code has lapsed. No payment; a confirmation surface
         // stating the new total.
         $this->actingAs($user)
-            ->post(route('payment.create'), [
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
                 'tariff_id' => $tariff->id,
                 'promo_code' => 'EXPIRED',
             ])
@@ -132,7 +132,7 @@ class CheckoutPromoRenewalTest extends TestCase
 
         // Explicit confirmation → payment at the shown full price.
         $this->actingAs($user)
-            ->post(route('payment.create'), [
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
                 'tariff_id' => $tariff->id,
                 'promo_lapse_confirmed' => '1',
                 'confirmed_total' => 5000,
@@ -161,7 +161,7 @@ class CheckoutPromoRenewalTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post(route('payment.create'), [
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
                 'tariff_id' => $tariff->id,
                 'promo_code' => 'MINUS20',
             ])
@@ -193,7 +193,7 @@ class CheckoutPromoRenewalTest extends TestCase
 
         // Hidden field carried, session empty → NOT applied when the flag is off.
         $this->actingAs($user)
-            ->post(route('payment.create'), [
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1',
                 'tariff_id' => $tariff->id,
                 'promo_code' => 'MINUS20',
             ])
@@ -204,7 +204,7 @@ class CheckoutPromoRenewalTest extends TestCase
         Payment::query()->delete();
         $this->actingAs($user)
             ->withSession(['promo_code' => 'MINUS20'])
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertRedirect('https://pay.tochka.com/redirect/abc');
         $this->assertEquals(4000, (float) Payment::where('user_id', $user->id)->firstOrFail()->amount);
     }

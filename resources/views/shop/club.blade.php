@@ -84,7 +84,7 @@
             {{-- Свободный --}}
             <div class="bg-[#101521] border border-[#1F2636] rounded-2xl p-7 flex flex-col">
                 <p class="text-[11px] font-black uppercase tracking-widest text-[#38BDF8] mb-2">Free</p>
-                <h2 class="text-xl font-extrabold text-white mb-1">Свободный</h2>
+                <h2 class="text-xl font-extrabold text-white mb-1">{{ $ladderV2 ? $labels['free'] : 'Свободный' }}</h2>
                 <div class="flex items-baseline gap-1.5 mb-1">
                     <span class="text-3xl font-extrabold text-white tabular-nums">0</span>
                     <span class="text-slate-400 font-bold text-sm">₽/мес</span>
@@ -129,7 +129,7 @@
             {{-- Базовый --}}
             <div class="bg-[#101521] border border-[#1F2636] rounded-2xl p-7 flex flex-col">
                 <p class="text-[11px] font-black uppercase tracking-widest text-[#38BDF8] mb-2">Basic</p>
-                <h2 class="text-xl font-extrabold text-white mb-1">Базовый</h2>
+                <h2 class="text-xl font-extrabold text-white mb-1">{{ $ladderV2 ? $labels['basic'] : 'Базовый' }}</h2>
                 <div class="flex items-baseline gap-1.5 mb-1">
                     <span class="text-3xl font-extrabold text-white tabular-nums">{{ number_format((float) $basicPrice, 0, '.', ' ') }}</span>
                     <span class="text-slate-400 font-bold text-sm">₽/мес</span>
@@ -171,7 +171,7 @@
             <div class="bg-[#101521] border border-[#38BDF8]/50 rounded-2xl p-7 flex flex-col relative shadow-[0_0_40px_rgba(56,189,248,0.08)]">
                 <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#38BDF8] text-[#06283C] text-[10px] font-black uppercase tracking-widest rounded-full px-3 py-1 whitespace-nowrap">Продвинутый доступ</span>
                 <p class="text-[11px] font-black uppercase tracking-widest text-[#38BDF8] mb-2 mt-1">Club</p>
-                <h2 class="text-xl font-extrabold text-white mb-1">Клуб</h2>
+                <h2 class="text-xl font-extrabold text-white mb-1">{{ $ladderV2 ? $labels['club'] : 'Клуб' }}</h2>
                 <div class="flex items-baseline gap-1.5 mb-1">
                     <span class="text-3xl font-extrabold text-white tabular-nums">{{ number_format((float) $clubPrice, 0, '.', ' ') }}</span>
                     <span class="text-slate-400 font-bold text-sm">₽/мес</span>
@@ -209,7 +209,7 @@
             <div class="bg-[#101521] border border-dashed border-[#1F2636] rounded-2xl p-7 flex flex-col relative opacity-80">
                 <span class="absolute right-5 top-5 bg-amber-400/10 border border-amber-400/40 text-amber-300 text-[10px] font-black uppercase tracking-widest rounded-full px-3 py-1">Позже</span>
                 <p class="text-[11px] font-black uppercase tracking-widest text-[#38BDF8] mb-2">Top</p>
-                <h2 class="text-xl font-extrabold text-white mb-1">Максимальный</h2>
+                <h2 class="text-xl font-extrabold text-white mb-1">{{ $ladderV2 ? $labels['top'] : 'Максимальный' }}</h2>
                 <div class="flex items-baseline gap-1.5 mb-1">
                     <span class="text-3xl font-extrabold text-white tabular-nums">{{ number_format((float) $topPrice, 0, '.', ' ') }}</span>
                     <span class="text-slate-400 font-bold text-sm">₽/мес</span>

@@ -156,7 +156,7 @@ class PromoReservationTest extends TestCase
         $before = now();
         $this->checkout($promoBuyer, $tariff, $promo)->assertRedirect();
         $this->actingAs($regularBuyer)
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertRedirect();
 
         $promoPayment = Payment::where('user_id', $promoBuyer->id)->firstOrFail();
@@ -255,7 +255,7 @@ class PromoReservationTest extends TestCase
     {
         return $this->actingAs($user)
             ->withSession(['promo_code' => $promo->code])
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id]);
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id]);
     }
 
     private function pendingReservation(
