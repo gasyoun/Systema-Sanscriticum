@@ -51,6 +51,17 @@ _Avoid_: admin note, preference
 **offer gate**:
 The decision point that hides a new-course offer whose known weekly slot falls outside the student's availability windows. It never touches already-purchased or ongoing study.
 
-_Created: 09-11-2026 · Last updated: 26-11-2026_
+**membership tier**:
+An entitlement level with an internal key (`free`, `basic`, `club`, `top`). Internal keys are stable across renames; payments and entitlements refer to them, never to display names.
+_Avoid_: tariff, plan name
+
+**membership label**:
+The public display name of a membership tier. Since 01-12-2026: free = Базовый, basic = Оптимальный, club = Максимальный, top = Премиум (не продаётся). A label change never rewrites a tier key or a payment.
+_Avoid_: tier key
+
+**capability gate**:
+The check that makes a membership label meaningful by enforcing a capability (library, standard exercises, recordings) against the active tier. Copy alone is not a gate.
+
+_Created: 09-11-2026 · Last updated: 27-11-2026_
 
 _Dr. Mārcis Gasūns_

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Concerns;
 
 use App\Models\Announcement;
 use App\Models\Lesson;
+use App\Services\Membership\ClubEntitlement;
+use App\Services\Membership\LadderV2;
 
 /**
  * Domain-scoped concern for StudentController — extracted by H4978 split
@@ -36,6 +38,11 @@ trait StudentMiscConcerns
      */
     public function skillDrills()
     {
+        // С 01-12 стандартные упражнения — часть «Оптимального».
+        if (app(LadderV2::class)->active()) {
+            abort_unless(app(ClubEntitlement::class)->allows(auth()->user(), 'standard_exercises'), 403);
+        }
+
         $drills = [
             ['family' => 'sort', 'label' => 'Гласные: долгие и краткие', 'url' => '/lila/sort/vowel-length/'],
             ['family' => 'match', 'label' => 'IAST ↔ кириллица', 'url' => '/lila/match/iast-cyrillic/'],
