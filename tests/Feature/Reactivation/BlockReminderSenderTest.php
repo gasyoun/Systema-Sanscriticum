@@ -185,7 +185,6 @@ class BlockReminderSenderTest extends TestCase
         $this->assertSame(0, DebtReminder::query()->count());
     }
 
-
     /** @test */
     public function generic_account_refusal_also_releases_the_journal_claim(): void
     {
