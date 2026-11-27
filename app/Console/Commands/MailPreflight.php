@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Support\Mail\SenderNameSetting;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -13,6 +14,12 @@ use Illuminate\Support\Str;
  * mailpit host — a mail-catcher with no outbound relay, so every mail was
  * silently swallowed. Deterministic and network-free by default; `--send`
  * is the only check that touches the network. See docs/mail-esp.md.
+ *
+ * 24-11-2026: добавлен отчёт об отправителе и предупреждение о дрейфе кеша
+ * конфига. Не FATAL намеренно: на проде дрейф лечится следующим deploy
+ * (`optimize` пересобирает кеш), а падающий гейт останавливал бы выкатку из-за
+ * состояния, которое сама выкатка и исправляет. Тот же уровень, что и
+ * предупреждение о `QUEUE_CONNECTION`.
  */
 class MailPreflight extends Command
 {
@@ -22,7 +29,7 @@ class MailPreflight extends Command
 
     private const DEV_HOSTS = ['mailpit', 'localhost', '127.0.0.1'];
 
-    public function handle(): int
+    public function handle(SenderNameSetting $setting): int
     {
         $failures = [];
 
@@ -37,6 +44,8 @@ class MailPreflight extends Command
                 $failures[] = "MAIL_FROM_ADDRESS is '{$from}', a placeholder sender — use a verified address on an SPF+DKIM+DMARC domain (see docs/mail-esp.md).";
             }
         }
+
+        $this->reportSender($setting);
 
         $queueConnection = (string) config('queue.default');
         if ($queueConnection !== 'sync') {
@@ -63,5 +72,29 @@ class MailPreflight extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Кто стоит в поле «от кого» и не разошёлся ли .env с собранным конфигом.
+     *
+     * Имя отправителя видно студенту в списке писем, и оно единственное во всей
+     * рассылке: ни один Mailable в app/Mail не задаёт `from:` в envelope, все
+     * берут `config('mail.from.name')`. Поэтому печатаем его в каждой проверке —
+     * «mail:preflight OK» без имени отправителя уже один раз скрыл расхождение.
+     */
+    private function reportSender(SenderNameSetting $setting): void
+    {
+        $this->line('from: '.(string) config('mail.from.name').' <'.(string) config('mail.from.address').'>');
+
+        if (! $setting->isStale()) {
+            return;
+        }
+
+        $this->warn(sprintf(
+            'MAIL_FROM_NAME в .env = «%s», а собранный конфиг использует «%s» — правка .env не действует, пока не пересобран кеш конфига.',
+            (string) $setting->raw(),
+            (string) $setting->effective(),
+        ));
+        $this->line(sprintf('  Исправить: php artisan config:cache — или одной командой: php artisan mail:from-name "%s".', (string) $setting->raw()));
     }
 }
