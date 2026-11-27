@@ -124,4 +124,55 @@ class CourseBlockParticipantsReport
             'students' => $students,
         ];
     }
+
+    /**
+     * Должники блока: участники групп курса, у которых нет доступа ни к одной
+     * половине блока.
+     *
+     * Почему не из `students`: там только те, кто хоть что-то оплатил по этому
+     * курсу. Человек, не заплативший ни разу, в матрицу не попадает — а именно
+     * он и есть первый адресат напоминания. Поэтому состав берётся из групп
+     * курса, а покрытие — из тех же `coversBlockHalf`, что и вся сводка.
+     *
+     * @return list<array{id: int, name: string}>
+     */
+    public function debtorsFor(Course $course, int $blockNumber): array
+    {
+        $groupIds = $course->groups()->pluck('groups.id');
+        if ($groupIds->isEmpty()) {
+            return [];
+        }
+
+        $participantIds = DB::table('group_user')
+            ->whereIn('group_id', $groupIds)
+            ->distinct()
+            ->pluck('user_id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+
+        $covered = [];
+        foreach ($course->payments()
+            ->paid()
+            ->where(fn ($q) => $q->whereNull('is_conditional')->orWhere('is_conditional', false))
+            ->get(['id', 'user_id', 'tariff', 'start_block', 'end_block', 'is_conditional', 'status']) as $payment) {
+            if (! $payment->user_id) {
+                continue;
+            }
+            if ($payment->coversBlockHalf($blockNumber, 1) || $payment->coversBlockHalf($blockNumber, 2)) {
+                $covered[(int) $payment->user_id] = true;
+            }
+        }
+
+        $debtorIds = array_values(array_filter($participantIds, static fn (int $id): bool => ! isset($covered[$id])));
+        if ($debtorIds === []) {
+            return [];
+        }
+
+        $rows = [];
+        foreach (User::query()->whereIn('id', $debtorIds)->orderBy('name')->get(['id', 'name']) as $user) {
+            $rows[] = ['id' => (int) $user->id, 'name' => (string) $user->name];
+        }
+
+        return $rows;
+    }
 }

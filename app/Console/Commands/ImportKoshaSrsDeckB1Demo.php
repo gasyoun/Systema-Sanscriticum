@@ -6,9 +6,9 @@ namespace App\Console\Commands;
 
 use App\Models\Dictionary;
 use App\Models\DictionaryWord;
-use App\Models\SrsCard;
 use App\Models\SrsDeck;
 use App\Models\SrsNoteType;
+use App\Services\Srs\KnownWords;
 use Database\Seeders\SrsSanskritDeckSeeder;
 use Illuminate\Console\Command;
 use RuntimeException;
@@ -105,6 +105,7 @@ class ImportKoshaSrsDeckB1Demo extends Command
 
         $imported = 0;
         $existing = 0;
+        $skipped = 0;
 
         // Feed is already sorted by `rank` ascending — inserting in feed order
         // keeps card `id` order == `rank` order on a first run.
@@ -118,8 +119,12 @@ class ImportKoshaSrsDeckB1Demo extends Command
                 ],
             );
 
-            $srsCard = SrsCard::firstOrCreate(
-                ['deck_id' => $deck->id, 'source_word_id' => $word->id],
+            // H8599: the shared import guard skips a same-shape card that
+            // already lives in ANOTHER deck (lemma + note type) when the
+            // known-words flag is ON. Flag OFF: plain firstOrCreate.
+            $srsCard = app(KnownWords::class)->firstOrCreateCard(
+                $deck,
+                $word->id,
                 [
                     'direction' => 'front_back',
                     'fields' => [
@@ -131,12 +136,18 @@ class ImportKoshaSrsDeckB1Demo extends Command
                     ],
                 ],
             );
+            if ($srsCard === null) {
+                $skipped++;
+
+                continue;
+            }
 
             $srsCard->wasRecentlyCreated ? $imported++ : $existing++;
         }
 
         $this->newLine();
-        $this->info("Imported 1 deck, {$imported} new card(s), {$existing} already present.");
+        $skippedLine = $skipped > 0 ? ", {$skipped} same-shape skipped" : '';
+        $this->info("Imported 1 deck, {$imported} new card(s), {$existing} already present{$skippedLine}.");
 
         return self::SUCCESS;
     }

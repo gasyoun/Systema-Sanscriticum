@@ -1,6 +1,6 @@
 # Плейбук: уход сотрудника и аварийная передача дел
 
-_Created: 23-11-2026 · Last updated: 23-11-2026_ · [метадок](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAYBOOK_STAFF_OFFBOARDING_EMERGENCY_HANDOVER_RU.meta.md)
+_Created: 23-11-2026 · Last updated: 24-11-2026_ · [метадок](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAYBOOK_STAFF_OFFBOARDING_EMERGENCY_HANDOVER_RU.meta.md)
 
 Операторская процедура для двух сценариев: **плановый уход сотрудника** (куратор,
 преподаватель, админ-контур) и **аварийная недоступность** ответственного человека.
@@ -30,7 +30,7 @@ _Created: 23-11-2026 · Last updated: 23-11-2026_ · [метадок](https://gi
 | Первая линия | ИИ-куратор (бот кабинета `@samskrtamru_bot`); эскалация выше по лестнице. Отдельной роли «куратор» в системе **нет** — кураторские обязанности у людей держат роли manager/admin (ролей пять: super_admin, admin, teacher, manager, accountant); magic-ссылки выдают только ADMIN/MANAGER | [RUNBOOK_SUPPORT_ESCALATION](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_SUPPORT_ESCALATION.md) · [MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_MAGIC_LOGIN_LINK_RU.md) |
 | Преподаватель | свои группы/уроки; свою зарплату видит только свою (`seesOwnSalary`), чужие payouts — нет | [STANDING_POLICY_ADMIN_SEES_TEACHER_SURFACES_2026](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STANDING_POLICY_ADMIN_SEES_TEACHER_SURFACES_2026.md) · [TEACHER_PAYROLL_OPERATOR_PLAYBOOK](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TEACHER_PAYROLL_OPERATOR_PLAYBOOK.md) |
 | Системы | прод `.92` (193.232.229.92), n8n `.91`, вебхук-релей `103.112.71.201`, боты `@samskrtamru_bot` (кабинет), `@samskrte_ops_bot` (ops), `@zapisi_ORSbot` (записи), `@samskrte_bot` (лидовый); живой аккаунт `@rusamskrtam` — **одна** MadelineProto-сессия | [telegram-bots-inventory](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/telegram-bots-inventory.md) · [telegram-userbot-inventory](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/telegram-userbot-inventory.md) |
-| Секретные поверхности | переменные окружения (классификация feature-switch vs credential), вебхук-секреты Tochka/Telegram/VK/MAX/Zoom с fail-policy, деплой-ключ GitHub, пароль бэкап-архива | [ENVIRONMENT_VARIABLES](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ENVIRONMENT_VARIABLES.md) · [webhook-security](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/webhook-security.md) · [deploy.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md) · [ops/backup](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/ops/backup) |
+| Секретные поверхности | переменные окружения (классификация feature-switch vs credential), вебхук-секреты Telegram/VK/MAX/Zoom (БД или env — по классу секрета; Tochka — без секрета, RS256) с fail-policy, деплой-ключ GitHub, пароль бэкап-архива | [ENVIRONMENT_VARIABLES](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ENVIRONMENT_VARIABLES.md) · [webhook-security](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/webhook-security.md) · [deploy.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md) · [ops/backup](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/ops/backup) |
 
 ## Процесс A — плановый уход
 
@@ -97,8 +97,9 @@ _Created: 23-11-2026 · Last updated: 23-11-2026_ · [метадок](https://gi
    учётной записи в приложении нет — «оставить на всякий случай» закрывается
    именно снятием роли; удаление учётной записи (adminOnly-действие,
    необратимо) — только по отдельной визе MG, не рутинно.
-2. **Сессии/токены.** Кнопки «завершить чужие сессии» в приложении нет:
-   веб-сессии завершает сам владелец (`logoutOtherDevices`), у оператора есть
+2. **Сессии/токены.** Кнопки «завершить чужие сессии» в приложении нет, и
+   механизм `logoutOtherDevices` не подключён ни одной поверхностью —
+   принудительно завершить чужую веб-сессию оператору нечем; у оператора есть
    только телеметрия сессий. Поэтому долгосрочный доступ уходящего закрывается
    снятием роли (шаг 1) и ротацией общих секретов (§A6); живая сессия без роли
    уже ничего не может. «Отзыв» на строке гранта — это механизм доступа
@@ -114,12 +115,24 @@ _Created: 23-11-2026 · Last updated: 23-11-2026_ · [метадок](https://gi
 
 1. **Индивидуальные 2FA / magic-link привычки** — закрываются самим отзывом
    (§A5); отдельно ничего вращать не надо.
-2. **Вебхук-секреты Tochka/Telegram/VK/MAX/Zoom** — по одному: новое значение
-   в окружении + перерегистрация у провайдера (`setWebhook` `secret_token` /
-   VK Callback API secret / Zoom Event Subscription secret); сверка подписи —
-   один секрет на эндпоинт через `hash_equals`, fail-policy и рецепт —
-   [webhook-security](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/webhook-security.md);
-   после каждого — платёжный/ботовый смоук.
+2. **Вебхук-секреты** — по одному, по РЕАЛЬНОМУ хранению секрета
+   (сверка — [webhook-security](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/webhook-security.md)):
+   - **БД, шифруемое поле MarketingSetting** — магнитные TG-боты
+     (`tg_webhook_secret`), записи (`zapisi_webhook_secret`), VK-магнит
+     (`vk_callback_secret`), MAX (`max_webhook_secret`), landing-боты —
+     ротация в форме настройки, **не** в окружении;
+   - **окружение (.env)** — легаси TG-вебхук (`TELEGRAM_BOT_WEBHOOK_SECRET`),
+     легаси VK-вебхук (`VK_CALLBACK_SECRET`), Zoom
+     (`ZOOM_WEBHOOK_SECRET`) — новое значение в окружении +
+     перерегистрация у провайдера (`setWebhook` `secret_token` /
+     VK Callback API secret / Zoom Event Subscription secret);
+   - сверка подписи — один секрет на эндпоинт через `hash_equals`,
+     fail-policy и рецепт — [webhook-security](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/webhook-security.md);
+   - **Tochka** — вебхук-секрета **нет**: подпись JWT проверяется публичным
+     ключом RS256 ([WebhookController](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/WebhookController.php)),
+     ротировать нечего; отдельный кейс — только при компрометации ключа.
+
+   После каждого шага — платёжный/ботовый смоук.
 3. **Деплой-ключ GitHub** — рутинной ротации **нет**: ключ read-only и не
    истекает ([deploy.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md));
    вращать только при компрометации, с восстановлением по deploy.md (там же
@@ -195,7 +208,7 @@ _Created: 23-11-2026 · Last updated: 23-11-2026_ · [метадок](https://gi
 | 4 | **Доступ «М.» проверен ДО отзыва «К.»**: роль manager (объём — только передаваемые обязанности), 2FA пройдена, test-magic-ссылка выдана, тестовое обращение закрыто | смоук-тикет со статусом и временем |
 | 5 | Виза MG: «доступ замены подтверждён» — только теперь отзыв | строка-виза |
 | 6 | Роль «К.» снята в Filament (удаления учётной записи не было — не рутинно и необратимо); живая сессия без роли бессильна; долгосрочный доступ закрывает ротация | changelog-строка тикета, без содержимого доступов |
-| 7 | «К.» знал вебхук-секрет Tochka → ротация №2 из §A6.2: новое значение + перерегистрация у провайдера; платёжный смоук зелёный | смоук-тикет, время ротации |
+| 7 | «К.» знал MAX-вебхук-секрет → ротация §A6.2: значение меняется в настройке `max_webhook_secret` (не в окружении!); платёжный смоук зелёный | смоук-тикет, время ротации |
 | 8 | Коммуникации: группам — шаблон §A4; ops — факт доступа/отзыва | копии сообщений без имен сумм |
 | 9 | T+7: все проверки §A7 зелёные | чек-лист со ссылками |
 
@@ -262,4 +275,4 @@ _Created: 23-11-2026 · Last updated: 23-11-2026_ · [метадок](https://gi
 - Инциденты и мониторинг: [SERVER_INCIDENT_MANUAL](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_INCIDENT_MANUAL.md) · [SERVER_SOFT_ALERT_PLAYBOOK](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md) · [UPTIME_BETTERSTACK_MONITORING_RU](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md)
 - Аудит фонда (этот плейбук закрыл пробел «передача дел»): [AUDIT_PLAYBOOK_RUNBOOK_GAPS_04-10-2026](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/AUDIT_PLAYBOOK_RUNBOOK_GAPS_04-10-2026.md)
 
-_Гасунс_
+_к.ф.н. М.Ю. Гасунс_
