@@ -99,6 +99,24 @@ final class SoftAlertWorkflowExpressions
             return ((float) $this->evalAtom($m[1], $context)) > ((float) $this->evalAtom($m[2], $context));
         }
 
+        // Paired-item node reference: $('X').item.json.path — resolved
+        // against outputs[X] at the CURRENT item index (1:1 when the
+        // intervening HTTP node emits one output per input, which the close
+        // node's mirror guarantees). Requires itemIndex in the context.
+        if (preg_match('/^\$\(\'([^\']+)\'\)\.item\.json\.(.+)$/', $expr, $m) === 1) {
+            $node = $m[1];
+            $index = $context['itemIndex'] ?? null;
+            if ($index === null) {
+                throw new WorkflowGlueException("\$('{$node}').item used without an item-index context");
+            }
+            $items = $context['outputs'][$node] ?? null;
+            if ($items === null || ! array_key_exists($index, $items)) {
+                throw new WorkflowGlueException("\$('{$node}') has no paired item at index {$index} in this replay");
+            }
+
+            return $this->resolvePath($items[$index]['json'], str_replace('?.', '.', $m[2]));
+        }
+
         if (preg_match('/^\$\(\'([^\']+)\'\)\.first\(\)\.json\.(.+)$/', $expr, $m) === 1) {
             $node = $m[1];
             $item = $context['outputs'][$node][0]['json'] ?? null;

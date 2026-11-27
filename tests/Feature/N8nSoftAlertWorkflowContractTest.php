@@ -162,12 +162,9 @@ class N8nSoftAlertWorkflowContractTest extends TestCase
         $byName = $this->nodesByName();
 
         $create = (string) ($byName['GitHub create issue']['parameters']['jsonBody'] ?? '');
-        $this->assertStringContainsString('<!-- soft-alert-fingerprint:', $create, 'created issue body carries the structured full-fingerprint marker');
-        $this->assertStringContainsString(
-            '<!-- soft-alert-fingerprint:${$(\'Webhook soft-alert\').first().json.body.fingerprint} -->',
-            $create,
-            'the marker interpolates the delivered FULL fingerprint'
-        );
+        $this->assertStringContainsString("body: $('Match exact title').first().json.issue_body", $create, 'created issue body comes from the Match node composer (live-fix 27-11-2026: n8n extendSyntax rejects template literals with escaped backticks/nested interpolation inside ={{ }} jsonBody)');
+        $matchCode = (string) ($byName['Match exact title']['parameters']['jsCode'] ?? '');
+        $this->assertStringContainsString("<!-- soft-alert-fingerprint:' + (body.fingerprint || '') + ' -->", $matchCode, 'the composer embeds the structured marker interpolating the delivered FULL fingerprint');
         $this->assertStringNotContainsString('slice(0, 8)', $create, 'create must not rebuild the title');
 
         foreach (['Match exact title', 'Reconcile find rival'] as $name) {
@@ -278,19 +275,48 @@ class N8nSoftAlertWorkflowContractTest extends TestCase
         $this->assertStringContainsString('{{$json.duplicate_number}}', $closeUrl);
 
         $commentUrl = (string) ($byName['Sweep comment duplicate']['parameters']['url'] ?? '');
-        $this->assertStringContainsString('{{$json.number}}', $commentUrl);
+        // The comment node sits AFTER the close node, so $json there is the
+        // close response — it must read the duplicate number through the
+        // paired-item reference to the group node. (The pre-live-fix URL
+        // read $json.number, which exists on neither object.)
+        $this->assertStringContainsString("{{ $('Sweep group duplicates').item.json.duplicate_number }}", $commentUrl);
     }
 
     /**
      * Секреты не вшиваются в экспорт: проверка секрета остается на env,
      * токенов в узлах нет.
      */
+    /**
+     * Live-fix 27-11-2026 (execution 17392 "Credentials not found"): the
+     * export must be importable as-is on .91 — GitHub auth rides the
+     * env-token header expression (SOFT_ALERT_GITHUB_TOKEN on
+     * N8N_ENV_ALLOWLIST), never a UI credential reference.
+     */
+    public function test_github_auth_is_env_token_headers_not_credential_refs(): void
+    {
+        $byName = $this->nodesByName();
+        $githubNodes = ['GitHub list open issues', 'GitHub comment on existing', 'GitHub create issue',
+            'GitHub reconcile list', 'GitHub comment duplicate note', 'GitHub close duplicate',
+            'Sweep list open issues', 'Sweep close duplicate', 'Sweep comment duplicate'];
+        foreach ($githubNodes as $name) {
+            $raw = (string) json_encode($byName[$name] ?? []);
+            $this->assertStringNotContainsString('predefinedCredentialType', $raw, "{$name}: no UI credential references");
+            $this->assertStringNotContainsString('githubApi', $raw, "{$name}: no githubApi credential type");
+            $this->assertStringContainsString('Bearer {{$env.SOFT_ALERT_GITHUB_TOKEN}}', $raw, "{$name}: env-token Authorization header");
+            $this->assertStringContainsString('systema-n8n-soft-alert', $raw, "{$name}: pinned User-Agent");
+        }
+    }
+
     public function test_no_secrets_baked_into_export(): void
     {
         $raw = (string) file_get_contents(base_path(self::EXPORT));
         $this->assertStringNotContainsString('ghp_', $raw);
         $this->assertStringNotContainsString('github_pat_', $raw);
-        $this->assertStringNotContainsString('Bearer ', $raw);
+        // "Bearer " alone is now legal — it prefixes the env-token EXPRESSION
+        // (live-fix 27-11-2026). What must never appear is a baked token
+        // literal after it.
+        $this->assertDoesNotMatchRegularExpression('/Bearer [A-Za-z0-9_]{16,}/', $raw, 'no literal token after the Bearer scheme');
+        $this->assertStringContainsString('Bearer {{$env.SOFT_ALERT_GITHUB_TOKEN}}', $raw, 'the only Bearer is the env expression');
         $this->assertStringContainsString('$env.SOFT_ALERT_WEBHOOK_SECRET', $raw);
     }
 }

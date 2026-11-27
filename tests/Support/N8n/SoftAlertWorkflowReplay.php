@@ -288,9 +288,10 @@ final class SoftAlertWorkflowReplay
         $method = strtoupper((string) ($params['method'] ?? 'GET'));
         $out = [];
 
-        foreach ($input as $item) {
+        foreach ($input as $itemIndex => $item) {
             $json = $item['json'] ?? [];
             $context = $this->context($state, $json);
+            $context['itemIndex'] = $itemIndex;
             $url = (string) $this->expressions->evalExpr((string) ($params['url'] ?? ''), $context);
 
             if ($method === 'GET') {
