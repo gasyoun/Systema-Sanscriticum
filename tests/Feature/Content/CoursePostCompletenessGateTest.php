@@ -6,6 +6,8 @@ namespace Tests\Feature\Content;
 
 use App\Jobs\PublishCalendarSlotJob;
 use App\Models\ContentCalendarSlot;
+use App\Services\Access\TelegramAdminNotifier;
+use App\Services\Content\CalendarPublicationRunner;
 use App\Services\Content\CalendarPublishService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
@@ -160,6 +162,54 @@ class CoursePostCompletenessGateTest extends TestCase
         $this->assertArrayNotHasKey('course_post_hold_at', $fresh->meta);
         $this->assertArrayHasKey('checklist_passed_at', $fresh->meta);
         Log::shouldNotHaveReceived('warning');
+    }
+
+    /**
+     * Путь TG-ингеста: слот минует content:publish-due и проходит чек-лист внутри
+     * джобы. До правки 27-11-2026 джоба читала причину удержания только из
+     * meta.prohibition_hold — удержание гейтом падало с «Undefined array key»,
+     * админы не узнавали бы о нём (само удержание к тому моменту уже сохранено).
+     */
+    public function test_telegram_ingest_path_notifies_admins_with_the_course_post_hold(): void
+    {
+        Log::spy();
+        $slot = $this->slot(['title' => '🪤 ЛОВУШКА · ГЛАЗА НЕ ВЕРТЯТСЯ', 'body' => $this->redBody()]);
+
+        $notifier = $this->mock(TelegramAdminNotifier::class);
+        $notifier->expects('notifyAdmins')->once()->withArgs(
+            fn (string $message): bool => str_contains($message, "слот #{$slot->id}: пост не разнесён по площадкам — ".self::HOLD_PREFIX),
+        );
+        $this->mock(CalendarPublicationRunner::class)->shouldNotReceive('run');
+
+        (new PublishCalendarSlotJob($slot->id))->handle(
+            app(CalendarPublicationRunner::class),
+            $notifier,
+            app(CalendarPublishService::class),
+        );
+
+        $this->assertSame(ContentCalendarSlot::STATUS_DRAFT, $slot->fresh()->status, 'held, nothing went to any destination');
+        Log::shouldHaveReceived('warning')->once();
+    }
+
+    /** Тот же путь, прежняя ветка: удержание чек-листом §2.8 по-прежнему доходит до админов. */
+    public function test_telegram_ingest_path_still_reports_the_prohibition_hold(): void
+    {
+        Log::spy();
+        $slot = $this->slot(['title' => 'Слово дня', 'body' => '<p>Напишите на ivan@example.com</p>']);
+
+        $notifier = $this->mock(TelegramAdminNotifier::class);
+        $notifier->expects('notifyAdmins')->once()->withArgs(
+            fn (string $message): bool => str_contains($message, 'площадкам — prohibition-hold §2.8: crm_personal_data'),
+        );
+        $this->mock(CalendarPublicationRunner::class)->shouldNotReceive('run');
+
+        (new PublishCalendarSlotJob($slot->id))->handle(
+            app(CalendarPublicationRunner::class),
+            $notifier,
+            app(CalendarPublishService::class),
+        );
+
+        $this->assertSame(ContentCalendarSlot::STATUS_DRAFT, $slot->fresh()->status);
     }
 
     private function slot(array $overrides = []): ContentCalendarSlot
