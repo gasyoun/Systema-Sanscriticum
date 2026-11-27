@@ -4,4 +4,11 @@ OnFailure=systema-alert@%n.service
 
 [Service]
 Type=oneshot
+# H6081: the weekly canary collided 3 weeks straight (Sep 20/27, Oct 4) with
+# stale locks left by .92's hourly sftp pushes — a lock created ~2h earlier is
+# past the canary's 15-min restic wait but under the daily cleaner's 120-min
+# threshold, so nothing removed it in between. Pre-pass at 15 min (runs take
+# ~1 min) closes the window; breaker still gates the delete.
+Environment=RESTIC_STALE_MIN_AGE_MIN=15
+ExecStartPre=/usr/local/sbin/restic-stale-locks-clean.sh
 ExecStart=/usr/local/sbin/systema-backup/weekly_canary.sh

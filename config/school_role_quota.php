@@ -84,6 +84,12 @@ return [
      | ограничивает и ничего не пишет. В тестах — синтетические значения.
      */
     'allowances' => [
-        // 'faq-rag' => 1000, // пример формы; прод-числа добавляются по замеру
+        // Roles from School Agents department phase-1, roster V2 (H6103):
+        'first-contact-247' => 3,   // role 13: first contact/initial response
+        'onboarding-greeter' => 2,  // role 19: bot binding preparation
+        'access-provisioner' => 4,  // role 85: access diagnostics
+        'faq-rag' => 1,              // role 20: RAG-based FAQ answers
+        'payment-reconciler' => 2,  // role 65: payment reconciliation
+        // Total phase-1 allowances: 12 units within Q2 quota of 25
     ],
 ];

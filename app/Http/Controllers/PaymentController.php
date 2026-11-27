@@ -60,18 +60,24 @@ class PaymentController extends Controller
         $rules = [
             'tariff_id' => 'required|exists:tariffs,id',
             'prana_amount' => 'nullable|integer|min:0',
+            // Рассылка — отдельное согласие (38-ФЗ), необязательное и для гостя,
+            // и для студента: снятая галочка = «не давал», а не «отозвал».
+            'wants_announcements' => 'nullable|boolean',
         ];
+
+        // Согласия на оплате (рулинг MG 24-11-2026): оферта и ПДн обязательны
+        // ВСЕГДА и для всех — без флага money-контура. Галочки живут в карточке
+        // кнопки оплаты и приходят сюда через атрибут form="checkout-form".
+        $rules['oferta_accepted'] = ConsentRules::oferta();
+        $rules['pd_consent'] = ConsentRules::pdForCheckout();
 
         if (! auth()->check()) {
             $rules['name'] = 'required|string|max:255';
             $rules['surname'] = 'required|string|max:255';
             $rules['city'] = 'required|string|max:255';
             $rules['email'] = 'required|email|max:255';
-            $rules['wants_announcements'] = 'nullable|boolean';
             $rules['birth_year'] = 'nullable|integer|min:1900|max:'.now()->format('Y');
             $rules['signup_source'] = ['nullable', 'string', Rule::in(AttributionService::SIGNUP_SOURCES)];
-            // 152-ФЗ: обязательность — за флагом money-контура (дефолт OFF).
-            $rules['pd_consent'] = ConsentRules::pd(checkout: true);
         }
 
         $request->validate($rules, ConsentRules::messages());
@@ -189,6 +195,19 @@ class PaymentController extends Controller
         // аноним мог создавать платежи на чужой аккаунт и триггерить письмо со
         // сбросом пароля владельцу (Payment::sendWelcomeEmailIfNeeded).
         $user = $this->resolveUser($request);
+
+        // 152-ФЗ: журнал согласий пишется для ЛЮБОГО покупателя — и гостя, и
+        // залогиненного студента. Раньше вызов жил внутри resolveUser (ветка
+        // создания гостя), поэтому у студента галочка ПДн не попадала в журнал
+        // consents вовсе: она была декоративной.
+        app(ConsentRecorder::class)->fromForm($request, 'checkout', $user, null, null, 'wants_announcements');
+
+        // 38-ФЗ: согласие на рассылку — только opt-in. Снять чужую подписку
+        // молча нельзя (для этого есть раздел «Рассылки и персональные данные»
+        // в кабинете), поэтому записываем лишь новое согласие, никогда — отказ.
+        if ($request->boolean('wants_announcements') && ! $user->wants_email_announcements) {
+            $user->forceFill(['wants_email_announcements' => true])->save();
+        }
 
         // Re-check once more at the confirmed submit: the window between showing the
         // confirmation and this request is itself a lapse opportunity. If the
@@ -605,6 +624,10 @@ class PaymentController extends Controller
         $carry = $request->only([
             'tariff_id', 'prana_amount', 'name', 'surname', 'city', 'email',
             'wants_announcements', 'birth_year', 'signup_source', 'ref',
+            // Согласия (оферта + ПДн) уже даны на чекауте и обязательны на
+            // повторной отправке — экран подтверждения несёт их скрытыми полями,
+            // а не спрашивает второй раз.
+            'oferta_accepted', 'pd_consent',
         ]);
 
         return response()->view('checkout.confirm-price', [
@@ -651,7 +674,6 @@ class PaymentController extends Controller
             'password' => Hash::make(Str::random(12)),
             'wants_email_announcements' => $request->boolean('wants_announcements'),
         ]);
-        app(ConsentRecorder::class)->fromForm($request, 'checkout', $user, null, null, 'wants_announcements');
 
         // Реферал: привязываем нового студента к пригласившему по коду
         // (из формы или сохранённого в сессии при переходе по ссылке).
