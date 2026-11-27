@@ -43,6 +43,10 @@ class StudentAvailabilityController extends Controller
             'days.*.*.kind' => ['required_with:days.*.*.enabled', 'in:'.Window::KIND_ALLOW.','.Window::KIND_DENY],
             'days.*.*.start' => ['required_with:days.*.*.enabled', 'date_format:H:i'],
             'days.*.*.end' => ['required_with:days.*.*.enabled', 'date_format:H:i'],
+            'days.*.*.repeat_mode' => ['sometimes', 'in:'.Window::REPEAT_WEEKLY.','.Window::REPEAT_CYCLE],
+            'days.*.*.cycle_on_days' => ['sometimes', 'integer', 'min:1', 'max:14'],
+            'days.*.*.cycle_off_days' => ['sometimes', 'integer', 'min:1', 'max:14'],
+            'days.*.*.anchor_date' => ['sometimes', 'date'],
             'tzid' => ['required', 'string', 'timezone'],
         ])->validate();
 
@@ -63,6 +67,13 @@ class StudentAvailabilityController extends Controller
                     'source' => Window::SOURCE_STUDENT,
                     'kind' => $values['kind'] ?? Window::KIND_ALLOW,
                     'rrule' => 'FREQ=WEEKLY;BYDAY='.$day,
+                    'repeat_mode' => $values['repeat_mode'] ?? Window::REPEAT_WEEKLY,
+                    'cycle_on_days' => ($values['repeat_mode'] ?? null) === Window::REPEAT_CYCLE
+                        ? (int) ($values['cycle_on_days'] ?? 2) : null,
+                    'cycle_off_days' => ($values['repeat_mode'] ?? null) === Window::REPEAT_CYCLE
+                        ? (int) ($values['cycle_off_days'] ?? 2) : null,
+                    'anchor_date' => ($values['repeat_mode'] ?? null) === Window::REPEAT_CYCLE
+                        ? ($values['anchor_date'] ?? now()->toDateString()) : null,
                     'start_time' => $values['start'],
                     'end_time' => $values['end'],
                     'tzid' => $data['tzid'],

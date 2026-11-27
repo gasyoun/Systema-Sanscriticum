@@ -69,6 +69,19 @@ class StudentAvailabilityWindowResource extends Resource
             Forms\Components\TextInput::make('rrule')
                 ->label('RRULE')->default('FREQ=WEEKLY;BYDAY=SA')->required()
                 ->helperText('Поддерживается FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU'),
+            Forms\Components\Select::make('repeat_mode')
+                ->label('Повтор')
+                ->options([
+                    StudentAvailabilityWindow::REPEAT_WEEKLY => 'Каждую неделю',
+                    StudentAvailabilityWindow::REPEAT_CYCLE => 'Цикл: N можно / M нельзя',
+                ])
+                ->default(StudentAvailabilityWindow::REPEAT_WEEKLY)->required(),
+            Forms\Components\Grid::make(3)->schema([
+                Forms\Components\TextInput::make('cycle_on_days')->label('Можно дней')->numeric()->minValue(1)->maxValue(14)->default(2),
+                Forms\Components\TextInput::make('cycle_off_days')->label('Нельзя дней')->numeric()->minValue(1)->maxValue(14)->default(2),
+                Forms\Components\DatePicker::make('anchor_date')->label('Дата старта цикла')
+                    ->helperText('Отсчёт цикла идёт от этой даты; для еженедельного повтора не заполняется.'),
+            ]),
             Forms\Components\Grid::make(2)->schema([
                 Forms\Components\TimePicker::make('start_time')->label('Начало')->seconds(false)->required(),
                 Forms\Components\TimePicker::make('end_time')->label('Конец (23:59 = до конца дня)')->seconds(false)->required(),

@@ -9,9 +9,10 @@
         <a href="{{ route('student.dashboard') }}" class="text-sm text-brand hover:underline">← Личный кабинет</a>
         <h2 class="text-3xl font-extrabold text-[#101010] tracking-tight mt-3">Когда вам удобно заниматься</h2>
         <p class="text-gray-500 mt-2">
-            Для каждого интервала выберите режим: «Удобное время» или «Неудобное время».
-            Новые курсы и факультативы будут предлагаться только в удобные интервалы,
-            а неудобные — исключаться, даже если остальное время свободно.
+            Для каждого интервала выберите режим: «Удобное время» или «Неудобное время»,
+            а также повтор: «Каждую неделю» либо цикл «2 дня можно / 2 дня нельзя» с датой старта —
+            он подойдёт для плавающего графика. Новые курсы и факультативы будут предлагаться
+            только в удобные интервалы, а неудобные исключаются.
             Если ничего не отметить — ограничений не будет. Уточнения куратора имеют приоритет.
         </p>
     </div>
@@ -54,6 +55,32 @@
                                 Неудобное время
                             </option>
                         </select>
+                        <select name="days[{{ $day }}][{{ $slot }}][repeat_mode]"
+                                class="rounded-lg border border-gray-200 px-2 py-1.5 text-sm"
+                                title="Как повторять интервал">
+                            <option value="{{ \App\Models\StudentAvailabilityWindow::REPEAT_WEEKLY }}"
+                                @selected(old('days.'.$day.'.'.$slot.'.repeat_mode', $row?->repeat_mode ?? \App\Models\StudentAvailabilityWindow::REPEAT_WEEKLY) === \App\Models\StudentAvailabilityWindow::REPEAT_WEEKLY)>
+                                Каждую неделю
+                            </option>
+                            <option value="{{ \App\Models\StudentAvailabilityWindow::REPEAT_CYCLE }}"
+                                @selected(old('days.'.$day.'.'.$slot.'.repeat_mode', $row?->repeat_mode ?? \App\Models\StudentAvailabilityWindow::REPEAT_WEEKLY) === \App\Models\StudentAvailabilityWindow::REPEAT_CYCLE)>
+                                Цикл (например, 2/2)
+                            </option>
+                        </select>
+                        <span class="text-xs text-gray-400" title="Только для цикла: можно / нельзя дней и дата старта">
+                            можно
+                            <input type="number" min="1" max="14" class="w-12 rounded-lg border border-gray-200 px-1 py-1 text-sm"
+                                   name="days[{{ $day }}][{{ $slot }}][cycle_on_days]"
+                                   value="{{ old('days.'.$day.'.'.$slot.'.cycle_on_days', $row?->cycle_on_days ?? 2) }}">
+                            / нельзя
+                            <input type="number" min="1" max="14" class="w-12 rounded-lg border border-gray-200 px-1 py-1 text-sm"
+                                   name="days[{{ $day }}][{{ $slot }}][cycle_off_days]"
+                                   value="{{ old('days.'.$day.'.'.$slot.'.cycle_off_days', $row?->cycle_off_days ?? 2) }}">
+                            с
+                            <input type="date" class="rounded-lg border border-gray-200 px-1 py-1 text-sm"
+                                   name="days[{{ $day }}][{{ $slot }}][anchor_date]"
+                                   value="{{ old('days.'.$day.'.'.$slot.'.anchor_date', $row?->anchor_date?->toDateString() ?? now()->toDateString()) }}">
+                        </span>
                     </div>
                 @endforeach
             @endforeach

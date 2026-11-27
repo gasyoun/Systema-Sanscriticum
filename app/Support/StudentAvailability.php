@@ -98,24 +98,30 @@ final class StudentAvailability
         }
         [$h, $min] = explode(':', $m[2]);
         $minutes = ((int) $h) * 60 + (int) $min;
+        // Для плавающего графика слот привязан к КОНКРЕТНОЙ дате — ближайшему
+        // такому дню недели. Это консервативно: если ближайший повтор вне окна,
+        // оффер не показываем.
+        $date = Carbon::now($this->timezoneFor($user))
+            ->next(Window::CARBON_WEEKDAYS[$weekday])
+            ->toDateString();
 
         foreach ($windows->where('source', Window::SOURCE_CURATOR) as $window) {
-            if ($window->kind === Window::KIND_DENY && $window->coversDayAndTime($weekday, $minutes)) {
+            if ($window->kind === Window::KIND_DENY && $window->coversDayAndTime($weekday, $minutes, $date)) {
                 return false;
             }
         }
         foreach ($windows->where('source', Window::SOURCE_CURATOR) as $window) {
-            if ($window->kind === Window::KIND_ALLOW && $window->coversDayAndTime($weekday, $minutes)) {
+            if ($window->kind === Window::KIND_ALLOW && $window->coversDayAndTime($weekday, $minutes, $date)) {
                 return true;
             }
         }
         foreach ($windows->where('source', Window::SOURCE_STUDENT) as $window) {
-            if ($window->kind === Window::KIND_DENY && $window->coversDayAndTime($weekday, $minutes)) {
+            if ($window->kind === Window::KIND_DENY && $window->coversDayAndTime($weekday, $minutes, $date)) {
                 return false;
             }
         }
         foreach ($windows->where('source', Window::SOURCE_STUDENT) as $window) {
-            if ($window->kind === Window::KIND_ALLOW && $window->coversDayAndTime($weekday, $minutes)) {
+            if ($window->kind === Window::KIND_ALLOW && $window->coversDayAndTime($weekday, $minutes, $date)) {
                 return true;
             }
         }
@@ -126,6 +132,6 @@ final class StudentAvailability
     /** Таймзона ученика из уже существующего H4434-поля. */
     public function timezoneFor(User $user): string
     {
-        return $user->timezone() ?: self::DEFAULT_TZ;
+        return $user->effectiveTimezone() ?: self::DEFAULT_TZ;
     }
 }
