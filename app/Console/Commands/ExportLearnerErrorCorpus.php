@@ -40,7 +40,7 @@ class ExportLearnerErrorCorpus extends Command
             return $this->canary();
         }
 
-        $masker = new SupportStudentPiiMasker();
+        $masker = new SupportStudentPiiMasker;
         $records = [];
 
         if ($this->option('input')) {
@@ -65,8 +65,8 @@ class ExportLearnerErrorCorpus extends Command
             return self::FAILURE;
         }
 
-        $rows = (new LearnerErrorCorpusExtractor())->extract($records);
-        $csv = (new LearnerErrorCorpusExtractor())->toCsv($rows);
+        $rows = (new LearnerErrorCorpusExtractor)->extract($records);
+        $csv = (new LearnerErrorCorpusExtractor)->toCsv($rows);
         $output = (string) ($this->option('output') ?: 'storage/app/learner_errors_2026-10.csv');
         $dir = dirname($output);
         if (! is_dir($dir)) {
@@ -187,7 +187,7 @@ class ExportLearnerErrorCorpus extends Command
             'Ольга Петрова', 'Ольга Алексеевна', '@user_name_1990',
             'сергей电视台@mail.ru', 'Наталия Гаврилова',
         ];
-        $masker = new SupportStudentPiiMasker();
+        $masker = new SupportStudentPiiMasker;
         $masked = 0;
         foreach ($examples as $ex) {
             try {

@@ -41,7 +41,7 @@ final class LearnerErrorCorpusExtractor
 
     /**
      * @param  array<int, array{anon_id: string, source: string, body: string}>  $records  already masked
-     * @return array<int, array<string, string>>  one row per occurrence
+     * @return array<int, array<string, string>> one row per occurrence
      */
     public function extract(array $records): array
     {
@@ -83,6 +83,7 @@ final class LearnerErrorCorpusExtractor
         usort($rows, static function (array $a, array $b) use ($freq): int {
             $ka = $a['lemma']."\x1f".$a['form']."\x1f".$a['error_type'];
             $kb = $b['lemma']."\x1f".$b['form']."\x1f".$b['error_type'];
+
             return ($freq[$kb] <=> $freq[$ka]) ?: strcmp($ka, $kb);
         });
 

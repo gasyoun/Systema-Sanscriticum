@@ -21,7 +21,7 @@ class LearnerErrorCorpusExportTest extends TestCase
 {
     public function test_header_and_row_contract(): void
     {
-        $rows = (new LearnerErrorCorpusExtractor())->extract([
+        $rows = (new LearnerErrorCorpusExtractor)->extract([
             ['anon_id' => 'u_abc', 'source' => 'homework-review', 'body' => 'Обратите внимание на सहना и bāt, долгое ā.'],
         ]);
 
@@ -49,7 +49,7 @@ class LearnerErrorCorpusExportTest extends TestCase
             'сергей电视台@mail.ru', 'Наталия Гаврилова',
         ];
 
-        $rows = (new LearnerErrorCorpusExtractor())->extract(array_map(
+        $rows = (new LearnerErrorCorpusExtractor)->extract(array_map(
             static fn (string $s): array => ['anon_id' => 'u_canary', 'source' => 'synthetic', 'body' => $s],
             $samples
         ));
@@ -69,7 +69,7 @@ class LearnerErrorCorpusExportTest extends TestCase
             ['anon_id' => 'u_a', 'source' => 'homework-review', 'body' => 'सहना सहना bāt bāt'],
             ['anon_id' => 'u_b', 'source' => 'stenogrammy', 'body' => 'долгое ā, कर्म'],
         ];
-        $extractor = new LearnerErrorCorpusExtractor();
+        $extractor = new LearnerErrorCorpusExtractor;
         $a = $extractor->extract($input);
         $b = $extractor->extract($input);
 
