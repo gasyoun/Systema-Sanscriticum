@@ -496,6 +496,14 @@ else
     if touched 'memwatch'; then
       systemctl enable --now memwatch.timer >/dev/null 2>&1 && ok "memwatch.timer включён"
     fi
+    # H8564: сторож SOCKS-метки .91. Свой таймер (не строка в cron) — смерть
+    # одного сторожа не должна уносить остальных. Без него тишина метки на .92
+    # никем не читается, а это ровно тот класс, ради которого он заведён.
+    if touched 'systema-socks91-watch.timer'; then
+      systemctl enable --now systema-socks91-watch.timer >/dev/null 2>&1 \
+        && ok "systema-socks91-watch.timer включён (свидетель SOCKS .91)" \
+        || warn "systema-socks91-watch.timer не включился: systemctl status systema-socks91-watch.timer"
+    fi
     if touched 'n8n-container-limits.timer'; then
       systemctl enable --now n8n-container-limits.timer >/dev/null 2>&1 && ok "n8n-container-limits.timer включён (H5080-F1)"
     fi
@@ -597,6 +605,14 @@ else
         systemctl enable --now n8n-backup.timer >/dev/null 2>&1 \
           && ok "n8n-backup.timer включён" \
           || warn "n8n-backup.timer не включился: systemctl status n8n-backup.timer"
+      fi
+      # H8564: SOCKS-проба socks-nl (#4429 п.2) — свой сервис и таймер, не cron.
+      # Таймер мог существовать только на машине; enable --now ставит следующий
+      # тик, а сервис остаётся oneshot (никакого демона).
+      if touched 'socks-liveness.timer'; then
+        systemctl enable --now socks-liveness.timer >/dev/null 2>&1 \
+          && ok "socks-liveness.timer включён (проба SOCKS каждые 5 мин)" \
+          || warn "socks-liveness.timer не включился: systemctl status socks-liveness.timer"
       fi
       if touched 'n8n-guards-verify'; then
         # Каталог статуса — внутри ChrootDirectory пользователя restic-push

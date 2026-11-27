@@ -23,6 +23,14 @@ class Consent extends Model
 
     public const TYPE_COOKIES = 'cookies';
 
+    /**
+     * Участие в тесте ИИ-помощника занятия: разбор вопросов ученика и его
+     * сообщений об ошибках, чтобы править ответы помощника. Текст согласия —
+     * страница /lesson-ai/consent (та же, что открывается из письма), поэтому
+     * doc_version ссылается на дату редакции этого текста.
+     */
+    public const TYPE_AI_TEST = 'ai_test';
+
     public const ACTION_GIVEN = 'given';
 
     public const ACTION_WITHDRAWN = 'withdrawn';

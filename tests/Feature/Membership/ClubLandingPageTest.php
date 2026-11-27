@@ -6,169 +6,152 @@ namespace Tests\Feature\Membership;
 
 use App\Enums\MembershipTier;
 use App\Models\User;
+use App\Support\Roles;
 
 /**
- * Лендинг + прайсинг клуба (H2645): страница живёт только при включённом
- * контуре H2644, цены приходят из БД, исключения видимы, формулировка
- * «что заканчивается» дословно совпадает с карточкой кабинета, и на странице
- * нет ни третьего тарифа, ни корпуса, ни обещаний куратора.
+ * Лендинг подписки на личный кабинет (голосовой запуск MG 23-11-2026).
+ *
+ * Контракт: страница — ПРЕВЬЮ ДЛЯ СУПЕР-АДМИНА до публичного запуска
+ * после 1 января 2027. Продаёт месячную лестницу Свободный/Базовый/Клуб/Top
+ * с ИИ-функциями (ответы на основе оцифрованных грамматик школы).
+ * Цены — из строк БД с fallback на config; чекаут — только у активных
+ * тарифов; годовая линейка («в записи», клубные 3/12 мес) с витрины снята,
+ * и её цифр на странице нет вовсе.
  */
 final class ClubLandingPageTest extends MembershipTestCase
 {
-    /** Три клубных тарифа с прод-ценами (месяц/квартал/год). */
-    private function makeTariffs(): array
+    private function superAdmin(): User
     {
-        $monthly = $this->clubTariff(1);
-        $quarterly = $this->clubTariff(3);
-        $quarterly->update(['price' => 5700, 'description' => 'Три месяца сразу, скидка 5 %.']);
-        $yearly = $this->clubTariff(12);
-        $yearly->update(['price' => 20400, 'description' => 'Год сразу, скидка 15 %.']);
+        return User::factory()->create(['role' => Roles::SUPER_ADMIN]);
+    }
 
-        return [$monthly, $quarterly->fresh(), $yearly->fresh()];
+    public function test_only_super_admin_sees_the_preview(): void
+    {
+        $this->clubTariff(1);
+
+        $this->get('/klub')->assertNotFound();
+
+        $this->actingAs(User::factory()->create(['role' => Roles::ADMIN]))
+            ->get('/klub')->assertNotFound();
+
+        $this->actingAs(User::factory()->create())
+            ->get('/klub')->assertNotFound();
+
+        $this->actingAs($this->superAdmin())
+            ->get('/klub')->assertOk();
     }
 
     public function test_404_while_club_membership_flag_is_off(): void
     {
-        $this->makeTariffs();
         config()->set('features.club_membership', false);
 
-        $this->get('/klub')->assertNotFound();
+        $this->actingAs($this->superAdmin())->get('/klub')->assertNotFound();
     }
 
-    public function test_404_without_active_club_tariffs(): void
+    public function test_preview_renders_even_without_tariff_rows(): void
     {
-        // Курс клуба есть (setUp), тарифов нет — продавать нечего.
-        $this->get('/klub')->assertNotFound();
-
-        // Неактивный тариф тоже не продаётся.
-        $this->clubTariff(1)->update(['is_active' => false]);
-        $this->get('/klub')->assertNotFound();
-    }
-
-    public function test_prices_come_from_db_and_ctas_lead_to_checkout(): void
-    {
-        [$monthly, $quarterly, $yearly] = $this->makeTariffs();
-
-        $response = $this->get('/klub')->assertOk();
-
-        // Цены — из строк БД, в формате магазина.
-        $response->assertSee('2 000');
-        $response->assertSee('5 700');
-        $response->assertSee('20 400');
-
-        // CTA каждого тарифа ведёт в реальный чекаут этого тарифа.
-        foreach ([$monthly, $quarterly, $yearly] as $tariff) {
-            $response->assertSee(route('checkout.show', $tariff), false);
-        }
-    }
-
-    public function test_exclusions_are_visible_for_both_levels(): void
-    {
-        $this->makeTariffs();
-
-        $response = $this->get('/klub')->assertOk();
-
-        // Уровни.
-        $response->assertSee('Свободный');
-        $response->assertSee('Базовый');
-        $response->assertSee('Клуб');
-
-        // Исключения — на странице, не спрятаны.
-        $response->assertSee('Живые потоки');
-        $response->assertSee('Проверка домашних заданий');
-        $response->assertSee('Сертификат');
-        $response->assertSee('Платные курсы, которые вы не покупали');
-    }
-
-    public function test_tiered_landing_requires_and_renders_basic_and_club_terms(): void
-    {
-        config()->set('features.membership_tiered', true);
-        foreach ([1, 3, 12] as $months) {
-            $this->clubTariff($months, MembershipTier::Basic);
-            $this->clubTariff($months, MembershipTier::Club);
-        }
-
-        $this->get('/klub')
+        // Снятый с продажи Базовый больше НЕ роняет страницу 404 — это и была
+        // причина мёртвого /klub на проде. Без строк БД цены берутся из конфига.
+        $this->actingAs($this->superAdmin())->get('/klub')
             ->assertOk()
-            ->assertSee('Базовый')
-            ->assertSee('Клуб')
-            ->assertSee('2 850')
-            ->assertSee('10 200')
-            ->assertSee('5 700')
-            ->assertSee('20 400');
+            ->assertSee('1 000')
+            ->assertSee('2 000')
+            ->assertSee('5 000');
     }
 
-    public function test_retained_access_statement_matches_cabinet_verbatim(): void
+    public function test_prices_come_from_db_and_only_active_tariffs_get_checkout(): void
     {
-        $this->makeTariffs();
+        $basic = $this->clubTariff(1, MembershipTier::Basic);
+        $club = $this->clubTariff(1, MembershipTier::Club);
 
-        $response = $this->get('/klub')->assertOk();
+        $response = $this->actingAs($this->superAdmin())->get('/klub')->assertOk();
 
-        // Дословное ядро карточки кабинета (H2644): заканчивается ПРАВО,
-        // открытые уроки не отбираются. Правки — только синхронно с
-        // student/partials/club-membership.blade.php.
-        $response->assertSee('право доступа');
-        $response->assertSee('мы у вас не отбираем');
-        $response->assertSee('не списывает');
+        // Цены месячных — из строк БД; Top без строки — из конфига.
+        $response->assertSee('1 000');
+        $response->assertSee('2 000');
+        $response->assertSee('5 000');
 
-        // Запрещённая формулировка «доступ будет отозван» — отсутствует.
-        $response->assertDontSee('отозван');
+        // Оба активных месячных ведут в свой чекаут; Top — без ссылки.
+        $response->assertSee(route('checkout.show', $basic), false);
+        $response->assertSee(route('checkout.show', $club), false);
+        $this->assertSame(2, substr_count($response->getContent(), '/checkout/'));
     }
 
-    public function test_no_third_tier_no_corpus_no_curator_promise(): void
+    public function test_inactive_tariff_is_shown_without_checkout(): void
     {
-        $this->makeTariffs();
+        $this->clubTariff(1, MembershipTier::Basic)->update(['is_active' => false]);
+        $this->clubTariff(1, MembershipTier::Club);
 
-        $response = $this->get('/klub')->assertOk();
+        $response = $this->actingAs($this->superAdmin())->get('/klub')->assertOk();
 
-        // Третий тариф не назван и не оценён: продаются ровно три тарифа из БД
-        // (наивный assertDontSee('5 000') ловил подстроку в «15 000»).
-        $this->assertSame(3, substr_count($response->getContent(), '/checkout/'));
-        $response->assertDontSee('готовится');
+        // Снятый с продажи Базовый виден (превью сетки должно быть полным),
+        // но чекаут-ссылки у неактивного тарифа нет.
+        $response->assertSee('Появится к запуску');
+        $this->assertSame(1, substr_count($response->getContent(), '/checkout/'));
+    }
 
-        // Корпус не упоминается ни в каком регистре.
+    public function test_ai_features_are_visible_in_the_ladder(): void
+    {
+        $this->clubTariff(1);
+
+        $this->actingAs($this->superAdmin())->get('/klub')->assertOk()
+            ->assertSee('2 пробных ИИ-запроса')
+            ->assertSee('Оцифрованные грамматики школы')
+            ->assertSee('Грамотные ответы ИИ по всем пройденным курсам')
+            ->assertSee('Запросы по стенограммам, презентациям и видео любого курса')
+            // Ключевое различие Клуб/Top — на строке таблицы.
+            ->assertSee('пройденным')
+            ->assertSee('любым');
+    }
+
+    public function test_preview_banner_names_launch_window(): void
+    {
+        $this->clubTariff(1);
+
+        $this->actingAs($this->superAdmin())->get('/klub')->assertOk()
+            ->assertSee('Превью для супер-админа')
+            ->assertSee('1 января 2027');
+    }
+
+    public function test_payment_reminders_separate_free_from_basic(): void
+    {
+        $this->clubTariff(1);
+
+        $this->actingAs($this->superAdmin())->get('/klub')->assertOk()
+            // Граница Free/Basic из голосового: «когда платить» — платная функция.
+            ->assertSee('Напоминания, когда платить')
+            ->assertSee('Напоминания: когда и сколько платить');
+    }
+
+    public function test_archive_line_is_parked_without_prices(): void
+    {
+        // Годовые тарифы сняты с витрины: ни карточек, ни цифр в копи.
+        $this->clubTariff(3);
+        $this->clubTariff(12);
+
+        $this->actingAs($this->superAdmin())->get('/klub')->assertOk()
+            ->assertDontSee('5 700')
+            ->assertDontSee('20 400')
+            ->assertDontSee('5 500')
+            ->assertDontSee('35 000')
+            // Честная пометка о снятии — без цифр.
+            ->assertSee('Годовая линейка снята с витрины');
+    }
+
+    public function test_no_corpus_no_curator_promise_no_revocation(): void
+    {
+        $this->clubTariff(1);
+
+        $response = $this->actingAs($this->superAdmin())->get('/klub')->assertOk();
+
         $response->assertDontSee('корпус');
         $response->assertDontSee('Корпус');
-
-        // Куратор упоминается только как исключение («и время куратора» /
-        // «куратор и сертификат — это курсы»), никогда как обещание клуба.
         $response->assertDontSee('поддержка куратора');
         $response->assertDontSee('с куратором');
-    }
+        // Запрещённая формулировка «доступ будет отозван» — отсутствует.
+        $response->assertDontSee('отозван');
 
-    public function test_free_tier_grant_line_is_gated_by_its_flag(): void
-    {
-        $this->makeTariffs();
-
-        // setUp включает membership_free_tier — обещание в настоящем времени.
-        $this->get('/klub')->assertOk()
-            ->assertSee('который вы уже оплачивали')
-            ->assertDontSee('Скоро');
-
-        // Флаг ВЫКЛ — то же обещание помечено как будущее, не как действующее.
-        config()->set('features.membership_free_tier', false);
-        $this->get('/klub')->assertOk()->assertSee('Скоро');
-    }
-
-    public function test_logged_in_student_is_routed_to_cabinet(): void
-    {
-        $this->makeTariffs();
-        $user = User::factory()->create();
-
-        $this->actingAs($user)->get('/klub')->assertOk()
-            ->assertSee('Открыть кабинет')
-            ->assertSee(route('student.dashboard'), false);
-    }
-
-    public function test_shop_index_links_to_club_only_when_flag_is_on(): void
-    {
-        $this->makeTariffs();
-
-        $this->get('/online')->assertOk()
-            ->assertSee(route('membership.landing'), false);
-
-        config()->set('features.club_membership', false);
-        $this->get('/online')->assertOk()
-            ->assertDontSee(route('membership.landing'), false);
+        // Ручное продление названо прямо (формулировка согласована с H2644).
+        $response->assertSee('не списывает');
     }
 }

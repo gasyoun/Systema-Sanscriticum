@@ -43,7 +43,11 @@ class OllamaShadowReplyJob implements ShouldQueue
 
     public function handle(CuratorAi $ai): void
     {
-        $result = $ai->localChatWithUsage($this->messages);
+        // think=false (25-11-2026): тень сравнивает локальный лан с тем, как он
+        // работал бы в проде, а прод-путь ответа ученику идёт без размышления
+        // (LessonQaService, LessonAiService). С размышлением тень мерила бы
+        // конфигурацию, которой в проде нет, и жгла втрое больше токенов.
+        $result = $ai->localChatWithUsage($this->messages, null, 0.3, false);
         $content = $result['content'];
 
         SupportAiReplyEvent::create([

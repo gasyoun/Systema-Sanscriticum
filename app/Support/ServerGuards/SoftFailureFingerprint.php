@@ -85,6 +85,18 @@ final class SoftFailureFingerprint
             return OllamaTunnelProbe::PREFIX;
         }
 
+        // One fingerprint per FAILING UNIT, not one for the whole check
+        // (25-11-2026). Every `failed-units` finding used to collapse to
+        // `guards/failed-units`, so telegram-daily.service and
+        // systema-socks91-watch.service shared fingerprint 6fd69840: the second
+        // broken unit hid behind the first unit's already-open alert, and an
+        // alert-deduped channel would have appended it to that wrong issue.
+        // The unit name is the identity of the condition; the trailing
+        // `systemctl status …` guidance text is not.
+        if (preg_match('#^guards/failed-units:\s*([A-Za-z0-9@._-]+)\s+в состоянии failed#u', $m, $fu)) {
+            return 'guards/failed-units:'.preg_replace('/\.service$/', '', strtolower($fu[1]));
+        }
+
         // Live host-guard metrics (cgroup RSS MiB, backup age/size) change
         // every */15 tick and must not re-open TG (H3227). Fuse/dirty above
         // keep a finer class; other guards/<name>: collapse to the name.

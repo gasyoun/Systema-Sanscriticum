@@ -2,11 +2,13 @@
 
 use App\Filament\Resources\UserResource;
 use App\Http\Controllers\AdminLoginLinkController;
+use App\Http\Controllers\CabinetEmailVerificationController;
 use App\Http\Controllers\CabinetInviteLinkController;
 use App\Http\Controllers\CourseInterestController;
 use App\Http\Controllers\Email\TrackingController as EmailTrackingController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\LessonAiConsentController;
 use App\Http\Controllers\NewsletterSubscribeController;
 use App\Http\Controllers\TelegramSupportLinkController;
 use App\Http\Controllers\TgLoginLinkController;
@@ -73,6 +75,12 @@ Route::get('/magic/{token}', [NewsletterSubscribeController::class, 'magic'])
     ->where('token', '[A-Za-z0-9]+')
     ->name('newsletter.magic');
 
+// Подтверждение почты кабинета, созданного через /кабинет (одна ссылка = галочка + вход).
+Route::get('/verify-email/{token}', [CabinetEmailVerificationController::class, 'verify'])
+    ->middleware('throttle:10,1')
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('cabinet.verify-email');
+
 // --- ОТПИСКА ОТ РЕКЛАМНОЙ РАССЫЛКИ (152-ФЗ, 38-ФЗ ст. 18). Подписанная ссылка
 // из письма (App\Support\Unsubscribe::url). GET — подтверждение, POST — отписка
 // (и One-Click RFC 8058; исключён из CSRF). Строго до catch-all /{slug}.
@@ -82,6 +90,21 @@ Route::get('/otpiska', [UnsubscribeController::class, 'show'])
 Route::post('/otpiska', [UnsubscribeController::class, 'store'])
     ->middleware(['signed', 'throttle:30,1'])
     ->name('unsubscribe.store');
+
+// --- СОГЛАСИЕ НА ТЕСТ ИИ-ПОМОЩНИКА ЗАНЯТИЯ («Спроси Сократа»).
+// Подписанные ссылки из письма-приглашения. GET — только текст согласия (его
+// открывают антивирус и предпросмотр ссылок, поэтому открытие ничего не меняет),
+// POST — единственное место, где включается users.lesson_ai_tester и пишется
+// строка в журнал consents; GET /done — результат, чтобы F5 не слал форму снова.
+Route::get('/lesson-ai/consent/{user}', [LessonAiConsentController::class, 'show'])
+    ->middleware(['signed', 'throttle:30,1'])
+    ->name('lesson-ai.consent');
+Route::post('/lesson-ai/consent/{user}', [LessonAiConsentController::class, 'store'])
+    ->middleware(['signed', 'throttle:30,1'])
+    ->name('lesson-ai.consent.store');
+Route::get('/lesson-ai/consent/{user}/done', [LessonAiConsentController::class, 'done'])
+    ->middleware(['signed', 'throttle:30,1'])
+    ->name('lesson-ai.consent.done');
 
 // --- ПРЕВЬЮ YOUTUBE СО СВОЕГО СЕРВЕРА (152-ФЗ: без IP посетителя в img.youtube.com).
 Route::get('/video-thumb/{id}.jpg', [VideoThumbController::class, 'show'])

@@ -1,0 +1,14 @@
+# systema-socks91-watch.service — читатель SOCKS-метки .91 (H8564, #4429 п.2).
+# MANAGED FILE — см. scripts/server_guards/sbin/systema-socks91-watch.sh.
+# Свой таймер, не cron: у каждого сторожа своя судьба (H4929) — общий cron
+# означает общую смерть всех сторожей от одной правки.
+[Unit]
+Description=External witness of vps91 SOCKS channel heartbeat (H8564, #4429)
+Documentation=https://github.com/gasyoun/Systema-Sanscriticum/issues/4429
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/systema-socks91-watch.sh
+TimeoutStartSec=120
+Nice=10

@@ -111,3 +111,12 @@ systemd/systema-drill-watchdog.timer|/etc/systemd/system/systema-drill-watchdog.
 systemd/systema-drill-watchdog.service|/etc/systemd/system/systema-drill-watchdog.service|644|warning
 systemd/systema-size-sanity.timer|/etc/systemd/system/systema-size-sanity.timer|644|warning
 systemd/systema-size-sanity.service|/etc/systemd/system/systema-size-sanity.service|644|warning
+
+# H8564 (23-11-2026) — SOCKS-проба socks-nl (#4429 п.2) под версионным контролем.
+# До этого socks-liveness-check.sh и его юниты жили ТОЛЬКО на машине: пересборка
+# LXC вернула бы туннель без единого читателя. Скрипт на каждом успешном прогоне
+# пушит метку socks91_hub.last на .92 — её читает systema-socks91-watch.sh
+# (scripts/server_guards/manifest.psv, профиль app).
+sbin/socks-liveness-check.sh|/usr/local/sbin/socks-liveness-check.sh|755|warning
+systemd/socks-liveness.service|/etc/systemd/system/socks-liveness.service|644|warning
+systemd/socks-liveness.timer|/etc/systemd/system/socks-liveness.timer|644|warning

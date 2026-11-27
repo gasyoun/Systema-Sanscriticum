@@ -6,6 +6,7 @@ use App\Filament\Actions\SplitPaymentBlockBulkAction;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Support\NoAutofill;
 use App\Jobs\SendMessengerAlerts;
+use App\Mail\LessonAiInviteMail;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\HomeworkSubmission;
@@ -43,6 +44,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -295,6 +297,15 @@ class UserResource extends Resource
                         Toggle::make('is_lecture_editor')
                             ->label('Редактор лекций')
                             ->helperText('Доступ к панели сборки лекций (без доступа в админку)')
+                            ->onColor('success')
+                            ->offColor('gray')
+                            ->visible(fn () => RoleGate::isSuperAdmin()),
+
+                        // Пока LESSON_AI_ENABLED выключен, вкладку «ИИ» на странице
+                        // занятия видят суперадмин и эти студенты (LessonAiService::enabledFor).
+                        Toggle::make('lesson_ai_tester')
+                            ->label('Тестировщик ИИ')
+                            ->helperText('Видит вкладку «ИИ» на странице занятия до включения для всех. Дневной лимит запросов — как у всех.')
                             ->onColor('success')
                             ->offColor('gray')
                             ->visible(fn () => RoleGate::isSuperAdmin()),
@@ -916,6 +927,21 @@ class UserResource extends Resource
                         return "📚 {$lessons} · ⏱ {$time} · 🔑 {$visits}";
                     }),
 
+                // --- ЧАСЫ ЗАНЯТИЙ: рейтинг по времени на страницах уроков ---
+                // Сумма lesson_views.total_time_on_page — heartbeat урока (только
+                // активная вкладка, ≤90 с за отправку, только уроки с доступом).
+                // Не путать с ⏱ под «Последним визитом» — то всё время на сайте.
+                Tables\Columns\TextColumn::make('lesson_views_sum_total_time_on_page')
+                    ->label('Часы занятий')
+                    ->sum('lessonViews', 'total_time_on_page')
+                    ->sortable()
+                    ->alignment('center')
+                    ->formatStateUsing(fn ($state): string => self::formatWatchTime((int) $state))
+                    ->placeholder('—')
+                    ->color(fn ($state): string => (int) $state >= 3600 ? 'success' : 'gray')
+                    ->tooltip('Время на страницах занятий (вкладка урока открыта и активна). Нажмите на заголовок — рейтинг по убыванию.')
+                    ->toggleable(),
+
                 // --- КОЛОНКА 5: РОЛЬ (видна админам и супер-админу) ---
                 Tables\Columns\TextColumn::make('role')
                     ->label('Роль')
@@ -935,6 +961,13 @@ class UserResource extends Resource
 
                 Tables\Columns\IconColumn::make('is_lecture_editor')
                     ->label('Ред. лекций')
+                    ->boolean()
+                    ->alignment('center')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visible(fn () => RoleGate::isSuperAdmin()),
+
+                Tables\Columns\IconColumn::make('lesson_ai_tester')
+                    ->label('Тест ИИ')
                     ->boolean()
                     ->alignment('center')
                     ->toggleable(isToggledHiddenByDefault: true)
@@ -1004,6 +1037,13 @@ class UserResource extends Resource
                     ->placeholder('Все студенты')
                     ->trueLabel('Согласились на анонсы')
                     ->falseLabel('Отказались от анонсов'),
+
+                Tables\Filters\TernaryFilter::make('lesson_ai_tester')
+                    ->label('Тестировщики ИИ')
+                    ->placeholder('Все')
+                    ->trueLabel('Только тестировщики ИИ')
+                    ->falseLabel('Не тестировщики')
+                    ->visible(fn () => RoleGate::isSuperAdmin()),
 
                 // --- Согласие на анонсы в мессенджеры (152-ФЗ гейт TG/VK-рассылки) ---
                 Tables\Filters\TernaryFilter::make('wants_messenger_announcements')
@@ -1485,6 +1525,39 @@ class UserResource extends Resource
                                 ->send();
                         }),
 
+                    // --- ТЕСТИРОВЩИКИ ИИ-ПОМОЩНИКА ЗАНЯТИЯ (features.lesson_ai выключен) ---
+                    Tables\Actions\BulkAction::make('lessonAiTesterOn')
+                        ->label('Сделать тестировщиками ИИ')
+                        ->icon('heroicon-o-sparkles')
+                        ->color('gray')
+                        ->visible(fn () => RoleGate::isSuperAdmin())
+                        ->requiresConfirmation()
+                        ->modalHeading('Открыть ИИ-помощник выделенным')
+                        ->modalDescription('Они увидят вкладку «ИИ» на странице занятия, с обычным дневным лимитом запросов.')
+                        ->deselectRecordsAfterCompletion()
+                        ->action(fn (Collection $records) => self::setLessonAiTester($records, true)),
+
+                    Tables\Actions\BulkAction::make('lessonAiTesterOff')
+                        ->label('Убрать из тестировщиков ИИ')
+                        ->icon('heroicon-o-no-symbol')
+                        ->color('gray')
+                        ->visible(fn () => RoleGate::isSuperAdmin())
+                        ->requiresConfirmation()
+                        ->deselectRecordsAfterCompletion()
+                        ->action(fn (Collection $records) => self::setLessonAiTester($records, false)),
+
+                    Tables\Actions\BulkAction::make('lessonAiInvite')
+                        ->label('Пригласить в тест ИИ (письмо)')
+                        ->icon('heroicon-o-envelope')
+                        ->color('gray')
+                        ->visible(fn () => RoleGate::isSuperAdmin())
+                        ->requiresConfirmation()
+                        ->modalHeading('Пригласить выделенных в тест «Спроси Сократа»')
+                        ->modalDescription('Каждому уйдет письмо с персональной подписанной ссылкой на страницу согласия: две недели теста, после релиза 2000 ₽ в месяц. Галочка «Тестировщик ИИ» этой рассылкой НЕ ставится — только после согласия ученика на той странице.')
+                        ->modalSubmitActionLabel('Отправить приглашения')
+                        ->deselectRecordsAfterCompletion()
+                        ->action(fn (Collection $records) => self::sendLessonAiInvites($records)),
+
                     // --- ПЕРЕНОС В ГРУППУ КУРСА (сплит курса на 2 группы) ---
                     // Отвязывает выбранных от остальных групп ЭТОГО курса и привязывает
                     // к целевой. Оплаты не трогаются (дублей Payment не возникает).
@@ -1834,6 +1907,81 @@ class UserResource extends Resource
             UserResource\RelationManagers\CourseAccessWindowsRelationManager::class,
             UserResource\RelationManagers\IndividualDiscountsRelationManager::class,
         ];
+    }
+
+    /** «34ч 7м» / «12м»; 0 — прочерк. */
+    public static function formatWatchTime(int $seconds): string
+    {
+        if ($seconds <= 0) {
+            return '—';
+        }
+        $hours = intdiv($seconds, 3600);
+        $mins = intdiv($seconds % 3600, 60);
+
+        return $hours > 0 ? "{$hours}ч {$mins}м" : "{$mins}м";
+    }
+
+    /** Массовое назначение/снятие тестировщиков ИИ-помощника занятия. */
+    public static function setLessonAiTester(Collection $records, bool $on): void
+    {
+        abort_unless(RoleGate::isSuperAdmin(), 403);
+
+        $count = 0;
+        foreach ($records as $user) {
+            if ((bool) $user->lesson_ai_tester !== $on) {
+                $user->lesson_ai_tester = $on;
+                $user->save();
+                $count++;
+            }
+        }
+
+        Notification::make()
+            ->title($on ? 'Тестировщики ИИ назначены' : 'Тестировщики ИИ сняты')
+            ->body($on ? "Вкладка «ИИ» открыта: {$count}." : "Вкладка «ИИ» закрыта: {$count}.")
+            ->success()
+            ->send();
+    }
+
+    /**
+     * Рассылка приглашения в тест «Спроси Сократа» (ИИ-помощник занятия).
+     *
+     * Флаг users.lesson_ai_tester здесь НЕ ставится: согласие дается на
+     * подписанной странице (LessonAiConsentController@store), иначе «вам открыли
+     * доступ» и «вы согласились» стали бы одним событием, а антивирус, открывший
+     * ссылку из письма, давал бы согласие за человека.
+     */
+    public static function sendLessonAiInvites(Collection $records): void
+    {
+        abort_unless(RoleGate::isSuperAdmin(), 403);
+
+        $ttl = now()->addDays(max(1, (int) config('lesson_ai.invite.consent_link_ttl_days', 30)));
+        $sent = 0;
+        $withoutEmail = 0;
+
+        foreach ($records as $user) {
+            $email = trim((string) $user->email);
+
+            if ($email === '') {
+                $withoutEmail++;
+
+                continue;
+            }
+
+            Mail::to($email)->queue(new LessonAiInviteMail(
+                $user,
+                URL::temporarySignedRoute('lesson-ai.consent', $ttl, ['user' => $user->id]),
+                URL::temporarySignedRoute('lesson-ai.consent', $ttl, ['user' => $user->id, 'intent' => 'no']),
+            ));
+            $sent++;
+        }
+
+        Notification::make()
+            ->title('Приглашения в тест отправлены')
+            ->body($withoutEmail > 0
+                ? "Писем в очереди: {$sent}. Без email пропущено: {$withoutEmail}."
+                : "Писем в очереди: {$sent}. Вкладка откроется только после согласия ученика.")
+            ->success()
+            ->send();
     }
 
     public static function getPages(): array

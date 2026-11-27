@@ -1,6 +1,6 @@
 # Ранбук эскалации поддержки: ИИ-куратор → Иван → MG
 
-_Created: 05-10-2026 · Last updated: 05-10-2026_
+_Created: 05-10-2026 · Last updated: 23-11-2026_
 
 Рулинг MG 05-10-2026 (орг-гриль): первая линия поддержки — **ИИ-куратор** в кабинете
 (кабинетный бот **@samskrtamru_bot**); то, что он не решил (деньги, прогресс, конфликт,
@@ -75,6 +75,7 @@ _Created: 05-10-2026 · Last updated: 05-10-2026_
 - Сессия @rusamskrtam умерла: [RUNBOOK_USERBOT_SESSION_RECOVERY](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_USERBOT_SESSION_RECOVERY.md)
 - Вход/привязка кабинета: [RUNBOOK_TELEGRAM_CABINET_LOGIN_2026-08-28](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_TELEGRAM_CABINET_LOGIN_2026-08-28.md)
 - Запуск курса с нуля: [PLAYBOOK_COURSE_LAUNCH_FROM_ZERO_2026-10](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAYBOOK_COURSE_LAUNCH_FROM_ZERO_2026-10.md)
+- Уход сотрудника / недоступность ответственного: [PLAYBOOK_STAFF_OFFBOARDING_EMERGENCY_HANDOVER_RU](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAYBOOK_STAFF_OFFBOARDING_EMERGENCY_HANDOVER_RU.md)
 - Аудит фонда (что ещё не покрыто): [AUDIT_PLAYBOOK_RUNBOOK_GAPS_04-10-2026](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/AUDIT_PLAYBOOK_RUNBOOK_GAPS_04-10-2026.md)
 
 ## Границы
