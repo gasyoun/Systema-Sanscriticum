@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Prana\PranaSettings;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -228,6 +229,9 @@ class MarketingSetting extends Model
     public static function flushCached(): void
     {
         Cache::forget(self::CACHE_KEY);
+        // PranaSettings дублирует строку в процессном статике — сбрасывать его
+        // вместе с кэшем модели обязательно (иначе админка/тест видят старые награды).
+        PranaSettings::flush();
     }
 
     /**
