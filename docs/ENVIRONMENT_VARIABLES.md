@@ -86,20 +86,20 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CABINET_HYBRID` | optional | `false` | config/features.php:1154 |
 | `CABINET_OFFER_ATTRIBUTION` | optional | `false` | config/features.php:2334 |
 | `CABINET_OFFER_ATTRIBUTION_WINDOW_DAYS` | optional | `7` | config/features.php:2340 |
-| `CABINET_PROBE_CHECK_DEPLOY_DRIFT` | optional | `true` | config/cabinet_probe.php:156 |
-| `CABINET_PROBE_CHECK_GUARDS` | optional | `true` | config/cabinet_probe.php:64 |
-| `CABINET_PROBE_CHECK_HOMEWORK_UPLOAD` | optional | `true` | config/cabinet_probe.php:102 |
-| `CABINET_PROBE_CHECK_OLLAMA_TUNNEL` | optional | `true` | config/cabinet_probe.php:126 |
-| `CABINET_PROBE_CHECK_PAYMENT_TLS` | optional | `true` | config/cabinet_probe.php:75 |
-| `CABINET_PROBE_CHECK_SCHEDULE_LINKS` | optional | `true` | config/cabinet_probe.php:114 |
-| `CABINET_PROBE_CRON` | optional | `'*/15 * * * *'` | config/cabinet_probe.php:49 |
-| `CABINET_PROBE_DEPLOY_DRIFT_BEHIND_MAX_AGE` | optional | `60` | config/cabinet_probe.php:158 |
-| `CABINET_PROBE_DEPLOY_DRIFT_FETCH_MAX_AGE` | optional | `90` | config/cabinet_probe.php:157 |
-| `CABINET_PROBE_HISTORY_KEEP` | optional | `500` | config/cabinet_probe.php:54 |
-| `CABINET_PROBE_HOMEWORK_COURSE` | optional | `''` | config/cabinet_probe.php:153 |
-| `CABINET_PROBE_HOMEWORK_LESSON_ID` | optional | `0` | config/cabinet_probe.php:154 |
-| `CABINET_PROBE_KANVA_COURSE_ID` | optional | `0` | config/cabinet_probe.php:221 |
-| `CABINET_PROBE_PAYMENT_URL` | optional | `'https://enter.tochka.com/uapi/acquiring/v1.0/payments_with_receipt',` | config/cabinet_probe.php:76 |
+| `CABINET_PROBE_CHECK_DEPLOY_DRIFT` | optional | `true` | config/cabinet_probe.php:166 |
+| `CABINET_PROBE_CHECK_GUARDS` | optional | `true` | config/cabinet_probe.php:74 |
+| `CABINET_PROBE_CHECK_HOMEWORK_UPLOAD` | optional | `true` | config/cabinet_probe.php:112 |
+| `CABINET_PROBE_CHECK_OLLAMA_TUNNEL` | optional | `true` | config/cabinet_probe.php:136 |
+| `CABINET_PROBE_CHECK_PAYMENT_TLS` | optional | `true` | config/cabinet_probe.php:85 |
+| `CABINET_PROBE_CHECK_SCHEDULE_LINKS` | optional | `true` | config/cabinet_probe.php:124 |
+| `CABINET_PROBE_CRON` | optional | `'*/15 * * * *'` | config/cabinet_probe.php:59 |
+| `CABINET_PROBE_DEPLOY_DRIFT_BEHIND_MAX_AGE` | optional | `60` | config/cabinet_probe.php:168 |
+| `CABINET_PROBE_DEPLOY_DRIFT_FETCH_MAX_AGE` | optional | `90` | config/cabinet_probe.php:167 |
+| `CABINET_PROBE_HISTORY_KEEP` | optional | `500` | config/cabinet_probe.php:64 |
+| `CABINET_PROBE_HOMEWORK_COURSE` | optional | `''` | config/cabinet_probe.php:163 |
+| `CABINET_PROBE_HOMEWORK_LESSON_ID` | optional | `0` | config/cabinet_probe.php:164 |
+| `CABINET_PROBE_KANVA_COURSE_ID` | optional | `0` | config/cabinet_probe.php:231 |
+| `CABINET_PROBE_PAYMENT_URL` | optional | `'https://enter.tochka.com/uapi/acquiring/v1.0/payments_with_receipt',` | config/cabinet_probe.php:86 |
 | `CABINET_PROBE_PING_URL` | optional | `''` | config/cabinet_probe.php:20 |
 | `CABINET_PROBE_SCHEDULE_LINKS_HORIZON_DAYS` | optional | `14` | config/cabinet_probe.php:139 |
 | `CABINET_PROBE_SOFT_GREEN_GRACE_TICKS` | optional | `2` | config/cabinet_probe.php:49 |
@@ -109,7 +109,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID` | optional | `''` | config/cabinet_probe.php:26<br>config/logs_watch.php:51 |
 | `CABINET_PROBE_TELEGRAM_SOFT_COOLDOWN` | optional | `env('CABINET_PROBE_TELEGRAM_COOLDOWN', 60),` | config/cabinet_probe.php:36 |
 | `CABINET_PROBE_TELEGRAM_SOFT_REMINDER_HOURS` | optional | `24` | config/cabinet_probe.php:43 |
-| `CABINET_PROBE_TIMEOUT` | optional | `15` | config/cabinet_probe.php:51 |
+| `CABINET_PROBE_TIMEOUT` | optional | `15` | config/cabinet_probe.php:61 |
 | `CABINET_TOUR` | optional | `true` | config/features.php:1164 |
 | `CACHE_DRIVER` | optional | `'file'` | config/cache.php:18 |
 | `CACHE_PREFIX` | optional | `Str::slug(env('APP_NAME', 'laravel'), '_').'_cache_'` | config/cache.php:109 |
