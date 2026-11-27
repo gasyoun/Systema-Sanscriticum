@@ -33,6 +33,7 @@ use App\Http\Controllers\Student\HindiTranscriptDrillsController;
 use App\Http\Controllers\Student\LessonPackController;
 use App\Http\Controllers\Student\TestimonialSubmissionController;
 use App\Http\Controllers\StudentAgentController;
+use App\Http\Controllers\StudentAvailabilityController;
 use App\Http\Controllers\StudentCabinetGuideController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\StudentFaqController;
@@ -84,6 +85,14 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
 
     Route::get('/dvaram/help', [StudentCabinetGuideController::class, 'show'])
         ->name('student.help');
+
+    // Окна доступности (26-11-2026): студент сам задаёт удобные дни/часы.
+    // Контроллер 404, пока features.availability_windows OFF.
+    Route::get('/dvaram/availability', [StudentAvailabilityController::class, 'index'])
+        ->name('student.availability');
+    Route::post('/dvaram/availability', [StudentAvailabilityController::class, 'store'])
+        ->middleware('throttle:10,60')
+        ->name('student.availability.store');
 
     // H6301 — веб-паритет FAQ (тикет 5 аудита self-service): тот же
     // resources/knowledge/faq.md, что кормит BotKnowledgeBase бота,
