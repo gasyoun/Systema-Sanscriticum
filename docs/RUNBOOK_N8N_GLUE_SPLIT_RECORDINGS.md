@@ -34,6 +34,7 @@ _Created: 17-11-2026 · Last updated: 17-11-2026_
 8. **Устаревшая Titles-строка = кривое название всюду** (видео YT, Rutube, урок). Если преподаватель не обновил `last_topic`, труба тиражирует прошлую тему с прошлой датой. Склейка — повод заодно починить: `videos.update` (YT), `PATCH /api/video/{id}/` (Rutube), `UPDATE lessons SET title=…` (.92).
 9. `pkill -f '<pattern>'` по ssh убивает твою же ssh-команду, если pattern встречается в её собственной командной строке — только через файл-скрипт на сервере.
 10. Temp-workflow: после import — `docker restart n8n-n8n-1` (FINDINGS §546: живой процесс не перерегистрирует вебхуки); `cmdline`-порты брокера на каждый `n8n execute` — разные (5680+).
+11. **`n8n execute` из CLI 3.x требует Execute Workflow Trigger**; `readWriteFile` не пишет в `/home/node/.n8n` (только `/tmp`). Обход 17-11: HTTP-сервер на docker-bridge gw + запрос изнутри контейнера, либо вебхук temp-workflow (§6.4). Не путать с п.3 — OAuth из CLI невалиден.
 
 ## 3. Источники видео — по убыванию приоритета
 
