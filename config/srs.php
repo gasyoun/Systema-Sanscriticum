@@ -31,4 +31,15 @@ return [
     // Public /koloda/{slug} guest trial: how many cards a non-registered visitor
     // may flip before the soft register wall. Progress is not persisted.
     'guest_trial_cards' => (int) env('SRS_GUEST_TRIAL_CARDS', 10),
+
+    // H8599 (track Б, known-words). OFF by default: turning it on changes the
+    // queue of live users, so it goes behind an explicit env flag + measurement
+    // first (R2/Q10, R3/Q15, R4/Q16 grill 10-11-2026).
+    'known_words' => [
+        'enabled' => (bool) env('SRS_KNOWN_WORDS_ENABLED', false),
+
+        // Anki convention: a card is "already learned" when its FSRS interval
+        // (due - last_review) is at least this many days.
+        'mature_days' => (int) env('SRS_KNOWN_WORDS_MATURE_DAYS', 21),
+    ],
 ];

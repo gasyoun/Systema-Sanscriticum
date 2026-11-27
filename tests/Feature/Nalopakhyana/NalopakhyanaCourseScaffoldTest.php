@@ -86,7 +86,7 @@ class NalopakhyanaCourseScaffoldTest extends TestCase
         ], 200)]);
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertRedirect('https://pay.tochka/nala1');
 
         $this->assertDatabaseHas('payments', [

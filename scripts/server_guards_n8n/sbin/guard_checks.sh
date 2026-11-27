@@ -41,6 +41,19 @@ guard_cert_expiry() {
   fi
 }
 
+# guard_cert_days <enddate-string> <now_epoch>
+# Печатает целое число дней до конца сертификата (может быть отрицательным)
+# ИЛИ пусто, если строку не удалось разобрать. Пустой вход = ПУСТО, не «0»:
+# GNU `date -d ""` отдаёт полночь сегодняшнего дня с exit 0, и наивный вызов
+# превращал провалившуюся пробу TLS в ЛОЖНЫЙ critical «осталось 0 дней».
+guard_cert_days() {
+  local end="$1" now="$2" ep
+  [ -n "$end" ] || return 0
+  ep=$(date -d "$end" +%s 2>/dev/null || true)
+  [ -n "$ep" ] || return 0
+  printf '%s' "$(( (ep - now) / 86400 ))"
+}
+
 # guard_backup_age <label> <age_hours> <max_age_hours>
 # Возраст считается ПО НАЗНАЧЕНИЮ (локальный архив или снимок в off-site
 # репозитории); нечитаемый возраст — находка, а не молчание.

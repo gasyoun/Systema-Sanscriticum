@@ -7,8 +7,10 @@ namespace App\Http\Controllers;
 use App\Jobs\LessonAiJob;
 use App\Models\Course;
 use App\Models\Lesson;
+use App\Models\LessonAiEvent;
 use App\Models\User;
 use App\Services\Access\LessonGate;
+use App\Services\Knowledge\LessonAiEventLog;
 use App\Services\Knowledge\LessonAiService;
 use App\Support\ServerGuards\OllamaTunnelProbe;
 use Illuminate\Http\JsonResponse;
@@ -57,6 +59,14 @@ final class LessonAiController extends Controller
 
         // Готовый пересказ занятия — сразу, без модели и без расхода лимита.
         if ($task === 'summary' && ($md = $this->service->cachedSummary($lesson)) !== null) {
+            // Кэш-выдача тоже событие: по журналу видно, что модель не звали
+            // (source=cached), иначе «пересказов не было» читалось бы как сбой.
+            app(LessonAiEventLog::class)->record($user->id, $lesson->id, $task, LessonAiEvent::STATUS_DONE, [
+                'source' => LessonAiEvent::SOURCE_CACHED,
+                'answer_md' => $md,
+                'notes_chars' => null,
+            ]);
+
             return response()->json(LessonAiJob::donePayload($this->service, $task, ['md' => $md])
                 + ['cached' => true] + $this->quota($user));
         }
@@ -77,7 +87,7 @@ final class LessonAiController extends Controller
             'status' => 'pending',
         ], LessonAiJob::TTL);
 
-        LessonAiJob::dispatch($token, $lesson->id, $task, $input);
+        LessonAiJob::dispatch($token, $lesson->id, $task, $input, $user->id);
 
         // sync-очередь (локально, тесты) уже всё посчитала — отдаём сразу.
         $state = $this->publicState(Cache::get(LessonAiJob::key($token)));

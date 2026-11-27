@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Tests\Feature\Knowledge;
 
 use App\Filament\Resources\UserResource\Pages\ListUsers;
+use App\Models\Consent;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Lesson;
+use App\Models\LessonAiEvent;
 use App\Models\User;
+use App\Services\Consent\ConsentRecorder;
 use App\Services\Knowledge\LessonAiService;
 use App\Support\Roles;
 use Filament\Facades\Filament;
@@ -149,6 +152,7 @@ class LessonAiTest extends TestCase
             ->get(route('student.lesson', [$course->slug, $lesson->id]))
             ->assertOk()
             ->assertSee('data-testid="lesson-ai-tab"', false)
+            ->assertSee('Спроси Сократа')
             ->assertSee('js/lesson-ai.js', false);
     }
 
@@ -466,5 +470,45 @@ class LessonAiTest extends TestCase
         }
 
         return ['results' => ['channels' => [['alternatives' => [['words' => $words]]]]]];
+    }
+
+    public function test_logs_question_and_answer_for_consenting_tester(): void
+    {
+        $this->fakeNode('Сандхи — слияние звуков на стыке слов [00:41].');
+        [$course, $lesson, $student] = $this->openLesson();
+
+        $tester = $this->studentInGroupOf($course);
+        $tester->forceFill(['lesson_ai_tester' => true])->save();
+        app(ConsentRecorder::class)
+            ->given(Consent::TYPE_AI_TEST, 'test', null, $tester);
+
+        $this->actingAs($tester)
+            ->postJson(route('student.lesson.ai', [$course->slug, $lesson->id]), ['task' => 'explain', 'text' => 'сандхи'])
+            ->assertOk()
+            ->assertJsonPath('status', 'done');
+
+        $event = LessonAiEvent::query()->sole();
+        $this->assertSame($tester->id, $event->user_id);
+        $this->assertSame($lesson->id, $event->lesson_id);
+        $this->assertSame('explain', $event->task);
+        $this->assertSame('сандхи', $event->selection);
+        $this->assertStringContainsString('Сандхи', (string) $event->answer_md);
+    }
+
+    public function test_logs_counters_without_text_for_non_consenting_student(): void
+    {
+        $this->fakeNode('Ответ без согласия [00:41].');
+        [$course, $lesson, $student] = $this->openLesson();
+
+        $this->actingAs($student)
+            ->postJson(route('student.lesson.ai', [$course->slug, $lesson->id]), ['task' => 'explain', 'text' => 'сандхи'])
+            ->assertOk()
+            ->assertJsonPath('status', 'done');
+
+        $event = LessonAiEvent::query()->sole();
+        $this->assertSame('explain', $event->task);
+        $this->assertNull($event->question);
+        $this->assertNull($event->selection);
+        $this->assertNull($event->answer_md);
     }
 }

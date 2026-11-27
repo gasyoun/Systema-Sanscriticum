@@ -53,7 +53,7 @@ class PromoRecentPendingTest extends TestCase
         // Первый чекаут: создаётся pending со скидкой (8000).
         $this->actingAs($user)
             ->withSession(['promo_code' => $promo->code])
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertRedirect();
 
         $first = Payment::where('user_id', $user->id)->latest('id')->first();
@@ -63,7 +63,7 @@ class PromoRecentPendingTest extends TestCase
         // Второй чекаут в течение окна с тем же кодом → ошибка, НЕ новый заказ.
         $this->actingAs($user)
             ->withSession(['promo_code' => $promo->code])
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertSessionHasErrors('promo_code');
 
         // Второй платёж не создан — по-прежнему ровно один.
