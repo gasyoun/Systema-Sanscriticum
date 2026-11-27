@@ -286,12 +286,37 @@ class N8nSoftAlertWorkflowContractTest extends TestCase
      * Секреты не вшиваются в экспорт: проверка секрета остается на env,
      * токенов в узлах нет.
      */
+    /**
+     * Live-fix 27-11-2026 (execution 17392 "Credentials not found"): the
+     * export must be importable as-is on .91 — GitHub auth rides the
+     * env-token header expression (SOFT_ALERT_GITHUB_TOKEN on
+     * N8N_ENV_ALLOWLIST), never a UI credential reference.
+     */
+    public function test_github_auth_is_env_token_headers_not_credential_refs(): void
+    {
+        $byName = $this->nodesByName();
+        $githubNodes = ['GitHub list open issues', 'GitHub comment on existing', 'GitHub create issue',
+            'GitHub reconcile list', 'GitHub comment duplicate note', 'GitHub close duplicate',
+            'Sweep list open issues', 'Sweep close duplicate', 'Sweep comment duplicate'];
+        foreach ($githubNodes as $name) {
+            $raw = (string) json_encode($byName[$name] ?? []);
+            $this->assertStringNotContainsString('predefinedCredentialType', $raw, "{$name}: no UI credential references");
+            $this->assertStringNotContainsString('githubApi', $raw, "{$name}: no githubApi credential type");
+            $this->assertStringContainsString('Bearer {{$env.SOFT_ALERT_GITHUB_TOKEN}}', $raw, "{$name}: env-token Authorization header");
+            $this->assertStringContainsString('systema-n8n-soft-alert', $raw, "{$name}: pinned User-Agent");
+        }
+    }
+
     public function test_no_secrets_baked_into_export(): void
     {
         $raw = (string) file_get_contents(base_path(self::EXPORT));
         $this->assertStringNotContainsString('ghp_', $raw);
         $this->assertStringNotContainsString('github_pat_', $raw);
-        $this->assertStringNotContainsString('Bearer ', $raw);
+        // "Bearer " alone is now legal — it prefixes the env-token EXPRESSION
+        // (live-fix 27-11-2026). What must never appear is a baked token
+        // literal after it.
+        $this->assertDoesNotMatchRegularExpression('/Bearer [A-Za-z0-9_]{16,}/', $raw, 'no literal token after the Bearer scheme');
+        $this->assertStringContainsString('Bearer {{$env.SOFT_ALERT_GITHUB_TOKEN}}', $raw, 'the only Bearer is the env expression');
         $this->assertStringContainsString('$env.SOFT_ALERT_WEBHOOK_SECRET', $raw);
     }
 }
