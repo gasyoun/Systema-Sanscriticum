@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\Lesson;
+use App\Models\LessonAiEvent;
+use App\Services\Knowledge\LessonAiEventLog;
 use App\Services\Knowledge\LessonAiService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -20,8 +22,9 @@ use Throwable;
  * отвечает 10–90 секунд — в request-path это не держим: контроллер ставит
  * джобу и отдаёт токен, страница опрашивает {@see self::key()}.
  *
- * Состояние и ответ живут только в кэше и только {@see self::TTL} — тексты
- * студента (заметки, выделенный фрагмент, вопрос) нигде не сохраняются.
+ * Ответ живёт в кэше {@see self::TTL}, чтобы страница его забрала. Отдельно
+ * пишется строка журнала (LessonAiEventLog): тексты — только тестировщику с
+ * согласием ai_test, остальным счетчики; заметки текстом не сохраняются.
  * Ретраев нет: студент ждёт на странице и сам нажмёт «Повторить».
  */
 final class LessonAiJob implements ShouldQueue
@@ -43,6 +46,7 @@ final class LessonAiJob implements ShouldQueue
         public readonly int $lessonId,
         public readonly string $task,
         public readonly array $input,
+        public readonly int $userId,
     ) {
         $this->onQueue('imports');
     }
@@ -57,9 +61,12 @@ final class LessonAiJob implements ShouldQueue
         $lesson = Lesson::with('course')->find($this->lessonId);
         if (! $lesson instanceof Lesson) {
             $this->finish(['status' => 'error', 'error' => 'gone']);
+            $this->logEvent(LessonAiEvent::STATUS_ERROR, ['error_code' => 'gone']);
 
             return;
         }
+
+        $startedAt = microtime(true);
 
         try {
             $result = $service->run($this->task, $lesson, $this->input);
@@ -67,11 +74,19 @@ final class LessonAiJob implements ShouldQueue
             // Студент ничего не получил — и лимит не тратит.
             $this->refund($service);
             $this->finish(['status' => 'error', 'error' => $e->getMessage()]);
+            $this->logEvent(LessonAiEvent::STATUS_ERROR, [
+                'error_code' => $e->getMessage(),
+                'latency_ms' => $this->latencyMs($startedAt),
+            ]);
 
             return;
         }
 
         $this->finish(self::donePayload($service, $this->task, $result));
+        $this->logEvent(LessonAiEvent::STATUS_DONE, [
+            'answer_md' => $result['md'] ?? null,
+            'latency_ms' => $this->latencyMs($startedAt),
+        ]);
     }
 
     public function failed(Throwable $e): void
@@ -79,6 +94,33 @@ final class LessonAiJob implements ShouldQueue
         Log::warning('LessonAiJob failed', ['task' => $this->task, 'lesson_id' => $this->lessonId, 'error' => $e->getMessage()]);
         $this->refund(app(LessonAiService::class));
         $this->finish(['status' => 'error', 'error' => 'provider']);
+        $this->logEvent(LessonAiEvent::STATUS_ERROR, ['error_code' => 'provider']);
+    }
+
+    /**
+     * Строка журнала: тексты кладет LessonAiEventLog, он же решает, можно ли
+     * их хранить. Заметки передаются только длиной — так и в схеме.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function logEvent(string $status, array $data = []): void
+    {
+        app(LessonAiEventLog::class)->record(
+            $this->userId,
+            $this->lessonId,
+            $this->task,
+            $status,
+            $data + [
+                'question' => $this->input['question'] ?? null,
+                'selection' => $this->input['text'] ?? null,
+                'notes_chars' => isset($this->input['notes']) ? mb_strlen((string) $this->input['notes']) : null,
+            ],
+        );
+    }
+
+    private function latencyMs(float $startedAt): int
+    {
+        return (int) round((microtime(true) - $startedAt) * 1000);
     }
 
     /** Один возврат на токен — повторный failed() после handle() не вернёт дважды. */

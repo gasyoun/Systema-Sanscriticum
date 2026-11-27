@@ -56,6 +56,7 @@
 - [deploy.md](deploy.md) — документированный деплой.
 - [server-resource-guards.md](server-resource-guards.md) — ресурсные ограничения и защита сервера.
 - [SERVER_SOFT_ALERT_PLAYBOOK.md](SERVER_SOFT_ALERT_PLAYBOOK.md) — playbook soft-alert.
+- [PLAYBOOK_STAFF_OFFBOARDING_EMERGENCY_HANDOVER_RU.md](PLAYBOOK_STAFF_OFFBOARDING_EMERGENCY_HANDOVER_RU.md) — уход сотрудника и аварийная передача дел: доступ замены до отзыва, порядок ротации секретов, проверки непрерывности.
 - [UPTIME_BETTERSTACK_MONITORING_RU.md](UPTIME_BETTERSTACK_MONITORING_RU.md) — мониторинг uptime.
 - [agents/issue-tracker.md](agents/issue-tracker.md) — работа с issue tracker.
 - [agents/triage-labels.md](agents/triage-labels.md) — метки triage.

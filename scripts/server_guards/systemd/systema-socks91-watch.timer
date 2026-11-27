@@ -1,0 +1,17 @@
+# systema-socks91-watch.timer — такт сторожа SOCKS-метки .91 (H8564, #4429 п.2).
+# MANAGED FILE — свой таймер, не строка в cron (H4929: у каждого сторожа своя
+# судьба; общий cron означает общую смерть). Такт 5 мин при пороге тишины
+# 15 мин: три пропущенных пуша подряд = инцидент, а не дрожание сети.
+[Unit]
+Description=Check the vps91 SOCKS heartbeat marker every 5 minutes (H8564)
+Documentation=https://github.com/gasyoun/Systema-Sanscriticum/issues/4429
+
+[Timer]
+OnBootSec=4min
+OnUnitActiveSec=5min
+Persistent=true
+RandomizedDelaySec=20
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\GameTelemetryController;
 use App\Http\Controllers\Api\LilaGateController;
 use App\Http\Controllers\Api\PublicWaitlistController;
 use App\Http\Controllers\BookClubController;
+use App\Http\Controllers\BookClubShopController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MarathonController;
@@ -208,6 +209,15 @@ Route::get('/knizhny-klub/dostavka', [BookClubController::class, 'show'])
 Route::post('/knizhny-klub/dostavka', [BookClubController::class, 'submit'])
     ->middleware('throttle:10,1')
     ->name('book-club.submit');
+
+// «Книжный клуб» — МАГАЗИН (H8412): книга «Школьные лекции» 1000 ₽ × N +
+// доставка или самовывоз, без полей кампании planeta. Свой рубильник
+// BOOK_CLUB_SHOP (дефолт OFF — контроллер отдаёт 404).
+Route::get('/knizhny-klub/kupit', [BookClubShopController::class, 'show'])
+    ->name('book-club.shop');
+Route::post('/knizhny-klub/kupit', [BookClubShopController::class, 'submit'])
+    ->middleware('throttle:10,1')
+    ->name('book-club.shop.submit');
 
 // «Консультация по онлайн-курсам ОРС» — 3-дневный диагностический марафон,
 // верхний вход воронки (H440, Phase 1: landing + capture). Evergreen —

@@ -9,6 +9,7 @@ use App\Models\Dictionary;
 use App\Models\DictionaryWord;
 use App\Models\SrsCard;
 use App\Models\SrsDeck;
+use App\Services\Srs\KnownWords;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
@@ -104,8 +105,11 @@ class EditSrsDeck extends EditRecord
 
         $query->chunkById(200, function ($words) use ($deck, &$created): void {
             foreach ($words as $word) {
-                $card = SrsCard::firstOrCreate(
-                    ['deck_id' => $deck->id, 'source_word_id' => $word->id],
+                // H8599: same-shape guard while seeding a deck from the
+                // dictionary (lemma + note type, flag ON only).
+                $card = app(KnownWords::class)->firstOrCreateCard(
+                    $deck,
+                    $word->id,
                     [
                         'direction' => 'front_back',
                         'fields' => [
@@ -116,6 +120,9 @@ class EditSrsDeck extends EditRecord
                         ],
                     ],
                 );
+                if ($card === null) {
+                    return;
+                }
 
                 if ($card->wasRecentlyCreated) {
                     $created++;

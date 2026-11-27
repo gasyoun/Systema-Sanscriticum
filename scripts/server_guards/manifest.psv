@@ -64,3 +64,14 @@ sshd/60-restic-append-only.conf|/etc/ssh/sshd_config.d/60-restic-append-only.con
 # (отчёт 2026-10-01 03:14Z, census H6286). Крон-строка уже управляемая:
 # scripts/server_guards/cron/root.crontab:55 — «14 3 1 * * /usr/local/sbin/restore_drill.sh».
 sbin/restore_drill.sh|/usr/local/sbin/restore_drill.sh|755|critical
+
+# H8564 (23-11-2026) — внешний свидетель SOCKS-канала .91 (#4429 п.2). Метку
+# /var/lib/systema-guards/socks91_hub.last пушит socks-liveness-check.sh на .91
+# (scripts/server_guards_n8n/manifest.psv); этот сторож — её единственный
+# читатель, поэтому тишина метки = туннель ИЛИ таймер .91 ИЛИ сама .91.
+# Приёмник крика .91 тоже управляемый: до H8564 socks-alarm-relay.sh был
+# файлом, которого нет в репозитории ("rebuild = silent loss" класс).
+sbin/systema-socks91-watch.sh|/usr/local/sbin/systema-socks91-watch.sh|755|warning
+sbin/socks-alarm-relay.sh|/usr/local/sbin/socks-alarm-relay.sh|755|warning
+systemd/systema-socks91-watch.service|/etc/systemd/system/systema-socks91-watch.service|644|warning
+systemd/systema-socks91-watch.timer|/etc/systemd/system/systema-socks91-watch.timer|644|warning

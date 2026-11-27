@@ -11,6 +11,7 @@ use App\Models\LessonAccessGrant;
 use App\Models\Payment;
 use App\Services\HomeworkImagePdfService;
 use App\Services\HomeworkService;
+use App\Services\Payments\B2bGroupEntitlement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -330,6 +331,15 @@ class HomeworkController extends Controller
             ->withAccessExpiry()
             ->pluck('tariff')
             ->toArray();
+
+        // H8245-регрессия (24-11-2026): B2B-ключи группы — не клубные и живут
+        // по тому же правилу «плеер пускает ⇒ ДЗ принимает». Без них ученик
+        // группы с оплатой юрлица видел урок, а на сдаче ДЗ получал 403
+        // (гр. 157 курса 463 «Грамматика по Кочергиной»: 11 из 13 человек).
+        $unlocked = array_values(array_unique(array_merge(
+            $unlocked,
+            app(B2bGroupEntitlement::class)->extraTariffKeysFor($user, $course),
+        )));
 
         if (! $lesson->isUnlockedBy($unlocked)) {
             abort(403, 'Нет доступа к этому уроку.');

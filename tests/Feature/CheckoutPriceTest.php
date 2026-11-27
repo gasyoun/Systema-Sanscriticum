@@ -62,7 +62,7 @@ class CheckoutPriceTest extends TestCase
         $tariff = Tariff::factory()->for($course)->create(['price' => 5000]);
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertSessionHasErrors('tariff_id');
 
         $this->assertDatabaseCount('payments', 0);
@@ -86,7 +86,7 @@ class CheckoutPriceTest extends TestCase
         // цены ДО вызова Точки.
         $this->actingAs($user)
             ->withSession(['promo_code' => $promo->code])
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertRedirect(route('student.dashboard'));
 
         $payment = Payment::where('user_id', $user->id)->firstOrFail();
@@ -113,7 +113,7 @@ class CheckoutPriceTest extends TestCase
 
         $this->actingAs($user)
             ->withSession(['promo_code' => $promo->code])
-            ->post(route('payment.create'), ['tariff_id' => $tariff->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $tariff->id])
             ->assertRedirect('https://pay.tochka.com/redirect/abc');
 
         $payment = Payment::where('user_id', $user->id)->firstOrFail();
@@ -159,7 +159,7 @@ class CheckoutPriceTest extends TestCase
 
         // Первый заказ: 5000 − 2000 депозит = 3000, уходит в Точку как pending.
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $block1->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $block1->id])
             ->assertRedirect('https://pay.tochka.com/redirect/abc');
 
         $paymentA = Payment::where('tariff', 'block_1')->firstOrFail();
@@ -169,7 +169,7 @@ class CheckoutPriceTest extends TestCase
         // Второй заказ на тот же курс, депозит ещё не потрачен (paymentA не оплачен) →
         // должен быть отклонён, а не создан со своим полным вычетом того же депозита.
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $block2->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $block2->id])
             ->assertSessionHasErrors('tariff_id');
 
         $this->assertSame(0, Payment::where('tariff', 'block_2')->count());
@@ -179,7 +179,7 @@ class CheckoutPriceTest extends TestCase
         $paymentA->update(['status' => 'paid']);
 
         $this->actingAs($user)
-            ->post(route('payment.create'), ['tariff_id' => $block2->id])
+            ->post(route('payment.create'), ['oferta_accepted' => '1', 'pd_consent' => '1', 'tariff_id' => $block2->id])
             ->assertRedirect('https://pay.tochka.com/redirect/abc');
 
         $paymentB = Payment::where('tariff', 'block_2')->firstOrFail();
