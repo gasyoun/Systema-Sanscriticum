@@ -28,6 +28,7 @@ use App\Services\Leaderboard\LeaderboardService;
 use App\Services\Learning\ExternalLearningProgressService;
 use App\Services\Membership\ClubEntitlement;
 use App\Services\Membership\ClubMembershipService;
+use App\Services\Membership\LadderV2;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use App\Services\Schedule\TextbookScale;
@@ -185,6 +186,10 @@ trait StudentDashboardConcerns
         abort_unless((bool) config('features.cabinet_hybrid'), 404);
 
         $user = auth()->user();
+        // С 01-12 библиотека — часть «Оптимального»; до даты поведение прежнее.
+        if (app(LadderV2::class)->active()) {
+            abort_unless(app(ClubEntitlement::class)->allows($user, 'library'), 403);
+        }
         $recovery = app(RecoveryStateResolver::class)->resolve($user);
         $catalog = app(RecordingsCatalog::class)->forUser($user);
         $suppressOffers = $recovery->suppressOffers();
