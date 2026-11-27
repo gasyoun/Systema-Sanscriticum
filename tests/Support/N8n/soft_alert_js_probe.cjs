@@ -73,7 +73,9 @@ check(
 
 // Empty-list + alwaysOutputData transport case: one empty item in, no match out.
 const emptyListOut = runCode(codeOf('Match exact title'), [{ json: {} }], { 'Webhook soft-alert': [webhookItem] })[0].json;
-check('match: empty list item is not a match, title still built', emptyListOut, { expected_title: TITLE_X, matches: [] });
+check('match: empty list item is not a match, title still built', emptyListOut, { expected_title: TITLE_X, matches: [], issue_body: emptyListOut.issue_body, repeat_comment_body: emptyListOut.repeat_comment_body });
+check('match: issue_body carries the rendered full-fp marker', emptyListOut.issue_body.includes('<!-- soft-alert-fingerprint:' + FP_X + ' -->'), true);
+check('match: repeat comment carries the failures line', emptyListOut.repeat_comment_body.includes('- guards/failed-units: telegram-daily.service'), true);
 
 // ---------------------------------------------------------------- reconcile
 const reconcileOut = runCode(
@@ -90,6 +92,7 @@ check('reconcile: rival = lowest same-fp issue (full object), colliding fp exclu
   expected_title: TITLE_X,
   rival: listItems[2].json,
   rivals_count: 2,
+  dup_note_body: 'Closed as duplicate of #103 - concurrent soft-alert deliveries converge on one issue (H8562).',
 });
 
 const reconcileCollideOut = runCode(
@@ -106,6 +109,7 @@ check('reconcile: a lower-number 8-hex collision is NOT a rival', reconcileColli
   expected_title: TITLE_X,
   rival: null,
   rivals_count: 0,
+  dup_note_body: '',
 });
 
 // ---------------------------------------------------------------- finding 3b
@@ -125,21 +129,21 @@ check(
   'sweep: only provable duplicates close (202 group: 203, 204); ambiguous 201 / colliding 205 / PR / closed / foreign untouched',
   sweepOut,
   [
-    { json: { title: TITLE_X, survivor_number: 202, duplicate_number: 203 } },
-    { json: { title: TITLE_X, survivor_number: 202, duplicate_number: 204 } },
+    { json: { title: TITLE_X, survivor_number: 202, duplicate_number: 203, sweep_note_body: 'Closed as duplicate - periodic soft-alert dedup sweep (H8562). Survivor: the lowest-numbered OPEN issue with the same title and full fingerprint.' } },
+    { json: { title: TITLE_X, survivor_number: 202, duplicate_number: 204, sweep_note_body: 'Closed as duplicate - periodic soft-alert dedup sweep (H8562). Survivor: the lowest-numbered OPEN issue with the same title and full fingerprint.' } },
   ],
 );
 
 // ---------------------------------------------------------------- finding 1
-// The create body marker: evaluate the exported template the way n8n does.
+// The create body marker: the body is composed in the Match Code node
+// (live-fix 27-11-2026: n8n extendSyntax rejects template literals with
+// escaped backticks / nested interpolation inside ={{ }} jsonBody), and the
+// create node references it flatly. Execute the real composer and pin both.
 const createBody = byName['GitHub create issue'].parameters.jsonBody;
-const markerTemplate = '<!-- soft-alert-fingerprint:${$(\'Webhook soft-alert\').first().json.body.fingerprint} -->';
-check('create: body template embeds the marker', createBody.includes(markerTemplate), true);
-const rendered = markerTemplate.replace(
-  /\$\{\$\('Webhook soft-alert'\)\.first\(\)\.json\.body\.fingerprint\}/,
-  webhookItem.json.body.fingerprint,
-);
-check('create: marker renders with the full fingerprint', rendered, '<!-- soft-alert-fingerprint:' + FP_X + ' -->');
+check('create: body comes from the Match node composer (flat expression)', createBody.includes("body: $('Match exact title').first().json.issue_body"), true);
+check('create: composer embeds the rendered marker with the FULL fingerprint', matchOut.issue_body.includes('<!-- soft-alert-fingerprint:' + FP_X + ' -->'), true);
+check('create: rendered marker', matchOut.issue_body.split('\n').filter((l) => l.startsWith('<!-- soft-alert-fingerprint:'))[0], '<!-- soft-alert-fingerprint:' + FP_X + ' -->');
+check('create: composer never rebuilds the title', createBody.includes('slice(0, 8)'), false);
 
 // finding 2: pagination config per the documented n8n schema.
 for (const name of ['GitHub list open issues', 'GitHub reconcile list', 'Sweep list open issues']) {

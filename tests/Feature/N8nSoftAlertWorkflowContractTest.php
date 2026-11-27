@@ -162,12 +162,9 @@ class N8nSoftAlertWorkflowContractTest extends TestCase
         $byName = $this->nodesByName();
 
         $create = (string) ($byName['GitHub create issue']['parameters']['jsonBody'] ?? '');
-        $this->assertStringContainsString('<!-- soft-alert-fingerprint:', $create, 'created issue body carries the structured full-fingerprint marker');
-        $this->assertStringContainsString(
-            '<!-- soft-alert-fingerprint:${$(\'Webhook soft-alert\').first().json.body.fingerprint} -->',
-            $create,
-            'the marker interpolates the delivered FULL fingerprint'
-        );
+        $this->assertStringContainsString("body: $('Match exact title').first().json.issue_body", $create, 'created issue body comes from the Match node composer (live-fix 27-11-2026: n8n extendSyntax rejects template literals with escaped backticks/nested interpolation inside ={{ }} jsonBody)');
+        $matchCode = (string) ($byName['Match exact title']['parameters']['jsCode'] ?? '');
+        $this->assertStringContainsString("<!-- soft-alert-fingerprint:' + (body.fingerprint || '') + ' -->", $matchCode, 'the composer embeds the structured marker interpolating the delivered FULL fingerprint');
         $this->assertStringNotContainsString('slice(0, 8)', $create, 'create must not rebuild the title');
 
         foreach (['Match exact title', 'Reconcile find rival'] as $name) {
@@ -278,7 +275,11 @@ class N8nSoftAlertWorkflowContractTest extends TestCase
         $this->assertStringContainsString('{{$json.duplicate_number}}', $closeUrl);
 
         $commentUrl = (string) ($byName['Sweep comment duplicate']['parameters']['url'] ?? '');
-        $this->assertStringContainsString('{{$json.number}}', $commentUrl);
+        // The comment node sits AFTER the close node, so $json there is the
+        // close response — it must read the duplicate number through the
+        // paired-item reference to the group node. (The pre-live-fix URL
+        // read $json.number, which exists on neither object.)
+        $this->assertStringContainsString("{{ $('Sweep group duplicates').item.json.duplicate_number }}", $commentUrl);
     }
 
     /**
