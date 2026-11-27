@@ -32,7 +32,7 @@ class LessonFlashCardsSync
 
     public const DECK_LANGUAGE = 'sa';
 
-    /** @return array{deck_id:int,cards:int}|null null when the lesson has no flash cards */
+    /** @return array{deck_id:int,cards:int,skipped:int}|null null when the lesson has no flash cards */
     public static function sync(Lesson $lesson): ?array
     {
         if (! $lesson->hasFlashcards()) {
@@ -69,6 +69,8 @@ class LessonFlashCardsSync
             SrsCard::where('deck_id', $deck->id)->delete();
 
             $cards = 0;
+            $skipped = 0;
+            $seen = [];
             foreach ((array) $lesson->flash_cards as $entry) {
                 [$front, $back] = self::normalize($entry);
                 if ($front === '') {
@@ -80,15 +82,33 @@ class LessonFlashCardsSync
                     $fields['back'] = $back;
                 }
 
-                SrsCard::create([
-                    'deck_id' => $deck->id,
+                // H8599: import-level same-shape dedup (flag ON only). A
+                // lesson's flash cards have no lemma, so the shape key is
+                // note type + normalized front; duplicates inside one sync
+                // are caught here, duplicates in another deck by the service.
+                $shape = KnownWords::shapeKey($deck, null, $fields);
+                if (KnownWords::enabled() && $shape !== null && isset($seen[$shape])) {
+                    $skipped++;
+
+                    continue;
+                }
+                if ($shape !== null) {
+                    $seen[$shape] = true;
+                }
+
+                $card = app(KnownWords::class)->createCard($deck, null, [
                     'direction' => 'front_back',
                     'fields' => $fields,
                 ]);
+                if ($card === null) {
+                    $skipped++;
+
+                    continue;
+                }
                 $cards++;
             }
 
-            return ['deck_id' => $deck->id, 'cards' => $cards];
+            return ['deck_id' => $deck->id, 'cards' => $cards, 'skipped' => $skipped];
         });
     }
 
