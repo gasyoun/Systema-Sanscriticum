@@ -1012,53 +1012,63 @@ class ProbeCabinetHealth extends Command
 
         // Soft + host-guard-critical (tmpfs/backup): sticky, not SOS.
         // H1941/H2335 + H3197: same class silent until green or reminder.
+        // H8562: вся секция read → check → send → write под single-flight
+        // локом — перекрывающиеся пробы не читают «новый отпечаток» дважды.
         if ($criticalHealthy && $softFails !== []) {
             $fingerprint = SoftFailureFingerprint::hash($softFails);
-            $lastSoftAt = $state->getTime(CabinetProbeAlertState::LAST_SOFT_ALERT_AT);
-            $lastFp = $state->getString(CabinetProbeAlertState::LAST_SOFT_FP);
-            $sameSet = is_string($lastFp) && $lastFp === $fingerprint;
-            if (! $force && $sameSet && $lastSoftAt !== null) {
-                if ($reminderHours === 0) {
-                    $this->comment('TG soft-sticky: тот же soft/host-класс, без re-alert до зеленого (reminder=0)');
+            $guard = $state->withSoftLock(function () use ($state, $force, $reminderHours, $softFails, $fingerprint, $token, $softIds): void {
+                // H8562: сбой прерывает серию зеленых проб (flap grace).
+                $state->forget(CabinetProbeAlertState::SOFT_GREEN_STREAK);
 
-                    return;
+                $lastSoftAt = $state->getTime(CabinetProbeAlertState::LAST_SOFT_ALERT_AT);
+                $lastFp = $state->getString(CabinetProbeAlertState::LAST_SOFT_FP);
+                $sameSet = is_string($lastFp) && $lastFp === $fingerprint;
+                if (! $force && $sameSet && $lastSoftAt !== null) {
+                    if ($reminderHours === 0) {
+                        $this->comment('TG soft-sticky: тот же soft/host-класс, без re-alert до зеленого (reminder=0)');
+
+                        return;
+                    }
+                    $elapsedH = (int) now()->diffInHours($lastSoftAt, absolute: true);
+                    if ($elapsedH < $reminderHours) {
+                        $this->comment('TG soft-sticky: ~'.($reminderHours - $elapsedH).' ч до reminder (тот же soft/host-класс)');
+
+                        return;
+                    }
                 }
-                $elapsedH = (int) now()->diffInHours($lastSoftAt, absolute: true);
-                if ($elapsedH < $reminderHours) {
-                    $this->comment('TG soft-sticky: ~'.($reminderHours - $elapsedH).' ч до reminder (тот же soft/host-класс)');
 
-                    return;
+                $scopeRaw = $this->softAlertScope($softFails);
+                $scope = e($scopeRaw);
+                $hostOnly = $this->softFailsAreHostGuards($softFails);
+                $heading = $hostOnly
+                    ? "⚠️ <b>Кабинет: host/ops</b> ({$scope})"
+                    : "⚠️ <b>Кабинет: soft-сбой</b> ({$scope})";
+                $lines = array_map(fn ($f) => '• '.e($f['message']), array_slice($softFails, 0, 8));
+                $text = $heading."\n\n"
+                    .$this->telegramUrlBlock()."\n"
+                    .implode("\n", $lines)."\n\n"
+                    .$this->telegramRunbook();
+                $sent = $token !== '' && $softIds !== []
+                    ? $this->sendTelegram($token, $softIds, $text)
+                    : false;
+
+                $webhook = ['attempted' => false, 'ok' => false, 'detail' => 'skipped'];
+                if (! $this->option('dry')) {
+                    $webhook = app(SoftAlertWebhookNotifier::class)->notify($scopeRaw, $fingerprint, $softFails);
+                    if ($webhook['attempted']) {
+                        $this->comment('soft-webhook: '.$webhook['detail']);
+                    }
                 }
-            }
 
-            $scopeRaw = $this->softAlertScope($softFails);
-            $scope = e($scopeRaw);
-            $hostOnly = $this->softFailsAreHostGuards($softFails);
-            $heading = $hostOnly
-                ? "⚠️ <b>Кабинет: host/ops</b> ({$scope})"
-                : "⚠️ <b>Кабинет: soft-сбой</b> ({$scope})";
-            $lines = array_map(fn ($f) => '• '.e($f['message']), array_slice($softFails, 0, 8));
-            $text = $heading."\n\n"
-                .$this->telegramUrlBlock()."\n"
-                .implode("\n", $lines)."\n\n"
-                .$this->telegramRunbook();
-            $sent = $token !== '' && $softIds !== []
-                ? $this->sendTelegram($token, $softIds, $text)
-                : false;
-
-            $webhook = ['attempted' => false, 'ok' => false, 'detail' => 'skipped'];
-            if (! $this->option('dry')) {
-                $webhook = app(SoftAlertWebhookNotifier::class)->notify($scopeRaw, $fingerprint, $softFails);
-                if ($webhook['attempted']) {
-                    $this->comment('soft-webhook: '.$webhook['detail']);
+                if ($sent || $webhook['ok']) {
+                    $state->put([
+                        CabinetProbeAlertState::LAST_SOFT_ALERT_AT => now(),
+                        CabinetProbeAlertState::LAST_SOFT_FP => $fingerprint,
+                    ]);
                 }
-            }
-
-            if ($sent || $webhook['ok']) {
-                $state->put([
-                    CabinetProbeAlertState::LAST_SOFT_ALERT_AT => now(),
-                    CabinetProbeAlertState::LAST_SOFT_FP => $fingerprint,
-                ]);
+            });
+            if (! $guard['acquired']) {
+                $this->comment('TG soft: лок in-flight занят другой пробой — этот тик молчит (H8562 single-flight)');
             }
 
             return;
@@ -1074,9 +1084,10 @@ class ProbeCabinetHealth extends Command
                 CabinetProbeAlertState::HTTP_DOWN,
                 CabinetProbeAlertState::LAST_HTTP_ALERT_AT,
                 CabinetProbeAlertState::LAST_HTTP_FP,
-                CabinetProbeAlertState::LAST_SOFT_ALERT_AT,
-                CabinetProbeAlertState::LAST_SOFT_FP,
             );
+            // H8562: одна зеленая проба больше НЕ снимает soft-инцидент —
+            // только N подряд (flap grace), см. advanceSoftGreenStreak().
+            $this->advanceSoftGreenStreak($state);
             if (! $wasHttpDown) {
                 return;
             }
@@ -1129,6 +1140,54 @@ class ProbeCabinetHealth extends Command
                 CabinetProbeAlertState::LAST_HTTP_ALERT_AT => now(),
                 CabinetProbeAlertState::LAST_HTTP_FP => $fingerprint,
             ]);
+        }
+    }
+
+    /**
+     * H8562 flap grace: одна зеленая проба не закрывает активный
+     * soft-инцидент. guards/failed-units флапает в такт 10-минутного
+     * таймера при пробе раз в 15 минут: на тиках :00/:30 failing-юнит в
+     * состоянии activating и невидим для `systemctl --failed` → ложная
+     * зелень → старый код забывал LAST_SOFT_* → следующая проба :15/:45
+     * снова «новый класс» → свежий issue каждые 30 минут (шторм 21–23.11:
+     * 35 issues на отпечаток 6fd69840). Закрывает только устойчивая зелень
+     * — N подряд (cabinet_probe.soft_green_grace_ticks); сбой сбрасывает
+     * счетчик (soft-путь под тем же локом).
+     */
+    private function advanceSoftGreenStreak(CabinetProbeAlertState $state): void
+    {
+        if (! is_string($state->getString(CabinetProbeAlertState::LAST_SOFT_FP))) {
+            return; // активного soft-инцидента нет — нечего закрывать
+        }
+        $grace = max(1, (int) config('cabinet_probe.soft_green_grace_ticks', 2));
+        $guard = $state->withSoftLock(function () use ($state, $grace): int {
+            if (! is_string($state->getString(CabinetProbeAlertState::LAST_SOFT_FP))) {
+                return -1; // конкурентный тик закрыл раньше
+            }
+            $streak = (int) ($state->getString(CabinetProbeAlertState::SOFT_GREEN_STREAK) ?? '0') + 1;
+            if ($streak >= $grace) {
+                $state->forget(
+                    CabinetProbeAlertState::LAST_SOFT_ALERT_AT,
+                    CabinetProbeAlertState::LAST_SOFT_FP,
+                    CabinetProbeAlertState::SOFT_GREEN_STREAK,
+                );
+
+                return $streak;
+            }
+            $state->put([CabinetProbeAlertState::SOFT_GREEN_STREAK => (string) $streak]);
+
+            return $streak;
+        }, waitSeconds: 2);
+        if (! $guard['acquired']) {
+            $this->comment('TG soft: лок занят — green-streak не учтен в этом тике (H8562)');
+
+            return;
+        }
+        $streak = (int) $guard['value'];
+        if ($streak >= $grace) {
+            $this->comment("TG soft: {$grace} зеленых проб подряд — soft-инцидент закрыт (H8562 grace).");
+        } elseif ($streak > 0) {
+            $this->comment("TG soft: зеленая проба {$streak}/{$grace} — инцидент еще открыт (H8562 flap grace).");
         }
     }
 

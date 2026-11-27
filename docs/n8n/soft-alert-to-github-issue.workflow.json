@@ -1,5 +1,5 @@
 {
-  "name": "Systema soft-alert → GitHub issue (skeleton H2148)",
+  "name": "Systema soft-alert → GitHub issue (dedup H8562)",
   "nodes": [
     {
       "parameters": {
@@ -36,15 +36,90 @@
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ { \"ok\": false, \"error\": \"unauthorized\" } }}",
-        "options": {
-          "responseCode": 401
-        }
+        "options": { "responseCode": 401 }
       },
       "id": "respond-401",
       "name": "Respond 401",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [480, 120]
+      "position": [480, 160]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.github.com/repos/gasyoun/Systema-Sanscriticum/issues",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendQuery": true,
+        "queryParameters": { "parameters": [ { "name": "state", "value": "open" }, { "name": "labels", "value": "ops-soft-alert" }, { "name": "sort", "value": "created" }, { "name": "direction", "value": "desc" }, { "name": "per_page", "value": "100" } ] },
+        "options": { "pagination": { "pagination": { "paginationMode": "updateAParameterInEachRequest", "parameters": { "parameters": [ { "type": "qs", "name": "page", "value": "={{ $pageCount + 1 }}" } ] }, "paginationCompleteWhen": "responseIsEmpty", "limitPagesFetched": true, "maxRequests": 20, "requestInterval": 300 } } }
+      },
+      "id": "github-list-open",
+      "name": "GitHub list open issues",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [480, -80],
+      "alwaysOutputData": true,
+      "notes": "H8562 v3: consistent REST list, never lagged search. alwaysOutputData — empty array still emits one item, so the FIRST issue on an empty board is created; supported pagination (page=$pageCount+1, empty-page complete, max 20). Rationale: docs/ops/SOFT_ALERT_WEBHOOK.md §4."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// H8562 v3: ONE dedup-key source; match = exact title + FULL fingerprint\n// (marker, legacy **Fingerprint:** line fallback); unprovable bodies never match.\nconst body = $('Webhook soft-alert').first().json.body || {};\nconst expected = '[soft-alert] ' + (body.scope || 'unknown') + ' ' + (body.fingerprint || '').slice(0, 8);\nconst fp = String(body.fingerprint || '').trim().toLowerCase();\nconst fpOf = (t) => { const m = String(t || '').match(/<!--\\s*soft-alert-fingerprint:([0-9a-fA-F]{8,128})\\s*-->|\\*\\*Fingerprint:\\*\\*\\s*`([0-9a-fA-F]{8,128})`/); return m ? (m[1] || m[2]).toLowerCase() : null; };\nconst matches = $input.all()\n  .map(i => i.json)\n  .filter(i => i && (i.title || '') === expected && i.state === 'open' && !i.pull_request && fp !== '' && fpOf(i.body) === fp)\n  .sort((a, b) => a.number - b.number)\n  .map(i => ({ number: i.number, html_url: i.html_url }));\nreturn [{ json: { expected_title: expected, matches } }];"
+      },
+      "id": "match-title",
+      "name": "Match exact title",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, -80]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.matches.length }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "if-existing",
+      "name": "IF existing open issue",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [960, -80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/gasyoun/Systema-Sanscriticum/issues/{{$json.matches[0].number}}/comments",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: `Same fingerprint re-fired — staying in this issue (H8562 dedup; sender flap grace landed in Systema PR).\\n\\n**When:** ${$('Webhook soft-alert').first().json.body.occurred_at}\\n**Failures:**\\n${($('Webhook soft-alert').first().json.body.failures || []).map(f => \\`- ${f.message}\\`).join('\\n')}` }) }}",
+        "options": {}
+      },
+      "id": "github-comment-existing",
+      "name": "GitHub comment on existing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1200, -200],
+      "notes": "A repeat delivery comments on the lowest-numbered open issue whose body PROVES the same full fingerprint."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"ok\": true, \"deduped\": true, \"issue\": $('Match exact title').first().json.matches[0].html_url || null } }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-200-dedup",
+      "name": "Respond 200 deduped",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1440, -200]
     },
     {
       "parameters": {
@@ -54,55 +129,215 @@
         "nodeCredentialType": "githubApi",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ title: `[soft-alert] ${$json.body.scope || 'unknown'} ${( $json.body.fingerprint || '' ).slice(0,8)}`, body: `## Soft cabinet alert\\n\\n**Scope:** ${$json.body.scope}\\n**Fingerprint:** \\`${$json.body.fingerprint}\\`\\n**When:** ${$json.body.occurred_at}\\n\\n### Failures\\n${($json.body.failures || []).map(f => `- ${f.message}`).join('\\n')}\\n\\n### Playbook\\nhttps://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md\\n\\n### Suggested (agent)\\n\\`\\`\\`\\nssh root@193.232.229.92\\ncd /var/www/html\\n${$json.body.suggested?.diagnose || 'php artisan ops:soft-remediate --dry-run --json'}\\n\\`\\`\\`\\n\\nAssignee: @pe4kinsmart-tech\\nLabel: ops-soft-alert\\nH2148 skeleton — do not auto-apply hard fuse clears.`, labels: ['ops-soft-alert'], assignees: ['pe4kinsmart-tech'] }) }}",
+        "jsonBody": "={{ JSON.stringify({ title: $('Match exact title').first().json.expected_title, body: `## Soft cabinet alert\\n\\n**Scope:** ${$('Webhook soft-alert').first().json.body.scope}\\n**Fingerprint:** \\`${$('Webhook soft-alert').first().json.body.fingerprint}\\`\\n<!-- soft-alert-fingerprint:${$('Webhook soft-alert').first().json.body.fingerprint} -->\\n**When:** ${$('Webhook soft-alert').first().json.body.occurred_at}\\n\\n### Failures\\n${($('Webhook soft-alert').first().json.body.failures || []).map(f => \\`- ${f.message}\\`).join('\\n')}\\n\\n### Playbook\\nhttps://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md\\n\\n### Suggested (agent)\\n\\`\\`\\`\\nssh root@193.232.229.92\\ncd /var/www/html\\n${$('Webhook soft-alert').first().json.body.suggested?.diagnose || 'php artisan ops:soft-remediate --dry-run --json'}\\n\\`\\`\\`\\n\\nAssignee: @pe4kinsmart-tech\\nLabel: ops-soft-alert\\nH8562 — do not auto-apply hard fuse clears.`, labels: ['ops-soft-alert'], assignees: ['pe4kinsmart-tech'] }) }}",
         "options": {}
       },
       "id": "github-issue",
       "name": "GitHub create issue",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [480, -80],
-      "notes": "Wire GitHub API credential in n8n UI. Create label ops-soft-alert once. Secret only via env SOFT_ALERT_WEBHOOK_SECRET — never bake into export."
+      "position": [1200, -40],
+      "notes": "Reachable ONLY from the IF-existing false branch. H8562 v3: reads expected_title from the Match node; the body carries the full-fingerprint marker (the dedup key — do not drop); failed-unit detection stays."
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.github.com/repos/gasyoun/Systema-Sanscriticum/issues",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendQuery": true,
+        "queryParameters": { "parameters": [ { "name": "state", "value": "open" }, { "name": "labels", "value": "ops-soft-alert" }, { "name": "sort", "value": "created" }, { "name": "direction", "value": "desc" }, { "name": "per_page", "value": "100" } ] },
+        "options": { "pagination": { "pagination": { "paginationMode": "updateAParameterInEachRequest", "parameters": { "parameters": [ { "type": "qs", "name": "page", "value": "={{ $pageCount + 1 }}" } ] }, "paginationCompleteWhen": "responseIsEmpty", "limitPagesFetched": true, "maxRequests": 20, "requestInterval": 300 } } }
+      },
+      "id": "github-reconcile-list",
+      "name": "GitHub reconcile list",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1440, -40],
+      "alwaysOutputData": true,
+      "notes": "H8562 v3 post-create reconcile: the higher-numbered creator always sees the lower-numbered rival (serial numbers + consistent list) and closes exactly itself; rivals require the FULL fingerprint, so an 8-hex collision is never a rival. Rationale: docs/ops/SOFT_ALERT_WEBHOOK.md §4."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// H8562 v3: duplicate = OPEN, exact title, SAME FULL fp, SMALLER number;\n// every race order converges; an 8-hex collision is never a rival.\nconst expected = $('Match exact title').first().json.expected_title;\nconst mine = $('GitHub create issue').first().json.number;\nconst fp = String($('Webhook soft-alert').first().json.body.fingerprint || '').trim().toLowerCase();\nconst fpOf = (t) => { const m = String(t || '').match(/<!--\\s*soft-alert-fingerprint:([0-9a-fA-F]{8,128})\\s*-->|\\*\\*Fingerprint:\\*\\*\\s*`([0-9a-fA-F]{8,128})`/); return m ? (m[1] || m[2]).toLowerCase() : null; };\nconst rivals = $input.all()\n  .map(i => i.json)\n  .filter(i => i && (i.title || '') === expected && i.state === 'open' && !i.pull_request && i.number < mine && fp !== '' && fpOf(i.body) === fp)\n  .sort((a, b) => a.number - b.number);\nreturn [{ json: { mine, expected_title: expected, rival: rivals[0] || null, rivals_count: rivals.length } }];"
+      },
+      "id": "reconcile-find-rival",
+      "name": "Reconcile find rival",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1680, -40]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.rivals_count > 0 }}"
+            }
+          ]
+        }
+      },
+      "id": "if-duplicate",
+      "name": "IF we are the duplicate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1920, -40],
+      "notes": "Lowest-number-wins: close self only when an open issue with the exact title AND full fingerprint has a LOWER number."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/gasyoun/Systema-Sanscriticum/issues/{{ $('GitHub create issue').first().json.number }}/comments",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: `Closed as duplicate of #${$json.rival.number} — concurrent soft-alert deliveries converge on one issue (H8562).` }) }}",
+        "options": {}
+      },
+      "id": "github-comment-duplicate",
+      "name": "GitHub comment duplicate note",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2160, -120]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.github.com/repos/gasyoun/Systema-Sanscriticum/issues/{{ $('GitHub create issue').first().json.number }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ state: 'closed', state_reason: 'completed' }) }}",
+        "options": {}
+      },
+      "id": "github-close-duplicate",
+      "name": "GitHub close duplicate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2400, -120],
+      "notes": "Closes exactly OUR own just-created issue — the URL pins the create node's number, never a rival's."
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ { \"ok\": true, \"issue\": $json.html_url || null } }}",
-        "options": {
-          "responseCode": 202
-        }
+        "responseBody": "={{ { \"ok\": true, \"converged\": true, \"issue\": $('GitHub create issue').first().json.html_url || null, \"converged_into\": $('Reconcile find rival').first().json.rival.html_url || null } }}",
+        "options": { "responseCode": 202 }
+      },
+      "id": "respond-202-converged",
+      "name": "Respond 202 converged",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2640, -120]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"ok\": true, \"issue\": $('GitHub create issue').first().json.html_url || null } }}",
+        "options": { "responseCode": 202 }
       },
       "id": "respond-202",
       "name": "Respond 202",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [720, -80]
+      "position": [2160, 20]
+    },
+    {
+      "parameters": { "rule": { "interval": [ { "field": "hours", "hoursInterval": 6 } ] } },
+      "id": "sweep-schedule",
+      "name": "Sweep schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 400],
+      "notes": "H8562 v3 sweep every 6 h. Closes ONLY duplicates whose bodies prove the same full fingerprint; the storm backlog qualifies if its bodies carry the legacy line (rollout contract step 1). Unprovable issues stay open for a human."
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.github.com/repos/gasyoun/Systema-Sanscriticum/issues",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendQuery": true,
+        "queryParameters": { "parameters": [ { "name": "state", "value": "open" }, { "name": "labels", "value": "ops-soft-alert" }, { "name": "sort", "value": "created" }, { "name": "direction", "value": "desc" }, { "name": "per_page", "value": "100" } ] },
+        "options": { "pagination": { "pagination": { "paginationMode": "updateAParameterInEachRequest", "parameters": { "parameters": [ { "type": "qs", "name": "page", "value": "={{ $pageCount + 1 }}" } ] }, "paginationCompleteWhen": "responseIsEmpty", "limitPagesFetched": true, "maxRequests": 20, "requestInterval": 300 } } }
+      },
+      "id": "sweep-list",
+      "name": "Sweep list open issues",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [240, 400],
+      "alwaysOutputData": true,
+      "notes": "Same consistent list + alwaysOutputData + supported pagination as the webhook flow: the whole open backlog is visible to the sweep, not just the 100 newest. Rationale: docs/ops/SOFT_ALERT_WEBHOOK.md §4."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// H8562 v3: group by title + FULL fp, keep the lowest number, close the\n// rest; no provable fp => skipped (ambiguity never closes); PRs excluded.\nconst fpOf = (t) => { const m = String(t || '').match(/<!--\\s*soft-alert-fingerprint:([0-9a-fA-F]{8,128})\\s*-->|\\*\\*Fingerprint:\\*\\*\\s*`([0-9a-fA-F]{8,128})`/); return m ? (m[1] || m[2]).toLowerCase() : null; };\nconst groups = {};\nfor (const item of $input.all()) {\n  const issue = item.json;\n  if (!issue || issue.state !== 'open' || issue.pull_request) continue;\n  const title = issue.title || '';\n  if (!title.startsWith('[soft-alert] ')) continue;\n  const fp = fpOf(issue.body);\n  if (!fp) continue;\n  const key = title + ' :: ' + fp;\n  if (!groups[key]) groups[key] = { title, issues: [] };\n  groups[key].issues.push(issue);\n}\nconst out = [];\nfor (const key of Object.keys(groups)) {\n  const group = groups[key].issues.sort((a, b) => a.number - b.number);\n  for (const dup of group.slice(1)) {\n    out.push({ json: { title: groups[key].title, survivor_number: group[0].number, duplicate_number: dup.number } });\n  }\n}\nreturn out;"
+      },
+      "id": "sweep-group",
+      "name": "Sweep group duplicates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 400]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.github.com/repos/gasyoun/Systema-Sanscriticum/issues/{{$json.duplicate_number}}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ state: 'closed', state_reason: 'completed' }) }}",
+        "options": {}
+      },
+      "id": "sweep-close",
+      "name": "Sweep close duplicate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [720, 400],
+      "notes": "Per-item (n8n). Closes ONLY non-minimal duplicates; the survivor is never closed."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/gasyoun/Systema-Sanscriticum/issues/{{$json.number}}/comments",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: `Closed as duplicate — periodic soft-alert dedup sweep (H8562). Survivor: the lowest-numbered OPEN issue with the same title and full fingerprint.` }) }}",
+        "options": {}
+      },
+      "id": "sweep-comment",
+      "name": "Sweep comment duplicate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [960, 400],
+      "notes": "$json is the PATCH response, so $json.number IS the duplicate."
     }
   ],
   "connections": {
-    "Webhook soft-alert": {
-      "main": [[{ "node": "IF secret matches", "type": "main", "index": 0 }]]
-    },
-    "IF secret matches": {
-      "main": [
-        [{ "node": "GitHub create issue", "type": "main", "index": 0 }],
-        [{ "node": "Respond 401", "type": "main", "index": 0 }]
-      ]
-    },
-    "GitHub create issue": {
-      "main": [[{ "node": "Respond 202", "type": "main", "index": 0 }]]
-    }
+    "Webhook soft-alert": { "main": [[{ "node": "IF secret matches", "type": "main", "index": 0 }]] },
+    "IF secret matches": { "main": [ [{ "node": "GitHub list open issues", "type": "main", "index": 0 }], [{ "node": "Respond 401", "type": "main", "index": 0 }] ] },
+    "GitHub list open issues": { "main": [[{ "node": "Match exact title", "type": "main", "index": 0 }]] },
+    "Match exact title": { "main": [[{ "node": "IF existing open issue", "type": "main", "index": 0 }]] },
+    "IF existing open issue": { "main": [ [{ "node": "GitHub comment on existing", "type": "main", "index": 0 }], [{ "node": "GitHub create issue", "type": "main", "index": 0 }] ] },
+    "GitHub comment on existing": { "main": [[{ "node": "Respond 200 deduped", "type": "main", "index": 0 }]] },
+    "GitHub create issue": { "main": [[{ "node": "GitHub reconcile list", "type": "main", "index": 0 }]] },
+    "GitHub reconcile list": { "main": [[{ "node": "Reconcile find rival", "type": "main", "index": 0 }]] },
+    "Reconcile find rival": { "main": [[{ "node": "IF we are the duplicate", "type": "main", "index": 0 }]] },
+    "IF we are the duplicate": { "main": [ [{ "node": "GitHub comment duplicate note", "type": "main", "index": 0 }], [{ "node": "Respond 202", "type": "main", "index": 0 }] ] },
+    "GitHub comment duplicate note": { "main": [[{ "node": "GitHub close duplicate", "type": "main", "index": 0 }]] },
+    "GitHub close duplicate": { "main": [[{ "node": "Respond 202 converged", "type": "main", "index": 0 }]] },
+    "Sweep schedule": { "main": [[{ "node": "Sweep list open issues", "type": "main", "index": 0 }]] },
+    "Sweep list open issues": { "main": [[{ "node": "Sweep group duplicates", "type": "main", "index": 0 }]] },
+    "Sweep group duplicates": { "main": [[{ "node": "Sweep close duplicate", "type": "main", "index": 0 }]] },
+    "Sweep close duplicate": { "main": [[{ "node": "Sweep comment duplicate", "type": "main", "index": 0 }]] }
   },
-  "meta": {
-    "templateCredsSetupCompleted": false,
-    "instanceId": "skeleton-h2148-not-for-prod-until-imported"
-  },
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "tags": [
-    { "name": "systema" },
-    { "name": "ops-soft-alert" },
-    { "name": "h2148-skeleton" }
-  ]
+  "meta": { "templateCredsSetupCompleted": false, "instanceId": "skeleton-h8562-dedup-not-for-prod-until-imported" },
+  "settings": { "executionOrder": "v1" },
+  "tags": [ { "name": "systema" }, { "name": "ops-soft-alert" }, { "name": "h8562-dedup" } ]
 }
