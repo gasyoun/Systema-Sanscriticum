@@ -41,7 +41,7 @@ A recorded intention to participate in a specific intake. It does not establish 
 _Avoid_: paid enrollment, confirmed reservation
 
 **availability window**:
-One recurring weekly interval in which a student may be offered a NEW course or elective. Stored as a constrained RRULE (`FREQ=WEEKLY;BYDAY=…`) plus start/end time and an IANA TZID. Absence of a window on a day means "not available" only when the student has at least one window at all.
+One interval in which a student may be offered a NEW course or elective. Either a constrained weekly RRULE (`FREQ=WEEKLY;BYDAY=…`) or a cycle (`repeat_mode=cycle`: N days on / M days off from an anchor date), plus start/end time and an IANA TZID. Absence of a window on a day means "not available" only when the student has at least one window at all.
 _Avoid_: schedule, slot preference, availability (too vague)
 
 **curator override**:

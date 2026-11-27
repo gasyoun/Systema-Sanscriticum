@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\StudentAvailabilityWindow as Window;
 use App\Models\User;
 use App\Support\StudentAvailability;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
 use Tests\TestCase;
@@ -22,13 +23,19 @@ class StudentAvailabilityTest extends TestCase
         config(['features.availability_windows' => true]);
     }
 
-    private function window(User $user, string $day, string $start, string $end, string $source = 'student', string $kind = 'allow'): void
+    protected function tearDown(): void
     {
-        Window::query()->create([
+        Carbon::setTestNow();
+        parent::tearDown();
+    }
+
+    private function window(User $user, string $day, string $start, string $end, string $source = 'student', string $kind = 'allow', array $extra = []): void
+    {
+        Window::query()->create(array_merge([
             'user_id' => $user->id, 'source' => $source, 'kind' => $kind,
             'rrule' => 'FREQ=WEEKLY;BYDAY='.$day,
             'start_time' => $start, 'end_time' => $end, 'tzid' => 'Europe/Moscow',
-        ]);
+        ], $extra));
     }
 
     public function test_no_rows_keeps_current_behavior(): void
@@ -109,6 +116,72 @@ class StudentAvailabilityTest extends TestCase
         $this->assertTrue($gate->allowsSlot($user, 'сб 15:00'));
         $this->assertFalse($gate->allowsSlot($user, 'сб 17:00'));
         $this->assertTrue($gate->allowsSlot($user, 'сб 18:30'));
+    }
+
+    public function test_cycle_two_on_two_off_with_anchor(): void
+    {
+        $user = User::factory()->create();
+        // Якорь 01.12.2026 (вторник): 1–2 декабря можно, 3–4 нельзя, 5–6 можно.
+        $this->window($user, 'MO', '20:00', '23:59', 'student', 'allow', [
+            'repeat_mode' => 'cycle', 'cycle_on_days' => 2, 'cycle_off_days' => 2,
+            'anchor_date' => '2026-12-01',
+        ]);
+        $gate = app(StudentAvailability::class);
+
+        $this->assertFalse($gate->allows($user, '2026-11-30 20:30')); // раньше якоря
+        $this->assertTrue($gate->allows($user, '2026-12-01 20:30'));
+        $this->assertTrue($gate->allows($user, '2026-12-02 23:59'));
+        $this->assertFalse($gate->allows($user, '2026-12-03 20:30'));
+        $this->assertFalse($gate->allows($user, '2026-12-04 20:30'));
+        $this->assertTrue($gate->allows($user, '2026-12-05 20:30'));
+        $this->assertFalse($gate->allows($user, '2026-12-01 19:59')); // вне окна времени
+    }
+
+    public function test_cycle_is_honored_for_weekly_slot_strings(): void
+    {
+        Carbon::setTestNow('2026-11-27 10:00'); // пятница; ближайшая суббота — 28.11
+        $user = User::factory()->create();
+        $gate = app(StudentAvailability::class);
+
+        // Якорь 26.11: 26–27 можно, 28–29 нельзя → субботний слот не предлагаем.
+        Window::query()->create([
+            'user_id' => $user->id, 'source' => 'student', 'kind' => 'allow',
+            'rrule' => 'FREQ=WEEKLY;BYDAY=SA', 'repeat_mode' => 'cycle',
+            'cycle_on_days' => 2, 'cycle_off_days' => 2, 'anchor_date' => '2026-11-26',
+            'start_time' => '14:30', 'end_time' => '23:59', 'tzid' => 'Europe/Moscow',
+        ]);
+        $this->assertFalse($gate->allowsSlot($user, 'сб 15:00'));
+
+        Window::query()->where('user_id', $user->id)->delete();
+        // Якорь 27.11: 27–28 можно → субботний слот предлагаем.
+        Window::query()->create([
+            'user_id' => $user->id, 'source' => 'student', 'kind' => 'allow',
+            'rrule' => 'FREQ=WEEKLY;BYDAY=SA', 'repeat_mode' => 'cycle',
+            'cycle_on_days' => 2, 'cycle_off_days' => 2, 'anchor_date' => '2026-11-27',
+            'start_time' => '14:30', 'end_time' => '23:59', 'tzid' => 'Europe/Moscow',
+        ]);
+        $this->assertTrue($gate->allowsSlot($user, 'сб 15:00'));
+    }
+
+    public function test_student_can_save_cycle_from_cabinet(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('student.availability.store'), [
+            'tzid' => 'Europe/Moscow',
+            'days' => [
+                'TH' => [[
+                    'enabled' => 1, 'kind' => 'allow', 'start' => '20:00', 'end' => '23:59',
+                    'repeat_mode' => 'cycle', 'cycle_on_days' => 2, 'cycle_off_days' => 2,
+                    'anchor_date' => '2026-12-01',
+                ]],
+            ],
+        ])->assertRedirect(route('student.availability'));
+
+        $this->assertDatabaseHas('student_availability_windows', [
+            'user_id' => $user->id, 'repeat_mode' => 'cycle',
+            'cycle_on_days' => 2, 'cycle_off_days' => 2, 'anchor_date' => '2026-12-01 00:00:00',
+        ]);
     }
 
     public function test_flag_off_disables_the_gate(): void
