@@ -208,6 +208,14 @@ trait SchedulesOpsAndMembership
             ->onFailure(fn () => ScheduleFailureSignal::report('membership:expire-club'))
             ->name('membership-expire-club');
 
+        // Лестница подписей v2: после 01-12 включаем тарифы «Оптимальный».
+        // Команда идемпотентна и до даты ничего не пишет.
+        $schedule->command('membership:activate-ladder-v2 --apply')
+            ->dailyAt('00:05')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('membership-activate-ladder-v2');
+
         // Месячный урок бесплатного уровня. Ежедневно, а не «первого числа»:
         // право не копится (FreeTierLessonGranter), поэтому у каждого свой цикл
         // от даты его последнего гранта, и ежедневный проход подбирает тех, у

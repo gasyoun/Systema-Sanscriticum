@@ -7,6 +7,10 @@
 @php
     /** @var \App\Services\Cabinet\RecoveryState $recovery */
     $recovery = $recovery ?? \App\Services\Cabinet\RecoveryState::normal();
+    // Гибридная «Оплата и доступ» недобирала два действия, которые классическая
+    // вкладка «Мои долги» умеет: «Погасить всё» по графику и «Перенести дату»
+    // (один раз, ≤14 дней). Флаг OFF — разметка ровно как раньше.
+    $debtActions = (bool) config('features.hybrid_access_debt_actions');
 @endphp
 
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-nunito">
@@ -152,6 +156,35 @@
                                 Блоки №{{ implode(', №', $opts['unpriced_blocks']) }} — оплата через
                                 <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener noreferrer" class="text-brand underline hover:no-underline">куратора</a>.
                             </p>
+                        @endif
+                    @endif
+
+                    {{-- Флаг hybrid_access_debt_actions: «Погасить всё» и «Перенести дату»,
+                         которых в гибридной оболочке не было вовсе (классическая
+                         вкладка «Мои долги» их умела). Ссылки на POST-роуты — только
+                         формами, иначе 405. --}}
+                    @if ($debtActions)
+                        @if (is_array($opts) && ! empty($opts['whole']))
+                            <form method="POST" action="{{ $opts['whole']['url'] }}" class="mt-2" data-testid="debt-pay-all">
+                                @csrf
+                                <button type="submit" data-track-event="access.renewal.start" data-track-kind="promise-whole"
+                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-brand/40 text-brand hover:bg-orange-50 text-sm font-bold">
+                                    Погасить всё{{ ! empty($opts['whole']['amount']) ? ' ('.number_format((float) $opts['whole']['amount'], 0, '.', ' ').' ₽)' : '' }}
+                                </button>
+                            </form>
+                        @endif
+
+                        {{-- Перенос даты ближайшего обещания (один раз, ≤14 дней) --}}
+                        @if (is_array($opts) && ! empty($opts['reschedule']))
+                            <details class="mt-2 text-xs text-gray-500" data-testid="debt-reschedule">
+                                <summary class="cursor-pointer select-none hover:text-gray-700">Перенести дату</summary>
+                                <form method="POST" action="{{ $opts['reschedule']['url'] }}" class="mt-2 flex gap-1.5">
+                                    @csrf
+                                    <input type="date" name="new_date" value="{{ $opts['reschedule']['current_date'] }}" class="flex-1 rounded border-gray-300 text-xs">
+                                    <button type="submit" class="px-2.5 py-1 border border-gray-300 hover:bg-gray-50 rounded-lg text-xs font-semibold">ОК</button>
+                                </form>
+                                <p class="mt-1 text-gray-400">Не более чем на 2 недели вперед, один раз.</p>
+                            </details>
                         @endif
                     @endif
 

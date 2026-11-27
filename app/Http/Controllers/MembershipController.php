@@ -11,6 +11,7 @@ use App\Models\Lesson;
 use App\Models\Tariff;
 use App\Models\User;
 use App\Services\Membership\ClubMembershipService;
+use App\Services\Membership\LadderV2;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -74,6 +75,10 @@ final class MembershipController extends Controller
             'basicPrice' => $basicTariff?->price ?? MembershipTier::Basic->monthlyPrice(),
             'clubPrice' => $clubTariff?->price ?? MembershipTier::Club->monthlyPrice(),
             'topPrice' => MembershipTier::Top->monthlyPrice(),
+            'ladderV2' => app(LadderV2::class)->active(),
+            'labels' => collect(MembershipTier::cases())->mapWithKeys(
+                fn (MembershipTier $tier) => [$tier->value => app(LadderV2::class)->labelFor($tier)]
+            )->all(),
             'freeLessonsCount' => Lesson::query()->shownOnMain()->count(),
         ]);
     }

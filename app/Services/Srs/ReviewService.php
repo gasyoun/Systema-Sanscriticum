@@ -63,7 +63,13 @@ class ReviewService
                 ->get()
             : collect();
 
-        return $due->concat($new)->values();
+        $queue = $due->concat($new)->values();
+
+        // H8599 (track Б): known-words filter — only for a persisted user,
+        // only while the flag is ON. Guests never reach this path (they use
+        // Livewire::guestQueue), and with the flag OFF the collection is
+        // returned untouched.
+        return app(KnownWords::class)->filterQueue($user, $queue);
     }
 
     /**
