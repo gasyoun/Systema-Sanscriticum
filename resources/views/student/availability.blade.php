@@ -9,7 +9,9 @@
         <a href="{{ route('student.dashboard') }}" class="text-sm text-brand hover:underline">← Личный кабинет</a>
         <h2 class="text-3xl font-extrabold text-[#101010] tracking-tight mt-3">Когда вам удобно заниматься</h2>
         <p class="text-gray-500 mt-2">
-            Отметьте дни и часы. Новые курсы и факультативы вне этих окон предлагаться не будут.
+            Для каждого интервала выберите режим: «Удобное время» или «Неудобное время».
+            Новые курсы и факультативы будут предлагаться только в удобные интервалы,
+            а неудобные — исключаться, даже если остальное время свободно.
             Если ничего не отметить — ограничений не будет. Уточнения куратора имеют приоритет.
         </p>
     </div>
@@ -40,6 +42,18 @@
                         <input type="time" name="days[{{ $day }}][{{ $slot }}][end]"
                                value="{{ old('days.'.$day.'.'.$slot.'.end', $row?->end_time ?? '23:59') }}"
                                class="rounded-lg border border-gray-200 px-2 py-1.5 text-sm">
+                        <select name="days[{{ $day }}][{{ $slot }}][kind]"
+                                class="rounded-lg border border-gray-200 px-2 py-1.5 text-sm"
+                                title="Удобное или неудобное время">
+                            <option value="{{ \App\Models\StudentAvailabilityWindow::KIND_ALLOW }}"
+                                @selected(old('days.'.$day.'.'.$slot.'.kind', $row?->kind ?? \App\Models\StudentAvailabilityWindow::KIND_ALLOW) === \App\Models\StudentAvailabilityWindow::KIND_ALLOW)>
+                                Удобное время
+                            </option>
+                            <option value="{{ \App\Models\StudentAvailabilityWindow::KIND_DENY }}"
+                                @selected(old('days.'.$day.'.'.$slot.'.kind', $row?->kind ?? \App\Models\StudentAvailabilityWindow::KIND_ALLOW) === \App\Models\StudentAvailabilityWindow::KIND_DENY)>
+                                Неудобное время
+                            </option>
+                        </select>
                     </div>
                 @endforeach
             @endforeach
