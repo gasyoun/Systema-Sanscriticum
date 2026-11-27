@@ -40,6 +40,7 @@ class StudentAvailabilityController extends Controller
             'days' => ['required', 'array', 'max:7'],
             'days.*' => ['array', 'max:2'],
             'days.*.*.enabled' => ['sometimes', 'boolean'],
+            'days.*.*.kind' => ['required_with:days.*.*.enabled', 'in:'.Window::KIND_ALLOW.','.Window::KIND_DENY],
             'days.*.*.start' => ['required_with:days.*.*.enabled', 'date_format:H:i'],
             'days.*.*.end' => ['required_with:days.*.*.enabled', 'date_format:H:i'],
             'tzid' => ['required', 'string', 'timezone'],
@@ -60,7 +61,7 @@ class StudentAvailabilityController extends Controller
                 Window::query()->create([
                     'user_id' => $user->id,
                     'source' => Window::SOURCE_STUDENT,
-                    'kind' => Window::KIND_ALLOW,
+                    'kind' => $values['kind'] ?? Window::KIND_ALLOW,
                     'rrule' => 'FREQ=WEEKLY;BYDAY='.$day,
                     'start_time' => $values['start'],
                     'end_time' => $values['end'],

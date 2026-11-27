@@ -61,8 +61,14 @@ final class StudentAvailability
                 return true;
             }
         }
+        // Студенческое «Неудобное время» перекрывает его же «Удобное время».
         foreach ($windows->where('source', Window::SOURCE_STUDENT) as $window) {
-            if ($window->coversInstant($instant)) {
+            if ($window->kind === Window::KIND_DENY && $window->coversInstant($instant)) {
+                return false;
+            }
+        }
+        foreach ($windows->where('source', Window::SOURCE_STUDENT) as $window) {
+            if ($window->kind === Window::KIND_ALLOW && $window->coversInstant($instant)) {
                 return true;
             }
         }
@@ -104,7 +110,12 @@ final class StudentAvailability
             }
         }
         foreach ($windows->where('source', Window::SOURCE_STUDENT) as $window) {
-            if ($window->coversDayAndTime($weekday, $minutes)) {
+            if ($window->kind === Window::KIND_DENY && $window->coversDayAndTime($weekday, $minutes)) {
+                return false;
+            }
+        }
+        foreach ($windows->where('source', Window::SOURCE_STUDENT) as $window) {
+            if ($window->kind === Window::KIND_ALLOW && $window->coversDayAndTime($weekday, $minutes)) {
                 return true;
             }
         }
