@@ -1,6 +1,6 @@
 # Архитектура: школа-агенты, департамент G «Финансы и админ» — фаза-1 (H6109)
 
-_Created: 18-11-2026 · Last updated: 18-11-2026_
+_Created: 18-11-2026 · Last updated: 25-11-2026_
 
 Исполнение handoff [H6109-OxAlpha_…school-agents-dept-g-finance-admin](https://github.com/gasyoun/Uprava/blob/main/handoffs/H6109-OxAlpha_Systema-Sanscriticum_school-agents-dept-g-finance-admin_05.10.26.md), эпик [E026](https://github.com/gasyoun/Uprava/blob/main/handoffs/epics/E026-Uprava_school-agents-program_05.10.26.md). Сестринский контур департамента A: [ARCHITECTURE_SCHOOL_AGENTS_DEPT_A_MARKETING_PHASE1_H6100](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_SCHOOL_AGENTS_DEPT_A_MARKETING_PHASE1_H6100_2026-11-07.md).
 
@@ -61,14 +61,14 @@ _Created: 18-11-2026 · Last updated: 18-11-2026_
 | Task-level killgate | реализация H5867; интеграционная проверка H6173 | [H6173](https://github.com/gasyoun/Uprava/blob/main/handoffs/H6173-GLM_Uprava_hermes-task-killgate-integration-proof_06.10.26.md) |
 | Подписочная квота по школьным ролям | H6174 | [H6174](https://github.com/gasyoun/Uprava/blob/main/handoffs/H6174-GLM_Systema-Sanscriticum_hermes-school-role-quota-enforcement_06.10.26.md) |
 | PII-маскинг на границах LLM | H6144 реализация, H6182 проверка TG+web | [H6182](https://github.com/gasyoun/Uprava/blob/main/handoffs/H6182-GLM_Systema-Sanscriticum_hermes-school-llm-boundary-pii-proof_06.10.26.md) |
-| Human-send (TG + web, human actor proof) | H6183, флаг `HERMES_HUMAN_SEND` дефолт OFF | `config/features.php:2101` |
+| Human-send (TG + web, human actor proof) | H6183, флаг `HERMES_HUMAN_SEND` дефолт OFF | `config/features.php:2154` (сверено 25-11-2026) |
 | Золотой набор первой волны (6 ролей + маршрутизация) | H6181 — обслуживает только первую волну (G65 в их числе); не заменяет golden-наборы G66–G72 и D/J-наборы учебки | [H6181](https://github.com/gasyoun/Uprava/blob/main/handoffs/H6181-GLM_Systema-Sanscriticum_hermes-w1-synthetic-golden-cases_06.10.26.md) |
 | Маршрутизация обращений | H6190 — общий слой поддержки, не создаёт канонических ID | [H6190](https://github.com/gasyoun/Uprava/blob/main/handoffs/H6190-GLM_Systema-Sanscriticum_hermes-w1-shared-routing-layer_06.10.26.md) |
 | Измерительная программа 90 дней | H6120 — claimed, владение не переносится | [H6120](https://github.com/gasyoun/Uprava/blob/main/handoffs/H6120-GLM_Uprava_school-agents-90-day-measurement_05.10.26.md) |
 
-## 5. Нулевой прод-след фазы-1 (центза 18-11-2026)
+## 5. Нулевой прод-след фазы-1 (центза 18-11, сверено 25-11-2026)
 
-- Флаги agent-запуска ролей G66–G72 в `config/features.php`: **0** (этот PR не добавляет ни одного флага). Существующие связанные флаги: `hermes_payment_reconciler` (`config/features.php:2143`, роль G65 — реализация ребёнка H6188, дефолт OFF); W1-флаги поддержки `hermes_schedule_keeper` (2087), `hermes_human_send` (2101), `hermes_faq_rag` (2114), `hermes_access_diagnostics` (2130) — все дефолт OFF, к департаменту G66–G72 не относятся. Флаг-омоним: `student_agent` (1777, H3231 bounded student agent — не роль ростера, не G).
+- Флаги agent-запуска ролей G66–G72 в `config/features.php`: **0** (этот PR не добавляет ни одного флага). Существующие связанные флаги (номера строк сверены на origin/main 25-11-2026): `hermes_payment_reconciler` (`config/features.php:2196`, роль G65 — реализация ребёнка H6188, дефолт OFF); W1-флаги поддержки `hermes_schedule_keeper` (2140), `hermes_human_send` (2154), `hermes_faq_rag` (2167), `hermes_access_diagnostics` (2183) — все дефолт OFF, к департаменту G66–G72 не относятся. Флаг-омоним: `student_agent` (1826, H3231 bounded student agent — не роль ростера, не G).
 - Новых Schedule-заданий и LLM-вызовов в этом PR: **0**. Существующие детерминированные финансы-утилиты (`PayoutPackageService`, `PayrollContourService`, `BlockMonthRecognition`, `RevenueScheduleService`, `UnitEconomicsService`, CompanyInvoice-контур) — утилиты estate, ими пользуются люди; агент-обёрток над ними в фазе-1 не добавлено.
 - Исходящих сообщений агентом: **0** (Q3/Q9 не активированы; `HERMES_HUMAN_SEND` дефолт OFF; инвариант «0 прод-писем до гейта волны»).
 - Финансовых мутаций агентом: **0** — роли G работают read-only-предложениями (формат H6188 money-safety).
@@ -85,13 +85,13 @@ _Created: 18-11-2026 · Last updated: 18-11-2026_
 
 - Этот документ — гейто-упаковка G65–G72 + карта переиспользования + нулевой прод-след (artifact 1).
 - Центза §5 — greps по `config/features.php` и diff PR: 0 новых agent-флагов, 0 новых планировщиков/LLM-вызовов, 0 исходящих (artifact 2).
-- Own-data canary: паритет ростера v1 §«G. Финансы и админ (8)» ↔ диспозиции строк 65–72 — 8 ролей, имена идентичны (`diff` двух выжимок = пусто, **PASS 8/8**, 18-11-2026).
+- Own-data canary: паритет ростера v1 §«G. Финансы и админ (8)» ↔ диспозиции строк 65–72 — 8 ролей, имена идентичны (`diff` двух выжимок = пусто, **PASS 8/8**, подтверждено повторно 25-11-2026).
 
 ## Delivery (five fields)
 
-- **Changed:** этот документ (департаментный контур H6109); ничего в коде, флагах, планировщиках.
+- **Changed:** этот документ (департаментный контур H6109): актуальные номера строк `config/features.php`; ничего в коде, флагах, планировщиках.
 - **Unchanged:** G65 — evidence H6188 принят без второй реализации; G66–G72 — подготовка; прод, исходящих и финансовых мутаций 0; Hermes/поддержка W1 и финансы-утилиты не тронуты.
-- **Checks:** центза §5 — PASS (agent-флаги G66–G72 = 0, новые планировщики/LLM = 0, исходящие = 0); own-data canary паритета ростер↔диспозиция — PASS 8/8.
+- **Checks:** центза §5 и 25-11-2026 — PASS (6 связанных флагов дефолт OFF, agent-флаги G66–G72 = 0, новые планировщики/LLM = 0, исходящие = 0); own-data canary паритета ростер↔диспозиция — PASS 8/8 (25-11-2026).
 - **Risks:** drift между этим документом и ростером при новой визе MG — лечится ссылкой на источник и центзой при каждом визе; расхождение стратегических волн диспозиции и состава волн ростера v2 (G72) остаётся за MG/H6120, агент его не разрешает.
 - **Inspect:** `grep -n "hermes_payment_reconciler\|hermes_" config/features.php`; `rg -n "PaymentReconcile" app tests`; `git diff --stat origin/main..HEAD` (ровно один файл — этот документ); этот документ.
 

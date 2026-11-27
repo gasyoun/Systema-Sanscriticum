@@ -933,6 +933,14 @@ return [
     'telegram_cabinet_provision' => (bool) env('TELEGRAM_CABINET_PROVISION', false),
 
     /*
+     * Мягкое подтверждение почты кабинета из /кабинет (27-11-2026): на email
+     * уходит одноразовая ссылка, которая ставит email_verified_at и логинит.
+     * Вход по ссылке из бота работает и без подтверждения — онбординг не рвём.
+     * Default OFF; включать после выката.
+     */
+    'cabinet_email_verification' => (bool) env('CABINET_EMAIL_VERIFICATION_ENABLED', false),
+
+    /*
      | H2304 spec 2: «у курса нет групп доступа» = throw в Payment::grantAccess()
      | (fail closed на всех платных маршрутах: zero-price checkout, Filament,
      | PayPal, PayPal-claim, conditional, импорт), а не log-and-return «оплачено
@@ -1230,6 +1238,13 @@ return [
      | пока OFF. Не включать в этом PR — только ключ, default false.
      */
     'waitlist_voting' => (bool) env('WAITLIST_VOTING', false),
+
+    /*
+     | Окна доступности ученика (RRULE + TZID): вкладка /dvaram/availability,
+     | Filament-редактор куратора и OfferGate для новых офферов кабинета.
+     | OFF по умолчанию — меняет доступ/офферы, включается только деплоем.
+     */
+    'availability_windows' => (bool) env('AVAILABILITY_WINDOWS_ENABLED', false),
 
     /*
      | Карточки открытых занятий в @samskrte_bot: фото + «✅ Я иду» + нижнее

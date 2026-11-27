@@ -47,6 +47,7 @@ use App\Services\Zoom\ZoomService;
 use App\Support\Backup\BackupListCommand;
 use App\Support\Backup\BackupRunCommand;
 use App\Support\Deploy\DeployDriftInspector;
+use App\Support\Mail\SenderNameSetting;
 use App\Support\NextIntroSession;
 use App\Support\ServerGuards\ShellSystemInspector;
 use App\Support\ServerGuards\SystemInspector;
@@ -115,6 +116,15 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(
             DeployDriftInspector::class,
             fn () => new DeployDriftInspector(base_path()),
+        );
+
+        // 24-11-2026: имя отправителя писем — .env, кеш конфига и очередь в одном
+        // объекте, потому что правка .env без config:cache и queue:restart не
+        // действует (см. SenderNameSetting). singleton с путями через base_path(),
+        // как у DeployDriftInspector: тест подменяет инстанс на временных файлах.
+        $this->app->singleton(
+            SenderNameSetting::class,
+            fn () => new SenderNameSetting(base_path('.env'), app()->getCachedConfigPath()),
         );
 
         // H3121: тот же шов для надзора за демоном MadelineProto. bind, а не
