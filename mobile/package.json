@@ -24,12 +24,8 @@
     "@capacitor/status-bar": "^8.0.4"
   },
   "devDependencies": {
-<<<<<<< HEAD
-    "dotenv": "^18.0.10",
-=======
     "@types/node": "^26.6.5",
-    "dotenv": "^18.0.1",
->>>>>>> 3e27c6f8 (ai-wip: add Node types for mobile config)
+    "dotenv": "^18.0.10",
     "typescript": "^7.0.2"
   },
   "overrides": {
