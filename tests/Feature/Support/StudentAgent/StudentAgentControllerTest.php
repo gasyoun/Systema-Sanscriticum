@@ -149,26 +149,16 @@ class StudentAgentControllerTest extends TestCase
             ->assertJsonPath('data.hits.0.iast', 'agni');
     }
 
-    public function test_route_allows_basic_tier_member(): void
+    public function test_route_refuses_basic_tier_member(): void
     {
-        // Basic ₽1 000 — тоже платный уровень (тот же предикат, что у
-        // RecordingAccessPolicy для открытых лекций).
+        // Лестница v2 (рулинг 27-11): ИИ-агент — с уровня Club; Basic ₽1 000
+        // получает библиотеку и упражнения, но не развёрнутые ИИ-ответы.
         config()->set('features.student_agent', true);
         $student = User::factory()->create();
         $this->grantTier($student, MembershipTier::Basic);
 
-        $dictionary = Dictionary::create(['name' => 'MW', 'is_active' => true]);
-        DictionaryWord::create([
-            'dictionary_id' => $dictionary->id,
-            'devanagari' => 'अग्नि',
-            'iast' => 'agni',
-            'cyrillic' => 'агни',
-            'translation' => 'огонь',
-        ]);
-
         $this->actingAs($student)
             ->postJson('/dvaram/agent', ['tool' => 'dictionary_lookup', 'params' => ['query' => 'agni']])
-            ->assertOk()
-            ->assertJsonPath('ok', true);
+            ->assertForbidden();
     }
 }
