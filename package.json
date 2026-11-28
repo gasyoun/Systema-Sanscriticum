@@ -27,14 +27,14 @@
         "@tailwindcss/typography": "^0.5.20",
         "alpinejs": "^3.17.5",
         "autoprefixer": "^10.6.2",
-        "axios": "^1.21.0",
+        "axios": "^1.21.1",
         "laravel-echo": "^2.6.3",
         "laravel-vite-plugin": "^3.2.1",
-        "playwright": "^1.64.1",
-        "postcss": "^8.5.32",
+        "playwright": "^1.65.1",
+        "postcss": "^8.5.33",
         "pusher-js": "^8.6.0",
         "tailwindcss": "^4.3.5",
-        "vite": "^8.3.6"
+        "vite": "^8.3.8"
     },
     "overrides": {
         "vite-plugin-full-reload": {

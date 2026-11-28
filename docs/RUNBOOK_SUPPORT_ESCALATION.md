@@ -70,6 +70,7 @@ _Created: 05-10-2026 · Last updated: 23-11-2026_
 ## Смежные плейбуки и ранбуки (фонд docs/)
 
 - Деньги и долги: [PLAYBOOK_PAYMENT_DISCIPLINE_CURATOR_STUDENT_2026](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAYBOOK_PAYMENT_DISCIPLINE_CURATOR_STUDENT_2026.md) · готовые 1:1 тексты: [tg-payment-discipline-1to1-scripts](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/tg-payment-discipline-1to1-scripts.md)
+- Возвраты и платёжные споры (заявление → виза → возврат → доступ → сверка; 5 разборов, H8082): [RUNBOOK_REFUND_PAYMENT_DISPUTES_2026-11-22](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_REFUND_PAYMENT_DISPUTES_2026-11-22.md)
 - Тех-сбой: [SERVER_SOFT_ALERT_PLAYBOOK](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md) · релей вебхуков: [RUNBOOK_BOTS_WEBHOOK_RELAY](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_BOTS_WEBHOOK_RELAY.md)
 - Сессия @rusamskrtam умерла: [RUNBOOK_USERBOT_SESSION_RECOVERY](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_USERBOT_SESSION_RECOVERY.md)
 - Вход/привязка кабинета: [RUNBOOK_TELEGRAM_CABINET_LOGIN_2026-08-28](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_TELEGRAM_CABINET_LOGIN_2026-08-28.md)

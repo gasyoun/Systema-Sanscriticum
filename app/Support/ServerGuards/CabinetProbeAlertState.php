@@ -26,6 +26,8 @@ final class CabinetProbeAlertState
 
     public const LAST_SOFT_FP = 'last_soft_fingerprint';
 
+    public const SOFT_GREEN_STREAK = 'soft_green_streak';
+
     public function path(): string
     {
         $configured = (string) config('cabinet_probe.tg_state_path', '');
@@ -83,6 +85,53 @@ final class CabinetProbeAlertState
             unset($data[$k]);
         }
         $this->write($data);
+    }
+
+    /**
+     * H8562: single-flight для критической секции soft-пути (read → check →
+     * send → write). Две перекрывающиеся пробы (тик крона + ручной/деплойный
+     * прогон) обе читают «новый отпечаток» до чужой записи → двойной webhook →
+     * два issues на один класс. Состояние — файл; лок живет рядом с ним.
+     *
+     * flock на выделенном lock-файле: межпроцессно на Linux (прод) и Windows
+     * (dev), без зависимости от cache-драйвера (урок H3197 — состояние
+     * сознательно вне кэша). Открыть лок-файл не удалось → fail-open: сломанный
+     * лок не должен гасить алерты; сходимость дубликатов добирается на
+     * приемнике (lookup + reconcile в n8n-экспорте H8562).
+     *
+     * @param  callable(): mixed  $fn
+     * @return array{acquired: bool, value: mixed} acquired=false — лок держит другая проба
+     */
+    public function withSoftLock(callable $fn, ?int $waitSeconds = null): array
+    {
+        $wait = $waitSeconds ?? (int) config('cabinet_probe.soft_lock_wait_seconds', 10);
+        $lockPath = $this->path().'.lock';
+        $dir = dirname($lockPath);
+        if (! is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
+        $fh = @fopen($lockPath, 'c');
+        if ($fh === false) {
+            return ['acquired' => true, 'value' => $fn()];
+        }
+        $deadline = microtime(true) + max(0, $wait);
+        while (true) {
+            if (@flock($fh, LOCK_EX | LOCK_NB)) {
+                break;
+            }
+            if (microtime(true) >= $deadline) {
+                @fclose($fh);
+
+                return ['acquired' => false, 'value' => null];
+            }
+            usleep(100_000);
+        }
+        try {
+            return ['acquired' => true, 'value' => $fn()];
+        } finally {
+            @flock($fh, LOCK_UN);
+            @fclose($fh);
+        }
     }
 
     /**

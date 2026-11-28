@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use App\Services\Prana\PranaSettings;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
@@ -29,6 +30,12 @@ abstract class TestCase extends BaseTestCase
         $this->previousTimezone = date_default_timezone_get();
 
         parent::setUp();
+
+        // YMC: PranaSettings хранит процессный статик со строкой MarketingSetting.
+        // RefreshDatabase откатывает строку между тестами, но статик живёт дальше
+        // в том же процессе PHPUnit — без сброса следующий тест наследует чужую
+        // награду (50 вместо 10 в BookClubWebhookTest::test_delivery_payment_awards_no_prana).
+        PranaSettings::flush();
 
         // Views pull the bundle through @vite; without a built
         // public/build/manifest.json the directive throws
