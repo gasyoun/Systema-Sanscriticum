@@ -13,6 +13,8 @@ class InstituteMecenatyTest extends TestCase
 
     public function test_page_renders_with_brand_guards(): void
     {
+        config(['institute.donations_enabled' => false]);
+
         $this->get('/mecenaty')
             ->assertOk()
             ->assertSee('Меценаты Института')
@@ -54,5 +56,14 @@ class InstituteMecenatyTest extends TestCase
             ->assertSee('5 000 ₽ в год')
             ->assertSee('Меценат — студент')
             ->assertSee('250 ₽ в месяц');
+    }
+
+    public function test_donation_submit_has_minimum_touch_target_height(): void
+    {
+        config(['institute.donations_enabled' => true]);
+
+        $this->get('/mecenaty')
+            ->assertOk()
+            ->assertSee('min-h-11 rounded-lg bg-brand px-6 py-2 font-bold text-white', false);
     }
 }
