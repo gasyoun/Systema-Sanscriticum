@@ -27,6 +27,7 @@ use App\Services\HomeworkTelegramTagService;
 use App\Services\Support\HomeworkPauseNoteRecorder;
 use App\Services\Support\SupportDmAutoReply;
 use App\Services\Support\SupportHintSendButton;
+use App\Services\Telegram\PollCancelCallbackService;
 use App\Services\VacationQuorumService;
 use App\Support\TelegramSendGuard;
 use App\Support\TelegramTransport;
@@ -778,6 +779,14 @@ class TelegramWebhookController extends Controller
 
         // «Молчит в учебном чате, урок закрыт»: исключить / не трогать.
         if (app(ChatSilenceRemovalService::class)->handleCallback($callback)) {
+            return;
+        }
+
+        // Итоги автоопроса о присутствии в личке админа: «Отменить занятие» / «Оставить».
+        if (str_starts_with($data, PollCancelCallbackService::CANCEL_PREFIX)
+            || $data === PollCancelCallbackService::KEEP_PREFIX) {
+            app(PollCancelCallbackService::class)->handle($callback);
+
             return;
         }
 
