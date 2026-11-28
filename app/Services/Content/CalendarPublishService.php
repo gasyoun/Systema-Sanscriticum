@@ -120,11 +120,17 @@ class CalendarPublishService
         // checklist_passed_at stays unstamped, so a re-scheduled slot runs
         // through both checks again. A passing slot stamps nothing new.
         // Kill switch: content_calendar.course_post_gate.
+        //
+        // 28-11-2026: the gate judges the text that leaves the calendar.
+        // publishBody() is the stored body plus the rubric's hashtag line
+        // (ContentCalendarSlot::publishBody()); fed the bare body, the gate
+        // saw no series post at all — 0 of 75 scheduled ones on production.
         if (config('content_calendar.course_post_gate', true)) {
+            $publishedBody = (string) $slot->publishBody() ?: (string) $slot->body;
             $coursePost = $this->coursePostCheck->check(
                 (string) $slot->title,
-                PostFormatter::toPlain($slot->body),
-                (string) $slot->body,
+                PostFormatter::toPlain($publishedBody),
+                $publishedBody,
             );
 
             if (! $coursePost['ok']) {
