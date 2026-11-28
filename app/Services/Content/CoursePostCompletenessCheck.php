@@ -17,9 +17,8 @@ namespace App\Services\Content;
  * back as `draft` for a human edit.
  *
  * Detection (D23): a series marker (ВОПРОС ИЗ КЛАССА · ЛОВУШКА · СЛОВО С
- * ИСТОРИЕЙ · НЕДЕЛЯ В ГРУППАХ) AND a hashtag-only line. The marker alone is
- * the trigger — the post need not name a course. Prose that merely DISCUSSES
- * the canon without a tag line never fires.
+ * ИСТОРИЕЙ · НЕДЕЛЯ В ГРУППАХ) in the title or the body — the marker alone;
+ * the post need not name a course.
  *
  * Checks (each nameable in an omission marker):
  *   C1 титул   — «Преподаватель курса — Имя Фамилия» present; an anonymised
@@ -40,6 +39,20 @@ namespace App\Services\Content;
  * no longer accepts a bare «в записи» — it let t.me/samskrtamru/4371 («в
  * записи открытого занятия») through.
  *
+ * SECOND deliberate difference from the Python file (28-11-2026): detection
+ * no longer needs a hashtag-only line. The calendar stores a series post's
+ * body WITHOUT hashtags — the rubric appends its own line at publish time
+ * (ContentCalendarSlot::publishBody()), and that line is not a canon line —
+ * so with the tag line as a precondition the gate let every scheduled series
+ * post through (0 of 75 detected on production) and, once the rubric lines
+ * are gone, a series draft that forgot its hashtags would pass silently.
+ * Measured on the live schedule (107 scheduled slots): the marker alone
+ * selects exactly the 75 slots of the four series rubrics and nothing else.
+ * A missing hashtag line is a C4 defect. The gate must be fed publishBody().
+ * The desk-side Python twin keeps «marker AND a hashtag line» ON PURPOSE: its
+ * input is an arbitrary agent message, where a series title is often merely
+ * quoted; a calendar slot is a post by definition. Not a canon change.
+ *
  * Deliberate omission: `[course-post-omit: <имя проверки> — причина]` skips
  * the named checks for that post. An unknown name inside a marker warns —
  * never a silent pass.
@@ -48,7 +61,7 @@ namespace App\Services\Content;
  */
 final class CoursePostCompletenessCheck
 {
-    /** Серии (D23): маркер серии + строка хэштегов = пост курсов. */
+    /** Серии (D23): маркер серии = пост курсов; строка хэштегов — проверка C4, не условие (28-11-2026). */
     public const SERIES_MARKERS = [
         'ВОПРОС ИЗ КЛАССА',
         'ЛОВУШКА', // без 🪤 — чтобы совпадал и просто текст
@@ -235,7 +248,7 @@ final class CoursePostCompletenessCheck
     {
         foreach (self::SERIES_MARKERS as $marker) {
             if (str_contains($plain, $marker)) {
-                return $this->hashtagLines($plain) !== [];
+                return true;
             }
         }
 
