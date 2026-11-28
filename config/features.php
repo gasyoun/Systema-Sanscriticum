@@ -166,14 +166,14 @@ return [
      |  - attendance_poll_report_admins — рубильник: false = и не закрывать авто,
      |    и не слать итоги (по умолчанию включён);
      |  - attendance_poll_report_lead_minutes — за сколько минут до старта
-     |    закрывать и слать итоги. Держите МЕНЬШЕ attendance_poll_lead_minutes,
-     |    чтобы голоса успели накопиться (опрос вешается за
-     |    attendance_poll_lead_minutes, итоги — за report_lead);
+     |    закрывать и слать итоги (по умолчанию 60 — за час до занятия). Держите
+     |    МЕНЬШЕ attendance_poll_lead_minutes, чтобы голоса успели накопиться
+     |    (опрос вешается за attendance_poll_lead_minutes, итоги — за report_lead);
      |  - attendance_poll_cancel_threshold — минимум «буду», ниже которого
      |    предлагается кнопка отмены.
      */
     'attendance_poll_report_admins' => (bool) env('ATTENDANCE_POLL_REPORT_ADMINS', true),
-    'attendance_poll_report_lead_minutes' => (int) env('ATTENDANCE_POLL_REPORT_LEAD_MINUTES', 1440),
+    'attendance_poll_report_lead_minutes' => (int) env('ATTENDANCE_POLL_REPORT_LEAD_MINUTES', 60),
     'attendance_poll_cancel_threshold' => (int) env('ATTENDANCE_POLL_CANCEL_THRESHOLD', 5),
 
     /*

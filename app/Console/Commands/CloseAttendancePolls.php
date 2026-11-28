@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
  * Авто-закрытие опросов о присутствии и отправка итогов админам.
  *
  * За `attendance_poll_report_lead_minutes` минут до старта занятия (по умолчанию
- * за сутки, 1440) закрывает идущий автоопрос (kind=attendance) этого занятия —
+ * за час, 60) закрывает идущий автоопрос (kind=attendance) этого занятия —
  * ZapisiPollService::close() останавливает опрос и шлёт итоги админам в личку
  * (ZapisiPollReporter); если «буду» меньше `attendance_poll_cancel_threshold`,
  * к итогам прикладывается кнопка «Отменить занятие».

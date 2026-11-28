@@ -35,7 +35,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `ATTENDANCE_POLL_GROUP_IDS` | optional | `''` | config/features.php:157 |
 | `ATTENDANCE_POLL_LEAD_MINUTES` | optional | `1440` | config/features.php:154 |
 | `ATTENDANCE_POLL_REPORT_ADMINS` | optional | `true` | config/features.php:175 |
-| `ATTENDANCE_POLL_REPORT_LEAD_MINUTES` | optional | `1440` | config/features.php:176 |
+| `ATTENDANCE_POLL_REPORT_LEAD_MINUTES` | optional | `60` | config/features.php:176 |
 | `ATTENDANCE_TREND_WEEKS` | optional | `12` | config/attendance.php:23 |
 | `AVAILABILITY_WINDOWS_ENABLED` | feature-flag | `false` | config/features.php:1266 |
 | `AWS_ACCESS_KEY_ID` | required | `—` | config/cache.php:85<br>config/filesystems.php:65<br>config/queue.php:56<br>config/services.php:31 |
