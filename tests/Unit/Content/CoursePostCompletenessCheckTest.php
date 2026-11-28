@@ -170,19 +170,33 @@ class CoursePostCompletenessCheckTest extends TestCase
         $this->assertSame(['C3'], self::codes($this->check->check('', self::GREEN_2382, $canonical)['defects']));
     }
 
-    public function test_prose_discussing_the_canon_is_not_detected(): void
+    public function test_a_tag_line_without_a_series_marker_is_not_detected(): void
+    {
+        // Строка тегов без маркера серии — не пост курсов.
+        $text = "Слово дня: ॐ — oṃ.\n\n#санскрит #словодня";
+
+        $this->assertFalse($this->check->isCoursePost('', $text));
+        $this->assertSame(['ok' => true, 'detected' => false, 'defects' => [], 'warnings' => []], $this->check->check('', $text));
+    }
+
+    /**
+     * 28-11-2026: маркер серии один — триггер (D23). Тело слота серии на проде
+     * хранится без хэштегов (их дописывает рубрика в publishBody()), поэтому
+     * строка тегов не может быть условием распознавания: пост серии без неё
+     * распознан и удержан по C4, а не пропущен молча.
+     */
+    public function test_a_series_marker_alone_is_detected_and_a_missing_tag_line_is_a_c4_defect(): void
     {
         foreach ([
             'Мы обсудили канон серии ЛОВУШКА и решение D15 по областям — протокол в Uprava.',
-            // Маркер серии и canonical-ссылка, но без строки тегов.
             "Как делать посты «ВОПРОС ИЗ КЛАССА»: титул, ссылка /ga/, тэги.\nhttps://samskrte.ru/k/example",
-            // Строка тегов без маркера серии.
-            "Слово дня: ॐ — oṃ.\n\n#санскрит #словодня",
+            '🪤 ЛОВУШКА · ГЛАЗА НЕ ВЕРТЯТСЯ',
         ] as $text) {
             $r = $this->check->check('', $text);
 
-            $this->assertFalse($this->check->isCoursePost('', $text), $text);
-            $this->assertSame(['ok' => true, 'detected' => false, 'defects' => [], 'warnings' => []], $r, $text);
+            $this->assertTrue($this->check->isCoursePost('', $text), $text);
+            $this->assertTrue($r['detected'], $text);
+            $this->assertContains('C4', self::codes($r['defects']), $text);
         }
     }
 

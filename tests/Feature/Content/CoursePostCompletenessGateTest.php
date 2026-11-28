@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Tests\Feature\Content;
 
 use App\Jobs\PublishCalendarSlotJob;
+use App\Models\ContentCalendarRubric;
 use App\Models\ContentCalendarSlot;
 use App\Services\Access\TelegramAdminNotifier;
 use App\Services\Content\CalendarPublicationRunner;
 use App\Services\Content\CalendarPublishService;
+use App\Services\Content\PostFormatter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
@@ -212,6 +214,100 @@ class CoursePostCompletenessGateTest extends TestCase
         $this->assertSame(ContentCalendarSlot::STATUS_DRAFT, $slot->fresh()->status);
     }
 
+    /**
+     * Форма хранения слота на проде (28-11-2026): в body серии НЕТ строки
+     * хэштегов — её дописывает рубрика в publishBody(). Гейт, которому
+     * передавали голый body, не распознал ни одного из 75 запланированных
+     * постов серий. Гейт судит текст, который уходит на площадки.
+     */
+    public function test_series_slot_is_judged_on_the_published_text_not_the_stored_body(): void
+    {
+        Bus::fake([PublishCalendarSlotJob::class]);
+        Log::spy();
+        $rubric = $this->rubric('Ловушка', '#санскрит #ловушка');
+        $slot = $this->slot([
+            'title' => 'Ловушка · Ким — не всегда «что»',
+            'body' => $this->redBodyWithoutTagLine(),
+            'rubric_id' => $rubric->id,
+        ]);
+        $this->assertStringNotContainsString('#ловушка', PostFormatter::toPlain((string) $slot->body), 'precondition: the stored body carries no hashtag line');
+        $this->assertStringContainsString('#ловушка', PostFormatter::toPlain((string) $slot->publishBody()), 'precondition: the rubric adds its line on publish');
+
+        $result = app(CalendarPublishService::class)->publishDue();
+
+        $this->assertSame(['dispatched' => 0, 'held' => 1, 'skipped_no_destinations' => false], $result);
+        Bus::assertNotDispatched(PublishCalendarSlotJob::class);
+        $held = $slot->fresh();
+        $this->assertSame(ContentCalendarSlot::STATUS_DRAFT, $held->status);
+        $this->assertStringStartsWith(self::HOLD_PREFIX, (string) $held->meta['course_post_hold']);
+    }
+
+    /** Серия без строки тегов вовсе (рубрика без хэштегов): распознана по маркеру, удержана по C4. */
+    public function test_series_slot_without_any_tag_line_is_held_with_a_c4_defect(): void
+    {
+        Bus::fake([PublishCalendarSlotJob::class]);
+        Log::spy();
+        $rubric = $this->rubric('Ловушка', '');
+        $slot = $this->slot([
+            'title' => 'Ловушка · Ким — не всегда «что»',
+            'body' => $this->redBodyWithoutTagLine(),
+            'rubric_id' => $rubric->id,
+        ]);
+
+        $result = app(CalendarPublishService::class)->publishDue();
+
+        $this->assertSame(['dispatched' => 0, 'held' => 1, 'skipped_no_destinations' => false], $result);
+        Bus::assertNotDispatched(PublishCalendarSlotJob::class);
+        $this->assertStringContainsString('C4 тэги: нет хэштег-строки', (string) $slot->fresh()->meta['course_post_hold']);
+    }
+
+    /**
+     * Строка рубрики дописывается последней, а гейт судит последнюю
+     * хэштег-строку: строка из двух тегов держит даже каноничный пост.
+     * Рубрикам серий строка рубрики не нужна — теги это пять слотов в самом посте.
+     */
+    public function test_a_rubric_tag_line_after_a_canonical_tag_line_still_holds_the_slot(): void
+    {
+        Bus::fake([PublishCalendarSlotJob::class]);
+        Log::spy();
+        $rubric = $this->rubric('Вопрос из класса', '#санскрит #вопрос');
+        $slot = $this->slot([
+            'title' => 'Вопрос из класса · Сахитья',
+            'body' => $this->greenBody(),
+            'rubric_id' => $rubric->id,
+        ]);
+
+        $result = app(CalendarPublishService::class)->publishDue();
+
+        $this->assertSame(['dispatched' => 0, 'held' => 1, 'skipped_no_destinations' => false], $result);
+        Bus::assertNotDispatched(PublishCalendarSlotJob::class);
+        $this->assertStringContainsString('C4 тэги: слотов 2, надо ровно 5', (string) $slot->fresh()->meta['course_post_hold']);
+    }
+
+    /** Каноничный пост серии, рубрика без своей строки тегов: уходит. */
+    public function test_a_canonical_series_slot_of_a_rubric_without_a_tag_line_is_dispatched(): void
+    {
+        Bus::fake([PublishCalendarSlotJob::class]);
+        Log::spy();
+        $rubric = $this->rubric('Вопрос из класса', '');
+        $slot = $this->slot([
+            'title' => 'Вопрос из класса · Сахитья',
+            'body' => $this->greenBody(),
+            'rubric_id' => $rubric->id,
+        ]);
+
+        $result = app(CalendarPublishService::class)->publishDue();
+
+        $this->assertSame(['dispatched' => 1, 'held' => 0, 'skipped_no_destinations' => false], $result);
+        Bus::assertDispatched(PublishCalendarSlotJob::class, fn (PublishCalendarSlotJob $job): bool => $job->slotId === $slot->id);
+        $this->assertArrayNotHasKey('course_post_hold', $slot->fresh()->meta);
+    }
+
+    private function rubric(string $name, string $hashtags): ContentCalendarRubric
+    {
+        return ContentCalendarRubric::create(['name' => $name, 'hashtags' => $hashtags, 'schedule' => []]);
+    }
+
     private function slot(array $overrides = []): ContentCalendarSlot
     {
         return ContentCalendarSlot::create(array_merge([
@@ -229,6 +325,18 @@ class CoursePostCompletenessGateTest extends TestCase
             '👉 samskrte.ru/online/poprobovat',
             '👉 <a href="http://samskrte.ru/online/poprobovat">samskrte.ru/online/poprobovat</a>',
             self::html(self::RED_4371),
+        );
+    }
+
+    /** Тело слота так, как оно хранится: заголовок серии внутри тела, строки хэштегов нет — её дописывает рубрика. */
+    private function redBodyWithoutTagLine(): string
+    {
+        $text = preg_replace('/\n\s*#санскрит #ловушка\s*$/u', '', self::RED_4371) ?? self::RED_4371;
+
+        return str_replace(
+            '👉 samskrte.ru/online/poprobovat',
+            '👉 <a href="http://samskrte.ru/online/poprobovat">samskrte.ru/online/poprobovat</a>',
+            self::html($text),
         );
     }
 
