@@ -35,6 +35,8 @@ class ZapisiPollReporterTest extends TestCase
 
     private const ADMIN_CHAT_ID = '100500';
 
+    private int $pollSeq = 0;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -80,15 +82,16 @@ class ZapisiPollReporterTest extends TestCase
     private function sentAttendancePoll(Group $group, Schedule $schedule): TelegramPoll
     {
         $poll = app(ZapisiPollService::class)->createAttendancePoll($schedule, $group);
-        $poll->update(['status' => TelegramPoll::STATUS_SENT, 'tg_poll_id' => '9990001', 'message_id' => 5]);
+        $this->pollSeq++;
+        $poll->update(['status' => TelegramPoll::STATUS_SENT, 'tg_poll_id' => '999000'.$this->pollSeq, 'message_id' => 5]);
 
         return $poll;
     }
 
-    private function vote(int $telegramId, array $optionIds): void
+    private function vote(TelegramPoll $poll, int $telegramId, array $optionIds): void
     {
         app(ZapisiPollService::class)->recordAnswer([
-            'poll_id' => '9990001',
+            'poll_id' => $poll->tg_poll_id,
             'user' => ['id' => $telegramId, 'is_bot' => false, 'first_name' => 'Анна'],
             'option_ids' => $optionIds,
         ]);
@@ -101,11 +104,11 @@ class ZapisiPollReporterTest extends TestCase
         $group = $this->group();
         $poll = $this->sentAttendancePoll($group, $this->lesson($group, '2026-11-16 15:00:00'));
 
-        $this->vote(1, [TelegramPoll::ATTENDANCE_OPTION_COMING]);
-        $this->vote(2, [TelegramPoll::ATTENDANCE_OPTION_COMING]);
-        $this->vote(3, [TelegramPoll::ATTENDANCE_OPTION_LATE]);
-        $this->vote(4, [TelegramPoll::ATTENDANCE_OPTION_ABSENT]);
-        $this->vote(5, []); // отозван
+        $this->vote($poll, 1, [TelegramPoll::ATTENDANCE_OPTION_COMING]);
+        $this->vote($poll, 2, [TelegramPoll::ATTENDANCE_OPTION_COMING]);
+        $this->vote($poll, 3, [TelegramPoll::ATTENDANCE_OPTION_LATE]);
+        $this->vote($poll, 4, [TelegramPoll::ATTENDANCE_OPTION_ABSENT]);
+        $this->vote($poll, 5, []); // отозван
 
         $this->assertSame(2, app(ZapisiPollReporter::class)->comingCount($poll));
     }
@@ -121,7 +124,7 @@ class ZapisiPollReporterTest extends TestCase
         $poll = $this->sentAttendancePoll($group, $schedule);
 
         foreach ([1, 2, 3] as $id) {
-            $this->vote($id, [TelegramPoll::ATTENDANCE_OPTION_COMING]);
+            $this->vote($poll, $id, [TelegramPoll::ATTENDANCE_OPTION_COMING]);
         }
 
         app(ZapisiPollService::class)->close($poll);
@@ -143,13 +146,12 @@ class ZapisiPollReporterTest extends TestCase
         Http::fake(['api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 1]])]);
 
         $group = $this->group();
-        $this->sentAttendancePoll($group, $this->lesson($group, '2026-11-16 15:00:00'));
+        $poll = $this->sentAttendancePoll($group, $this->lesson($group, '2026-11-16 15:00:00'));
 
         foreach ([1, 2, 3, 4, 5] as $id) {
-            $this->vote($id, [TelegramPoll::ATTENDANCE_OPTION_COMING]);
+            $this->vote($poll, $id, [TelegramPoll::ATTENDANCE_OPTION_COMING]);
         }
 
-        $poll = TelegramPoll::sole();
         app(ZapisiPollService::class)->close($poll);
 
         Http::assertSent(fn (Request $r): bool => str_contains($r->url(), 'botMAIN-TOKEN/sendMessage')
