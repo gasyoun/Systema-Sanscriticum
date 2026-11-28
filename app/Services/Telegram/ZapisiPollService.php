@@ -251,5 +251,16 @@ final class ZapisiPollService
         }
 
         $poll->update(['status' => TelegramPoll::STATUS_CLOSED, 'closed_at' => now()]);
+
+        // Итоги админам в личку (для автоопроса — с кнопкой отмены при недоборе).
+        // Сбой отчёта не должен откатывать уже закрытый опрос — только лог.
+        try {
+            app(ZapisiPollReporter::class)->report($poll);
+        } catch (\Throwable $e) {
+            Log::warning('ZapisiPoll: results report failed', [
+                'poll_id' => $poll->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

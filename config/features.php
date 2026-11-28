@@ -158,6 +158,25 @@ return [
     ))),
 
     /*
+     | Итоги автоопроса о присутствии: classes:close-attendance-polls закрывает
+     | опрос за attendance_poll_report_lead_minutes минут до старта и шлёт итоги
+     | админам в личку (ADMIN_TELEGRAM_ID). Если «буду» меньше
+     | attendance_poll_cancel_threshold — к итогам добавляется кнопка «Отменить
+     | занятие» (каскад +7 дней, ScheduleMover::cancelAndShiftWeek).
+     |  - attendance_poll_report_admins — рубильник: false = и не закрывать авто,
+     |    и не слать итоги (по умолчанию включён);
+     |  - attendance_poll_report_lead_minutes — за сколько минут до старта
+     |    закрывать и слать итоги. Держите МЕНЬШЕ attendance_poll_lead_minutes,
+     |    чтобы голоса успели накопиться (опрос вешается за
+     |    attendance_poll_lead_minutes, итоги — за report_lead);
+     |  - attendance_poll_cancel_threshold — минимум «буду», ниже которого
+     |    предлагается кнопка отмены.
+     */
+    'attendance_poll_report_admins' => (bool) env('ATTENDANCE_POLL_REPORT_ADMINS', true),
+    'attendance_poll_report_lead_minutes' => (int) env('ATTENDANCE_POLL_REPORT_LEAD_MINUTES', 1440),
+    'attendance_poll_cancel_threshold' => (int) env('ATTENDANCE_POLL_CANCEL_THRESHOLD', 5),
+
+    /*
      | FAQ-суггестер «Отдела заботы» (H247, тикет S3): факт-черновик ответа на
      | фактологические вопросы категорий A (Zoom/ссылка), B (записи), C (расписание)
      | из данных LMS — БЕЗ единого LLM-вызова. Бот сам НЕ отвечает студенту: готовит
