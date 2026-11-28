@@ -7,6 +7,7 @@ namespace Tests\Feature\BookClub;
 use App\Models\BookClubOrder;
 use App\Models\Course;
 use App\Models\Group;
+use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\User;
 use Firebase\JWT\JWT;
@@ -152,8 +153,12 @@ PEM;
 
     public function test_delivery_payment_awards_no_prana(): void
     {
-        // Живой контур праны: награда за оплату включена явно.
-        config(['prana.enabled' => true, 'prana.rewards.payment_success' => 10]);
+        // Живой контур праны: награда фиксируется СТРОКОЙ в БД, а не config-оверрайдом —
+        // PranaSettings читает MarketingSetting, если строка есть (GTD YMC: 50 != 10).
+        MarketingSetting::create([
+            'is_prana_active' => true,
+            'prana_reward_payment_success' => 10,
+        ]);
 
         // Позитивный контроль: обычный КУРСОВОЙ платёж прану начисляет —
         // механика награды в этом окружении действительно работает.

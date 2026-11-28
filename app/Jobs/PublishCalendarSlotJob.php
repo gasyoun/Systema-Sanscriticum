@@ -83,7 +83,10 @@ class PublishCalendarSlotJob implements ShouldBeUnique, ShouldQueue
         // Слот из TG-канала диспатчится в обход content:publish-due — чек-лист
         // §2.8 здесь (для остальных no-op: тик уже отметил checklist_passed_at).
         if (! $service->passesChecklist($slot)) {
-            $notifier->notifyAdmins("Календарь контента, слот #{$slot->id}: пост не разнесён по площадкам — {$slot->meta['prohibition_hold']}");
+            // H8643: удержать может и чек-лист §2.8, и гейт постов курсов —
+            // причина лежит в своём ключе meta у каждого.
+            $hold = $slot->meta['course_post_hold'] ?? ($slot->meta['prohibition_hold'] ?? 'чек-лист не пройден');
+            $notifier->notifyAdmins("Календарь контента, слот #{$slot->id}: пост не разнесён по площадкам — {$hold}");
 
             return;
         }

@@ -68,6 +68,15 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('post-attendance-poll-to-group');
 
+        // Закрытие автоопросов о присутствии перед занятием + итоги админам в
+        // личку (с кнопкой отмены при недоборе «буду»). Гейт
+        // (features.attendance_poll_report_admins) и окно — внутри команды.
+        $schedule->command('classes:close-attendance-polls')
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('close-attendance-polls');
+
         // Еженедельная сводка в чат онбординга: % с доступом, кто ни разу не заходил.
         $schedule->command('onboarding:weekly-digest')
             ->weeklyOn(1, '09:30') // понедельник 09:30 МСК

@@ -19,7 +19,10 @@ use Illuminate\Support\Facades\Log;
  */
 class CalendarPublishService
 {
-    public function __construct(private readonly ContentProhibitionsChecklist $checklist = new ContentProhibitionsChecklist) {}
+    public function __construct(
+        private readonly ContentProhibitionsChecklist $checklist = new ContentProhibitionsChecklist,
+        private readonly CoursePostCompletenessCheck $coursePostCheck = new CoursePostCompletenessCheck,
+    ) {}
 
     /** @return array{dispatched: int, held: int, skipped_no_destinations: bool} */
     public function publishDue(?Carbon $now = null): array
@@ -82,6 +85,7 @@ class CalendarPublishService
      * Чек-лист §2.8 один раз на слот (meta.checklist_passed_at): частично
      * опубликованный слот на повторном тике пополам не удерживается. Слоты
      * из TG-канала проходят его в PublishCalendarSlotJob перед разносом.
+     * Следом, тем же удержанием, — гейт постов курсов (H8643).
      */
     public function passesChecklist(ContentCalendarSlot $slot): bool
     {
@@ -108,6 +112,45 @@ class CalendarPublishService
 
             return false;
         }
+
+        // H8643 course-post completeness gate (canon D1–D24, 27-11-2026): a
+        // series post (ВОПРОС ИЗ КЛАССА · ЛОВУШКА · …) that misses a canon
+        // element is held back exactly like a §2.8 hit — never posted, never
+        // silently retried every tick, reason kept in meta.course_post_hold.
+        // checklist_passed_at stays unstamped, so a re-scheduled slot runs
+        // through both checks again. A passing slot stamps nothing new.
+        // Kill switch: content_calendar.course_post_gate.
+        //
+        // 28-11-2026: the gate judges the text that leaves the calendar.
+        // publishBody() is the stored body plus the rubric's hashtag line
+        // (ContentCalendarSlot::publishBody()); fed the bare body, the gate
+        // saw no series post at all — 0 of 75 scheduled ones on production.
+        if (config('content_calendar.course_post_gate', true)) {
+            $publishedBody = (string) $slot->publishBody() ?: (string) $slot->body;
+            $coursePost = $this->coursePostCheck->check(
+                (string) $slot->title,
+                PostFormatter::toPlain($publishedBody),
+                $publishedBody,
+            );
+
+            if (! $coursePost['ok']) {
+                $hold = $this->coursePostCheck->journalLine($coursePost);
+                $slot->forceFill([
+                    'status' => ContentCalendarSlot::STATUS_DRAFT,
+                    'meta' => array_merge($slot->meta ?? [], [
+                        'course_post_hold' => $hold,
+                        'course_post_hold_at' => now()->toDateTimeString(),
+                    ]),
+                ])->save();
+                Log::warning('CalendarPublishService: слот удержан гейтом постов курсов', [
+                    'calendar_slot_id' => $slot->id,
+                    'hold' => $hold,
+                ]);
+
+                return false;
+            }
+        }
+
         $meta = ['checklist_passed_at' => now()->toDateTimeString()];
         if ($verdict['warns'] !== []) {
             $meta['prohibition_warn'] = array_map(static fn (array $w): string => $w['rule'].' («'.$w['match'].'»)', $verdict['warns']);

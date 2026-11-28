@@ -51,7 +51,9 @@ class CourseBlockParticipants extends Page
 
     public string $reminderText = '';
 
-    public bool $reminderAccount = true;
+    // По умолчанию выключен: Telegram не даёт бизнес-боту писать первым
+    // (BUSINESS_PEER_USAGE_MISSING) — канал годится только как ответ.
+    public bool $reminderAccount = false;
 
     public bool $reminderBot = false;
 
@@ -179,6 +181,7 @@ class CourseBlockParticipants extends Page
         $sent = 0;
         $skipped = 0;
         $noChannels = 0;
+        $accountRefused = 0;
 
         foreach (User::query()->whereIn('id', $ids)->get() as $user) {
             $result = $sender->send(
@@ -199,13 +202,24 @@ class CourseBlockParticipants extends Page
             } else {
                 $noChannels++;
             }
+
+            // Канал аккаунта есть в списке, но Telegram его не принял:
+            // BUSINESS_PEER_USAGE_MISSING — писать первым бизнес-бот не может.
+            if ($this->reminderAccount && ($result['account_error'] ?? null) !== null) {
+                $accountRefused++;
+            }
         }
 
         $this->reminderIds = [];
 
+        $title = "Отправлено: {$sent}. Пропущено (писали за сутки): {$skipped}. Без каналов: {$noChannels}.";
+        if ($accountRefused > 0) {
+            $title .= " Аккаунт отказал: {$accountRefused} — Telegram не разрешает бизнес-боту писать первым.";
+        }
+
         Notification::make()
-            ->title("Отправлено: {$sent}. Пропущено (писали за сутки): {$skipped}. Без выбранных каналов: {$noChannels}.")
-            ->success()
+            ->title($title)
+            ->status($sent > 0 ? 'success' : 'warning')
             ->send();
     }
 

@@ -165,7 +165,7 @@ class BlockReminderSenderTest extends TestCase
         ]);
 
         Http::fake([
-            'api.telegram.org/*' => Http::response(['ok' => false, 'description' => 'forbidden'], 403),
+            'api.telegram.org/*' => Http::response(['ok' => false, 'error_code' => 400, 'description' => 'Bad Request: BUSINESS_PEER_USAGE_MISSING'], 400),
         ]);
 
         $user = User::factory()->create(['email' => 'refused@example.com']);
@@ -177,6 +177,38 @@ class BlockReminderSenderTest extends TestCase
 
         // Только канал аккаунта: Telegram отказал → отправки нет, клейм снят,
         // иначе следующий честный повтор был бы заблокирован дедупом.
+        $result = $this->sender()->send($user, 10, 1, 'Текст', 'Тема', true, false, false);
+
+        $this->assertSame('no_channels', $result['status']);
+        // Причина отказа доходит до экрана, а не теряется в «отправлено: 0».
+        $this->assertSame('BUSINESS_PEER_USAGE_MISSING', $result['account_error']);
+        $this->assertSame(0, DebtReminder::query()->count());
+    }
+
+    /** @test */
+    public function generic_account_refusal_also_releases_the_journal_claim(): void
+    {
+        Mail::fake();
+        Queue::fake();
+        config(['services.telegram_business.token' => 'bot-token']);
+
+        TelegramBusinessConnection::create([
+            'business_connection_id' => 'bc-test-403',
+            'owner_telegram_user_id' => 112,
+            'is_enabled' => true,
+            'can_reply' => true,
+        ]);
+        Http::fake([
+            'api.telegram.org/*' => Http::response(['ok' => false, 'description' => 'forbidden'], 403),
+        ]);
+
+        $user = User::factory()->create(['email' => 'refused403@example.com']);
+        TelegramSupportChat::create([
+            'telegram_chat_id' => 777002,
+            'linked_user_id' => $user->id,
+            'type' => 'private',
+        ]);
+
         $result = $this->sender()->send($user, 10, 1, 'Текст', 'Тема', true, false, false);
 
         $this->assertSame('no_channels', $result['status']);
